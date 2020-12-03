@@ -23,6 +23,8 @@ CONTAINER="$(docker run --rm -d ord-postgres:empty)"
 echo "Waiting 5s for the server to start..."
 sleep 5
 TAG="${ORD_POSTGRES_TAG:-latest}"
+# NOTE(kearnes): Pass the tag directly instead of using ORD_POSTGRES_TAG
+# so we don't have to set that variable in the docker image.
 docker exec "${CONTAINER}" ./ord_interface/docker/build_database.sh "${TAG}"
 docker commit "${CONTAINER}" "openreactiondatabase/ord-postgres:${TAG}"
 docker stop "${CONTAINER}"
