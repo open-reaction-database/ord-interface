@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Runs ord-schema tests.
+# Runs ord-interface tests.
 set -ex
 # Python tests.
-find ./ord_schema -name '*_test.py' -print0 \
+find ./ord_interface -name '*_test.py' -print0 \
   | xargs -t -0 -I '{}' coverage run '{}' > /dev/null
