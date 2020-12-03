@@ -27,10 +27,12 @@ cd ord_interface && docker-compose up --detach
 echo "Waiting 5s for the server to start..."
 sleep 5
 
+set +e
 status=0
 
-docker exec "$(docker ps -q --filter name=web)" python py/serve_test.py
-[ $? -eq 0 ] || status=1
+CONTAINER="$(docker ps -q --filter name=web)"
+docker exec "${CONTAINER}" python ord_interface/build_database_test.py || status=1
+docker exec "${CONTAINER}" python ord_interface/query_test.py || status=1
 
 # Shut down the containers.
 docker-compose down
