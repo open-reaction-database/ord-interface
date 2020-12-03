@@ -15,7 +15,13 @@
 
 set -ex
 
-python "${ORD_ROOT}/ord-schema/ord_schema/interface/build_database.py" \
-  --input="${ORD_INPUT}" --output="${ORD_ROOT}/tables" --database
+if [[ "${1:-latest}" == "test" ]]; then
+  ARGS="--downsample"
+else
+  ARGS="--nodownsample"
+fi
+
+python "${ORD_ROOT}/ord-interface/ord_interface/build_database.py" \
+  --input="${ORD_INPUT}" --output="${ORD_ROOT}/tables" --database "${ARGS}"
 # Reduce image size.
 rm -rf "${ORD_ROOT}"

@@ -24,15 +24,17 @@
 
 FROM continuumio/miniconda3
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+ && apt-get install -y \
     build-essential \
     procps \
     unzip \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get clean
 
 RUN conda install -c rdkit \
     flask \
     gunicorn \
+    python=3.7 \
     rdkit \
  && conda clean -afy
 

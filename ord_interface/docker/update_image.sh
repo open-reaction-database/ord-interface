@@ -22,6 +22,7 @@ docker build \
 CONTAINER="$(docker run --rm -d ord-postgres:empty)"
 echo "Waiting 5s for the server to start..."
 sleep 5
-docker exec -it "${CONTAINER}" ./build_database.sh
-docker commit "${CONTAINER}" openreactiondatabase/ord-postgres
+TAG="${ORD_POSTGRES_TAG:-latest}"
+docker exec "${CONTAINER}" ./ord_interface/docker/build_database.sh "${TAG}"
+docker commit "${CONTAINER}" "openreactiondatabase/ord-postgres:${TAG}"
 docker stop "${CONTAINER}"

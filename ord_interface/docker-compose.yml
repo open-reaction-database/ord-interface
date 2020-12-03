@@ -15,7 +15,7 @@
 version: "3"
 services:
   ord-postgres:
-    image: "openreactiondatabase/ord-postgres:latest"
+    image: "openreactiondatabase/ord-postgres:${ORD_POSTGRES_TAG:-latest}"
   web:
     depends_on:
       - ord-postgres
