@@ -18,8 +18,9 @@ from absl.testing import parameterized
 import numpy as np
 import psycopg2
 
-from ord_interface import query
 from ord_schema import interface
+
+from ord_interface import query
 
 
 class QueryTest(parameterized.TestCase, absltest.TestCase):

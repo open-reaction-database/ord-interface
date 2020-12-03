@@ -21,10 +21,11 @@ from absl.testing import absltest
 from absl.testing import flagsaver
 import pandas as pd
 
-from ord_interface import build_database
 from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
 from ord_schema.proto import reaction_pb2
+
+from ord_interface import build_database
 
 
 class BuildDatabaseTest(absltest.TestCase):
