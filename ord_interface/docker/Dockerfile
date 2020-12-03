@@ -50,10 +50,11 @@ ENV ORD_REPO=ord-data
 ADD "https://api.github.com/repos/Open-Reaction-Database/${ORD_REPO}/git/refs/heads/main" ord-data-version.json
 RUN git clone "https://github.com/Open-Reaction-Database/${ORD_REPO}.git"
 
-# COPY and install the local state of ord-schema.
-WORKDIR "${ORD_ROOT}/ord-schema"
-COPY setup.py requirements.txt ./
-COPY ord_schema/ ord_schema/
+# Install ord-schema.
+RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
+WORKDIR ord-schema
+ARG ORD_SCHEMA_TAG=v0.1.1
+RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
@@ -64,6 +65,6 @@ ENV PGDATA=/data
 ENV POSTGRES_DB=ord
 ENV POSTGRES_USER=ord-postgres
 ENV POSTGRES_PASSWORD=ord-postgres
-COPY ord_schema/interface/docker/postgres.conf /etc/postgresql/postgresql.conf
+COPY ord_interface/docker/postgres.conf /etc/postgresql/postgresql.conf
 ENV ORD_INPUT="${ORD_ROOT}/${ORD_REPO}/data/*/*.pb"
-COPY ord_schema/interface/docker/build_database.sh .
+COPY ord_interface/docker/build_database.sh .

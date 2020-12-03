@@ -28,4 +28,4 @@ jobs:
         timeout-minutes: 10
         run: |
           cd "${GITHUB_WORKSPACE}"
-          ./run_interface_tests.sh
+          ./run_tests.sh

@@ -36,14 +36,23 @@ RUN conda install -c rdkit \
     rdkit \
  && conda clean -afy
 
-# COPY and install the local state of ord-schema.
-WORKDIR /usr/src/app/ord-schema
-COPY setup.py requirements.txt ./
-COPY ord_schema/ ord_schema/
+# Install ord-schema.
+WORKDIR /usr/src/app
+RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
+WORKDIR ord-schema
+ARG ORD_SCHEMA_TAG=v0.1.1
+RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
+# COPY the local state.
+WORKDIR ../ord-interface
+COPY ord_interface/ ord_interface/
+
 # Build and launch the interface.
-WORKDIR /usr/src/app/ord-schema/ord_schema/interface
 EXPOSE 5000
-CMD gunicorn search:app -b 0.0.0.0:5000 --access-logfile '-'
+CMD gunicorn ord_interface.search:app \
+    --bind 0.0.0.0:5000 \
+    --workers 2 \
+    --access-logfile - \
+    --access-logformat '%(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'

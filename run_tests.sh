@@ -13,8 +13,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Runs ord-interface tests.
-set -ex
-# Python tests.
-find ./ord_interface -name '*_test.py' -print0 \
-  | xargs -t -0 -I '{}' coverage run '{}' > /dev/null
+set -e
+
+# Build the ord-postgres docker image.
+./ord_interface/docker/update_image.sh
+
+# Launch the ord-interface web server.
+cd ord_interface && docker-compose up --detach
+echo "Waiting 5s for the server to start..."
+sleep 5
+
+status=0
+
+docker exec "$(docker ps -q --filter name=web)" python py/serve_test.py
+[ $? -eq 0 ] || status=1
+
+# Report pass/fail.
+red='\033[0;31m'
+green='\033[0;32m'
+neutral='\033[0m'
+[ "${status}" -eq 0 ] && \
+    printf "${green}PASS${neutral}\n" || printf "${red}FAIL${neutral}\n"
+
+# Shut down the containers.
+docker-compose down
+
+# Relay the status for GitHub CI.
+test "${status}" -eq 0
