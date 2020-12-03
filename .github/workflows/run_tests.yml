@@ -25,7 +25,6 @@ jobs:
         with:
           python-version: '3.x'
       - name: Build and test interface
-        timeout-minutes: 10
         run: |
           cd "${GITHUB_WORKSPACE}"
           ./run_tests.sh
