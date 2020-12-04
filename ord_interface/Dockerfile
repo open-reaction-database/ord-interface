@@ -24,26 +24,39 @@
 
 FROM continuumio/miniconda3
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+ && apt-get install -y \
     build-essential \
     procps \
     unzip \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get clean
 
 RUN conda install -c rdkit \
     flask \
     gunicorn \
+    python=3.7 \
     rdkit \
  && conda clean -afy
 
-# COPY and install the local state of ord-schema.
-WORKDIR /usr/src/app/ord-schema
-COPY setup.py requirements.txt ./
-COPY ord_schema/ ord_schema/
+# Install ord-schema.
+WORKDIR /usr/src/app
+RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
+WORKDIR ord-schema
+ARG ORD_SCHEMA_TAG=v0.1.1
+RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
+# COPY the local state.
+WORKDIR ../ord-interface
+COPY setup.py .
+COPY ord_interface/ ord_interface/
+RUN python setup.py install
+
 # Build and launch the interface.
-WORKDIR /usr/src/app/ord-schema/ord_schema/interface
 EXPOSE 5000
-CMD gunicorn search:app -b 0.0.0.0:5000 --access-logfile '-'
+CMD gunicorn ord_interface.search:app \
+    --bind 0.0.0.0:5000 \
+    --workers 2 \
+    --access-logfile - \
+    --access-logformat '%(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'

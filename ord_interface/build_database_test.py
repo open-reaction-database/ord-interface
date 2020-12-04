@@ -15,59 +15,20 @@
 
 import os
 import tempfile
-import time
 
 from absl import flags
-from absl import logging
 from absl.testing import absltest
 from absl.testing import flagsaver
-import docker
 import pandas as pd
-import psycopg2
 
-from ord_schema import interface
 from ord_schema import message_helpers
-from ord_schema.interface import build_database
 from ord_schema.proto import dataset_pb2
 from ord_schema.proto import reaction_pb2
 
+from ord_interface import build_database
+
 
 class BuildDatabaseTest(absltest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        client = docker.from_env()
-        client.images.pull('mcs07/postgres-rdkit')
-        cls._container = client.containers.run(
-            'mcs07/postgres-rdkit',
-            ports={'5432/tcp': interface.POSTGRES_PORT},
-            environment={
-                'POSTGRES_USER': interface.POSTGRES_USER,
-                'POSTGRES_PASSWORD': interface.POSTGRES_PASSWORD,
-                'POSTGRES_DB': interface.POSTGRES_DB
-            },
-            detach=True,
-            remove=True)
-        num_attempts = 0
-        while True:
-            num_attempts += 1
-            if num_attempts > 30:
-                raise RuntimeError('failed to connect to the database')
-            try:
-                psycopg2.connect(dbname=interface.POSTGRES_DB,
-                                 host='localhost',
-                                 port=interface.POSTGRES_PORT,
-                                 user=interface.POSTGRES_USER,
-                                 password=interface.POSTGRES_PASSWORD)
-                break
-            except psycopg2.OperationalError as error:
-                logging.info('waiting for database to be ready: %s', error)
-                time.sleep(1)
-                continue
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._container.stop()
 
     def setUp(self):
         super().setUp()
@@ -82,8 +43,8 @@ class BuildDatabaseTest(absltest.TestCase):
         input2.components.add().identifiers.add(value='input2b', type='SMILES')
         outcome = reaction.outcomes.add()
         product = outcome.products.add()
-        product.measurements.add(type='YIELD', percentage=dict(value=2.5))
-        product.identifiers.add(value='product', type='SMILES')
+        product.compound_yield.value = 2.5
+        product.compound.identifiers.add(value='product', type='SMILES')
         self.dataset = dataset_pb2.Dataset(reactions=[reaction])
         message_helpers.write_message(
             self.dataset, os.path.join(self.test_subdirectory, 'test.pbtxt'))
@@ -93,7 +54,7 @@ class BuildDatabaseTest(absltest.TestCase):
         output_dir = os.path.join(self.test_subdirectory, 'tables')
         with flagsaver.flagsaver(input=input_pattern,
                                  output=output_dir,
-                                 database=True,
+                                 database=False,
                                  cleanup=False):
             build_database.main(())
         with open(os.path.join(output_dir, 'reactions.csv')) as f:

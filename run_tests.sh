@@ -13,8 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Runs ord-schema tests.
-set -ex
-# Python tests.
-find ./ord_schema -name '*_test.py' -print0 \
-  | xargs -t -0 -I '{}' coverage run '{}' > /dev/null
+set -e
+
+# Build the ord-postgres image.
+export ORD_POSTGRES_TAG=test
+./ord_interface/docker/update_image.sh
+
+# Build the ord-interface image.
+docker build -f ord_interface/Dockerfile -t openreactiondatabase/ord-interface .
+
+# Launch the web server.
+cd ord_interface && docker-compose up --detach
+echo "Waiting 5s for the server to start..."
+sleep 5
+
+set +e
+status=0
+
+CONTAINER="$(docker ps -q --filter name=web)"
+docker exec "${CONTAINER}" python ord_interface/build_database_test.py || status=1
+docker exec "${CONTAINER}" python ord_interface/query_test.py || status=1
+
+# Shut down the containers.
+docker-compose down
+
+# Report pass/fail.
+red='\033[0;31m'
+green='\033[0;32m'
+neutral='\033[0m'
+[ "${status}" -eq 0 ] && \
+    printf "${green}PASS${neutral}\n" || printf "${red}FAIL${neutral}\n"
+
+# Relay the status for GitHub CI.
+test "${status}" -eq 0

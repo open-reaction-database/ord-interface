@@ -21,14 +21,15 @@
 
 FROM mcs07/postgres-rdkit
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+ && apt-get install -y \
     build-essential \
     git \
     libpq-dev \
     procps \
     unzip \
     wget \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get clean
 
 ENV ORD_ROOT=/home/ord
 RUN wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
@@ -43,6 +44,16 @@ RUN conda install -c rdkit \
     rdkit \
  && conda clean -afy
 
+# Install ord-schema.
+WORKDIR "${ORD_ROOT}"
+RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
+WORKDIR ord-schema
+ARG ORD_SCHEMA_TAG=v0.1.1
+RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
+RUN pip install -r requirements.txt
+RUN python setup.py install
+
+# Install ord-data.
 WORKDIR "${ORD_ROOT}"
 # Bust the cache to get the latest ord-data commits; see
 # https://stackoverflow.com/a/39278224.
@@ -50,20 +61,15 @@ ENV ORD_REPO=ord-data
 ADD "https://api.github.com/repos/Open-Reaction-Database/${ORD_REPO}/git/refs/heads/main" ord-data-version.json
 RUN git clone "https://github.com/Open-Reaction-Database/${ORD_REPO}.git"
 
-# COPY and install the local state of ord-schema.
-WORKDIR "${ORD_ROOT}/ord-schema"
-COPY setup.py requirements.txt ./
-COPY ord_schema/ ord_schema/
-RUN pip install -r requirements.txt
-RUN python setup.py install
+# Copy local state.
+WORKDIR "${ORD_ROOT}/ord-interface"
+COPY ord_interface/ ord_interface/
+COPY ord_interface/docker/postgres.conf /etc/postgresql/postgresql.conf
 
 # NOTE(kearnes): Use non-standard PGDATA so the database persists; see
 # https://nickjanetakis.com/blog/docker-tip-79-saving-a-postgres-database-in-a-docker-image.
-WORKDIR "${ORD_ROOT}"
 ENV PGDATA=/data
 ENV POSTGRES_DB=ord
 ENV POSTGRES_USER=ord-postgres
 ENV POSTGRES_PASSWORD=ord-postgres
-COPY ord_schema/interface/docker/postgres.conf /etc/postgresql/postgresql.conf
 ENV ORD_INPUT="${ORD_ROOT}/${ORD_REPO}/data/*/*.pb"
-COPY ord_schema/interface/docker/build_database.sh .

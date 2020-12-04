@@ -15,13 +15,13 @@
 
 set -ex
 
-docker build \
-  --file=ord_schema/interface/docker/Dockerfile \
-  -t ord-postgres:empty \
-  .
-CONTAINER="$(docker run --rm -d ord-postgres:empty)"
-echo "Waiting 5s for the server to start..."
-sleep 5
-docker exec -it "${CONTAINER}" ./build_database.sh
-docker commit "${CONTAINER}" openreactiondatabase/ord-postgres
-docker stop "${CONTAINER}"
+if [[ "${1:-latest}" == "test" ]]; then
+  ARGS="--downsample"
+else
+  ARGS="--nodownsample"
+fi
+
+python "${ORD_ROOT}/ord-interface/ord_interface/build_database.py" \
+  --input="${ORD_INPUT}" --output="${ORD_ROOT}/tables" --database "${ARGS}"
+# Reduce image size.
+rm -rf "${ORD_ROOT}"

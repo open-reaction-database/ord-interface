@@ -16,6 +16,9 @@ name: Lint
 
 on: [pull_request, push]
 
+env:
+  ORD_SCHEMA_TAG: v0.1.1
+
 jobs:
   check_licenses:
     runs-on: ubuntu-latest
@@ -34,16 +37,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          path: ord-interface
+      - uses: actions/checkout@v2
+        with:
+          repository: "Open-Reaction-Database/ord-schema"
+          ref: ${{ env.ORD_SCHEMA_TAG }}
+          path: ord-schema
       - uses: s-weigand/setup-conda@v1
         with:
           python-version: 3.7
       - name: yapf
         run: |
-          cd "${GITHUB_WORKSPACE}"
+          cd "${GITHUB_WORKSPACE}/ord-interface"
           pip install yapf
-          yapf --parallel --recursive --exclude="*_pb2.py" --quiet .
+          yapf --parallel --recursive --quiet .
       - name: Install ord-schema
         run: |
+          cd "${GITHUB_WORKSPACE}/ord-schema"
           pip install -r requirements.txt
           # Test deps are required to check imports with pylint.
           pip install -r test_requirements.txt
@@ -51,16 +62,6 @@ jobs:
           python setup.py install
       - name: pylint
         run: |
-          cd "${GITHUB_WORKSPACE}"
+          cd "${GITHUB_WORKSPACE}/ord-interface"
           pip install flask pylint
-          pylint examples ord_schema *.py
-
-  check_proto:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: clang-format
-        run: |
-          cd "${GITHUB_WORKSPACE}"
-          sudo apt update && sudo apt install clang-format-10 --yes
-          find . -name '*.proto' -exec clang-format-10 -n -Werror --style=file {} +
+          pylint ord_interface *.py

@@ -20,6 +20,8 @@ files and load them into PostgreSQL with the COPY command.
 import csv
 import glob
 import os
+import random
+import sys
 
 from absl import app
 from absl import flags
@@ -39,6 +41,11 @@ flags.DEFINE_boolean('database', False,
 flags.DEFINE_boolean('overwrite', False, 'If True, overwrite existing tables.')
 flags.DEFINE_boolean('cleanup', True,
                      'If True, intermediate CSV files are removed.')
+flags.DEFINE_boolean('downsample', False,
+                     'Whether to downsample datasets for testing.')
+
+# Maximum number of reactions to keep when downsampling datasets for testing.
+_TEST_DATASET_SIZE = 100
 
 
 class Tables:
@@ -53,9 +60,12 @@ class Tables:
         for table, columns in interface.TABLES.items():
             handle = open(os.path.join(FLAGS.output, f'{table}.csv'), 'w')
             self._handles.append(handle)
+            # NOTE(kearnes): Use QUOTE_MINIMAL so Postgres handles NULL values
+            # properly; https://www.postgresql.org/docs/current/sql-copy.html.
             writer = csv.DictWriter(handle,
                                     fieldnames=columns.keys(),
-                                    dialect='unix')
+                                    dialect='unix',
+                                    quoting=csv.QUOTE_MINIMAL)
             writer.writeheader()
             setattr(self, table, writer)
         return self
@@ -129,12 +139,12 @@ def _outputs_table(reaction, tables):
         for product in outcome.products:
             row = {'reaction_id': reaction.reaction_id}
             try:
-                row['smiles'] = message_helpers.smiles_from_compound(product)
+                row['smiles'] = message_helpers.smiles_from_compound(
+                    product.compound)
             except ValueError:
                 pass
-            product_yield = message_helpers.get_product_yield(product)
-            if product_yield is not None:
-                row['yield'] = product_yield
+            if product.HasField('compound_yield'):
+                row['yield'] = product.compound_yield.value
             if len(row) > 1:
                 rows.append(row)
     tables.outputs.writerows(rows)
@@ -258,12 +268,22 @@ def main(argv):
     del argv  # Only used by app.run().
     filenames = glob.glob(FLAGS.input)
     logging.info('Found %d datasets', len(filenames))
+    if not filenames:
+        sys.exit(1)
     with Tables() as tables:
         for filename in filenames:
             logging.info(filename)
             dataset = message_helpers.load_message(filename,
                                                    dataset_pb2.Dataset)
-            for reaction in dataset.reactions:
+            if FLAGS.downsample and len(dataset.reactions) > FLAGS.downsample:
+                # Downsample ord-data Datasets for testing.
+                logging.info('TESTING: Downsampling from %d->%d reactions',
+                             len(dataset.reactions), _TEST_DATASET_SIZE)
+                random.seed(20201203)  # Tests should be deterministic.
+                reactions = random.sample(dataset.reactions, _TEST_DATASET_SIZE)
+            else:
+                reactions = dataset.reactions
+            for reaction in reactions:
                 process_reaction(reaction, tables)
     if FLAGS.database:
         logging.info('Creating Postgres database')

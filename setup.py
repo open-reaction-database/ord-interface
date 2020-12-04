@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # Copyright 2020 Open Reaction Database Project Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,16 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Installer script."""
 
-version: "3"
-services:
-  ord-postgres:
-    image: "openreactiondatabase/ord-postgres:latest"
-  web:
-    depends_on:
-      - ord-postgres
-    environment:
-      - ORD_POSTGRES_HOST=ord-postgres
-    image: "openreactiondatabase/ord-interface:latest"
-    ports:
-      - "5000:5000"
+import setuptools
+
+if __name__ == '__main__':
+    setuptools.setup(
+        name='ord-interface',
+        description='Interface for the Open Reaction Database',
+        url='https://github.com/Open-Reaction-Database/ord-interface',
+        license='Apache License, Version 2.0',
+        packages=setuptools.find_packages())

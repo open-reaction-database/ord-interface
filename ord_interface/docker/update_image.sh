@@ -15,7 +15,16 @@
 
 set -ex
 
-python "${ORD_ROOT}/ord-schema/ord_schema/interface/build_database.py" \
-  --input="${ORD_INPUT}" --output="${ORD_ROOT}/tables" --database
-# Reduce image size.
-rm -rf "${ORD_ROOT}"
+docker build \
+  --file=ord_interface/docker/Dockerfile \
+  -t ord-postgres:empty \
+  .
+CONTAINER="$(docker run --rm -d ord-postgres:empty)"
+echo "Waiting 5s for the server to start..."
+sleep 5
+TAG="${ORD_POSTGRES_TAG:-latest}"
+# NOTE(kearnes): Pass the tag directly instead of using ORD_POSTGRES_TAG
+# so we don't have to set that variable in the docker image.
+docker exec "${CONTAINER}" ./ord_interface/docker/build_database.sh "${TAG}"
+docker commit "${CONTAINER}" "openreactiondatabase/ord-postgres:${TAG}"
+docker stop "${CONTAINER}"

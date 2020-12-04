@@ -13,57 +13,31 @@
 # limitations under the License.
 """Tests for ord_schema.interface.query."""
 
-import time
-
-from absl import logging
 from absl.testing import absltest
 from absl.testing import parameterized
-import docker
 import numpy as np
 import psycopg2
 
 from ord_schema import interface
-from ord_schema.interface import query
+
+from ord_interface import query
 
 
 class QueryTest(parameterized.TestCase, absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        client = docker.from_env()
-        client.images.pull('openreactiondatabase/ord-postgres')
-        cls._container = client.containers.run(
-            'openreactiondatabase/ord-postgres',
-            ports={'5432/tcp': interface.POSTGRES_PORT},
-            detach=True,
-            remove=True)
-        num_attempts = 0
-        while True:
-            num_attempts += 1
-            if num_attempts > 30:
-                raise RuntimeError('failed to connect to the database')
-            try:
-                cls.postgres = query.OrdPostgres(
-                    dbname=interface.POSTGRES_DB,
-                    user=interface.POSTGRES_USER,
-                    password=interface.POSTGRES_PASSWORD,
-                    host='localhost',
-                    port=interface.POSTGRES_PORT)
-                break
-            except psycopg2.OperationalError as error:
-                logging.info('waiting for database to be ready: %s', error)
-                time.sleep(1)
-                continue
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._container.stop()
+        cls.postgres = query.OrdPostgres(
+            dbname=interface.POSTGRES_DB,
+            user=interface.POSTGRES_USER,
+            password=interface.POSTGRES_PASSWORD,
+            # Matches the service name in docker-compose.yml.
+            host='ord-postgres',
+            port=interface.POSTGRES_PORT)
 
     def test_reaction_id_query(self):
         reaction_ids = [
             'ord-e49ed67da61e4cddabd3c84a72fed227',
-            'ord-bc17663fcf7b4ddabf2de2a791be184e',
-            'ord-edff29c0822542b793cd95c54b315522'
         ]
         command = query.ReactionIdQuery(reaction_ids)
         results = self.postgres.run_query(command, limit=10, return_ids=True)

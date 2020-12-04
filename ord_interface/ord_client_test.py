@@ -16,7 +16,7 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 
-from ord_schema.interface import ord_client
+from ord_interface import ord_client
 
 
 class OrdClientTest(parameterized.TestCase, absltest.TestCase):
