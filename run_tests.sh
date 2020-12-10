@@ -17,10 +17,10 @@ set -e
 
 # Build the ord-postgres image.
 export ORD_POSTGRES_TAG=test
-./ord_interface/docker/update_image.sh
+./ord_interface/docker/update_image.sh "$@"
 
 # Build the ord-interface image.
-docker build -f ord_interface/Dockerfile -t openreactiondatabase/ord-interface .
+docker build -f ord_interface/Dockerfile -t openreactiondatabase/ord-interface . "$@"
 
 # Launch the web server.
 cd ord_interface && docker-compose up --detach
