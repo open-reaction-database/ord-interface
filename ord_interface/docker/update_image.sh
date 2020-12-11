@@ -18,7 +18,7 @@ set -ex
 docker build \
   --file=ord_interface/docker/Dockerfile \
   -t ord-postgres:empty \
-  .
+  . "$@"
 CONTAINER="$(docker run --rm -d ord-postgres:empty)"
 echo "Waiting 5s for the server to start..."
 sleep 5
