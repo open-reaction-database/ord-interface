@@ -20,7 +20,9 @@ export ORD_POSTGRES_TAG=test
 ./ord_interface/docker/update_image.sh "$@"
 
 # Build the ord-interface image.
+set -x
 docker build -f ord_interface/Dockerfile -t openreactiondatabase/ord-interface . "$@"
+set +x
 
 # Launch the web server.
 cd ord_interface && docker-compose up --detach
