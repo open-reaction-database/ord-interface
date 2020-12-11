@@ -11,28 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for ord_schema.interface.ord_client."""
+"""Tests for ord_interface.ord_client."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
 
-from ord_schema.interface import ord_client
+from ord_interface import ord_client
 
 
 class OrdClientTest(parameterized.TestCase, absltest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.client = ord_client.OrdClient()
+        self.client = ord_client.OrdClient(target='http://localhost:5000')
 
-    @absltest.skip('Temporarily disabled for Reaction schema migration.')
     @parameterized.parameters(
         ('ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c', 264))
     def test_fetch_dataset(self, dataset_id, expected_num_reactions):
         dataset = self.client.fetch_dataset(dataset_id)
         self.assertLen(dataset.reactions, expected_num_reactions)
 
-    @absltest.skip('Temporarily disabled for Reaction schema migration.')
     @parameterized.parameters(
         (['ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c'], [264]))
     def test_fetch_datasets(self, dataset_ids, expected_num_reactions):
@@ -42,7 +40,6 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
         for dataset, expected in zip(datasets, expected_num_reactions):
             self.assertLen(dataset.reactions, expected)
 
-    @absltest.skip('Temporarily disabled for Reaction schema migration.')
     @parameterized.parameters(
         ('ord-f0621fa47ac74fd59f9da027f6d13fc4', 'Jun Li'),
         ('ord-c6fbf2aab30841d198a27068a65a9a98', 'Steven Kearnes'))
@@ -51,7 +48,6 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
         self.assertEqual(reaction.provenance.record_created.person.name,
                          created_by)
 
-    @absltest.skip('Temporarily disabled for Reaction schema migration.')
     @parameterized.parameters(([
         'ord-f0621fa47ac74fd59f9da027f6d13fc4',
         'ord-c6fbf2aab30841d198a27068a65a9a98'
@@ -74,24 +70,24 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
     def test_query_reaction_smarts(self):
         dataset = self.client.query(
             reaction_smarts='FC(F)(F)c1ccc([F,Cl,Br,I])cc1>CS(=O)C>')
-        self.assertLen(dataset.reactions, 862)
+        self.assertLen(dataset.reactions, 21)
 
     def test_query_single_component(self):
         component = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
                                               source='input',
                                               mode='exact')
         dataset = self.client.query(components=[component])
-        self.assertLen(dataset.reactions, 287)
+        self.assertLen(dataset.reactions, 7)
 
     def test_query_multiple_components(self):
         component1 = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
                                                source='input',
                                                mode='exact')
-        component2 = ord_client.ComponentQuery('Cc1cc(C)on1',
+        component2 = ord_client.ComponentQuery('CN(C)C(=NC(C)(C)C)N(C)C',
                                                source='input',
                                                mode='exact')
         dataset = self.client.query(components=[component1, component2])
-        self.assertLen(dataset.reactions, 12)
+        self.assertLen(dataset.reactions, 2)
 
     def test_query_stereochemistry(self):
         # TODO(kearnes): Add a test once we have more chiral stuff.
@@ -102,7 +98,7 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
                                               source='input',
                                               mode='similar')
         dataset = self.client.query(components=[component], similarity=0.6)
-        self.assertLen(dataset.reactions, 575)
+        self.assertLen(dataset.reactions, 14)
 
 
 if __name__ == '__main__':

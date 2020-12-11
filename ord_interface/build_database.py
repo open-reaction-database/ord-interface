@@ -29,7 +29,7 @@ from absl import logging
 import psycopg2
 from psycopg2 import sql
 
-from ord_schema import interface
+import ord_interface
 from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
 
@@ -57,7 +57,7 @@ class Tables:
     def __enter__(self):
         os.makedirs(FLAGS.output, exist_ok=True)
         self._handles = []
-        for table, columns in interface.TABLES.items():
+        for table, columns in ord_interface.TABLES.items():
             handle = open(os.path.join(FLAGS.output, f'{table}.csv'), 'w')
             self._handles.append(handle)
             # NOTE(kearnes): Use QUOTE_MINIMAL so Postgres handles NULL values
@@ -152,22 +152,22 @@ def _outputs_table(reaction, tables):
 
 def create_database():
     """Populates the Postgres database."""
-    db = psycopg2.connect(dbname=interface.POSTGRES_DB,
-                          user=interface.POSTGRES_USER,
-                          password=interface.POSTGRES_PASSWORD,
+    db = psycopg2.connect(dbname=ord_interface.POSTGRES_DB,
+                          user=ord_interface.POSTGRES_USER,
+                          password=ord_interface.POSTGRES_PASSWORD,
                           host='localhost',
-                          port=interface.POSTGRES_PORT)
+                          port=ord_interface.POSTGRES_PORT)
     cursor = db.cursor()
     if FLAGS.overwrite:
         logging.info('Removing existing tables')
-        for table in interface.TABLES:
+        for table in ord_interface.TABLES:
             command = sql.SQL('DROP TABLE IF EXISTS {}')
             cursor.execute(command.format(sql.Identifier(table)))
     cursor.execute(sql.SQL('CREATE EXTENSION IF NOT EXISTS rdkit'))
     cursor.execute(
         sql.SQL('CREATE SCHEMA {}').format(
-            sql.Identifier(interface.RDKIT_SCHEMA)))
-    for table, columns in interface.TABLES.items():
+            sql.Identifier(ord_interface.RDKIT_SCHEMA)))
+    for table, columns in ord_interface.TABLES.items():
         dtypes = []
         for column, dtype in columns.items():
             if table == 'reactions' and column == 'reaction_id':
@@ -221,12 +221,12 @@ def _rdkit_reaction_smiles(cursor, table):
                    reaction_from_smiles(reaction_smiles::cstring) AS r
             FROM {}) tmp
         WHERE r IS NOT NULL""").format(
-            sql.Identifier(interface.RDKIT_SCHEMA, table),
+            sql.Identifier(ord_interface.RDKIT_SCHEMA, table),
             sql.Identifier(table)))
     cursor.execute(
         sql.SQL('CREATE INDEX {} ON {} USING gist(r)').format(
             sql.Identifier(f'{table}_r'),
-            sql.Identifier(interface.RDKIT_SCHEMA, table)))
+            sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
 
 
 def _rdkit_smiles(cursor, table):
@@ -252,16 +252,16 @@ def _rdkit_smiles(cursor, table):
                    mol_from_smiles(smiles::cstring) AS m
             FROM {}) tmp
         WHERE m IS NOT NULL""").format(
-            sql.Identifier(interface.RDKIT_SCHEMA, table),
+            sql.Identifier(ord_interface.RDKIT_SCHEMA, table),
             sql.Identifier(table)))
     cursor.execute(
         sql.SQL('CREATE INDEX {} ON {} USING gist(m)').format(
             sql.Identifier(f'{table}_m'),
-            sql.Identifier(interface.RDKIT_SCHEMA, table)))
+            sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
     cursor.execute(
         sql.SQL('CREATE INDEX {} ON {} USING gist(mfp2)').format(
             sql.Identifier(f'{table}_mfp2'),
-            sql.Identifier(interface.RDKIT_SCHEMA, table)))
+            sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
 
 
 def main(argv):
@@ -279,8 +279,7 @@ def main(argv):
                 # Downsample ord-data Datasets for testing.
                 logging.info('TESTING: Downsampling from %d->%d reactions',
                              len(dataset.reactions), _TEST_DATASET_SIZE)
-                random.seed(20201203)  # Tests should be deterministic.
-                reactions = random.sample(dataset.reactions, _TEST_DATASET_SIZE)
+                reactions = dataset.reactions[:_TEST_DATASET_SIZE]
             else:
                 reactions = dataset.reactions
             for reaction in reactions:

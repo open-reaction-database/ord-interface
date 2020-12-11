@@ -39,7 +39,7 @@ import os
 
 import flask
 
-from ord_schema.interface import query
+from ord_interface import query
 from ord_schema.visualization import generate_text
 
 app = flask.Flask(__name__, template_folder='.')

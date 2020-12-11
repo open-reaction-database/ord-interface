@@ -15,7 +15,7 @@
 # To build the interface using the current state of ord-schema:
 # $ cd path/to/ord-schema
 # $ docker build \
-#     --file=ord_schema/interface/Dockerfile \
+#     --file=ord_interface/Dockerfile \
 #     -t openreactiondatabase/ord-interface \
 #     .
 #

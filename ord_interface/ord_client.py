@@ -17,9 +17,9 @@ import urllib.parse
 
 import requests
 
+from ord_interface import query
 from ord_schema import message_helpers
 from ord_schema import validations
-from ord_schema.interface import query
 from ord_schema.proto import dataset_pb2
 
 TARGET = 'https://client.open-reaction-database.org'
@@ -150,7 +150,14 @@ class OrdClient:
 
         Returns:
             A Dataset containing the matched reactions.
+
+        Raises:
+            ValueError: A reaction ID is invalid.
         """
+        if reaction_ids:
+            for reaction_id in reaction_ids:
+                if not validations.is_valid_reaction_id(reaction_id):
+                    raise ValueError(f'Invalid reaction ID: {reaction_id}')
         if components is not None:
             component_params = [
                 component.get_params() for component in components
