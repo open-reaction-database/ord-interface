@@ -39,8 +39,9 @@ import os
 
 import flask
 
-from ord_interface import query
 from ord_schema.visualization import generate_text
+
+from ord_interface import query
 
 app = flask.Flask(__name__, template_folder='.')
 app.config['ORD_POSTGRES_HOST'] = os.getenv('ORD_POSTGRES_HOST', 'localhost')

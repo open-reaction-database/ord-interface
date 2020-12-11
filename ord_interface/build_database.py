@@ -20,7 +20,6 @@ files and load them into PostgreSQL with the COPY command.
 import csv
 import glob
 import os
-import random
 import sys
 
 from absl import app
@@ -29,9 +28,10 @@ from absl import logging
 import psycopg2
 from psycopg2 import sql
 
-import ord_interface
 from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
+
+import ord_interface
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('input', None, 'Input pattern (glob).')

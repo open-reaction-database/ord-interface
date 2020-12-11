@@ -17,10 +17,11 @@ import urllib.parse
 
 import requests
 
-from ord_interface import query
 from ord_schema import message_helpers
 from ord_schema import validations
 from ord_schema.proto import dataset_pb2
+
+from ord_interface import query
 
 TARGET = 'https://client.open-reaction-database.org'
 ORD_DATA_URL = 'https://github.com/Open-Reaction-Database/ord-data/raw/main/'
