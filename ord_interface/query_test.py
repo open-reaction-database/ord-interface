@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for ord_schema.interface.query."""
+"""Tests for ord_interface.query."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
 import numpy as np
 import psycopg2
 
-from ord_schema import interface
-
+import ord_interface
 from ord_interface import query
 
 
@@ -28,12 +27,12 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.postgres = query.OrdPostgres(
-            dbname=interface.POSTGRES_DB,
-            user=interface.POSTGRES_USER,
-            password=interface.POSTGRES_PASSWORD,
+            dbname=ord_interface.POSTGRES_DB,
+            user=ord_interface.POSTGRES_USER,
+            password=ord_interface.POSTGRES_PASSWORD,
             # Matches the service name in docker-compose.yml.
             host='ord-postgres',
-            port=interface.POSTGRES_PORT)
+            port=ord_interface.POSTGRES_PORT)
 
     def test_reaction_id_query(self):
         reaction_ids = [

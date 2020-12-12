@@ -34,6 +34,7 @@ status=0
 
 CONTAINER="$(docker ps -q --filter name=web)"
 docker exec "${CONTAINER}" python ord_interface/build_database_test.py || status=1
+docker exec "${CONTAINER}" python ord_interface/ord_client_test.py || status=1
 docker exec "${CONTAINER}" python ord_interface/query_test.py || status=1
 
 # Shut down the containers.

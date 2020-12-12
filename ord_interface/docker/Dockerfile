@@ -14,7 +14,7 @@
 
 # To build an updated ord-postgres image containing the latest data:
 # $ cd path/to/ord-schema
-# $ ./ord_schema/interface/docker/update_image.sh
+# $ ./docker/update_image.sh
 #
 # To push the built image to Docker Hub:
 # docker push openreactiondatabase/ord-postgres
@@ -63,8 +63,10 @@ RUN git clone "https://github.com/Open-Reaction-Database/${ORD_REPO}.git"
 
 # Copy local state.
 WORKDIR "${ORD_ROOT}/ord-interface"
+COPY setup.py .
 COPY ord_interface/ ord_interface/
 COPY ord_interface/docker/postgres.conf /etc/postgresql/postgresql.conf
+RUN python setup.py install
 
 # NOTE(kearnes): Use non-standard PGDATA so the database persists; see
 # https://nickjanetakis.com/blog/docker-tip-79-saving-a-postgres-database-in-a-docker-image.
