@@ -45,7 +45,7 @@
         grid-row: controls;
         grid-row-gap: 18px;
         grid-column-gap: 18px;
-        grid-template-columns: [text] 220px [source] auto [mode] auto;
+        grid-template-columns: [text] 220px [source] auto [mode] auto [remove] auto;
         align-items: center;
       }
       #reactions {
@@ -130,12 +130,13 @@
         <option value="input">input</option>
         <option value="output">output</option>
       </select>
-      <select class="component" style="grid-column: mode">
+      <select class="mode" style="grid-column: mode">
         <option value="exact">exact</option>
         <option value="similar">similar</option>
         <option value="substructure">substructure</option>
         <option value="smarts">smarts</option>
       </select>
+      <a href="#" class="remove">remove</a>
     </div>
 
     <script>
@@ -159,6 +160,14 @@
       // Add a component field, for "+ component" button (and initialization).
       function addComponent() {
         const component = $('#component_template').clone();
+        // Hook up the "remove" button.
+        $('.remove', component).click(function() {
+            $(this).prevAll('.component').first().remove();
+            $(this).prevAll('.source').first().remove();
+            $(this).prevAll('.mode').first().remove();
+            $(this).remove();
+        });
+        // Insert the component into the form.
         const anchor = $('#add_component');
         component.children().each((index, node) => {
           anchor.before(node);
