@@ -45,7 +45,7 @@
         grid-row: controls;
         grid-row-gap: 18px;
         grid-column-gap: 18px;
-        grid-template-columns: [labels] 120px [text] 220px [source] auto [mode] auto;
+        grid-template-columns: [text] 220px [source] auto [mode] auto;
         align-items: center;
       }
       #reactions {
@@ -53,24 +53,12 @@
         grid-row: controls;
         grid-row-gap: 18px;
         grid-column-gap: 18px;
-        grid-template-columns: [labels] 120px [text] 220px;
+        grid-template-columns: [labels] auto [text] 220px;
         align-items: center;
       }
       .label {
         grid-column: labels;
         text-align: right;
-      }
-      .edittext, #similarity {
-        grid-column: text;
-      }
-      select {
-        grid-column: match;
-      }
-      #add_component {
-        grid-column: add;
-      }
-      #similarity {
-        grid-column: text;
       }
       #go {
         grid-row: go;
@@ -82,13 +70,6 @@
       #results {
         grid-column: results;
         font-family: monospace;
-      }
-      .edittext {
-        border: solid #c0c0c0;
-        border-width: 1px;
-        margin: 2px;
-        padding: 2px;
-        width: 200px;
       }
       .tab {
         padding: 2px 4px;
@@ -116,20 +97,19 @@
 
         <a href="#" id="add_component" style="grid-column: text">+ component</a>
 
-        <span class="label">use stereochemistry</span>
+        <span style="grid-column: text; text-align: right">use stereochemistry</span>
         <input type="checkbox" id="stereo">
 
-        <span class="label">similarity</span>
-        <div id="similarity"></div>
-        <span id="similarityText"></span>
+        <span style="grid-column: text; text-align: right">similarity threshold</span>
+        <input id="similarity" type="text" style="width: 60px">
       </div>
 
       <div id="reactions" style="display: none;">
         <span class="label">reaction IDs</span>
-        <div id="reaction_ids" class="edittext"></div>
+        <textarea id="reaction_ids"></textarea>
 
         <span class="label">reaction SMARTS</span>
-        <div id="reaction_smarts" class="edittext"></div>
+        <input id="reaction_smarts" type="text">
       </div>
 
       <div id="go">
@@ -145,7 +125,7 @@
     </div>
 
     <div id="component_template" style="display: none">
-      <div class="component edittext"></div>
+      <input style="grid-column: text" class="component" type="text">
       <select class="source" style="grid-column: source">
         <option value="input">input</option>
         <option value="output">output</option>
@@ -207,14 +187,14 @@
         return $('#stereo').is(":checked")
       }
 
-      // Get the current value of the similarity slider.
+      // Get the current value of the similarity threshold.
       function getSimilarity() {
-        return $('#similarity').slider('option', 'value');
+        return $('#similarity').text();
       }
 
-      // Set the value of the similarity slider.
+      // Set the value of the similarity threshold.
       function setSimilarity(similarity) {
-        $('#similarity').slider({min: 0, max: 100, value: 100 * similarity});
+        $('#similarity').text(similarity);
       }
 
       // Read back the user inputs and build a query URL.
@@ -322,13 +302,6 @@
       $('#go').click(() => {
         const path = exportQuery();
         window.location.href = path;
-      });
-
-      // Initialize the similarity slider.
-      similarity = $('#similarity').slider({min: 0, max: 100});
-      similarity.on('slidechange', () => {
-        const value = similarity.slider('option', 'value');
-        $('#similarityText').text((value / 100).toFixed(2));
       });
 
       // Hook up the tabs.
