@@ -45,7 +45,7 @@
         grid-row: controls;
         grid-row-gap: 18px;
         grid-column-gap: 18px;
-        grid-template-columns: [labels] 120px [text] 220px [match] 96px [add] 100px;
+        grid-template-columns: [labels] 120px [text] 220px [source] auto [mode] auto;
         align-items: center;
       }
       #reactions {
@@ -110,9 +110,11 @@
       </div>
 
       <div id="reagents">
-        <a href="#" id="add_component">+ component</a>
+        <span style="grid-column: text">SMILES/SMARTS</span>
+        <span>Source</span>
+        <span>Match mode</span>
 
-        <div></div> <!-- Blank grid cell to the right of the output. -->
+        <a href="#" id="add_component" style="grid-column: text">+ component</a>
 
         <span class="label">use stereochemistry</span>
         <input type="checkbox" id="stereo">
@@ -142,14 +144,13 @@
       <table id="results_table"></table>
     </div>
 
-    <div id="component_template" style="display: none;">
-      <span class="label">Component</span>
+    <div id="component_template" style="display: none">
       <div class="component edittext"></div>
-      <select class="source">
+      <select class="source" style="grid-column: source">
         <option value="input">input</option>
         <option value="output">output</option>
       </select>
-      <select class="component">
+      <select class="component" style="grid-column: mode">
         <option value="exact">exact</option>
         <option value="similar">similar</option>
         <option value="substructure">substructure</option>
