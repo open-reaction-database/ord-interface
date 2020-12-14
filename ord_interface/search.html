@@ -45,7 +45,7 @@
         grid-row: controls;
         grid-row-gap: 18px;
         grid-column-gap: 18px;
-        grid-template-columns: [labels] 120px [text] 220px [match] 96px [add] 100px;
+        grid-template-columns: [text] 220px [source] auto [mode] auto [remove] auto;
         align-items: center;
       }
       #reactions {
@@ -53,24 +53,12 @@
         grid-row: controls;
         grid-row-gap: 18px;
         grid-column-gap: 18px;
-        grid-template-columns: [labels] 120px [text] 220px;
+        grid-template-columns: [labels] auto [text] 350px;
         align-items: center;
       }
       .label {
         grid-column: labels;
         text-align: right;
-      }
-      .edittext, #similarity {
-        grid-column: text;
-      }
-      select {
-        grid-column: match;
-      }
-      #add_component {
-        grid-column: add;
-      }
-      #similarity {
-        grid-column: text;
       }
       #go {
         grid-row: go;
@@ -82,13 +70,6 @@
       #results {
         grid-column: results;
         font-family: monospace;
-      }
-      .edittext {
-        border: solid #c0c0c0;
-        border-width: 1px;
-        margin: 2px;
-        padding: 2px;
-        width: 200px;
       }
       .tab {
         padding: 2px 4px;
@@ -110,24 +91,25 @@
       </div>
 
       <div id="reagents">
-        <a href="#" id="add_component">+ component</a>
+        <span style="grid-column: text">SMILES/SMARTS</span>
+        <span>Source</span>
+        <span>Match mode</span>
 
-        <div></div> <!-- Blank grid cell to the right of the output. -->
+        <a href="#" id="add_component" style="grid-column: text">+ component</a>
 
-        <span class="label">use stereochemistry</span>
+        <span style="grid-column: text; text-align: right">use stereochemistry</span>
         <input type="checkbox" id="stereo">
 
-        <span class="label">similarity</span>
-        <div id="similarity"></div>
-        <span id="similarityText"></span>
+        <span style="grid-column: text; text-align: right">similarity threshold</span>
+        <input id="similarity" type="text" value="0.5" style="width: 60px">
       </div>
 
       <div id="reactions" style="display: none;">
         <span class="label">reaction IDs</span>
-        <div id="reaction_ids" class="edittext"></div>
+        <textarea id="reaction_ids"></textarea>
 
         <span class="label">reaction SMARTS</span>
-        <div id="reaction_smarts" class="edittext"></div>
+        <input id="reaction_smarts" type="text">
       </div>
 
       <div id="go">
@@ -142,19 +124,19 @@
       <table id="results_table"></table>
     </div>
 
-    <div id="component_template" style="display: none;">
-      <span class="label">Component</span>
-      <div class="component edittext"></div>
-      <select class="source">
+    <div id="component_template" style="display: none">
+      <input style="grid-column: text" class="component" type="text">
+      <select class="source" style="grid-column: source">
         <option value="input">input</option>
         <option value="output">output</option>
       </select>
-      <select class="component">
+      <select class="mode" style="grid-column: mode">
         <option value="exact">exact</option>
         <option value="similar">similar</option>
         <option value="substructure">substructure</option>
         <option value="smarts">smarts</option>
       </select>
+      <a href="#" class="remove">remove</a>
     </div>
 
     <script>
@@ -178,17 +160,20 @@
       // Add a component field, for "+ component" button (and initialization).
       function addComponent() {
         const component = $('#component_template').clone();
+        // Hook up the "remove" button.
+        $('.remove', component).click(function() {
+            $(this).prevAll('.component').first().remove();
+            $(this).prevAll('.source').first().remove();
+            $(this).prevAll('.mode').first().remove();
+            $(this).remove();
+        });
+        // Insert the component into the form.
         const anchor = $('#add_component');
         component.children().each((index, node) => {
           anchor.before(node);
         });
         // Return value is the text field <div/> of the new component.
-        return anchor.prev().prev().prev();
-      }
-
-      // Get the text from an .edittext div.
-      function getText(node) {
-        return node.text().trim();
+        return anchor.prevAll('.component').first();
       }
 
       // Get the component source (input/output).
@@ -206,14 +191,14 @@
         return $('#stereo').is(":checked")
       }
 
-      // Get the current value of the similarity slider.
+      // Get the current value of the similarity threshold.
       function getSimilarity() {
-        return $('#similarity').slider('option', 'value');
+        return $('#similarity').val();
       }
 
-      // Set the value of the similarity slider.
+      // Set the value of the similarity threshold.
       function setSimilarity(similarity) {
-        $('#similarity').slider({min: 0, max: 100, value: 100 * similarity});
+        $('#similarity').val(similarity);
       }
 
       // Read back the user inputs and build a query URL.
@@ -222,14 +207,14 @@
         let hasReagent = false;
 
         // Components.
-        const components = $('.component.edittext');
+        const components = $('.component');
         components.each((index, node) => {
           const component = $(node);
           if (component.is(':hidden')) {
             // The template.
             return;
           }
-          const componentText = getText(component);
+          const componentText = component.val().trim();
           if (componentText) {
             const sourceTable = getComponentSource(component);
             const matchMode = getMatchMode(component);
@@ -242,11 +227,11 @@
           const useStereochemistry = getUseStereochemistry();
           path += 'use_stereochemistry=' + encodeURIComponent(useStereochemistry) + '&';
           const similarity = getSimilarity();
-          path += 'similarity=' + encodeURIComponent(similarity / 100) + '&';
+          path += 'similarity=' + encodeURIComponent(similarity) + '&';
         }
         // Reaction IDs.
         const reactionsNode = $('#reaction_ids');
-        const reactionIdsText = reactionsNode.html();
+        const reactionIdsText = reactionsNode.val();
         const matches = reactionIdsText.matchAll(/(ord-[0-9a-f]+)/g);
         const reactionIds = [];
         for (const match of matches) {
@@ -257,7 +242,7 @@
         }
         // Reaction SMARTS.
         const reactionSmarts = $('#reaction_smarts');
-        const reactionSmartsText = getText(reactionSmarts);
+        const reactionSmartsText = reactionSmarts.val().trim();
         if (reactionSmartsText) {
           path += 'reaction_smarts=' + encodeURIComponent(reactionSmartsText) + '&';
         }
@@ -275,10 +260,10 @@
         // Components.
         if ('components' in query && (query.components.length > 0)) {
           query.components.forEach(component => {
-            const edittext = addComponent();
-            edittext.text(component.pattern);
-            edittext.next().val(component.source);
-            edittext.next().next().val(component.mode);
+            const node = addComponent();
+            node.val(component.pattern);
+            node.nextAll('.source').first().val(component.source);
+            node.nextAll('.mode').first().val(component.mode);
           });
         } else {
           // Make sure there is at least one component for convenience.
@@ -297,20 +282,17 @@
         // Reaction ID.
         if ('reactionIds' in query) {
           const reactionIds = $('#reaction_ids')
-          reactionIds.text(query.reactionIds.join(','));
+          reactionIds.val(query.reactionIds.join('\n'));
         }
 
         // Reaction SMILES.
         if ('reactionSmarts' in query) {
           const reactionSmarts = $('#reaction_smarts');
-          reactionSmarts.text(query.reactionSmarts);
+          reactionSmarts.val(query.reactionSmarts);
         }
 
         return query;
       }
-
-      // Make the .editext divs actually editable.
-      $('.edittext').attr('contentEditable', 'true');
 
       // Hook up the "+ component" button.
       $('#add_component').click(() => {
@@ -321,13 +303,6 @@
       $('#go').click(() => {
         const path = exportQuery();
         window.location.href = path;
-      });
-
-      // Initialize the similarity slider.
-      similarity = $('#similarity').slider({min: 0, max: 100});
-      similarity.on('slidechange', () => {
-        const value = similarity.slider('option', 'value');
-        $('#similarityText').text((value / 100).toFixed(2));
       });
 
       // Hook up the tabs.
