@@ -17,7 +17,7 @@ name: Lint
 on: [pull_request, push]
 
 env:
-  ORD_SCHEMA_TAG: v0.1.1
+  ORD_SCHEMA_TAG: v0.2.3
 
 jobs:
   check_licenses:
@@ -56,12 +56,11 @@ jobs:
         run: |
           cd "${GITHUB_WORKSPACE}/ord-schema"
           pip install -r requirements.txt
-          # Test deps are required to check imports with pylint.
-          pip install -r test_requirements.txt
           conda install -c rdkit rdkit
           python setup.py install
       - name: pylint
         run: |
           cd "${GITHUB_WORKSPACE}/ord-interface"
+          pip install -r requirements.txt
           pip install flask pylint
           pylint ord_interface *.py

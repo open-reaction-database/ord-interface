@@ -48,7 +48,7 @@ RUN conda install -c rdkit \
 WORKDIR "${ORD_ROOT}"
 RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
 WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.1.1
+ARG ORD_SCHEMA_TAG=v0.2.3
 RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
@@ -63,9 +63,10 @@ RUN git clone "https://github.com/Open-Reaction-Database/${ORD_REPO}.git"
 
 # Copy local state.
 WORKDIR "${ORD_ROOT}/ord-interface"
-COPY setup.py .
+COPY requirements.txt setup.py ./
 COPY ord_interface/ ord_interface/
 COPY ord_interface/docker/postgres.conf /etc/postgresql/postgresql.conf
+RUN pip install -r requirements.txt
 RUN python setup.py install
 
 # NOTE(kearnes): Use non-standard PGDATA so the database persists; see

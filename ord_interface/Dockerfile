@@ -42,15 +42,16 @@ RUN conda install -c rdkit \
 WORKDIR /usr/src/app
 RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
 WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.1.1
+ARG ORD_SCHEMA_TAG=v0.2.3
 RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
 # COPY the local state.
 WORKDIR ../ord-interface
-COPY setup.py .
+COPY requirements.txt setup.py ./
 COPY ord_interface/ ord_interface/
+RUN pip install -r requirements.txt
 RUN python setup.py install
 
 # Build and launch the interface.
