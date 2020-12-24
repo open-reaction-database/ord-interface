@@ -49,8 +49,9 @@ RUN python setup.py install
 
 # COPY the local state.
 WORKDIR ../ord-interface
-COPY setup.py .
+COPY requirements.txt setup.py .
 COPY ord_interface/ ord_interface/
+RUN pip install -r requirements.txt
 RUN python setup.py install
 
 # Build and launch the interface.
