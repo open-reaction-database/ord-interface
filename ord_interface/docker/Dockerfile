@@ -63,7 +63,7 @@ RUN git clone "https://github.com/Open-Reaction-Database/${ORD_REPO}.git"
 
 # Copy local state.
 WORKDIR "${ORD_ROOT}/ord-interface"
-COPY requirements.txt setup.py .
+COPY requirements.txt setup.py ./
 COPY ord_interface/ ord_interface/
 COPY ord_interface/docker/postgres.conf /etc/postgresql/postgresql.conf
 RUN pip install -r requirements.txt
