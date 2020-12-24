@@ -14,7 +14,6 @@
 """Tests for ord_interface.build_database."""
 
 import os
-import tempfile
 
 from absl import flags
 from absl.testing import absltest
@@ -32,7 +31,7 @@ class BuildDatabaseTest(absltest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.test_subdirectory = tempfile.mkdtemp(dir=flags.FLAGS.test_tmpdir)
+        self.test_subdirectory = self.create_tempdir()
         reaction = reaction_pb2.Reaction()
         reaction.reaction_id = 'test'
         reaction.identifiers.add(value='reaction', type='REACTION_SMILES')
@@ -43,8 +42,8 @@ class BuildDatabaseTest(absltest.TestCase):
         input2.components.add().identifiers.add(value='input2b', type='SMILES')
         outcome = reaction.outcomes.add()
         product = outcome.products.add()
-        product.compound_yield.value = 2.5
-        product.compound.identifiers.add(value='product', type='SMILES')
+        product.measurements.add(type='YIELD', percentage={'value': 2.5})
+        product.identifiers.add(value='product', type='SMILES')
         self.dataset = dataset_pb2.Dataset(reactions=[reaction])
         message_helpers.write_message(
             self.dataset, os.path.join(self.test_subdirectory, 'test.pbtxt'))
