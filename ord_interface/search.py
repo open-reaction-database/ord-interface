@@ -61,6 +61,9 @@ def show_root():
     except query.QueryException as exception:
         dataset = None
         error = f'(Error) {exception}'
+    if not dataset.reaction_ids:
+        dataset = None
+        error = 'query did not match any reactions'
     return flask.render_template('search.html',
                                  dataset=dataset,
                                  error=error,
