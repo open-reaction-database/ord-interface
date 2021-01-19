@@ -132,18 +132,21 @@ class OrdClient:
         assert len(reactions) == 1
         return reactions[0]
 
-    def query(self,
-              reaction_ids=None,
-              reaction_smarts=None,
-              components=None,
-              use_stereochemistry=None,
-              similarity=None):
+    def query(  # pylint: disable=too-many-arguments
+            self,
+            reaction_ids=None,
+            reaction_smarts=None,
+            dois=None,
+            components=None,
+            use_stereochemistry=None,
+            similarity=None):
         """Executes a query against the Open Reaction Database.
 
         Args:
             reaction_ids: List of reaction IDs to fetch. This is provided for
                 completeness, but fetch_reaction(s) should be preferred.
             reaction_smarts: Reaction SMARTS pattern.
+            dois: List of DOIs to match.
             components: List of ComponentQuery instances.
             use_stereochemistry: Boolean whether to use stereochemistry when
                 matching.
@@ -168,6 +171,7 @@ class OrdClient:
         params = {
             'reaction_ids': ','.join(reaction_ids) if reaction_ids else None,
             'reaction_smarts': reaction_smarts,
+            'dois': ','.join(dois) if dois else None,
             'component': component_params,
             'use_stereochemistry': use_stereochemistry,
             'similarity': similarity,

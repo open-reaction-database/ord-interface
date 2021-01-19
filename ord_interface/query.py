@@ -44,9 +44,11 @@ import abc
 import binascii
 import enum
 import json
+from typing import Dict, Iterable, Optional
 
 from absl import logging
 import psycopg2
+import psycopg2.extensions
 from psycopg2 import sql
 from rdkit import Chem
 
@@ -161,6 +163,51 @@ class ReactionSmartsQuery(ReactionQueryBase):
             WHERE rdk.reactions.r@>reaction_from_smarts(%s)""")
         ]
         args = [self._reaction_smarts]
+        if limit:
+            components.append(sql.SQL(' LIMIT %s'))
+            args.append(limit)
+        query = sql.Composed(components).join('')
+        logging.info('Running SQL command:%s',
+                     cursor.mogrify(query, args).decode())
+        cursor.execute(query, args)
+        return fetch_results(cursor)
+
+
+class DoiQuery(ReactionQueryBase):
+    """Looks up reactions by DOI."""
+
+    def __init__(self, dois: Iterable[str]):
+        """Initializes the query.
+
+        Args:
+            dois: List of DOIs.
+        """
+        self._dois = dois
+
+    def json(self) -> str:
+        """Returns a JSON representation of the query."""
+        return json.dumps({'dois': self._dois})
+
+    def run(self,
+            cursor: psycopg2.extensions.cursor,
+            limit: Optional[int] = None) -> Dict[str, reaction_pb2.Reaction]:
+        """Runs the query.
+
+        Args:
+            cursor: psycopg2 cursor.
+            limit: Integer maximum number of matches. If None (the default), no
+                limit is set.
+
+        Returns:
+            Dict mapping reaction IDs to serialized Reaction protos.
+        """
+        components = [
+            sql.SQL("""
+            SELECT DISTINCT reaction_id, serialized 
+            FROM reactions 
+            WHERE doi = ANY (%s)""")
+        ]
+        args = [self._dois]
         if limit:
             components.append(sql.SQL(' LIMIT %s'))
             args.append(limit)

@@ -124,6 +124,7 @@ def build_query():
     """
     reaction_ids = flask.request.args.get('reaction_ids')
     reaction_smarts = flask.request.args.get('reaction_smarts')
+    dois = flask.request.args.get('dois')
     components = flask.request.args.getlist('component')
     use_stereochemistry = flask.request.args.get('use_stereochemistry')
     similarity = flask.request.args.get('similarity')
@@ -132,6 +133,8 @@ def build_query():
         command = query.ReactionIdQuery(reaction_ids.split(','))
     elif reaction_smarts is not None:
         command = query.ReactionSmartsQuery(reaction_smarts)
+    elif dois is not None:
+        command = query.DoiQuery(dois.split(','))
     else:
         predicates = []
         for component in components:

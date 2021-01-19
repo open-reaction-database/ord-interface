@@ -72,6 +72,13 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
             reaction_smarts='FC(F)(F)c1ccc([F,Cl,Br,I])cc1>CS(=O)C>')
         self.assertLen(dataset.reactions, 21)
 
+    def test_query_dois(self):
+        doi = '10.1021/acscatal.0c02247'
+        dataset = self.client.query(dois=[doi])
+        self.assertLen(dataset.reactions, 100)  # Downsampled size.
+        for reaction in dataset.reactions:
+            self.assertEqual(reaction.provenance.doi, doi)
+
     def test_query_single_component(self):
         component = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
                                               source='input',
