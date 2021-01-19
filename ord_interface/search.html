@@ -30,7 +30,7 @@
       #form {
         grid-column: form;
         display: grid;
-        grid-template-rows: [tabs] 60px [controls] auto [go] 40px [spacer] 1fr;
+        grid-template-rows: [tabs] 60px [controls] auto [go] 40px [spacer] 40px;
         justify-content: center;
       }
       #tabs {
@@ -80,6 +80,13 @@
       .tab:hover {
         background-color: lightblue;
       }
+      #error {
+        grid-row: spacer;
+        color: red;
+        font-style: italic;
+        text-align: center;
+        padding-top: 10px;
+      }
     </style>
   </head>
   <body>
@@ -119,7 +126,11 @@
         <button>go</button>
       </div>
 
-      <div id="spacer"></div>
+      {% if error %}
+        <div id="error">{{ error }}</div>
+      {% else %}
+        <div id="spacer"></div>
+      {% endif %}
 
     </div>
 
@@ -337,9 +348,11 @@
       }
 
       const resultsData = [
-          {% for reaction_id in reaction_ids -%}
-            {"Reaction ID": "{{ reaction_id }}", "Summary": ""},
-          {% endfor %}
+          {% if dataset -%}
+            {% for reaction_id in dataset.reaction_ids -%}
+              {"Reaction ID": "{{ reaction_id }}", "Summary": ""},
+            {% endfor %}
+          {% endif %}
       ];
 
       $( document ).ready(function() {
