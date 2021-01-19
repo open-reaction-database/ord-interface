@@ -43,7 +43,9 @@ class BuildDatabaseTest(absltest.TestCase):
         product = outcome.products.add()
         product.measurements.add(type='YIELD', percentage={'value': 2.5})
         product.identifiers.add(value='product', type='SMILES')
-        self.dataset = dataset_pb2.Dataset(reactions=[reaction])
+        reaction.provenance.doi = '10.0000/test.foo'
+        self.dataset = dataset_pb2.Dataset(dataset_id='test_dataset',
+                                           reactions=[reaction])
         message_helpers.write_message(
             self.dataset, os.path.join(self.test_subdirectory, 'test.pbtxt'))
 
@@ -66,8 +68,11 @@ class BuildDatabaseTest(absltest.TestCase):
             pd.DataFrame({
                 'reaction_id': ['test'],
                 'reaction_smiles': ['reaction'],
+                'dataset_id': ['test_dataset'],
+                'doi': ['10.0000/test.foo'],
                 'deserialized': [self.dataset.reactions[0]],
-            }))
+            }),
+            check_like=True)
         with open(os.path.join(output_dir, 'inputs.csv')) as f:
             df = pd.read_csv(f)
         pd.testing.assert_frame_equal(

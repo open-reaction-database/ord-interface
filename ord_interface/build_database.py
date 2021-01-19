@@ -20,6 +20,7 @@ files and load them into PostgreSQL with the COPY command.
 import csv
 import glob
 import os
+import re
 import sys
 
 from absl import app
@@ -30,6 +31,7 @@ from psycopg2 import sql
 
 from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
+from ord_schema.proto import reaction_pb2
 
 import ord_interface
 
@@ -75,26 +77,31 @@ class Tables:
             handle.close()
 
 
-def process_reaction(reaction, tables):
+def process_reaction(reaction: reaction_pb2.Reaction, tables: Tables,
+                     dataset_id: str):
     """Adds rows to database tables.
 
     Args:
         reaction: Reaction proto.
         tables: Tables instance.
+        dataset_id: Dataset ID.
     """
-    _reactions_table(reaction, tables)
+    _reactions_table(reaction, tables, dataset_id=dataset_id)
     _inputs_table(reaction, tables)
     _outputs_table(reaction, tables)
 
 
-def _reactions_table(reaction, tables):
+def _reactions_table(reaction: reaction_pb2.Reaction, tables: Tables,
+                     dataset_id: str):
     """Adds rows to the 'reactions' table.
 
     Args:
         reaction: Reaction proto.
         tables: Tables instance.
+        dataset_id: Dataset ID.
     """
     values = {
+        'dataset_id': dataset_id,
         'reaction_id': reaction.reaction_id,
         'serialized': reaction.SerializeToString().hex()
     }
@@ -103,6 +110,8 @@ def _reactions_table(reaction, tables):
             reaction)
     except ValueError:
         pass
+    if reaction.provenance.doi:
+        values['doi'] = reaction.provenance.doi
     tables.reactions.writerow(values)
 
 
@@ -283,7 +292,9 @@ def main(argv):
             else:
                 reactions = dataset.reactions
             for reaction in reactions:
-                process_reaction(reaction, tables)
+                process_reaction(reaction,
+                                 tables,
+                                 dataset_id=dataset.dataset_id)
     if FLAGS.database:
         logging.info('Creating Postgres database')
         create_database()

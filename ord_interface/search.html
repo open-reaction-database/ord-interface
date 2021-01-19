@@ -110,6 +110,9 @@
 
         <span class="label">reaction SMARTS</span>
         <input id="reaction_smarts" type="text">
+
+        <span class="label">DOIs</span>
+        <textarea id="dois"></textarea>
       </div>
 
       <div id="go">
@@ -149,7 +152,7 @@
         $('#reagentsTab').css('background-color', 'lightblue');
       }
 
-      // Reaction IDs, reaction SMILES.
+      // Reaction IDs, reaction SMILES, DOIs.
       function showReactionsTab() {
         $('#reactions').show();
         $('#reagents').hide();
@@ -232,7 +235,7 @@
         // Reaction IDs.
         const reactionsNode = $('#reaction_ids');
         const reactionIdsText = reactionsNode.val();
-        const matches = reactionIdsText.matchAll(/(ord-[0-9a-f]+)/g);
+        const matches = reactionIdsText.matchAll(/ord-[0-9a-f]+/g);
         const reactionIds = [];
         for (const match of matches) {
           reactionIds.push(match[0]);
@@ -248,6 +251,17 @@
         }
         if (path.slice(-1) == '&') {
           path = path.slice(0, -1);
+        }
+        // DOIs.
+        const doiNode = $('#dois');
+        const doiText = doiNode.val();
+        const doiMatches = doiText.matchAll(/10\.[\d.]+\/[a-zA-Z\d.]+/g);
+        const dois = [];
+        for (const match of doiMatches) {
+          dois.push(match[0]);
+        }
+        if (dois.length > 0) {
+          path += 'dois=' + encodeURIComponent(dois.join(',')) + '&';
         }
         return path;
       }

@@ -28,6 +28,8 @@ TABLES = {
         collections.OrderedDict([
             ('reaction_id', 'text'),
             ('reaction_smiles', 'text'),
+            ('doi', 'text'),
+            ('dataset_id', 'text'),
             ('serialized', 'bytea'),
         ]),
     'inputs':

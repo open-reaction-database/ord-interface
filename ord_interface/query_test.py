@@ -35,9 +35,7 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
             port=ord_interface.POSTGRES_PORT)
 
     def test_reaction_id_query(self):
-        reaction_ids = [
-            'ord-e49ed67da61e4cddabd3c84a72fed227',
-        ]
+        reaction_ids = ['ord-e49ed67da61e4cddabd3c84a72fed227']
         command = query.ReactionIdQuery(reaction_ids)
         results = self.postgres.run_query(command, limit=10, return_ids=True)
         self.assertCountEqual(results.reaction_ids, reaction_ids)
@@ -47,6 +45,14 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
         command = query.ReactionSmartsQuery(pattern)
         results = self.postgres.run_query(command, limit=10, return_ids=True)
         self.assertLen(results.reaction_ids, 10)
+
+    def test_doi_query(self):
+        dois = ['10.1021/acscatal.0c02247']
+        command = query.DoiQuery(dois)
+        results = self.postgres.run_query(command, limit=10)
+        self.assertLen(results.reactions, 10)
+        for reaction in results.reactions:
+            self.assertIn(reaction.provenance.doi, dois)
 
     def test_substructure_query(self):
         pattern = 'C'
