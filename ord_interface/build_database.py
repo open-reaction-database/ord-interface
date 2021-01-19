@@ -20,7 +20,6 @@ files and load them into PostgreSQL with the COPY command.
 import csv
 import glob
 import os
-import re
 import sys
 
 from absl import app

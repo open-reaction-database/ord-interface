@@ -132,13 +132,14 @@ class OrdClient:
         assert len(reactions) == 1
         return reactions[0]
 
-    def query(self,
-              reaction_ids=None,
-              reaction_smarts=None,
-              dois=None,
-              components=None,
-              use_stereochemistry=None,
-              similarity=None):
+    def query(  # pylint: disable=too-many-arguments
+            self,
+            reaction_ids=None,
+            reaction_smarts=None,
+            dois=None,
+            components=None,
+            use_stereochemistry=None,
+            similarity=None):
         """Executes a query against the Open Reaction Database.
 
         Args:
