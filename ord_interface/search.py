@@ -58,9 +58,9 @@ def show_root():
     if command is None:
         dataset = None
         error = None
-        query = '{}'
+        query_json = '{}'
     else:
-        query = command.json()
+        query_json = command.json()
         try:
             dataset = connect().run_query(command, return_ids=True)
             error = None
@@ -73,7 +73,7 @@ def show_root():
     return flask.render_template('search.html',
                                  dataset=dataset,
                                  error=error,
-                                 query=query)
+                                 query=query_json)
 
 
 @app.route('/id/<reaction_id>')
