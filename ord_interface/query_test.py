@@ -16,7 +16,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 import numpy as np
-import psycopg2
 
 import ord_interface
 from ord_interface import query
@@ -105,8 +104,8 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
             query.ReactionComponentPredicate(pattern, table='inputs', mode=mode)
         ]
         command = query.ReactionComponentQuery(predicates)
-        with self.assertRaisesRegex(psycopg2.errors.DataException,
-                                    'could not create molecule'):
+        with self.assertRaisesRegex(query.QueryException,
+                                    'cannot parse pattern: invalid_smiles'):
             self.postgres.run_query(command)
 
 

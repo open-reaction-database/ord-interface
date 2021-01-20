@@ -44,14 +44,17 @@ import abc
 import binascii
 import enum
 import json
-from typing import Dict, Iterable, Optional
+from typing import Dict, List, Optional
 
 from absl import logging
 import psycopg2
 import psycopg2.extensions
 from psycopg2 import sql
 from rdkit import Chem
+from rdkit.Chem import rdChemReactions
 
+from ord_schema import message_helpers
+from ord_schema import validations
 from ord_schema.proto import dataset_pb2
 from ord_schema.proto import reaction_pb2
 
@@ -77,6 +80,14 @@ class ReactionQueryBase(abc.ABC):
     @abc.abstractmethod
     def json(self):
         """Returns a JSON representation of the query."""
+
+    @abc.abstractmethod
+    def validate(self):
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
 
     @abc.abstractmethod
     def run(self, cursor, limit=None):
@@ -106,6 +117,16 @@ class ReactionIdQuery(ReactionQueryBase):
     def json(self):
         """Returns a JSON representation of the query."""
         return json.dumps({'reactionIds': self._reaction_ids})
+
+    def validate(self):
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        for reaction_id in self._reaction_ids:
+            if not validations.is_valid_reaction_id(reaction_id):
+                raise QueryException(f'invalid reaction ID: {reaction_id}')
 
     def run(self, cursor, limit=None):
         """Runs the query.
@@ -144,6 +165,17 @@ class ReactionSmartsQuery(ReactionQueryBase):
         """Returns a JSON representation of the query."""
         return json.dumps({'reactionSmarts': self._reaction_smarts})
 
+    def validate(self):
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        rxn = rdChemReactions.ReactionFromSmarts(self._reaction_smarts)
+        if not rxn:
+            raise QueryException(
+                f'cannot parse reaction SMARTS: {self._reaction_smarts}')
+
     def run(self, cursor, limit=None):
         """Runs the query.
 
@@ -176,7 +208,7 @@ class ReactionSmartsQuery(ReactionQueryBase):
 class DoiQuery(ReactionQueryBase):
     """Looks up reactions by DOI."""
 
-    def __init__(self, dois: Iterable[str]):
+    def __init__(self, dois: List[str]):
         """Initializes the query.
 
         Args:
@@ -187,6 +219,22 @@ class DoiQuery(ReactionQueryBase):
     def json(self) -> str:
         """Returns a JSON representation of the query."""
         return json.dumps({'dois': self._dois})
+
+    def validate(self):
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        for i, doi in enumerate(self._dois):
+            try:
+                parsed = message_helpers.parse_doi(doi)
+            except ValueError as error:
+                raise QueryException(f'invalid DOI: {doi}') from error
+            if doi != parsed:
+                # Trim the DOI as needed to match the database contents.
+                logging.info(f'Updating DOI: {doi} -> {parsed}')
+                self._dois[i] = parsed
 
     def run(self,
             cursor: psycopg2.extensions.cursor,
@@ -300,6 +348,21 @@ class ReactionComponentQuery(ReactionQueryBase):
             INNER JOIN rdk.outputs USING (reaction_id) """))
         return tables
 
+    def validate(self):
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        for predicate in self._predicates:
+            if predicate.mode == predicate.MatchMode.SMARTS:
+                mol = Chem.MolFromSmarts(predicate.pattern)
+            else:
+                mol = Chem.MolFromSmiles(predicate.pattern)
+            if not mol:
+                raise QueryException(
+                    f'cannot parse pattern: {predicate.pattern}')
+
     def run(self, cursor, limit=None):
         """Runs the query.
 
@@ -375,6 +438,10 @@ class ReactionComponentPredicate:
         self._pattern = pattern
         self._table = table
         self._mode = mode
+
+    @property
+    def pattern(self):
+        return self._pattern
 
     @property
     def table(self):
@@ -456,6 +523,7 @@ class OrdPostgres:
         Returns:
             dataset_pb2.Dataset containing the matched reactions (or IDs).
         """
+        query.validate()
         with self._connection, self.cursor() as cursor:
             reactions = query.run(cursor, limit=limit)
             self._connection.rollback()  # Revert rdkit runtime configuration.
@@ -467,3 +535,7 @@ class OrdPostgres:
                 binascii.unhexlify(serialized.tobytes()))
             unserialized.append(reaction)
         return dataset_pb2.Dataset(reactions=unserialized)
+
+
+class QueryException(Exception):
+    """Exception class for ORD queries."""

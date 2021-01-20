@@ -55,9 +55,18 @@ def show_root():
     populated with the results. The form fields are populated with the params.
     """
     command = build_query()
-    dataset = connect().run_query(command, return_ids=True)
+    try:
+        dataset = connect().run_query(command, return_ids=True)
+        error = None
+    except query.QueryException as exception:
+        dataset = None
+        error = f'(Error) {exception}'
+    if not dataset.reaction_ids:
+        dataset = None
+        error = 'query did not match any reactions'
     return flask.render_template('search.html',
-                                 reaction_ids=dataset.reaction_ids,
+                                 dataset=dataset,
+                                 error=error,
                                  query=command.json())
 
 
@@ -100,8 +109,11 @@ def fetch_reactions():
     """Fetches a list of Reactions by ID."""
     reaction_ids = flask.request.get_json()
     command = query.ReactionIdQuery(reaction_ids)
-    dataset = connect().run_query(command)
-    return flask.make_response(dataset.SerializeToString())
+    try:
+        dataset = connect().run_query(command)
+        return flask.make_response(dataset.SerializeToString())
+    except query.QueryException as error:
+        flask.abort(flask.make_response(str(error), 400))
 
 
 @app.route('/api/query')
@@ -112,8 +124,11 @@ def run_query():
         A serialized Dataset proto containing the matched reactions.
     """
     command = build_query()
-    dataset = connect().run_query(command)
-    return flask.make_response(dataset.SerializeToString())
+    try:
+        dataset = connect().run_query(command)
+        return flask.make_response(dataset.SerializeToString())
+    except query.QueryException as error:
+        flask.abort(flask.make_response(str(error), 400))
 
 
 def build_query():
