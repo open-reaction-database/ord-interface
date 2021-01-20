@@ -279,7 +279,7 @@
 
       // Initialize the user inputs from the current predicate.
       function importQuery() {
-        const query = JSON.parse('{{ query|safe }}')
+        const query = JSON.parse('{{ query|safe }}');
         console.log(query);
 
         // Components.
@@ -306,7 +306,7 @@
 
         // Reaction ID.
         if ('reactionIds' in query) {
-          const reactionIds = $('#reaction_ids')
+          const reactionIds = $('#reaction_ids');
           reactionIds.val(query.reactionIds.join('\n'));
         }
 
@@ -314,6 +314,12 @@
         if ('reactionSmarts' in query) {
           const reactionSmarts = $('#reaction_smarts');
           reactionSmarts.val(query.reactionSmarts);
+        }
+
+        // DOI.
+        if ('dois' in query) {
+            const dois = $('#dois');
+            dois.val(query.dois.join('\n'));
         }
 
         return query;

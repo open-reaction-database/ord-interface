@@ -55,19 +55,25 @@ def show_root():
     populated with the results. The form fields are populated with the params.
     """
     command = build_query()
-    try:
-        dataset = connect().run_query(command, return_ids=True)
+    if command is None:
+        dataset = None
         error = None
-    except query.QueryException as exception:
-        dataset = None
-        error = f'(Error) {exception}'
-    if not dataset.reaction_ids:
-        dataset = None
-        error = 'query did not match any reactions'
+        query = '{}'
+    else:
+        query = command.json()
+        try:
+            dataset = connect().run_query(command, return_ids=True)
+            error = None
+        except query.QueryException as exception:
+            dataset = None
+            error = f'(Error) {exception}'
+        if not dataset.reaction_ids:
+            dataset = None
+            error = 'query did not match any reactions'
     return flask.render_template('search.html',
                                  dataset=dataset,
                                  error=error,
-                                 query=command.json())
+                                 query=query)
 
 
 @app.route('/id/<reaction_id>')
@@ -124,6 +130,8 @@ def run_query():
         A serialized Dataset proto containing the matched reactions.
     """
     command = build_query()
+    if command is None:
+        flask.abort(flask.make_response('no query defined', 400))
     try:
         dataset = connect().run_query(command)
         return flask.make_response(dataset.SerializeToString())
@@ -150,7 +158,7 @@ def build_query():
         command = query.ReactionSmartsQuery(reaction_smarts)
     elif dois is not None:
         command = query.DoiQuery(dois.split(','))
-    else:
+    elif components:
         predicates = []
         for component in components:
             pattern, source, mode_name = component.split(';')
@@ -165,4 +173,6 @@ def build_query():
         if similarity is not None:
             kwargs['tanimoto_threshold'] = float(similarity)
         command = query.ReactionComponentQuery(predicates, **kwargs)
+    else:
+        command = None
     return command
