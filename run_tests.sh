@@ -19,13 +19,13 @@ set -e
 export ORD_POSTGRES_TAG=test
 ./ord_interface/docker/update_image.sh "$@"
 
-# Build the ord-interface image.
+# Build the ord-interface image and start the web server.
 set -x
-docker build -f ord_interface/Dockerfile -t openreactiondatabase/ord-interface . "$@"
+cd ord_interface
+docker build -f Dockerfile -t openreactiondatabase/ord-interface ../ "$@"
+docker-compose up --detach
 set +x
 
-# Launch the web server.
-cd ord_interface && docker-compose up --detach
 echo "Waiting 5s for the server to start..."
 sleep 5
 

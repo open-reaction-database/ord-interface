@@ -171,10 +171,14 @@ class ReactionSmartsQuery(ReactionQueryBase):
         Raises:
             QueryException if the query is not valid.
         """
-        rxn = rdChemReactions.ReactionFromSmarts(self._reaction_smarts)
-        if not rxn:
+        try:
+            rxn = rdChemReactions.ReactionFromSmarts(self._reaction_smarts)
+            if not rxn:
+                raise ValueError('cannot parse reaction SMARTS')
+        except ValueError as error:
             raise QueryException(
-                f'cannot parse reaction SMARTS: {self._reaction_smarts}')
+                f'cannot parse reaction SMARTS: {self._reaction_smarts}'
+            ) from error
 
     def run(self, cursor, limit=None):
         """Runs the query.

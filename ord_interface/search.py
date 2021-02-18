@@ -67,7 +67,7 @@ def show_root():
         except query.QueryException as exception:
             dataset = None
             error = f'(Error) {exception}'
-        if not dataset.reaction_ids:
+        if dataset is not None and not dataset.reaction_ids:
             dataset = None
             error = 'query did not match any reactions'
     return flask.render_template('search.html',
@@ -96,7 +96,7 @@ def render_reaction(reaction_id):
     if not (reaction.inputs or reaction.outcomes):
         return ''
     try:
-        html = generate_text.generate_html(reaction)
+        html = generate_text.generate_html(reaction, compact=True)
         return flask.jsonify(html)
     except (ValueError, KeyError):
         return ''
