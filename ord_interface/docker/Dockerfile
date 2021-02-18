@@ -25,6 +25,7 @@ RUN apt-get update \
  && apt-get install -y \
     build-essential \
     git \
+    git-lfs \
     libpq-dev \
     procps \
     unzip \
@@ -48,7 +49,7 @@ RUN conda install -c rdkit \
 WORKDIR "${ORD_ROOT}"
 RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
 WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.2.5
+ARG ORD_SCHEMA_TAG=v0.2.11
 RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
@@ -75,4 +76,4 @@ ENV PGDATA=/data
 ENV POSTGRES_DB=ord
 ENV POSTGRES_USER=ord-postgres
 ENV POSTGRES_PASSWORD=ord-postgres
-ENV ORD_INPUT="${ORD_ROOT}/${ORD_REPO}/data/*/*.pb"
+ENV ORD_INPUT="${ORD_ROOT}/${ORD_REPO}/data/*/*.pb*"

@@ -17,6 +17,8 @@ services:
   ord-postgres:
     image: "openreactiondatabase/ord-postgres:${ORD_POSTGRES_TAG:-latest}"
     command: ["postgres", "-c", "log_statement=all"]
+    ports:
+      - "5432:5432"
   web:
     depends_on:
       - ord-postgres

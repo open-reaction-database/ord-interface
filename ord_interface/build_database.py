@@ -106,7 +106,7 @@ def _reactions_table(reaction: reaction_pb2.Reaction, tables: Tables,
     }
     try:
         values['reaction_smiles'] = message_helpers.get_reaction_smiles(
-            reaction)
+            reaction, generate_if_missing=True)
     except ValueError:
         pass
     if reaction.provenance.doi:
