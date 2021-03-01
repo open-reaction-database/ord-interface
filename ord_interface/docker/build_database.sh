@@ -22,6 +22,4 @@ else
 fi
 
 python "${ORD_ROOT}/ord-interface/ord_interface/build_database.py" \
-  --input="${ORD_INPUT}" --output="${ORD_ROOT}/tables" --database "${ARGS}"
-# Reduce image size.
-rm -rf "${ORD_ROOT}"
+  --input="${ORD_INPUT}" "${ARGS}"

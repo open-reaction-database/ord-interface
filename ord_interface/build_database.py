@@ -17,7 +17,6 @@ For simplicity, and to aid in debugging, we write tables to individual CSV
 files and load them into PostgreSQL with the COPY command.
 """
 
-import csv
 import glob
 import os
 import sys
@@ -36,67 +35,50 @@ import ord_interface
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('input', None, 'Input pattern (glob).')
-flags.DEFINE_string('output', 'tables', 'Output directory for CSV tables.')
-flags.DEFINE_boolean('database', False,
-                     'If True, builds the PostgreSQL database.')
 flags.DEFINE_boolean('overwrite', False, 'If True, overwrite existing tables.')
-flags.DEFINE_boolean('cleanup', True,
-                     'If True, intermediate CSV files are removed.')
 flags.DEFINE_boolean('downsample', False,
                      'Whether to downsample datasets for testing.')
+# Connection parameters.
+flags.DEFINE_string('host', 'localhost', 'PostgreSQL server host.')
+flags.DEFINE_string('dbname', ord_interface.POSTGRES_DB, 'Database name.')
+flags.DEFINE_string('user', ord_interface.POSTGRES_USER, 'Username.')
+flags.DEFINE_string('password', ord_interface.POSTGRES_PASSWORD, 'Password.')
+flags.DEFINE_integer('port', ord_interface.POSTGRES_PORT, 'Port.')
 
 # Maximum number of reactions to keep when downsampling datasets for testing.
 _TEST_DATASET_SIZE = 100
+# Datasets to use for testing.
+_TEST_DATASETS = [
+    'ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c',
+    'ord_dataset-cbcc4048add7468e850b6ec42549c70d',
+    'ord_dataset-b440f8c90b6343189093770060fc4098',
+    'ord_dataset-33320f511ffb4f89905448c7a5153111',
+    'ord_dataset-7d8f5fd922d4497d91cb81489b052746',
+    'ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3',
+]
 
 
-class Tables:
-    """Holds file handles and CSV writers for database table files."""
-
-    def __init__(self):
-        self._handles = []
-
-    def __enter__(self):
-        os.makedirs(FLAGS.output, exist_ok=True)
-        self._handles = []
-        for table, columns in ord_interface.TABLES.items():
-            handle = open(os.path.join(FLAGS.output, f'{table}.csv'), 'w')
-            self._handles.append(handle)
-            # NOTE(kearnes): Use QUOTE_MINIMAL so Postgres handles NULL values
-            # properly; https://www.postgresql.org/docs/current/sql-copy.html.
-            writer = csv.DictWriter(handle,
-                                    fieldnames=columns.keys(),
-                                    dialect='unix',
-                                    quoting=csv.QUOTE_MINIMAL)
-            writer.writeheader()
-            setattr(self, table, writer)
-        return self
-
-    def __exit__(self, *exc):
-        for handle in self._handles:
-            handle.close()
-
-
-def process_reaction(reaction: reaction_pb2.Reaction, tables: Tables,
-                     dataset_id: str):
-    """Adds rows to database tables.
+def process_reaction(reaction: reaction_pb2.Reaction,
+                     cursor: psycopg2.extensions.cursor, dataset_id: str):
+    """Adds a Reaction to the database.
 
     Args:
         reaction: Reaction proto.
-        tables: Tables instance.
+        cursor: psycopg2 cursor.
         dataset_id: Dataset ID.
     """
-    _reactions_table(reaction, tables, dataset_id=dataset_id)
-    _inputs_table(reaction, tables)
-    _outputs_table(reaction, tables)
+    _reactions_table(reaction=reaction, cursor=cursor, dataset_id=dataset_id)
+    _inputs_table(reaction=reaction, cursor=cursor)
+    _outputs_table(reaction=reaction, cursor=cursor)
 
 
-def _reactions_table(reaction: reaction_pb2.Reaction, tables: Tables,
-                     dataset_id: str):
-    """Adds rows to the 'reactions' table.
+def _reactions_table(reaction: reaction_pb2.Reaction,
+                     cursor: psycopg2.extensions.cursor, dataset_id: str):
+    """Adds a Reaction to the 'reactions' table.
 
     Args:
         reaction: Reaction proto.
-        tables: Tables instance.
+        cursor: psycopg2 cursor.
         dataset_id: Dataset ID.
     """
     values = {
@@ -108,18 +90,29 @@ def _reactions_table(reaction: reaction_pb2.Reaction, tables: Tables,
         values['reaction_smiles'] = message_helpers.get_reaction_smiles(
             reaction, generate_if_missing=True)
     except ValueError:
-        pass
+        values['reaction_smiles'] = None
     if reaction.provenance.doi:
         values['doi'] = reaction.provenance.doi
-    tables.reactions.writerow(values)
+    else:
+        values['doi'] = None
+    cursor.execute(
+        """
+        INSERT INTO reactions
+        VALUES (%(reaction_id)s, 
+                %(reaction_smiles)s, 
+                %(doi)s, 
+                %(dataset_id)s, 
+                %(serialized)s);
+        """, values)
 
 
-def _inputs_table(reaction, tables):
+def _inputs_table(reaction: reaction_pb2.Reaction,
+                  cursor: psycopg2.extensions.cursor):
     """Adds rows to the 'inputs' table.
 
     Args:
         reaction: Reaction proto.
-        tables: Tables instance.
+        cursor: psycopg2 cursor.
     """
     rows = []
     for key in sorted(reaction.inputs):
@@ -129,18 +122,21 @@ def _inputs_table(reaction, tables):
             try:
                 row['smiles'] = message_helpers.smiles_from_compound(compound)
             except ValueError:
-                pass
-            if len(row) > 1:
-                rows.append(row)
-    tables.inputs.writerows(rows)
+                continue
+            cursor.execute(
+                """
+                INSERT INTO inputs 
+                VALUES (%(reaction_id)s, %(smiles)s);
+                """, row)
 
 
-def _outputs_table(reaction, tables):
+def _outputs_table(reaction: reaction_pb2.Reaction,
+                   cursor: psycopg2.extensions.cursor):
     """Adds rows to the 'outputs' table.
 
     Args:
         reaction: Reaction proto.
-        tables: Tables instance.
+        cursor: psycopg2 cursor.
     """
     rows = []
     for outcome in reaction.outcomes:
@@ -149,24 +145,22 @@ def _outputs_table(reaction, tables):
             try:
                 row['smiles'] = message_helpers.smiles_from_compound(product)
             except ValueError:
-                pass
+                continue
             product_yield = message_helpers.get_product_yield(product)
             if product_yield is not None:
                 row['yield'] = product_yield
-            if len(row) > 1:
-                rows.append(row)
-    tables.outputs.writerows(rows)
+            else:
+                continue
+            cursor.execute(
+                """
+                INSERT INTO outputs 
+                VALUES (%(reaction_id)s, %(smiles)s, %(yield)s);
+                """, row)
 
 
-def create_database():
-    """Populates the Postgres database."""
-    db = psycopg2.connect(dbname=ord_interface.POSTGRES_DB,
-                          user=ord_interface.POSTGRES_USER,
-                          password=ord_interface.POSTGRES_PASSWORD,
-                          host='localhost',
-                          port=ord_interface.POSTGRES_PORT)
-    cursor = db.cursor()
-    if FLAGS.overwrite:
+def create_database(cursor: psycopg2.extensions.cursor, overwrite: bool):
+    """Initializes the Postgres database."""
+    if overwrite:
         logging.info('Removing existing tables')
         for table in ord_interface.TABLES:
             command = sql.SQL('DROP TABLE IF EXISTS {}')
@@ -193,22 +187,9 @@ def create_database():
         ])
         logging.info('Running:\n%s', command.as_string(cursor))
         cursor.execute(command)
-        logging.info('Running COPY')
-        with open(os.path.join(FLAGS.output, f'{table}.csv')) as f:
-            cursor.copy_expert(
-                sql.SQL('COPY {} FROM STDIN WITH CSV HEADER').format(
-                    sql.Identifier(table)), f)
-        logging.info('Adding RDKit cartridge functionality')
-        if 'reaction_smiles' in columns:
-            _rdkit_reaction_smiles(cursor, table)
-        elif 'smiles' in columns:
-            _rdkit_smiles(cursor, table)
-    db.commit()
-    cursor.close()
-    db.close()
 
 
-def _rdkit_reaction_smiles(cursor, table):
+def _rdkit_reaction_smiles(cursor: psycopg2.extensions.cursor, table: str):
     """Adds RDKit cartridge tables for reaction SMILES.
 
     Creates a new table rdk.<table> with the following columns:
@@ -217,8 +198,8 @@ def _rdkit_reaction_smiles(cursor, table):
     An index is also created for each column.
 
     Args:
-        cursor: psycopg2 Cursor.
-        table: Text table name.
+        cursor: psycopg2 cursor.
+        table: Table name.
     """
     cursor.execute(
         sql.SQL("""
@@ -237,7 +218,7 @@ def _rdkit_reaction_smiles(cursor, table):
             sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
 
 
-def _rdkit_smiles(cursor, table):
+def _rdkit_smiles(cursor: psycopg2.extensions.cursor, table: str):
     """Adds RDKit cartridge tables for molecule SMILES.
 
     Creates a new table rdk.<table> with the following columns:
@@ -247,8 +228,8 @@ def _rdkit_smiles(cursor, table):
     An index is also created for each column.
 
     Args:
-        cursor: psycopg2 Cursor.
-        table: Text table name.
+        cursor: psycopg2 cursor.
+        table: Table name.
     """
     cursor.execute(
         sql.SQL("""
@@ -272,36 +253,51 @@ def _rdkit_smiles(cursor, table):
             sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
 
 
+def process_dataset(filename: str, cursor: psycopg2.extensions.cursor,
+                    downsample: bool):
+    """Processes a single Dataset."""
+    dataset_id, _ = os.path.splitext(os.path.basename(filename))
+    if downsample and dataset_id not in _TEST_DATASETS:
+        logging.info('TESTING: Dataset is not in _TEST_DATASETS')
+        return
+    dataset = message_helpers.load_message(filename, dataset_pb2.Dataset)
+    if downsample and len(dataset.reactions) > _TEST_DATASET_SIZE:
+        # Downsample ord-data Datasets for testing.
+        logging.info('TESTING: Downsampling from %d->%d reactions',
+                     len(dataset.reactions), _TEST_DATASET_SIZE)
+        reactions = dataset.reactions[:_TEST_DATASET_SIZE]
+    else:
+        reactions = dataset.reactions
+    for reaction in reactions:
+        process_reaction(reaction, cursor, dataset_id=dataset.dataset_id)
+
+
 def main(argv):
     del argv  # Only used by app.run().
     filenames = glob.glob(FLAGS.input)
     logging.info('Found %d datasets', len(filenames))
     if not filenames:
         sys.exit(1)
-    with Tables() as tables:
-        for filename in filenames:
-            logging.info(filename)
-            dataset = message_helpers.load_message(filename,
-                                                   dataset_pb2.Dataset)
-            if FLAGS.downsample and len(dataset.reactions) > FLAGS.downsample:
-                # Downsample ord-data Datasets for testing.
-                logging.info('TESTING: Downsampling from %d->%d reactions',
-                             len(dataset.reactions), _TEST_DATASET_SIZE)
-                reactions = dataset.reactions[:_TEST_DATASET_SIZE]
-            else:
-                reactions = dataset.reactions
-            for reaction in reactions:
-                process_reaction(reaction,
-                                 tables,
-                                 dataset_id=dataset.dataset_id)
-    if FLAGS.database:
-        logging.info('Creating Postgres database')
-        create_database()
-    if FLAGS.cleanup:
-        logging.info('Removing intermediate CSV files')
-        for filename in glob.glob(os.path.join(FLAGS.output, '*.csv')):
-            logging.info(filename)
-            os.remove(filename)
+    connection = psycopg2.connect(dbname=FLAGS.dbname,
+                                  user=FLAGS.user,
+                                  password=FLAGS.password,
+                                  host=FLAGS.host,
+                                  port=FLAGS.port)
+    with connection:
+        with connection.cursor() as cursor:
+            create_database(overwrite=FLAGS.overwrite, cursor=cursor)
+            for filename in filenames:
+                logging.info(filename)
+                process_dataset(filename=filename,
+                                cursor=cursor,
+                                downsample=FLAGS.downsample)
+            for table, columns in ord_interface.TABLES.items():
+                logging.info('Adding RDKit cartridge functionality')
+                if 'reaction_smiles' in columns:
+                    _rdkit_reaction_smiles(cursor, table)
+                elif 'smiles' in columns:
+                    _rdkit_smiles(cursor, table)
+            connection.commit()
 
 
 if __name__ == '__main__':
