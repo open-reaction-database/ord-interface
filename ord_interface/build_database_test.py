@@ -17,7 +17,6 @@ import os
 
 from absl.testing import absltest
 from absl.testing import flagsaver
-import pandas as pd
 import psycopg2
 
 from ord_schema import message_helpers

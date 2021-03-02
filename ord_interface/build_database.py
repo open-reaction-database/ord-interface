@@ -98,10 +98,10 @@ def _reactions_table(reaction: reaction_pb2.Reaction,
     cursor.execute(
         """
         INSERT INTO reactions
-        VALUES (%(reaction_id)s, 
-                %(reaction_smiles)s, 
-                %(doi)s, 
-                %(dataset_id)s, 
+        VALUES (%(reaction_id)s,
+                %(reaction_smiles)s,
+                %(doi)s,
+                %(dataset_id)s,
                 %(serialized)s);
         """, values)
 
@@ -114,7 +114,6 @@ def _inputs_table(reaction: reaction_pb2.Reaction,
         reaction: Reaction proto.
         cursor: psycopg2 cursor.
     """
-    rows = []
     for key in sorted(reaction.inputs):
         reaction_input = reaction.inputs[key]
         for compound in reaction_input.components:
@@ -125,7 +124,7 @@ def _inputs_table(reaction: reaction_pb2.Reaction,
                 continue
             cursor.execute(
                 """
-                INSERT INTO inputs 
+                INSERT INTO inputs
                 VALUES (%(reaction_id)s, %(smiles)s);
                 """, row)
 
@@ -138,7 +137,6 @@ def _outputs_table(reaction: reaction_pb2.Reaction,
         reaction: Reaction proto.
         cursor: psycopg2 cursor.
     """
-    rows = []
     for outcome in reaction.outcomes:
         for product in outcome.products:
             row = {'reaction_id': reaction.reaction_id}
@@ -153,7 +151,7 @@ def _outputs_table(reaction: reaction_pb2.Reaction,
                 continue
             cursor.execute(
                 """
-                INSERT INTO outputs 
+                INSERT INTO outputs
                 VALUES (%(reaction_id)s, %(smiles)s, %(yield)s);
                 """, row)
 
