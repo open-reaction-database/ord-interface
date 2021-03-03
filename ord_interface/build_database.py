@@ -90,7 +90,7 @@ def process_reaction(reaction: reaction_pb2.Reaction,
 
 
 def _reactions_table(reaction: reaction_pb2.Reaction,
-                     dataset_id: str) -> Mapping[str, Union[str, bytes]]:
+                     dataset_id: str) -> Mapping[str, Union[str, bytes, None]]:
     """Adds a Reaction to the 'reactions' table.
 
     Args:
@@ -140,8 +140,8 @@ def _inputs_table(reaction: reaction_pb2.Reaction) -> List[Mapping[str, str]]:
 
 
 def _outputs_table(
-        reaction: reaction_pb2.Reaction
-) -> List[Mapping[str, Union[str, float]]]:
+    reaction: reaction_pb2.Reaction
+) -> List[Mapping[str, Union[str, float, None]]]:
     """Adds rows to the 'outputs' table.
 
     Args:
@@ -158,11 +158,7 @@ def _outputs_table(
                 row['smiles'] = message_helpers.smiles_from_compound(product)
             except ValueError:
                 continue
-            product_yield = message_helpers.get_product_yield(product)
-            if product_yield is not None:
-                row['yield'] = product_yield
-            else:
-                continue
+            row['yield'] = message_helpers.get_product_yield(product)
             values.append(row)
     return values
 
