@@ -119,7 +119,7 @@ def fetch_reactions():
         dataset = connect().run_query(command)
         return flask.make_response(dataset.SerializeToString())
     except query.QueryException as error:
-        flask.abort(flask.make_response(str(error), 400))
+        return flask.abort(flask.make_response(str(error), 400))
 
 
 @app.route('/api/query')
@@ -131,12 +131,12 @@ def run_query():
     """
     command = build_query()
     if command is None:
-        flask.abort(flask.make_response('no query defined', 400))
+        return flask.abort(flask.make_response('no query defined', 400))
     try:
         dataset = connect().run_query(command)
         return flask.make_response(dataset.SerializeToString())
     except query.QueryException as error:
-        flask.abort(flask.make_response(str(error), 400))
+        return flask.abort(flask.make_response(str(error), 400))
 
 
 def build_query():

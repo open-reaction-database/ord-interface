@@ -17,12 +17,13 @@ import os
 
 from absl.testing import absltest
 from absl.testing import flagsaver
-import pandas as pd
+import psycopg2
 
 from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
 from ord_schema.proto import reaction_pb2
 
+import ord_interface
 from ord_interface import build_database
 
 
@@ -30,6 +31,15 @@ class BuildDatabaseTest(absltest.TestCase):
 
     def setUp(self):
         super().setUp()
+        # NOTE(kearnes): ord-postgres is the hostname in docker-compose.
+        self.host = 'ord-postgres'
+        # Create a test database.
+        with self._connect(ord_interface.POSTGRES_DB) as connection:
+            connection.set_isolation_level(
+                psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+            with connection.cursor() as cursor:
+                cursor.execute('CREATE DATABASE test;')
+        # Create a test dataset.
         self.test_subdirectory = self.create_tempdir()
         reaction = reaction_pb2.Reaction()
         reaction.reaction_id = 'test'
@@ -47,49 +57,41 @@ class BuildDatabaseTest(absltest.TestCase):
         self.dataset = dataset_pb2.Dataset(dataset_id='test_dataset',
                                            reactions=[reaction])
         message_helpers.write_message(
-            self.dataset, os.path.join(self.test_subdirectory, 'test.pbtxt'))
+            self.dataset, os.path.join(self.test_subdirectory, 'test.pb'))
+
+    def tearDown(self):
+        # Remove the test database.
+        with self._connect(ord_interface.POSTGRES_DB) as connection:
+            connection.set_isolation_level(
+                psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+            with connection.cursor() as cursor:
+                cursor.execute('DROP DATABASE test;')
+
+    def _connect(self, dbname):
+        return psycopg2.connect(dbname=dbname,
+                                user=ord_interface.POSTGRES_USER,
+                                password=ord_interface.POSTGRES_PASSWORD,
+                                host=self.host,
+                                port=ord_interface.POSTGRES_PORT)
 
     def test_main(self):
-        input_pattern = os.path.join(self.test_subdirectory, '*.pbtxt')
-        output_dir = os.path.join(self.test_subdirectory, 'tables')
+        input_pattern = os.path.join(self.test_subdirectory, '*.pb')
         with flagsaver.flagsaver(input=input_pattern,
-                                 output=output_dir,
-                                 database=False,
-                                 cleanup=False):
+                                 dbname='test',
+                                 host=self.host):
             build_database.main(())
-        with open(os.path.join(output_dir, 'reactions.csv')) as f:
-            df = pd.read_csv(f)
-        # NOTE(kearnes): Map keys are not always serialized in the same order.
-        df['deserialized'] = df.serialized.apply(
-            lambda x: reaction_pb2.Reaction.FromString(bytes.fromhex(x)))
-        del df['serialized']
-        pd.testing.assert_frame_equal(
-            df,
-            pd.DataFrame({
-                'reaction_id': ['test'],
-                'reaction_smiles': ['reaction'],
-                'dataset_id': ['test_dataset'],
-                'doi': ['10.0000/test.foo'],
-                'deserialized': [self.dataset.reactions[0]],
-            }),
-            check_like=True)
-        with open(os.path.join(output_dir, 'inputs.csv')) as f:
-            df = pd.read_csv(f)
-        pd.testing.assert_frame_equal(
-            df,
-            pd.DataFrame({
-                'reaction_id': ['test', 'test', 'test'],
-                'smiles': ['input1', 'input2a', 'input2b'],
-            }))
-        with open(os.path.join(output_dir, 'outputs.csv')) as f:
-            df = pd.read_csv(f)
-        pd.testing.assert_frame_equal(
-            df,
-            pd.DataFrame({
-                'reaction_id': ['test'],
-                'smiles': ['product'],
-                'yield': [2.5]
-            }))
+        # Sanity checks.
+        with self._connect('test') as connection:
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT * from reactions LIMIT 1;')
+                row = cursor.fetchone()
+                self.assertLen(row, 5)
+                cursor.execute('SELECT * from inputs LIMIT 1;')
+                row = cursor.fetchone()
+                self.assertLen(row, 2)
+                cursor.execute('SELECT * from outputs LIMIT 1;')
+                row = cursor.fetchone()
+                self.assertLen(row, 3)
 
 
 if __name__ == '__main__':
