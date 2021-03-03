@@ -17,14 +17,18 @@ For simplicity, and to aid in debugging, we write tables to individual CSV
 files and load them into PostgreSQL with the COPY command.
 """
 
+import dataclasses
 import glob
+import itertools
 import os
 import sys
+from typing import Iterable, List, Mapping, Union
 
 from absl import app
 from absl import flags
 from absl import logging
 import psycopg2
+from psycopg2 import extras
 from psycopg2 import sql
 
 from ord_schema import message_helpers
@@ -58,28 +62,43 @@ _TEST_DATASETS = [
 ]
 
 
+@dataclasses.dataclass(frozen=True)
+class InsertValues:
+    """Container for INSERT VALUES for a single Reaction."""
+    reactions: Mapping[str, Union[str, bytes]]
+    inputs: Iterable[Mapping[str, str]]
+    outputs: Iterable[Mapping[str, Union[str, float]]]
+
+
 def process_reaction(reaction: reaction_pb2.Reaction,
-                     cursor: psycopg2.extensions.cursor, dataset_id: str):
+                     dataset_id: str) -> InsertValues:
     """Adds a Reaction to the database.
 
     Args:
         reaction: Reaction proto.
         cursor: psycopg2 cursor.
         dataset_id: Dataset ID.
+
+    Returns:
+        InsertValues instance.
     """
-    _reactions_table(reaction=reaction, cursor=cursor, dataset_id=dataset_id)
-    _inputs_table(reaction=reaction, cursor=cursor)
-    _outputs_table(reaction=reaction, cursor=cursor)
+    reactions_values = _reactions_table(reaction=reaction,
+                                        dataset_id=dataset_id)
+    inputs_values = _inputs_table(reaction=reaction)
+    outputs_values = _outputs_table(reaction=reaction)
+    return InsertValues(reactions_values, inputs_values, outputs_values)
 
 
 def _reactions_table(reaction: reaction_pb2.Reaction,
-                     cursor: psycopg2.extensions.cursor, dataset_id: str):
+                     dataset_id: str) -> Mapping[str, Union[str, bytes]]:
     """Adds a Reaction to the 'reactions' table.
 
     Args:
         reaction: Reaction proto.
-        cursor: psycopg2 cursor.
         dataset_id: Dataset ID.
+
+    Returns:
+        Dict mapping string column names to values.
     """
     values = {
         'dataset_id': dataset_id,
@@ -95,25 +114,19 @@ def _reactions_table(reaction: reaction_pb2.Reaction,
         values['doi'] = reaction.provenance.doi
     else:
         values['doi'] = None
-    cursor.execute(
-        """
-        INSERT INTO reactions
-        VALUES (%(reaction_id)s,
-                %(reaction_smiles)s,
-                %(doi)s,
-                %(dataset_id)s,
-                %(serialized)s);
-        """, values)
+    return values
 
 
-def _inputs_table(reaction: reaction_pb2.Reaction,
-                  cursor: psycopg2.extensions.cursor):
+def _inputs_table(reaction: reaction_pb2.Reaction) -> List[Mapping[str, str]]:
     """Adds rows to the 'inputs' table.
 
     Args:
         reaction: Reaction proto.
-        cursor: psycopg2 cursor.
+
+    Returns:
+        List of dicts mapping string column names to values.
     """
+    values = []
     for key in sorted(reaction.inputs):
         reaction_input = reaction.inputs[key]
         for compound in reaction_input.components:
@@ -122,21 +135,22 @@ def _inputs_table(reaction: reaction_pb2.Reaction,
                 row['smiles'] = message_helpers.smiles_from_compound(compound)
             except ValueError:
                 continue
-            cursor.execute(
-                """
-                INSERT INTO inputs
-                VALUES (%(reaction_id)s, %(smiles)s);
-                """, row)
+            values.append(row)
+    return values
 
 
-def _outputs_table(reaction: reaction_pb2.Reaction,
-                   cursor: psycopg2.extensions.cursor):
+def _outputs_table(
+        reaction: reaction_pb2.Reaction
+) -> List[Mapping[str, Union[str, float]]]:
     """Adds rows to the 'outputs' table.
 
     Args:
         reaction: Reaction proto.
-        cursor: psycopg2 cursor.
+
+    Returns:
+        List of dicts mapping string column names to values.
     """
+    values = []
     for outcome in reaction.outcomes:
         for product in outcome.products:
             row = {'reaction_id': reaction.reaction_id}
@@ -149,11 +163,8 @@ def _outputs_table(reaction: reaction_pb2.Reaction,
                 row['yield'] = product_yield
             else:
                 continue
-            cursor.execute(
-                """
-                INSERT INTO outputs
-                VALUES (%(reaction_id)s, %(smiles)s, %(yield)s);
-                """, row)
+            values.append(row)
+    return values
 
 
 def create_database(cursor: psycopg2.extensions.cursor, overwrite: bool):
@@ -266,8 +277,30 @@ def process_dataset(filename: str, cursor: psycopg2.extensions.cursor,
         reactions = dataset.reactions[:_TEST_DATASET_SIZE]
     else:
         reactions = dataset.reactions
+    values = []
     for reaction in reactions:
-        process_reaction(reaction, cursor, dataset_id=dataset.dataset_id)
+        values.append(process_reaction(reaction, dataset_id=dataset.dataset_id))
+    # Update reactions table.
+    extras.execute_values(cursor,
+                          'INSERT INTO reactions VALUES %s',
+                          [value.reactions for value in values],
+                          template="""(%(reaction_id)s,
+                                       %(reaction_smiles)s,
+                                       %(doi)s,
+                                       %(dataset_id)s,
+                                       %(serialized)s)""")
+    # Update inputs table.
+    extras.execute_values(cursor,
+                          'INSERT INTO inputs VALUES %s',
+                          itertools.chain.from_iterable(
+                              [value.inputs for value in values]),
+                          template='(%(reaction_id)s, %(smiles)s)')
+    # Update outputs table.
+    extras.execute_values(cursor,
+                          'INSERT INTO outputs VALUES %s',
+                          itertools.chain.from_iterable(
+                              [value.outputs for value in values]),
+                          template='(%(reaction_id)s, %(smiles)s, %(yield)s)')
 
 
 def main(argv):
