@@ -20,8 +20,8 @@ docker build \
   -t ord-postgres:empty \
   . "$@"
 CONTAINER="$(docker run --rm -d ord-postgres:empty)"
-echo "Waiting 5s for the server to start..."
-sleep 5
+echo "Waiting for the server to start..."
+sleep 10
 TAG="${ORD_POSTGRES_TAG:-latest}"
 # NOTE(kearnes): Pass the tag directly instead of using ORD_POSTGRES_TAG
 # so we don't have to set that variable in the docker image.
