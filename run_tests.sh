@@ -26,8 +26,8 @@ docker build -f Dockerfile -t openreactiondatabase/ord-interface ../ "$@"
 docker-compose up --detach
 set +x
 
-echo "Waiting 5s for the server to start..."
-sleep 5
+echo "Waiting for the server to start..."
+sleep 10
 
 set +e
 status=0
