@@ -131,7 +131,9 @@
       </div>
 
       <div id="go">
-        <button>go</button>
+        <span style="text-align: right; margin-right: 18px;">result limit</span>
+        <input id="limit" type="text" value="100" min="0" style="width: 60px">
+        <button style="margin-left: 18px;">go</button>
       </div>
 
       {% if error %}
@@ -223,6 +225,16 @@
         $('#similarity').val(similarity);
       }
 
+      // Get the current result limit.
+      function getLimit() {
+          return $('#limit').val();
+      }
+
+      // Set the result limit.
+      function setLimit(limit) {
+          $('#limit').val(limit);
+      }
+
       // Read back the user inputs and build a query URL.
       function exportQuery() {
         let path = '/?'
@@ -250,6 +262,10 @@
           path += 'use_stereochemistry=' + encodeURIComponent(useStereochemistry) + '&';
           const similarity = getSimilarity();
           path += 'similarity=' + encodeURIComponent(similarity) + '&';
+          const limit = getLimit();
+          if (limit > 0) {
+              path += 'limit=' + encodeURIComponent(limit) + '&';
+          }
         }
         // Reaction IDs.
         const reactionsNode = $('#reaction_ids');
@@ -310,6 +326,10 @@
         if ('similarity' in query) {
           const similarity = query.similarity;
           setSimilarity(similarity);
+        }
+        if ('limit' in query) {
+            const limit = query.limit;
+            setLimit(limit);
         }
 
         // Reaction ID.

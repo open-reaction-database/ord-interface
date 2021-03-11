@@ -106,8 +106,10 @@ def _reactions_table(reaction: reaction_pb2.Reaction,
         'serialized': reaction.SerializeToString().hex()
     }
     try:
-        values['reaction_smiles'] = message_helpers.get_reaction_smiles(
+        reaction_smiles = message_helpers.get_reaction_smiles(
             reaction, generate_if_missing=True)
+        # Control for REACTION_CXSMILES.
+        values['reaction_smiles'] = reaction_smiles.split()[0]
     except ValueError:
         values['reaction_smiles'] = None
     if reaction.provenance.doi:
