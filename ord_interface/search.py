@@ -35,7 +35,10 @@ These query types are mutually exclusive. All query parameters are assumed to
 be URL-encoded.
 """
 
+# pylint: disable=too-many-locals
+
 import os
+from typing import NewType, Optional, Tuple
 
 import flask
 
@@ -46,6 +49,8 @@ from ord_interface import query
 app = flask.Flask(__name__, template_folder='.')
 app.config['ORD_POSTGRES_HOST'] = os.getenv('ORD_POSTGRES_HOST', 'localhost')
 
+Query = NewType('Query', query.ReactionQueryBase)
+
 
 @app.route('/')
 def show_root():
@@ -54,7 +59,7 @@ def show_root():
     If there are query params, then the query is executed and the form is
     populated with the results. The form fields are populated with the params.
     """
-    command = build_query()
+    command, limit = build_query()
     if command is None:
         dataset = None
         error = None
@@ -62,7 +67,7 @@ def show_root():
     else:
         query_json = command.json()
         try:
-            dataset = connect().run_query(command, return_ids=True)
+            dataset = connect().run_query(command, limit=limit, return_ids=True)
             error = None
         except query.QueryException as exception:
             dataset = None
@@ -129,21 +134,22 @@ def run_query():
     Returns:
         A serialized Dataset proto containing the matched reactions.
     """
-    command = build_query()
+    command, limit = build_query()
     if command is None:
         return flask.abort(flask.make_response('no query defined', 400))
     try:
-        dataset = connect().run_query(command)
+        dataset = connect().run_query(command, limit=limit)
         return flask.make_response(dataset.SerializeToString())
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
 
-def build_query():
+def build_query() -> Tuple[Optional[Query], Optional[int]]:
     """Builds a query from GET parameters.
 
     Returns:
-        ReactionQueryBase subclass instance.
+        query: ReactionQueryBase subclass instance.
+        limit: Maximum number of results to return.
     """
     reaction_ids = flask.request.args.get('reaction_ids')
     reaction_smarts = flask.request.args.get('reaction_smarts')
@@ -151,7 +157,9 @@ def build_query():
     components = flask.request.args.getlist('component')
     use_stereochemistry = flask.request.args.get('use_stereochemistry')
     similarity = flask.request.args.get('similarity')
-
+    limit = flask.request.args.get('limit')
+    if limit is not None:
+        limit = int(limit)
     if reaction_ids is not None:
         command = query.ReactionIdQuery(reaction_ids.split(','))
     elif reaction_smarts is not None:
@@ -175,4 +183,4 @@ def build_query():
         command = query.ReactionComponentQuery(predicates, **kwargs)
     else:
         command = None
-    return command
+    return command, limit
