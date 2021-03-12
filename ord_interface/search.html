@@ -262,10 +262,6 @@
           path += 'use_stereochemistry=' + encodeURIComponent(useStereochemistry) + '&';
           const similarity = getSimilarity();
           path += 'similarity=' + encodeURIComponent(similarity) + '&';
-          const limit = getLimit();
-          if (limit > 0) {
-              path += 'limit=' + encodeURIComponent(limit) + '&';
-          }
         }
         // Reaction IDs.
         const reactionsNode = $('#reaction_ids');
@@ -297,6 +293,9 @@
         }
         if (dois.length > 0) {
           path += 'dois=' + encodeURIComponent(dois.join(',')) + '&';
+        }
+        if (limit > 0) {
+            path += 'limit=' + encodeURIComponent(limit) + '&';
         }
         return path;
       }
