@@ -294,6 +294,7 @@
         if (dois.length > 0) {
           path += 'dois=' + encodeURIComponent(dois.join(',')) + '&';
         }
+        const limit = getLimit();
         if (limit > 0) {
             path += 'limit=' + encodeURIComponent(limit) + '&';
         }
