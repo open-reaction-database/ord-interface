@@ -263,7 +263,7 @@ def _rdkit_smiles(cursor: psycopg2.extensions.cursor, table: str):
 def process_dataset(filename: str, cursor: psycopg2.extensions.cursor,
                     downsample: bool):
     """Processes a single Dataset."""
-    dataset_id, _ = os.path.splitext(os.path.basename(filename))
+    dataset_id = os.path.basename(filename).split('.')[0]
     if downsample and dataset_id not in _TEST_DATASETS:
         logging.info('TESTING: Dataset is not in _TEST_DATASETS')
         return

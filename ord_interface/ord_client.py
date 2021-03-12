@@ -13,6 +13,7 @@
 # limitations under the License.
 """Python API for the Open Reaction Database."""
 
+import gzip
 import urllib.parse
 
 import requests
@@ -45,13 +46,13 @@ def fetch_dataset(dataset_id):
     """
     if not validations.is_valid_dataset_id(dataset_id):
         raise ValueError(f'Invalid dataset ID: {dataset_id}')
-    url = urllib.parse.urljoin(ORD_DATA_URL,
-                               f'{message_helpers.id_filename(dataset_id)}.pb')
+    url = urllib.parse.urljoin(
+        ORD_DATA_URL, f'{message_helpers.id_filename(dataset_id)}.pb.gz')
     response = requests.get(url)
     if response.status_code != 200:
         raise RuntimeError(
             f'Request {url} failed with status {response.status_code}')
-    return dataset_pb2.Dataset.FromString(response.content)
+    return dataset_pb2.Dataset.FromString(gzip.decompress(response.content))
 
 
 class OrdClient:

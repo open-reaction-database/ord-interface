@@ -35,6 +35,8 @@ These query types are mutually exclusive. All query parameters are assumed to
 be URL-encoded.
 """
 
+# pylint: disable=too-many-locals
+
 import os
 from typing import NewType, Optional, Tuple
 
