@@ -262,10 +262,6 @@
           path += 'use_stereochemistry=' + encodeURIComponent(useStereochemistry) + '&';
           const similarity = getSimilarity();
           path += 'similarity=' + encodeURIComponent(similarity) + '&';
-          const limit = getLimit();
-          if (limit > 0) {
-              path += 'limit=' + encodeURIComponent(limit) + '&';
-          }
         }
         // Reaction IDs.
         const reactionsNode = $('#reaction_ids');
@@ -284,9 +280,6 @@
         if (reactionSmartsText) {
           path += 'reaction_smarts=' + encodeURIComponent(reactionSmartsText) + '&';
         }
-        if (path.slice(-1) == '&') {
-          path = path.slice(0, -1);
-        }
         // DOIs.
         const doiNode = $('#dois');
         const doiText = doiNode.val();
@@ -297,6 +290,13 @@
         }
         if (dois.length > 0) {
           path += 'dois=' + encodeURIComponent(dois.join(',')) + '&';
+        }
+        const limit = getLimit();
+        if (limit > 0) {
+            path += 'limit=' + encodeURIComponent(limit) + '&';
+        }
+        if (path.slice(-1) == '&') {
+          path = path.slice(0, -1);
         }
         return path;
       }
@@ -326,10 +326,6 @@
         if ('similarity' in query) {
           const similarity = query.similarity;
           setSimilarity(similarity);
-        }
-        if ('limit' in query) {
-            const limit = query.limit;
-            setLimit(limit);
         }
 
         // Reaction ID.
