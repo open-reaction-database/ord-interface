@@ -56,25 +56,23 @@ Query = NewType('Query', query.ReactionQueryBase)
 def show_root():
     """Shows the web form.
 
-    If there are query params, then the query is executed and the form is
-    populated with the results. The form fields are populated with the params.
+    Creates a query to show a set of randomly selected reactions so the
+    page won't be empty.
     """
     command, limit = build_query()
     if command is None:
-        dataset = None
+        command = query.RandomSampleQuery(0.1)
+        limit = None
+    query_json = command.json()
+    try:
+        dataset = connect().run_query(command, limit=limit, return_ids=True)
         error = None
-        query_json = '{}'
-    else:
-        query_json = command.json()
-        try:
-            dataset = connect().run_query(command, limit=limit, return_ids=True)
-            error = None
-        except query.QueryException as exception:
-            dataset = None
-            error = f'(Error) {exception}'
-        if dataset is not None and not dataset.reaction_ids:
-            dataset = None
-            error = 'query did not match any reactions'
+    except query.QueryException as exception:
+        dataset = None
+        error = f'(Error) {exception}'
+    if dataset is not None and not dataset.reaction_ids:
+        dataset = None
+        error = 'query did not match any reactions'
     return flask.render_template('search.html',
                                  dataset=dataset,
                                  error=error,

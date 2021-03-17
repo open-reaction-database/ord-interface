@@ -33,6 +33,11 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
             host='ord-postgres',
             port=ord_interface.POSTGRES_PORT)
 
+    def test_random_sample_query(self):
+        command = query.RandomSampleQuery(0.13, seed=1.2)
+        results = self.postgres.run_query(command, limit=16, return_ids=True)
+        self.assertLen(results.reaction_ids, 16)
+
     def test_reaction_id_query(self):
         reaction_ids = ['ord-e49ed67da61e4cddabd3c84a72fed227']
         command = query.ReactionIdQuery(reaction_ids)

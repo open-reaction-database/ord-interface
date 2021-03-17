@@ -44,6 +44,7 @@ import abc
 import binascii
 import enum
 import json
+import random
 from typing import Dict, List, Optional
 
 from absl import logging
@@ -101,6 +102,64 @@ class ReactionQueryBase(abc.ABC):
         Returns:
             Dict mapping reaction IDs to serialized Reaction protos.
         """
+
+
+class RandomSampleQuery(ReactionQueryBase):
+    """Takes a random sample of reactions."""
+
+    def __init__(self, probability: float, seed: Optional[float] = None):
+        """Initializes the query.
+
+        Args:
+            probability: Probability of selecting a row; e.g. 0.15 == 15%.
+            seed: Random seed.
+        """
+        self._probability = probability
+        self._seed = seed
+
+    def json(self):
+        """Returns a JSON representation of the query."""
+        return json.dumps({'probability': self._probability})
+
+    def validate(self):
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        if not 0 < self._probability < 1:
+            raise QueryException('probability must be in (0, 1)')
+
+    def run(self,
+            cursor: psycopg2.extensions.cursor,
+            limit: Optional[int] = None):
+        """Runs the query.
+
+        Args:
+            cursor: psycopg.cursor instance.
+            limit: Maximum number of matches. If None, no limit is set.
+
+        Returns:
+            Dict mapping reaction IDs to serialized Reaction protos.
+        """
+        components = [
+            sql.SQL("""
+            SELECT DISTINCT reaction_id, serialized 
+            FROM reactions 
+            TABLESAMPLE BERNOULLI (%s)""")
+        ]
+        args = [self._probability * 100]
+        if self._seed is not None:
+            components.append(sql.SQL(' REPEATABLE (%s)'))
+            args.append(self._seed)
+        if limit:
+            components.append(sql.SQL(' LIMIT %s'))
+            args.append(limit)
+        query = sql.Composed(components).join('')
+        logging.info('Running SQL command:%s',
+                     cursor.mogrify(query, args).decode())
+        cursor.execute(query, args)
+        return fetch_results(cursor)
 
 
 class ReactionIdQuery(ReactionQueryBase):
