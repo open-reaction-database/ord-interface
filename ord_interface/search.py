@@ -61,8 +61,8 @@ def show_root():
     """
     command, limit = build_query()
     if command is None:
-        command = query.RandomSampleQuery(0.1)
-        limit = None
+        command = query.RandomSampleQuery(0.01)
+        limit = 100
     query_json = command.json()
     try:
         dataset = connect().run_query(command, limit=limit, return_ids=True)

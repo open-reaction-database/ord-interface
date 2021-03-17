@@ -44,7 +44,6 @@ import abc
 import binascii
 import enum
 import json
-import random
 from typing import Dict, List, Optional
 
 from absl import logging
@@ -146,7 +145,7 @@ class RandomSampleQuery(ReactionQueryBase):
             sql.SQL("""
             SELECT DISTINCT reaction_id, serialized 
             FROM reactions 
-            TABLESAMPLE BERNOULLI (%s)""")
+            TABLESAMPLE SYSTEM (%s)""")
         ]
         args = [self._probability * 100]
         if self._seed is not None:
