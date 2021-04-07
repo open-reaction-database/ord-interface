@@ -61,8 +61,7 @@ def show_root():
     """
     command, limit = build_query()
     if command is None:
-        command = query.RandomSampleQuery(0.01)
-        limit = 100
+        command = query.RandomSampleQuery(100)
     query_json = command.json()
     try:
         dataset = connect().run_query(command, limit=limit, return_ids=True)
@@ -85,7 +84,8 @@ def show_id(reaction_id):
     dataset = connect().run_query(query.ReactionIdQuery([reaction_id]))
     if len(dataset.reactions) == 0:
         return flask.abort(404)
-    return flask.Response(str(dataset.reactions[0]), mimetype='text/plain')
+    html = generate_text.generate_summary(dataset.reactions[0])
+    return flask.jsonify(html)
 
 
 @app.route('/render/<reaction_id>')

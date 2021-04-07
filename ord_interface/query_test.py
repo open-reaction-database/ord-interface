@@ -34,8 +34,8 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
             port=ord_interface.POSTGRES_PORT)
 
     def test_random_sample_query(self):
-        command = query.RandomSampleQuery(0.13, seed=1.2)
-        results = self.postgres.run_query(command, limit=16, return_ids=True)
+        command = query.RandomSampleQuery(16)
+        results = self.postgres.run_query(command, return_ids=True)
         self.assertLen(results.reaction_ids, 16)
 
     def test_reaction_id_query(self):

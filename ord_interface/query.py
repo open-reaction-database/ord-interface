@@ -106,19 +106,17 @@ class ReactionQueryBase(abc.ABC):
 class RandomSampleQuery(ReactionQueryBase):
     """Takes a random sample of reactions."""
 
-    def __init__(self, probability: float, seed: Optional[float] = None):
+    def __init__(self, num_rows: int):
         """Initializes the query.
 
         Args:
-            probability: Probability of selecting a row; e.g. 0.15 == 15%.
-            seed: Random seed.
+            num_rows: Number of rows to return.
         """
-        self._probability = probability
-        self._seed = seed
+        self._num_rows = num_rows
 
     def json(self):
         """Returns a JSON representation of the query."""
-        return json.dumps({'probability': self._probability})
+        return json.dumps({'num_rows': self._num_rows})
 
     def validate(self):
         """Checks the query for correctness.
@@ -126,8 +124,8 @@ class RandomSampleQuery(ReactionQueryBase):
         Raises:
             QueryException if the query is not valid.
         """
-        if not 0 < self._probability < 1:
-            raise QueryException('probability must be in (0, 1)')
+        if self._num_rows <= 0:
+            raise QueryException('num_rows must be greater than zero')
 
     def run(self,
             cursor: psycopg2.extensions.cursor,
@@ -141,20 +139,12 @@ class RandomSampleQuery(ReactionQueryBase):
         Returns:
             Dict mapping reaction IDs to serialized Reaction protos.
         """
-        components = [
-            sql.SQL("""
+        del limit  # Unused.
+        query = sql.SQL("""
             SELECT DISTINCT reaction_id, serialized 
             FROM reactions 
-            TABLESAMPLE SYSTEM (%s)""")
-        ]
-        args = [self._probability * 100]
-        if self._seed is not None:
-            components.append(sql.SQL(' REPEATABLE (%s)'))
-            args.append(self._seed)
-        if limit:
-            components.append(sql.SQL(' LIMIT %s'))
-            args.append(limit)
-        query = sql.Composed(components).join('')
+            TABLESAMPLE SYSTEM_ROWS (%s)""")
+        args = [self._num_rows]
         logging.info('Running SQL command:%s',
                      cursor.mogrify(query, args).decode())
         cursor.execute(query, args)

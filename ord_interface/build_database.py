@@ -173,6 +173,7 @@ def create_database(cursor: psycopg2.extensions.cursor, overwrite: bool):
             command = sql.SQL('DROP TABLE IF EXISTS {}')
             cursor.execute(command.format(sql.Identifier(table)))
     cursor.execute(sql.SQL('CREATE EXTENSION IF NOT EXISTS rdkit'))
+    cursor.execute(sql.SQL('CREATE EXTENSION IF NOT EXISTS tsm_system_rows'))
     cursor.execute(
         sql.SQL('CREATE SCHEMA {}').format(
             sql.Identifier(ord_interface.RDKIT_SCHEMA)))

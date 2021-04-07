@@ -398,11 +398,11 @@
               .then(responseData => {
                 const content = $("td", row).eq(0);
                 content.html(responseData);
-                $("p", content).html("<a href='/id/" + reactionId + "'>" + reactionId + "</a>");
+                $('p', content).html(reactionId);
                 const tbody = $("tbody", content);
                 tbody.css('cursor', 'pointer');
                 tbody.on('click', function() {
-                    window.location = '/id/' + reactionId;
+                    window.open('/id/' + reactionId, target='_blank');
                 })
               });
         },
