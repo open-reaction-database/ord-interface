@@ -396,12 +396,10 @@
             fetch('/render/' + reactionId)
               .then(response => response.json())
               .then(responseData => {
-                const content = $("td", row).eq(0);
+                const content = $('td', row).eq(0);
                 content.html(responseData);
-                $('p', content).html(reactionId);
-                const tbody = $("tbody", content);
-                tbody.css('cursor', 'pointer');
-                tbody.on('click', function() {
+                content.css('cursor', 'pointer');
+                content.on('click', function() {
                     window.open('/id/' + reactionId, target='_blank');
                 })
               });
