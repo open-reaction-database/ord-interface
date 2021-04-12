@@ -84,8 +84,7 @@ def show_id(reaction_id):
     dataset = connect().run_query(query.ReactionIdQuery([reaction_id]))
     if len(dataset.reactions) == 0:
         return flask.abort(404)
-    html = generate_text.generate_summary(dataset.reactions[0])
-    return flask.jsonify(html)
+    return generate_text.generate_summary(dataset.reactions[0])
 
 
 @app.route('/render/<reaction_id>')
@@ -96,13 +95,11 @@ def render_reaction(reaction_id):
     if len(dataset.reactions) == 0 or len(dataset.reactions) > 1:
         return flask.abort(404)
     reaction = dataset.reactions[0]
-    if not (reaction.inputs or reaction.outcomes):
-        return ''
     try:
         html = generate_text.generate_html(reaction, compact=True)
         return flask.jsonify(html)
     except (ValueError, KeyError):
-        return ''
+        return flask.jsonify('[Reaction cannot be displayed]')
 
 
 def connect():
