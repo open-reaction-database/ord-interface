@@ -62,10 +62,10 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
 
     def test_query_dataset_ids(self):
         dataset = self.client.query(dataset_ids=[
-            'ord_dataset-4d431564f3ef4e9c91d8da5836f4eae6',
-            'ord_dataset-e2103f90b283456b82024392b65719f5'
+            'ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3',
+            'ord_dataset-7d8f5fd922d4497d91cb81489b052746'
         ])
-        self.assertLen(dataset.reactions, 2)
+        self.assertLen(dataset.reactions, 200)
 
     def test_query_reaction_ids(self):
         dataset = self.client.query(reaction_ids=[

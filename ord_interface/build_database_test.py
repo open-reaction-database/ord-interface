@@ -34,11 +34,11 @@ class BuildDatabaseTest(absltest.TestCase):
         # NOTE(kearnes): ord-postgres is the hostname in docker-compose.
         self.host = 'ord-postgres'
         # Create a test database.
-        with self._connect(ord_interface.POSTGRES_DB) as connection:
-            connection.set_isolation_level(
-                psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-            with connection.cursor() as cursor:
-                cursor.execute('CREATE DATABASE test;')
+        connection = self._connect(ord_interface.POSTGRES_DB)
+        connection.set_session(autocommit=True)
+        with connection.cursor() as cursor:
+            cursor.execute('CREATE DATABASE test;')
+        connection.close()
         # Create a test dataset.
         self.test_subdirectory = self.create_tempdir()
         reaction = reaction_pb2.Reaction()
@@ -61,11 +61,11 @@ class BuildDatabaseTest(absltest.TestCase):
 
     def tearDown(self):
         # Remove the test database.
-        with self._connect(ord_interface.POSTGRES_DB) as connection:
-            connection.set_isolation_level(
-                psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-            with connection.cursor() as cursor:
-                cursor.execute('DROP DATABASE test;')
+        connection = self._connect(ord_interface.POSTGRES_DB)
+        connection.set_session(autocommit=True)
+        with connection.cursor() as cursor:
+            cursor.execute('DROP DATABASE test;')
+        connection.close()
 
     def _connect(self, dbname):
         return psycopg2.connect(dbname=dbname,

@@ -181,17 +181,23 @@ class DatasetIdQuery(ReactionQueryBase):
 
         Args:
             cursor: psycopg.cursor instance.
-            limit: Not used; present for compatibility.
+            limit: Integer maximum number of matches. If None (the default), no
+                limit is set.
 
         Returns:
             Dict mapping reaction IDs to serialized Reaction protos.
         """
-        del limit  # Unused.
-        query = sql.SQL("""
+        components = [
+            sql.SQL("""
             SELECT DISTINCT reaction_id, serialized 
             FROM reactions 
             WHERE dataset_id = ANY (%s)""")
+        ]
         args = [self._dataset_ids]
+        if limit:
+            components.append(sql.SQL(' LIMIT %s'))
+            args.append(limit)
+        query = sql.Composed(components).join('')
         logging.info('Running SQL command:%s',
                      cursor.mogrify(query, args).decode())
         cursor.execute(query, args)

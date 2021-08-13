@@ -158,7 +158,7 @@ def build_query() -> Tuple[Optional[Query], Optional[int]]:
         limit = int(limit)
     if dataset_ids is not None:
         command = query.DatasetIdQuery(dataset_ids.split(','))
-    if reaction_ids is not None:
+    elif reaction_ids is not None:
         command = query.ReactionIdQuery(reaction_ids.split(','))
     elif reaction_smarts is not None:
         command = query.ReactionSmartsQuery(reaction_smarts)

@@ -39,7 +39,7 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
         self.assertLen(results.reaction_ids, 16)
 
     def test_dataset_id_query(self):
-        dataset_ids = ['ord_dataset-4d431564f3ef4e9c91d8da5836f4eae6']
+        dataset_ids = ['ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3']
         command = query.DatasetIdQuery(dataset_ids)
         results = self.postgres.run_query(command, limit=10, return_ids=True)
         self.assertLen(results.reaction_ids, 10)
