@@ -60,6 +60,13 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
             self.assertEqual(reaction.provenance.record_created.person.name,
                              expected)
 
+    def test_query_dataset_ids(self):
+        dataset = self.client.query(dataset_ids=[
+            'ord_dataset-4d431564f3ef4e9c91d8da5836f4eae6',
+            'ord_dataset-e2103f90b283456b82024392b65719f5'
+        ])
+        self.assertLen(dataset.reactions, 2)
+
     def test_query_reaction_ids(self):
         dataset = self.client.query(reaction_ids=[
             'ord-f0621fa47ac74fd59f9da027f6d13fc4',

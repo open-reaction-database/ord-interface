@@ -135,6 +135,7 @@ class OrdClient:
 
     def query(  # pylint: disable=too-many-arguments
             self,
+            dataset_ids=None,
             reaction_ids=None,
             reaction_smarts=None,
             dois=None,
@@ -144,6 +145,8 @@ class OrdClient:
         """Executes a query against the Open Reaction Database.
 
         Args:
+            dataset_ids: List of dataset IDs to fetch. This is provided for
+                completeness, but fetch_dataset(s) should be preferred.
             reaction_ids: List of reaction IDs to fetch. This is provided for
                 completeness, but fetch_reaction(s) should be preferred.
             reaction_smarts: Reaction SMARTS pattern.
@@ -159,6 +162,10 @@ class OrdClient:
         Raises:
             ValueError: A reaction ID is invalid.
         """
+        if dataset_ids:
+            for dataset_id in dataset_ids:
+                if not validations.is_valid_dataset_id(dataset_id):
+                    raise ValueError(f'Invalid dataset ID: {dataset_id}')
         if reaction_ids:
             for reaction_id in reaction_ids:
                 if not validations.is_valid_reaction_id(reaction_id):
@@ -170,6 +177,7 @@ class OrdClient:
         else:
             component_params = None
         params = {
+            'dataset_ids': ','.join(dataset_ids) if dataset_ids else None,
             'reaction_ids': ','.join(reaction_ids) if reaction_ids else None,
             'reaction_smarts': reaction_smarts,
             'dois': ','.join(dois) if dois else None,
