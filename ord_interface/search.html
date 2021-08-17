@@ -120,6 +120,9 @@
       </div>
 
       <div id="reactions" style="display: none;">
+        <span class="label">dataset IDs</span>
+        <textarea id="dataset_ids"></textarea>
+
         <span class="label">reaction IDs</span>
         <textarea id="reaction_ids"></textarea>
 
@@ -263,12 +266,23 @@
           const similarity = getSimilarity();
           path += 'similarity=' + encodeURIComponent(similarity) + '&';
         }
+        // Dataset IDS.
+        const datasetsNode = $('#dataset_ids');
+        const datasetIdsText = datasetsNode.val();
+        const datasetMatches = datasetIdsText.matchAll(/ord_dataset-[0-9a-f]+/g);
+        const datasetIds = [];
+        for (const match of datasetMatches) {
+          datasetIds.push(match[0]);
+        }
+        if (datasetIds.length > 0) {
+          path += 'dataset_ids=' + encodeURIComponent(datasetIds.join(',')) + '&';
+        }
         // Reaction IDs.
         const reactionsNode = $('#reaction_ids');
         const reactionIdsText = reactionsNode.val();
-        const matches = reactionIdsText.matchAll(/ord-[0-9a-f]+/g);
+        const reactionMatches = reactionIdsText.matchAll(/ord-[0-9a-f]+/g);
         const reactionIds = [];
-        for (const match of matches) {
+        for (const match of reactionMatches) {
           reactionIds.push(match[0]);
         }
         if (reactionIds.length > 0) {
@@ -328,7 +342,13 @@
           setSimilarity(similarity);
         }
 
-        // Reaction ID.
+        // Dataset IDs.
+        if ('datasetIds' in query) {
+          const datasetIds = $('#dataset_ids');
+          datasetIds.val(query.datasetIds.join('\n'));
+        }
+
+        // Reaction IDs.
         if ('reactionIds' in query) {
           const reactionIds = $('#reaction_ids');
           reactionIds.val(query.reactionIds.join('\n'));

@@ -146,6 +146,7 @@ def build_query() -> Tuple[Optional[Query], Optional[int]]:
         query: ReactionQueryBase subclass instance.
         limit: Maximum number of results to return.
     """
+    dataset_ids = flask.request.args.get('dataset_ids')
     reaction_ids = flask.request.args.get('reaction_ids')
     reaction_smarts = flask.request.args.get('reaction_smarts')
     dois = flask.request.args.get('dois')
@@ -155,7 +156,9 @@ def build_query() -> Tuple[Optional[Query], Optional[int]]:
     limit = flask.request.args.get('limit')
     if limit is not None:
         limit = int(limit)
-    if reaction_ids is not None:
+    if dataset_ids is not None:
+        command = query.DatasetIdQuery(dataset_ids.split(','))
+    elif reaction_ids is not None:
         command = query.ReactionIdQuery(reaction_ids.split(','))
     elif reaction_smarts is not None:
         command = query.ReactionSmartsQuery(reaction_smarts)

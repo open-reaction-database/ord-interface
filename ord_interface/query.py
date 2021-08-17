@@ -151,6 +151,59 @@ class RandomSampleQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
+class DatasetIdQuery(ReactionQueryBase):
+    """Looks up reactions by dataset ID."""
+
+    def __init__(self, dataset_ids):
+        """Initializes the query.
+
+        Args:
+            dataset_ids: List of dataset IDs.
+        """
+        self._dataset_ids = dataset_ids
+
+    def json(self):
+        """Returns a JSON representation of the query."""
+        return json.dumps({'datasetIds': self._dataset_ids})
+
+    def validate(self):
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        for dataset_id in self._dataset_ids:
+            if not validations.is_valid_dataset_id(dataset_id):
+                raise QueryException(f'invalid dataset ID: {dataset_id}')
+
+    def run(self, cursor, limit=None):
+        """Runs the query.
+
+        Args:
+            cursor: psycopg.cursor instance.
+            limit: Integer maximum number of matches. If None (the default), no
+                limit is set.
+
+        Returns:
+            Dict mapping reaction IDs to serialized Reaction protos.
+        """
+        components = [
+            sql.SQL("""
+            SELECT DISTINCT reaction_id, serialized 
+            FROM reactions 
+            WHERE dataset_id = ANY (%s)""")
+        ]
+        args = [self._dataset_ids]
+        if limit:
+            components.append(sql.SQL(' LIMIT %s'))
+            args.append(limit)
+        query = sql.Composed(components).join('')
+        logging.info('Running SQL command:%s',
+                     cursor.mogrify(query, args).decode())
+        cursor.execute(query, args)
+        return fetch_results(cursor)
+
+
 class ReactionIdQuery(ReactionQueryBase):
     """Looks up reactions by ID."""
 
