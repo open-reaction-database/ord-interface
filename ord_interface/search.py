@@ -37,11 +37,11 @@ be URL-encoded.
 
 # pylint: disable=too-many-locals
 
+import json
 import os
 from typing import NewType, Optional, Tuple
 
 import flask
-import json
 
 from ord_schema.visualization import generate_text
 
