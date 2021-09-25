@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # To build an updated ord-postgres image containing the latest data:
-# $ cd path/to/ord-schema
-# $ ./docker/update_image.sh
+# $ cd path/to/ord-interface
+# $ ./ord_interface/docker/update_image.sh
 #
 # To push the built image to Docker Hub:
 # docker push openreactiondatabase/ord-postgres

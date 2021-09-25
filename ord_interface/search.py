@@ -85,7 +85,8 @@ def show_id(reaction_id):
     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
     if len(results) == 0:
         return flask.abort(404)
-    return generate_text.generate_summary(results[0].reaction)
+    return generate_text.generate_summary(reaction=results[0].reaction,
+                                          dataset_id=results[0].dataset_id)
 
 
 @app.route('/render/<reaction_id>')
@@ -98,7 +99,6 @@ def render_reaction(reaction_id):
     result = results[0]
     try:
         html = generate_text.generate_html(reaction=result.reaction,
-                                           dataset_id=result.dataset_id,
                                            compact=True)
         return flask.jsonify(html)
     except (ValueError, KeyError):

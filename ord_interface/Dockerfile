@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# To build the interface using the current state of ord-schema:
-# $ cd path/to/ord-schema
+# To build the interface using the current state of ord-interface:
+# $ cd path/to/ord-interface/ord_interface
 # $ docker build \
-#     --file=ord_interface/Dockerfile \
+#     --file=Dockerfile \
 #     -t openreactiondatabase/ord-interface \
-#     .
+#     ..
 #
 # To push the built image to Docker Hub:
 # docker push openreactiondatabase/ord-interface
