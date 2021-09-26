@@ -37,6 +37,7 @@ be URL-encoded.
 
 # pylint: disable=too-many-locals
 
+import dataclasses
 import json
 import os
 from typing import NewType, Optional, Tuple
@@ -121,7 +122,7 @@ def fetch_reactions():
     try:
         results = connect().run_query(command)
         return flask.make_response(
-            json.dumps([result.as_dict() for result in results]))
+            json.dumps([dataclasses.asdict(result) for result in results]))
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -139,7 +140,7 @@ def run_query():
     try:
         results = connect().run_query(command, limit=limit)
         return flask.make_response(
-            json.dumps([result.as_dict() for result in results]))
+            json.dumps([dataclasses.asdict(result) for result in results]))
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 

@@ -71,13 +71,6 @@ class Result:
         return reaction_pb2.Reaction.FromString(
             binascii.unhexlify(self.serialized))
 
-    def as_dict(self) -> Dict[str, str]:
-        return {
-            'dataset_id': self.dataset_id,
-            'reaction_id': self.reaction_id,
-            'serialized': self.serialized
-        }
-
 
 def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
     """Fetches query results.
