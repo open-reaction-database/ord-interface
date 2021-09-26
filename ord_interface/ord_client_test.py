@@ -61,37 +61,37 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
                              expected)
 
     def test_query_dataset_ids(self):
-        dataset = self.client.query(dataset_ids=[
+        results = self.client.query(dataset_ids=[
             'ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3',
             'ord_dataset-7d8f5fd922d4497d91cb81489b052746'
         ])
-        self.assertLen(dataset.reactions, 200)
+        self.assertLen(results, 200)
 
     def test_query_reaction_ids(self):
-        dataset = self.client.query(reaction_ids=[
+        results = self.client.query(reaction_ids=[
             'ord-f0621fa47ac74fd59f9da027f6d13fc4',
             'ord-c6fbf2aab30841d198a27068a65a9a98'
         ])
-        self.assertLen(dataset.reactions, 2)
+        self.assertLen(results, 2)
 
     def test_query_reaction_smarts(self):
-        dataset = self.client.query(
+        results = self.client.query(
             reaction_smarts='FC(F)(F)c1ccc([F,Cl,Br,I])cc1>CS(=O)C>')
-        self.assertLen(dataset.reactions, 21)
+        self.assertLen(results, 21)
 
     def test_query_dois(self):
         doi = '10.1021/acscatal.0c02247'
-        dataset = self.client.query(dois=[doi])
-        self.assertLen(dataset.reactions, 100)  # Downsampled size.
-        for reaction in dataset.reactions:
-            self.assertEqual(reaction.provenance.doi, doi)
+        results = self.client.query(dois=[doi])
+        self.assertLen(results, 100)  # Downsampled size.
+        for result in results:
+            self.assertEqual(result.reaction.provenance.doi, doi)
 
     def test_query_single_component(self):
         component = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
                                               source='input',
                                               mode='exact')
-        dataset = self.client.query(components=[component])
-        self.assertLen(dataset.reactions, 7)
+        results = self.client.query(components=[component])
+        self.assertLen(results, 7)
 
     def test_query_multiple_components(self):
         component1 = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
@@ -100,8 +100,8 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
         component2 = ord_client.ComponentQuery('CN(C)C(=NC(C)(C)C)N(C)C',
                                                source='input',
                                                mode='exact')
-        dataset = self.client.query(components=[component1, component2])
-        self.assertLen(dataset.reactions, 2)
+        results = self.client.query(components=[component1, component2])
+        self.assertLen(results, 2)
 
     def test_query_stereochemistry(self):
         # TODO(kearnes): Add a test once we have more chiral stuff.
@@ -111,8 +111,8 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
         component = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
                                               source='input',
                                               mode='similar')
-        dataset = self.client.query(components=[component], similarity=0.6)
-        self.assertLen(dataset.reactions, 14)
+        results = self.client.query(components=[component], similarity=0.6)
+        self.assertLen(results, 14)
 
 
 if __name__ == '__main__':

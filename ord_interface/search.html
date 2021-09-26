@@ -398,9 +398,9 @@
       }
 
       const resultsData = [
-          {% if dataset -%}
-            {% for reaction_id in dataset.reaction_ids -%}
-              {"Reaction ID": "{{ reaction_id }}", "Summary": ""},
+          {% if results -%}
+            {% for result in results -%}
+              {"Reaction ID": "{{ result.reaction_id }}", "Summary": ""},
             {% endfor %}
           {% endif %}
       ];

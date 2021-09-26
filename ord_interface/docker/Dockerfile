@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # To build an updated ord-postgres image containing the latest data:
-# $ cd path/to/ord-schema
-# $ ./docker/update_image.sh
+# $ cd path/to/ord-interface
+# $ ./ord_interface/docker/update_image.sh
 #
 # To push the built image to Docker Hub:
 # docker push openreactiondatabase/ord-postgres
@@ -49,7 +49,7 @@ RUN conda install -c rdkit \
 WORKDIR "${ORD_ROOT}"
 RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
 WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.3.11
+ARG ORD_SCHEMA_TAG=v0.3.12
 RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install

@@ -37,6 +37,8 @@ be URL-encoded.
 
 # pylint: disable=too-many-locals
 
+import dataclasses
+import json
 import os
 from typing import NewType, Optional, Tuple
 
@@ -64,16 +66,16 @@ def show_root():
         command = query.RandomSampleQuery(100)
     query_json = command.json()
     try:
-        dataset = connect().run_query(command, limit=limit, return_ids=True)
+        results = connect().run_query(command, limit=limit, return_ids=True)
         error = None
     except query.QueryException as exception:
-        dataset = None
+        results = None
         error = f'(Error) {exception}'
-    if dataset is not None and not dataset.reaction_ids:
-        dataset = None
+    if results is not None and not results:
+        results = None
         error = 'query did not match any reactions'
     return flask.render_template('search.html',
-                                 dataset=dataset,
+                                 results=results,
                                  error=error,
                                  query=query_json)
 
@@ -81,22 +83,24 @@ def show_root():
 @app.route('/id/<reaction_id>')
 def show_id(reaction_id):
     """Returns the pbtxt of a single reaction as plain text."""
-    dataset = connect().run_query(query.ReactionIdQuery([reaction_id]))
-    if len(dataset.reactions) == 0:
+    results = connect().run_query(query.ReactionIdQuery([reaction_id]))
+    if len(results) == 0:
         return flask.abort(404)
-    return generate_text.generate_summary(dataset.reactions[0])
+    return generate_text.generate_summary(reaction=results[0].reaction,
+                                          dataset_id=results[0].dataset_id)
 
 
 @app.route('/render/<reaction_id>')
 def render_reaction(reaction_id):
     """Renders a reaction as an HTML table with images and text."""
     command = query.ReactionIdQuery([reaction_id])
-    dataset = connect().run_query(command)
-    if len(dataset.reactions) == 0 or len(dataset.reactions) > 1:
+    results = connect().run_query(command)
+    if len(results) == 0 or len(results) > 1:
         return flask.abort(404)
-    reaction = dataset.reactions[0]
+    result = results[0]
     try:
-        html = generate_text.generate_html(reaction, compact=True)
+        html = generate_text.generate_html(reaction=result.reaction,
+                                           compact=True)
         return flask.jsonify(html)
     except (ValueError, KeyError):
         return flask.jsonify('[Reaction cannot be displayed]')
@@ -116,8 +120,9 @@ def fetch_reactions():
     reaction_ids = flask.request.get_json()
     command = query.ReactionIdQuery(reaction_ids)
     try:
-        dataset = connect().run_query(command)
-        return flask.make_response(dataset.SerializeToString())
+        results = connect().run_query(command)
+        return flask.make_response(
+            json.dumps([dataclasses.asdict(result) for result in results]))
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -133,8 +138,9 @@ def run_query():
     if command is None:
         return flask.abort(flask.make_response('no query defined', 400))
     try:
-        dataset = connect().run_query(command, limit=limit)
-        return flask.make_response(dataset.SerializeToString())
+        results = connect().run_query(command, limit=limit)
+        return flask.make_response(
+            json.dumps([dataclasses.asdict(result) for result in results]))
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 

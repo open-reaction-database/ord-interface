@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# To build the interface using the current state of ord-schema:
-# $ cd path/to/ord-schema
+# To build the interface using the current state of ord-interface:
+# $ cd path/to/ord-interface/ord_interface
 # $ docker build \
-#     --file=ord_interface/Dockerfile \
+#     --file=Dockerfile \
 #     -t openreactiondatabase/ord-interface \
-#     .
+#     ..
 #
 # To push the built image to Docker Hub:
 # docker push openreactiondatabase/ord-interface
@@ -42,7 +42,7 @@ RUN conda install -c rdkit \
 WORKDIR /usr/src/app
 RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
 WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.3.11
+ARG ORD_SCHEMA_TAG=v0.3.12
 RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install

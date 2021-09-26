@@ -13,7 +13,9 @@
 # limitations under the License.
 """Python API for the Open Reaction Database."""
 
+import binascii
 import gzip
+from typing import List, Optional
 import urllib.parse
 
 import requests
@@ -21,6 +23,7 @@ import requests
 from ord_schema import message_helpers
 from ord_schema import validations
 from ord_schema.proto import dataset_pb2
+from ord_schema.proto import reaction_pb2
 
 from ord_interface import query
 
@@ -28,7 +31,7 @@ TARGET = 'https://client.open-reaction-database.org'
 ORD_DATA_URL = 'https://github.com/Open-Reaction-Database/ord-data/raw/main/'
 
 
-def fetch_dataset(dataset_id):
+def fetch_dataset(dataset_id: str) -> dataset_pb2.Dataset:
     """Fetches a single Dataset message.
 
     Datasets are first class objects in GitHub, so this method skips the
@@ -58,7 +61,7 @@ def fetch_dataset(dataset_id):
 class OrdClient:
     """Client for the Open Reaction Database."""
 
-    def __init__(self, target=None):
+    def __init__(self, target: Optional[str] = None) -> None:
         """Initializes the client.
 
         Args:
@@ -69,7 +72,8 @@ class OrdClient:
             target = TARGET
         self._target = target
 
-    def fetch_datasets(self, dataset_ids):
+    def fetch_datasets(self,
+                       dataset_ids: List[str]) -> List[dataset_pb2.Dataset]:
         """Fetches one or more Dataset messages.
 
         Args:
@@ -85,7 +89,8 @@ class OrdClient:
         }
         return [datasets[dataset_id] for dataset_id in dataset_ids]
 
-    def fetch_dataset(self, dataset_id):  # pylint: disable=no-self-use
+    @staticmethod
+    def fetch_dataset(dataset_id: str) -> dataset_pb2.Dataset:
         """Fetches a single Dataset message.
 
         Args:
@@ -96,7 +101,8 @@ class OrdClient:
         """
         return fetch_dataset(dataset_id)
 
-    def fetch_reactions(self, reaction_ids):
+    def fetch_reactions(self,
+                        reaction_ids: List[str]) -> List[reaction_pb2.Reaction]:
         """Fetches one or more Reaction messages.
 
         Args:
@@ -113,14 +119,15 @@ class OrdClient:
                 raise ValueError(f'Invalid reaction ID: {reaction_id}')
         target = urllib.parse.urljoin(self._target, '/api/fetch_reactions')
         response = requests.post(target, json=list(set(reaction_ids)))
-        dataset = dataset_pb2.Dataset.FromString(response.content)
+        results = response.json()
         # NOTE(kearnes): Return reactions in the same order as requested.
-        reactions = {
-            reaction.reaction_id: reaction for reaction in dataset.reactions
-        }
+        reactions = {}
+        for result in results:
+            reactions[result['reaction_id']] = reaction_pb2.Reaction.FromString(
+                binascii.unhexlify(result['serialized']))
         return [reactions[reaction_id] for reaction_id in reaction_ids]
 
-    def fetch_reaction(self, reaction_id):
+    def fetch_reaction(self, reaction_id: str) -> reaction_pb2.Reaction:
         """Fetches a single Reaction message.
 
         Args:
@@ -135,13 +142,13 @@ class OrdClient:
 
     def query(  # pylint: disable=too-many-arguments
             self,
-            dataset_ids=None,
-            reaction_ids=None,
-            reaction_smarts=None,
-            dois=None,
-            components=None,
-            use_stereochemistry=None,
-            similarity=None):
+            dataset_ids: Optional[List[str]] = None,
+            reaction_ids: Optional[List[str]] = None,
+            reaction_smarts: Optional[str] = None,
+            dois: Optional[List[str]] = None,
+            components: Optional[List['ComponentQuery']] = None,
+            use_stereochemistry: Optional[bool] = None,
+            similarity: Optional[float] = None) -> List[query.Result]:
         """Executes a query against the Open Reaction Database.
 
         Args:
@@ -157,7 +164,7 @@ class OrdClient:
             similarity: Float similarity threshold for SIMILAR queries.
 
         Returns:
-            A Dataset containing the matched reactions.
+            List of Result instances.
 
         Raises:
             ValueError: A reaction ID is invalid.
@@ -187,17 +194,17 @@ class OrdClient:
         }
         target = urllib.parse.urljoin(self._target, '/api/query')
         response = requests.get(target, params=params)
-        return dataset_pb2.Dataset.FromString(response.content)
+        results = response.json()
+        return [query.Result(**result) for result in results]
 
 
 class ComponentQuery:
     """Client-side implementation of ReactionComponentPredicate."""
 
-    _ALLOWED_SOURCES = list(
+    _ALLOWED_SOURCES: List[str] = list(
         query.ReactionComponentPredicate.SOURCE_TO_TABLE.keys())
-    _MATCH_MODE = query.ReactionComponentPredicate.MatchMode
 
-    def __init__(self, pattern, source, mode):
+    def __init__(self, pattern: str, source: str, mode: str):
         """Initializes the query.
 
         Args:
@@ -210,9 +217,11 @@ class ComponentQuery:
             raise ValueError(f'source is not in {self._ALLOWED_SOURCES}')
         self._source = source
         try:
-            self._MATCH_MODE.from_name(mode)
+            query.ReactionComponentPredicate.MatchMode.from_name(mode)
         except KeyError as error:
-            raise ValueError(f'mode is not in {self._MATCH_MODE}') from error
+            raise ValueError(
+                f'mode is not in {query.ReactionComponentPredicate.MatchMode}'
+            ) from error
         self._mode = mode
 
     def get_params(self):
