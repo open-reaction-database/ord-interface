@@ -50,6 +50,10 @@ from ord_interface import query
 
 app = flask.Flask(__name__, template_folder='.')
 app.config['ORD_POSTGRES_HOST'] = os.getenv('ORD_POSTGRES_HOST', 'localhost')
+app.config['ORD_POSTGRES_USER'] = os.getenv('ORD_POSTGRES_USER',
+                                            'ord-postgres')
+app.config['ORD_POSTGRES_PASSWORD'] = os.getenv('ORD_POSTGRES_PASSWORD',
+                                                'ord-postgres')
 
 Query = NewType('Query', query.ReactionQueryBase)
 
@@ -108,8 +112,8 @@ def render_reaction(reaction_id):
 
 def connect():
     return query.OrdPostgres(dbname='ord',
-                             user='ord-postgres',
-                             password='ord-postgres',
+                             user=app.config['ORD_POSTGRES_USER'],
+                             password=app.config['ORD_POSTGRES_PASSWORD'],
                              host=app.config['ORD_POSTGRES_HOST'],
                              port=5432)
 
