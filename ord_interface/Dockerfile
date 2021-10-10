@@ -27,16 +27,14 @@ FROM continuumio/miniconda3
 RUN apt-get update \
  && apt-get install -y \
     build-essential \
+    libpq-dev \
     procps \
+    python3-dev \
     unzip \
  && apt-get clean
 
-RUN conda install -c rdkit \
-    flask \
-    gunicorn \
-    python=3.7 \
-    rdkit \
- && conda clean -afy
+RUN pip install --upgrade pip \
+ && pip install gunicorn
 
 # Install ord-schema.
 WORKDIR /usr/src/app
@@ -53,6 +51,10 @@ COPY requirements.txt setup.py ./
 COPY ord_interface/ ord_interface/
 RUN pip install -r requirements.txt
 RUN python setup.py install
+
+# Fix some missing deps in ord-schema.
+# TODO(skearnes): Move into ord-schema requirements.txt.
+RUN pip install pillow rdkit-pypi
 
 # Build and launch the interface.
 EXPOSE 5000
