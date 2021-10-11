@@ -43,7 +43,7 @@ count:          # Number of tasks that should be running in your service.
   range: 1-10
   cpu_percentage: 70
   memory_percentage: 80
-  requests: 100
+  requests: 10000
   response_time: 2s
 exec: true     # Enable running commands in your container.
 
