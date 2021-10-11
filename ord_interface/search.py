@@ -49,10 +49,10 @@ from ord_schema.visualization import generate_text
 from ord_interface import query
 
 app = flask.Flask(__name__, template_folder='.')
-app.config['ORD_POSTGRES_HOST'] = os.getenv('ORD_POSTGRES_HOST', 'localhost')
-app.config['ORD_POSTGRES_USER'] = os.getenv('ORD_POSTGRES_USER', 'ord-postgres')
-app.config['ORD_POSTGRES_PASSWORD'] = os.getenv('ORD_POSTGRES_PASSWORD',
-                                                'ord-postgres')
+POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
+POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
 
 Query = NewType('Query', query.ReactionQueryBase)
 
@@ -111,10 +111,10 @@ def render_reaction(reaction_id):
 
 def connect():
     return query.OrdPostgres(dbname='ord',
-                             user=app.config['ORD_POSTGRES_USER'],
-                             password=app.config['ORD_POSTGRES_PASSWORD'],
-                             host=app.config['ORD_POSTGRES_HOST'],
-                             port=5432)
+                             user=POSTGRES_USER,
+                             password=POSTGRES_PASSWORD,
+                             host=POSTGRES_HOST,
+                             port=int(POSTGRES_PORT))
 
 
 @app.route('/api/fetch_reactions', methods=['POST'])

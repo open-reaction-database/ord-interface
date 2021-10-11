@@ -61,6 +61,6 @@ exec: true     # Enable running commands in your container.
 #    count: 2               # Number of tasks to run for the "test" environment.
 
 secrets:
-  ORD_POSTGRES_HOST: /copilot/ord-interface/secrets/ORD_POSTGRES_HOST
-  ORD_POSTGRES_USER: /copilot/ord-interface/secrets/ORD_POSTGRES_USER
-  ORD_POSTGRES_PASSWORD: /copilot/ord-interface/secrets/ORD_POSTGRES_PASSWORD
+  POSTGRES_HOST: /copilot/ord-interface/secrets/POSTGRES_HOST
+  POSTGRES_USER: /copilot/ord-interface/secrets/POSTGRES_USER
+  POSTGRES_PASSWORD: /copilot/ord-interface/secrets/POSTGRES_PASSWORD
