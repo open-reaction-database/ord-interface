@@ -22,7 +22,7 @@
 # To push the built image to Docker Hub:
 # docker push openreactiondatabase/ord-interface
 
-FROM continuumio/miniconda3
+FROM python:3.8
 
 RUN apt-get update \
  && apt-get install -y \
@@ -31,7 +31,8 @@ RUN apt-get update \
     procps \
     python3-dev \
     unzip \
- && apt-get clean
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip \
  && pip install gunicorn
