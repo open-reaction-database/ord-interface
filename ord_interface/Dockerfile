@@ -22,7 +22,7 @@
 # To push the built image to Docker Hub:
 # docker push openreactiondatabase/ord-interface
 
-FROM python:3.8
+FROM continuumio/miniconda3
 
 RUN apt-get update \
  && apt-get install -y \
@@ -34,8 +34,10 @@ RUN apt-get update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip \
- && pip install gunicorn
+RUN conda install -c rdkit \
+    python=3.7 \
+    rdkit \
+ && conda clean -afy
 
 # Install ord-schema.
 WORKDIR /usr/src/app
@@ -51,13 +53,11 @@ WORKDIR ../ord-interface
 COPY requirements.txt setup.py ./
 COPY ord_interface/ ord_interface/
 RUN pip install -r requirements.txt
+RUN pip install pillow
 RUN python setup.py install
 
-# Fix some missing deps in ord-schema.
-# TODO(skearnes): Move into ord-schema requirements.txt.
-RUN pip install pillow rdkit-pypi
-
 # Build and launch the interface.
+RUN pip install gunicorn
 EXPOSE 5000
 CMD gunicorn ord_interface.search:app \
     --bind 0.0.0.0:5000 \
