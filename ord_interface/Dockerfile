@@ -53,7 +53,6 @@ WORKDIR ../ord-interface
 COPY requirements.txt setup.py ./
 COPY ord_interface/ ord_interface/
 RUN pip install -r requirements.txt
-RUN pip install pillow
 RUN python setup.py install
 
 # Build and launch the interface.
