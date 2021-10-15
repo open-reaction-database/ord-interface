@@ -27,14 +27,13 @@ FROM continuumio/miniconda3
 RUN apt-get update \
  && apt-get install -y \
     build-essential \
-    libpq-dev \
     procps \
-    python3-dev \
     unzip \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
 RUN conda install -c rdkit \
+    psycopg2 \
     python=3.7 \
     rdkit \
  && conda clean -afy
