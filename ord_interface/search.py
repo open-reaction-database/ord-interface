@@ -123,8 +123,7 @@ def fetch_reactions():
     command = query.ReactionIdQuery(reaction_ids)
     try:
         results = connect().run_query(command)
-        return flask.jsonify(
-            [dataclasses.asdict(result) for result in results])
+        return flask.jsonify([dataclasses.asdict(result) for result in results])
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -141,8 +140,7 @@ def run_query():
         return flask.abort(flask.make_response('no query defined', 400))
     try:
         results = connect().run_query(command, limit=limit)
-        return flask.jsonify(
-            [dataclasses.asdict(result) for result in results])
+        return flask.jsonify([dataclasses.asdict(result) for result in results])
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
