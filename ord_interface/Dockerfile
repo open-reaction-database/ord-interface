@@ -29,11 +29,11 @@ RUN apt-get update \
     build-essential \
     procps \
     unzip \
- && apt-get clean
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN conda install -c rdkit \
-    flask \
-    gunicorn \
+    psycopg2 \
     python=3.7 \
     rdkit \
  && conda clean -afy
@@ -55,6 +55,7 @@ RUN pip install -r requirements.txt
 RUN python setup.py install
 
 # Build and launch the interface.
+RUN pip install gunicorn
 EXPOSE 5000
 CMD gunicorn ord_interface.search:app \
     --bind 0.0.0.0:5000 \
