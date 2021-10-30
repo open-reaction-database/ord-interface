@@ -38,7 +38,6 @@ be URL-encoded.
 # pylint: disable=too-many-locals
 
 import dataclasses
-import json
 import os
 from typing import NewType, Optional, Tuple
 
@@ -49,7 +48,10 @@ from ord_schema.visualization import generate_text
 from ord_interface import query
 
 app = flask.Flask(__name__, template_folder='.')
-app.config['ORD_POSTGRES_HOST'] = os.getenv('ORD_POSTGRES_HOST', 'localhost')
+POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
+POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
 
 Query = NewType('Query', query.ReactionQueryBase)
 
@@ -108,10 +110,10 @@ def render_reaction(reaction_id):
 
 def connect():
     return query.OrdPostgres(dbname='ord',
-                             user='ord-postgres',
-                             password='ord-postgres',
-                             host=app.config['ORD_POSTGRES_HOST'],
-                             port=5432)
+                             user=POSTGRES_USER,
+                             password=POSTGRES_PASSWORD,
+                             host=POSTGRES_HOST,
+                             port=int(POSTGRES_PORT))
 
 
 @app.route('/api/fetch_reactions', methods=['POST'])
@@ -121,8 +123,7 @@ def fetch_reactions():
     command = query.ReactionIdQuery(reaction_ids)
     try:
         results = connect().run_query(command)
-        return flask.make_response(
-            json.dumps([dataclasses.asdict(result) for result in results]))
+        return flask.jsonify([dataclasses.asdict(result) for result in results])
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -139,8 +140,7 @@ def run_query():
         return flask.abort(flask.make_response('no query defined', 400))
     try:
         results = connect().run_query(command, limit=limit)
-        return flask.make_response(
-            json.dumps([dataclasses.asdict(result) for result in results]))
+        return flask.jsonify([dataclasses.asdict(result) for result in results])
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
