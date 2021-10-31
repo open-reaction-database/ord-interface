@@ -49,7 +49,7 @@ RUN conda install -c rdkit \
 WORKDIR "${ORD_ROOT}"
 RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
 WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.3.13
+ARG ORD_SCHEMA_TAG=v0.3.14
 RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
