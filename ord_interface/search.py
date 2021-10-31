@@ -57,7 +57,7 @@ POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
 Query = NewType('Query', query.ReactionQueryBase)
 
 # Load custom Jinja filters.
-app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)
+app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
 BOND_LENGTH = 20
 
 
