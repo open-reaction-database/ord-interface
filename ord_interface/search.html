@@ -83,12 +83,12 @@
             align-items: center;
         }
 
-        #reactions_content {
+        #reactions_content, #datasets_content {
             margin-top: 10px;
             display: grid;
             grid-row-gap: 18px;
             grid-column-gap: 18px;
-            grid-template-columns: [labels] 150px [text] 350px;
+            grid-template-columns: [labels] 150px [text] 450px;
             align-items: center;
         }
 
@@ -136,12 +136,17 @@
         <ul id="tabs" class="nav nav-pills justify-content-center" role="tablist">
             <li class="nav-item">
                 <button type="button" id="reagents_tab" class="nav-link active" data-bs-toggle="pill" data-bs-target="#reagents" role="tab" aria-controls="reagents" aria-selected="true">
-                    Search by Reagent(s)
+                    Search by Reagent
                 </button>
             </li>
             <li>
                 <button type="button" id="reactions_tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#reactions" role="tab" aria-controls="reactions" aria-selected="false">
-                    Search by Reaction(s)
+                    Search by Reaction
+                </button>
+            </li>
+            <li>
+                <button type="button" id="datasets_tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#datasets" role="tab" aria-controls="datasets" aria-selected="false">
+                    Search by Dataset
                 </button>
             </li>
         </ul>
@@ -162,9 +167,13 @@
             </div>
             <div id="reactions" class="tab-pane" role="tabpanel" aria-labelledby="reactions_tab">
                 <div id="reactions_content">
-                    <label for="dataset_ids">Dataset IDs</label><textarea id="dataset_ids"></textarea>
                     <label for="reaction_ids">Reaction IDs</label><textarea id="reaction_ids"></textarea>
                     <label for="reaction_smarts">Reaction SMARTS</label><textarea id="reaction_smarts"></textarea>
+                </div>
+            </div>
+            <div id="datasets" class="tab-pane" role="tabpanel" aria-labelledby="datasets_tab">
+                <div id="datasets_content">
+                    <label for="dataset_ids">Dataset IDs</label><textarea id="dataset_ids"></textarea>
                     <label for="dois">DOIs</label><textarea id="dois"></textarea>
                 </div>
             </div>
@@ -399,7 +408,10 @@
     // Show the tab appropriate to the current predicate.
     if ('reactionIds' in query || 'reactionSmarts' in query) {
         $('#reactions_tab').trigger('click');
-    } else {
+    } else if ('dois' in query || 'datasetIds' in query) {
+        $('#datasets_tab').trigger('click');
+    }
+    else {
         $('#reagents_tab').trigger('click');
     }
 
