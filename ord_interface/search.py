@@ -43,6 +43,7 @@ from typing import NewType, Optional, Tuple
 
 import flask
 
+from ord_schema.visualization import filters
 from ord_schema.visualization import generate_text
 
 from ord_interface import query
@@ -55,6 +56,10 @@ POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
 POSTGRES_DATABASE = os.getenv('POSTGRES_DATABASE', 'ord')
 
 Query = NewType('Query', query.ReactionQueryBase)
+
+# Load custom Jinja filters.
+app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
+BOND_LENGTH = 20
 
 
 @app.route('/')
@@ -89,8 +94,14 @@ def show_id(reaction_id):
     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
     if len(results) == 0:
         return flask.abort(404)
-    return generate_text.generate_summary(reaction=results[0].reaction,
-                                          dataset_id=results[0].dataset_id)
+    reaction = results[0].reaction
+    reaction_summary = generate_text.generate_html(reaction,
+                                                   bond_length=BOND_LENGTH)
+    return flask.render_template('reaction.html',
+                                 reaction=reaction,
+                                 dataset_id=results[0].dataset_id,
+                                 reaction_summary=reaction_summary,
+                                 bond_length=BOND_LENGTH)
 
 
 @app.route('/render/<reaction_id>')
