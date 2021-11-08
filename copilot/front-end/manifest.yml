@@ -64,3 +64,4 @@ secrets:
   POSTGRES_HOST: /copilot/ord-interface/secrets/POSTGRES_HOST
   POSTGRES_USER: /copilot/ord-interface/secrets/POSTGRES_USER
   POSTGRES_PASSWORD: /copilot/ord-interface/secrets/POSTGRES_PASSWORD
+  POSTGRES_DATABASE: /copilot/ord-interface/secrets/POSTGRES_DATABASE
