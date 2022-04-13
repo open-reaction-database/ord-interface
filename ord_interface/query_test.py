@@ -65,6 +65,19 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
         for result in results:
             self.assertIn(result.reaction.provenance.doi, dois)
 
+    def test_exact_query(self):
+        pattern = 'O=C1NC2=CC(Br)=CC3=C2N(C(CC(OC)=O)CC3)C1=O'
+        mode = query.ReactionComponentPredicate.MatchMode.EXACT
+        predicates = [
+            query.ReactionComponentPredicate(pattern, table='inputs', mode=mode)
+        ]
+        command = query.ReactionComponentQuery(predicates)
+        results = self.postgres.run_query(command, limit=5, return_ids=True)
+        self.assertLen(results, 5)
+        # Check that we remove redundant reaction IDs.
+        reaction_ids = [result.reaction_id for result in results]
+        self.assertCountEqual(reaction_ids, np.unique(reaction_ids))
+
     def test_substructure_query(self):
         pattern = 'C'
         mode = query.ReactionComponentPredicate.MatchMode.SUBSTRUCTURE

@@ -439,7 +439,12 @@ class ReactionComponentQuery(ReactionQueryBase):
                      cursor.mogrify(command, args).decode())
         cursor.execute(command, args)
         command = sql.SQL('SET rdkit.tanimoto_threshold=%s')
-        args = [self._tanimoto_threshold]
+        # TODO(skearnes): Handle conflicts with similarity.
+        tanimoto_threshold = self._tanimoto_threshold
+        for predicate in self._predicates:
+            if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
+                tanimoto_threshold = 1.0
+        args = [tanimoto_threshold]
         logging.info('Running SQL command: %s',
                      cursor.mogrify(command, args).decode())
         cursor.execute(command, args)
@@ -447,33 +452,17 @@ class ReactionComponentQuery(ReactionQueryBase):
     def _get_tables(self) -> List[sql.SQL]:
         """Identifies the minimum set of tables to join for the query."""
         tables = []
-        requires_inputs = False
         requires_rdk_inputs = False
-        requires_outputs = False
         requires_rdk_outputs = False
         for predicate in self._predicates:
             if predicate.table == 'inputs':
-                if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
-                    requires_inputs = True
-                else:
-                    requires_rdk_inputs = True
+                requires_rdk_inputs = True
             elif predicate.table == 'outputs':
-                if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
-                    requires_outputs = True
-                else:
-                    requires_rdk_outputs = True
-        if requires_inputs:
-            tables.append(
-                sql.SQL("""
-            INNER JOIN inputs USING (reaction_id) """))
+                requires_rdk_outputs = True
         if requires_rdk_inputs:
             tables.append(
                 sql.SQL("""
             INNER JOIN rdk.inputs USING (reaction_id) """))
-        if requires_outputs:
-            tables.append(
-                sql.SQL("""
-            INNER JOIN outputs USING (reaction_id) """))
         if requires_rdk_outputs:
             tables.append(
                 sql.SQL("""
@@ -509,7 +498,7 @@ class ReactionComponentQuery(ReactionQueryBase):
             List of Result instances.
         """
         if not self._predicates:
-            return {}
+            return []
         self._setup(cursor)
         predicates = []
         args = []
@@ -600,12 +589,7 @@ class ReactionComponentPredicate:
             predicate: sql.SQL query object.
             args: List of arguments for `predicate`.
         """
-        if self._mode == ReactionComponentPredicate.MatchMode.EXACT:
-            # Canonicalize the SMILES.
-            self._pattern = Chem.MolToSmiles(Chem.MolFromSmiles(self._pattern))
-            predicate = sql.SQL('{} = %s').format(
-                sql.Identifier(self._table, 'smiles'))
-        elif self._mode == ReactionComponentPredicate.MatchMode.SIMILAR:
+        if self._mode in [ReactionComponentPredicate.MatchMode.SIMILAR, ReactionComponentPredicate.MatchMode.EXACT]:
             predicate = sql.SQL('{}%%morganbv_fp(%s)').format(
                 sql.Identifier('rdk', self._table, 'mfp2'))
         elif self._mode == ReactionComponentPredicate.MatchMode.SUBSTRUCTURE:
