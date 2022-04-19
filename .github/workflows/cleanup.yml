@@ -17,7 +17,7 @@ name: Lint
 on: [pull_request, push]
 
 env:
-  ORD_SCHEMA_TAG: v0.3.14
+  ORD_SCHEMA_TAG: v0.3.15
 
 jobs:
   check_licenses:
