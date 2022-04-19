@@ -72,8 +72,8 @@ class Result:
             binascii.unhexlify(self.serialized))
 
     def __eq__(self, other: 'Result') -> bool:
-        return (self.dataset_id == other.dataset_id
-                and self.reaction_id == other.reaction_id)
+        return (self.dataset_id == other.dataset_id and
+                self.reaction_id == other.reaction_id)
 
 
 def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
@@ -431,8 +431,7 @@ class ReactionComponentQuery(ReactionQueryBase):
             ],
         })
 
-    def _setup(self,
-               predicates: List['ReactionComponentPredicate'],
+    def _setup(self, predicates: List['ReactionComponentPredicate'],
                cursor: psycopg2.extensions.cursor) -> None:
         """Prepares the database for a query.
 
@@ -620,8 +619,10 @@ class ReactionComponentPredicate:
             predicate: sql.SQL query object.
             args: List of arguments for `predicate`.
         """
-        if self._mode in [ReactionComponentPredicate.MatchMode.SIMILAR,
-                          ReactionComponentPredicate.MatchMode.EXACT]:
+        if self._mode in [
+                ReactionComponentPredicate.MatchMode.SIMILAR,
+                ReactionComponentPredicate.MatchMode.EXACT
+        ]:
             predicate = sql.SQL('{}%%morganbv_fp(%s)').format(
                 sql.Identifier('rdk', self._table, 'mfp2'))
         elif self._mode == ReactionComponentPredicate.MatchMode.SUBSTRUCTURE:
