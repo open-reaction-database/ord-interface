@@ -515,12 +515,11 @@ class ReactionComponentQuery(ReactionQueryBase):
         other_results = self._run(other, cursor=cursor, limit=limit)
         if exact_results and other_results:
             return list(set(exact_results).intersection(set(other_results)))
-        elif exact_results:
+        if exact_results:
             return exact_results
-        elif other_results:
+        if other_results:
             return other_results
-        else:
-            return []
+        return []
 
     def _run(self,
              predicates: List['ReactionComponentPredicate'],
