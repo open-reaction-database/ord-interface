@@ -71,6 +71,10 @@ class Result:
         return reaction_pb2.Reaction.FromString(
             binascii.unhexlify(self.serialized))
 
+    def __eq__(self, other: 'Result') -> bool:
+        return (self.dataset_id == other.dataset_id and
+                self.reaction_id == other.reaction_id)
+
 
 def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
     """Fetches query results.
@@ -427,11 +431,13 @@ class ReactionComponentQuery(ReactionQueryBase):
             ],
         })
 
-    def _setup(self, cursor: psycopg2.extensions.cursor) -> None:
+    def _setup(self, predicates: List['ReactionComponentPredicate'],
+               cursor: psycopg2.extensions.cursor) -> None:
         """Prepares the database for a query.
 
         Args:
             cursor: psycopg.cursor instance.
+            predicates: Predicates included in this query.
         """
         command = sql.SQL('SET rdkit.do_chiral_sss=%s')
         args = [self._do_chiral_sss]
@@ -439,7 +445,11 @@ class ReactionComponentQuery(ReactionQueryBase):
                      cursor.mogrify(command, args).decode())
         cursor.execute(command, args)
         command = sql.SQL('SET rdkit.tanimoto_threshold=%s')
-        args = [self._tanimoto_threshold]
+        tanimoto_threshold = self._tanimoto_threshold
+        for predicate in predicates:
+            if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
+                tanimoto_threshold = 1.0
+        args = [tanimoto_threshold]
         logging.info('Running SQL command: %s',
                      cursor.mogrify(command, args).decode())
         cursor.execute(command, args)
@@ -447,33 +457,17 @@ class ReactionComponentQuery(ReactionQueryBase):
     def _get_tables(self) -> List[sql.SQL]:
         """Identifies the minimum set of tables to join for the query."""
         tables = []
-        requires_inputs = False
         requires_rdk_inputs = False
-        requires_outputs = False
         requires_rdk_outputs = False
         for predicate in self._predicates:
             if predicate.table == 'inputs':
-                if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
-                    requires_inputs = True
-                else:
-                    requires_rdk_inputs = True
+                requires_rdk_inputs = True
             elif predicate.table == 'outputs':
-                if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
-                    requires_outputs = True
-                else:
-                    requires_rdk_outputs = True
-        if requires_inputs:
-            tables.append(
-                sql.SQL("""
-            INNER JOIN inputs USING (reaction_id) """))
+                requires_rdk_outputs = True
         if requires_rdk_inputs:
             tables.append(
                 sql.SQL("""
             INNER JOIN rdk.inputs USING (reaction_id) """))
-        if requires_outputs:
-            tables.append(
-                sql.SQL("""
-            INNER JOIN outputs USING (reaction_id) """))
         if requires_rdk_outputs:
             tables.append(
                 sql.SQL("""
@@ -508,12 +502,36 @@ class ReactionComponentQuery(ReactionQueryBase):
         Returns:
             List of Result instances.
         """
-        if not self._predicates:
-            return {}
-        self._setup(cursor)
-        predicates = []
-        args = []
+        # The RDKit Postgres cartridge only allows the Tanimoto threshold to be
+        # set once per query. If we mix EXACT and SIMILAR modes, we need to get
+        # the results in separate queries and compute the intersection.
+        exact, other = [], []
         for predicate in self._predicates:
+            if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
+                exact.append(predicate)
+            else:
+                other.append(predicate)
+        exact_results = self._run(exact, cursor=cursor, limit=limit)
+        other_results = self._run(other, cursor=cursor, limit=limit)
+        if exact_results and other_results:
+            return list(set(exact_results).intersection(set(other_results)))
+        if exact_results:
+            return exact_results
+        if other_results:
+            return other_results
+        return []
+
+    def _run(self,
+             predicates: List['ReactionComponentPredicate'],
+             cursor: psycopg2.extensions.cursor,
+             limit: Optional[int] = None) -> List[Result]:
+        """Runs the query for a set of predicates."""
+        if not predicates:
+            return []
+        self._setup(predicates, cursor)
+        predicate_components = []
+        args = []
+        for predicate in predicates:
             components = [
                 sql.SQL("""
                 SELECT DISTINCT dataset_id, reaction_id, serialized
@@ -525,8 +543,8 @@ class ReactionComponentQuery(ReactionQueryBase):
             predicate_sql, predicate_args = predicate.get()
             components.append(predicate_sql)
             args.extend(predicate_args)
-            predicates.append(sql.Composed(components))
-        components = [sql.Composed(predicates).join(' INTERSECT ')]
+            predicate_components.append(sql.Composed(components))
+        components = [sql.Composed(predicate_components).join(' INTERSECT ')]
         if limit:
             components.append(sql.SQL(' LIMIT %s'))
             args.append(limit)
@@ -600,12 +618,10 @@ class ReactionComponentPredicate:
             predicate: sql.SQL query object.
             args: List of arguments for `predicate`.
         """
-        if self._mode == ReactionComponentPredicate.MatchMode.EXACT:
-            # Canonicalize the SMILES.
-            self._pattern = Chem.MolToSmiles(Chem.MolFromSmiles(self._pattern))
-            predicate = sql.SQL('{} = %s').format(
-                sql.Identifier(self._table, 'smiles'))
-        elif self._mode == ReactionComponentPredicate.MatchMode.SIMILAR:
+        if self._mode in [
+                ReactionComponentPredicate.MatchMode.SIMILAR,
+                ReactionComponentPredicate.MatchMode.EXACT
+        ]:
             predicate = sql.SQL('{}%%morganbv_fp(%s)').format(
                 sql.Identifier('rdk', self._table, 'mfp2'))
         elif self._mode == ReactionComponentPredicate.MatchMode.SUBSTRUCTURE:

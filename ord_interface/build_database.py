@@ -76,7 +76,6 @@ def process_reaction(reaction: reaction_pb2.Reaction,
 
     Args:
         reaction: Reaction proto.
-        cursor: psycopg2 cursor.
         dataset_id: Dataset ID.
 
     Returns:

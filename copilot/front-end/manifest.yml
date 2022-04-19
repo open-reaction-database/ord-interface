@@ -40,7 +40,10 @@ image:
 cpu: 1024       # Number of CPU units for the task.
 memory: 2048    # Amount of memory in MiB used by the task.
 count:          # Number of tasks that should be running in your service.
-  range: 1-10
+  range:
+    min: 1
+    max: 10
+    spot_from: 1
   cpu_percentage: 70
   memory_percentage: 80
   requests: 10000
