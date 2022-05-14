@@ -54,19 +54,6 @@
             margin-left: 18px;
         }
 
-        #form {
-            grid-column: form;
-            display: grid;
-            grid-template-rows: [controls] auto [go] auto [spacer] 40px;
-            grid-template-columns: [overview] 300px [query] 650px;
-        }
-
-        #tabs {
-            grid-row: controls;
-            grid-column: query;
-            justify-content: center;
-        }
-
         #reagents_content {
             margin-top: 10px;
             display: grid;
@@ -93,27 +80,17 @@
             margin-left: 18px;
         }
 
-        #go {
-            border-top: 1px solid black;
-            padding-top: 18px;
-            margin-top: 18px;
-            grid-row: go;
-            grid-column: query;
-            text-align: center;
-        }
-
         #spacer {
-            grid-row: spacer;
-            grid-column: query;
+            border-bottom: 1px solid black;
+            height: 40px;
         }
 
         #error {
-            grid-row: spacer;
-            grid-column: query;
             color: red;
             font-style: italic;
             text-align: center;
-            padding-top: 10px;
+            border-bottom: 1px solid black;
+            height: 40px;
         }
     </style>
 </head>
@@ -146,67 +123,55 @@
         </div>
     </div>
 </nav>
-<div id="form" class="container mt-3">
-    <div id="query">
-        <ul id="tabs" class="nav nav-pills justify-content-center" role="tablist">
-            <li class="nav-item">
-                <button type="button" id="reagents_tab" class="nav-link active" data-bs-toggle="pill" data-bs-target="#reagents" role="tab" aria-controls="reagents" aria-selected="true">
-                    Search by Reagent
-                </button>
-            </li>
-            <li>
-                <button type="button" id="reactions_tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#reactions" role="tab" aria-controls="reactions" aria-selected="false">
-                    Search by Reaction
-                </button>
-            </li>
-            <li>
-                <button type="button" id="datasets_tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#datasets" role="tab" aria-controls="datasets" aria-selected="false">
-                    Search by Dataset
-                </button>
-            </li>
-        </ul>
-        <div class="tab-content">
-            <div id="reagents" class="tab-pane show active" role="tabpanel" aria-labelledby="reagents_tab">
-                <div id="reagents_content">
-                    <b style="grid-column: text">SMILES/SMARTS</b>
-                    <b>Source</b>
-                    <b>Match Mode</b>
-                    <button type="button" id="add_component" onclick="addComponent();">
-                        <i class="fas fa-plus"></i> Add Component
-                    </button>
-                    <label for="stereo" style="grid-column: text">Use Stereochemistry</label>
-                    <input type="checkbox" id="stereo">
-                    <label for="similarity" style="grid-column: text">Similarity Threshold</label>
-                    <input id="similarity" type="text" value="0.5" style="width: 60px">
-                </div>
-            </div>
-            <div id="reactions" class="tab-pane" role="tabpanel" aria-labelledby="reactions_tab">
-                <div id="reactions_content">
-                    <label for="reaction_ids">Reaction IDs</label><textarea id="reaction_ids"></textarea>
-                    <label for="reaction_smarts">Reaction SMARTS</label><textarea id="reaction_smarts"></textarea>
-                </div>
-            </div>
-            <div id="datasets" class="tab-pane" role="tabpanel" aria-labelledby="datasets_tab">
-                <div id="datasets_content">
-                    <label for="dataset_ids">Dataset IDs</label><textarea id="dataset_ids"></textarea>
-                    <label for="dois">DOIs</label><textarea id="dois"></textarea>
-                </div>
-            </div>
+<div class="container mt-3">
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByReagent" aria-expanded="false" aria-controls="searchByReagent">
+        Reagents
+    </button>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByReaction" aria-expanded="false" aria-controls="searchByReaction">
+        Reactions
+    </button>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByDataset" aria-expanded="false" aria-controls="searchByDataset">
+        Datasets
+    </button>
+    <div class="collapse" id="searchByReagent">
+        <div id="reagents_content">
+            <b style="grid-column: text">SMILES/SMARTS</b>
+            <b>Source</b>
+            <b>Match Mode</b>
+            <button type="button" id="add_component" onclick="addComponent();">
+                <i class="fas fa-plus"></i> Add Component
+            </button>
+            <label for="stereo" style="grid-column: text">Use Stereochemistry</label>
+            <input type="checkbox" id="stereo">
+            <label for="similarity" style="grid-column: text">Similarity Threshold</label>
+            <input id="similarity" type="text" value="0.5" style="width: 60px">
         </div>
     </div>
-    <div id="go">
+    <div class="collapse" id="searchByReaction">
+        <div id="reactions_content">
+            <label for="reaction_ids">Reaction IDs</label><textarea id="reaction_ids"></textarea>
+            <label for="reaction_smarts">Reaction SMARTS</label><textarea id="reaction_smarts"></textarea>
+        </div>
+    </div>
+    <div class="collapse" id="searchByDataset">
+        <div id="datasets_content">
+            <label for="dataset_ids">Dataset IDs</label><textarea id="dataset_ids"></textarea>
+            <label for="dois">DOIs</label><textarea id="dois"></textarea>
+        </div>
+    </div>
+    <div id="go" class="mt-3">
         <label for="limit">Result Limit</label>
         <input id="limit" type="text" value="100" min="0" style="width: 60px">
         <button id="go_button"><b>Search</b></button>
     </div>
     {% if error %}
-        <div id="error">{{ error }}</div>
+        <div id="error" class="mt-3 pb-3">{{ error }}</div>
     {% else %}
-        <div id="spacer"></div>
+        <div id="spacer" class="mt-3 pb-3"></div>
     {% endif %}
 </div>
 
-<div id="results" class="container mt-3">
+<div id="results" class="container mt-3 mb-3">
     <table id="results_table" class="table"></table>
 </div>
 <!-- https://radu.link/make-footer-stay-bottom-page-bootstrap/ -->
