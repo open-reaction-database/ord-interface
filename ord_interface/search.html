@@ -30,20 +30,13 @@
         gtag('js', new Date());
         gtag('config', 'G-REEDLYB0ZJ');
     </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
-            crossorigin="anonymous"></script>
-    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
+    <!-- https://datatables.net/download/ -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.js"></script>
     <style>
-        body {
-            padding: 48px;
-        }
-
         #add_component {
             font-size: medium;
             border: 1px solid black;
@@ -124,14 +117,36 @@
         }
     </style>
 </head>
-<body>
-<div id="form">
-    <div id="overview">
-        <a href="https://open-reaction-database.org">
-            <img src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg" height="50px">
+<body class="d-flex flex-column min-vh-100">
+<nav class="navbar navbar-expand-lg bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="https://open-reaction-database.org">
+            <img src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg" alt=""
+                 height="30px">
         </a>
-        <h2 style="margin-block-start: 0;">Search Interface</h2>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link"  href="/browse">Browse</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">Search</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://editor.open-reaction-database.org">Contribute</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://open-reaction-database.org">Docs</a>
+                </li>
+            </ul>
+        </div>
     </div>
+</nav>
+<div id="form" class="container mt-3">
     <div id="query">
         <ul id="tabs" class="nav nav-pills justify-content-center" role="tablist">
             <li class="nav-item">
@@ -191,9 +206,15 @@
     {% endif %}
 </div>
 
-<div id="results">
+<div id="results" class="container mt-3">
     <table id="results_table" class="table"></table>
 </div>
+<!-- https://radu.link/make-footer-stay-bottom-page-bootstrap/ -->
+<footer class="bg-light text-center mt-auto">
+    <div class="p-3">
+        &copy; Copyright 2022 Open Reaction Database Project Authors
+    </div>
+</footer>
 
 <div id="component_template" style="display: none">
     <input style="grid-column: text" class="component" type="text">
