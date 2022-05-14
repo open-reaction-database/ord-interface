@@ -39,30 +39,29 @@ be URL-encoded.
 
 import dataclasses
 import os
-from typing import NewType, Optional, Tuple
+from typing import Optional, Tuple
 
 import flask
 
 from ord_schema.visualization import filters
 from ord_schema.visualization import generate_text
 
-from ord_interface import query
+from ord_interface.client import query
 
-app = flask.Flask(__name__, template_folder='.')
+bp = flask.Blueprint('client', __name__, template_folder='.')
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
 POSTGRES_DATABASE = os.getenv('POSTGRES_DATABASE', 'ord')
 
-Query = NewType('Query', query.ReactionQueryBase)
-
 # Load custom Jinja filters.
-app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
+for name, function in filters.TEMPLATE_FILTERS.items():
+    bp.add_app_template_filter(name, function)
 BOND_LENGTH = 20
 
 
-@app.route('/')
+@bp.route('/')
 def show_root():
     """Shows the web form.
 
@@ -88,7 +87,7 @@ def show_root():
                                  query=query_json)
 
 
-@app.route('/id/<reaction_id>')
+@bp.route('/id/<reaction_id>')
 def show_id(reaction_id):
     """Returns the pbtxt of a single reaction as plain text."""
     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
@@ -104,7 +103,7 @@ def show_id(reaction_id):
                                  bond_length=BOND_LENGTH)
 
 
-@app.route('/render/<reaction_id>')
+@bp.route('/render/<reaction_id>')
 def render_reaction(reaction_id):
     """Renders a reaction as an HTML table with images and text."""
     command = query.ReactionIdQuery([reaction_id])
@@ -128,7 +127,7 @@ def connect():
                              port=int(POSTGRES_PORT))
 
 
-@app.route('/api/fetch_reactions', methods=['POST'])
+@bp.route('/api/fetch_reactions', methods=['POST'])
 def fetch_reactions():
     """Fetches a list of Reactions by ID."""
     reaction_ids = flask.request.get_json()
@@ -140,7 +139,7 @@ def fetch_reactions():
         return flask.abort(flask.make_response(str(error), 400))
 
 
-@app.route('/api/query')
+@bp.route('/api/query')
 def run_query():
     """Builds and executes a GET query.
 
@@ -157,7 +156,7 @@ def run_query():
         return flask.abort(flask.make_response(str(error), 400))
 
 
-def build_query() -> Tuple[Optional[Query], Optional[int]]:
+def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     """Builds a query from GET parameters.
 
     Returns:

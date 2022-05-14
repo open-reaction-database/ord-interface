@@ -26,8 +26,8 @@ js : gen/js/proto/ord/dataset.js \
 	   gen/js/ord/dataset.js \
 	   gen/js/ord/reaction.js \
 
-py : ../ord-schema/build/lib/ord_schema/proto/dataset_pb2.py \
-	   ../ord-schema/build/lib/ord_schema/proto/reaction_pb2.py
+py : ../../../ord-schema/build/lib/ord_schema/proto/dataset_pb2.py \
+	   ../../../ord-schema/build/lib/ord_schema/proto/reaction_pb2.py
 
 gen/js/ord/dataset.js : js/dataset.js gen/js/proto/ord/dataset.js
 	java -jar node_modules/google-closure-compiler-java/compiler.jar \
@@ -67,14 +67,14 @@ gen/js/ord/reaction.js : js/*.js gen/js/proto/ord/reaction.js
 	  --hide_warnings_for=gen/js/proto/ord \
 	  || (rm -f gen/js/ord/reaction.js && false)
 
-gen/js/proto/ord/%.js : ../ord-schema/ord_schema/proto/%.proto
+gen/js/proto/ord/%.js : ../../../ord-schema/ord_schema/proto/%.proto
 	protoc \
 	  --experimental_allow_proto3_optional \
 	  --js_out=binary:gen/js/proto/ord \
-	  --proto_path=../ord-schema \
+	  --proto_path=../../../ord-schema \
 	  $<
 
-../ord-schema/build/lib/ord_schema/proto/%_pb2.py : ../ord-schema/ord_schema/proto/%.proto
+../../../ord-schema/build/lib/ord_schema/proto/%_pb2.py : ../../../ord-schema/ord_schema/proto/%.proto
 	$(error $< not found--run setup?)
 
 package : all
@@ -89,7 +89,7 @@ package : all
 	  serve.sh \
 	  package/ord
 
-	cp -r ../ord-schema/build/lib/ord_schema package/ord/py
+	cp -r ../../../ord-schema/build/lib/ord_schema package/ord/py
 
 	mkdir package/ord/ketcher
 	cp -r ketcher/dist package/ord/ketcher

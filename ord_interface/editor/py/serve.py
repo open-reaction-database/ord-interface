@@ -45,7 +45,8 @@ from ord_schema.visualization import generate_text
 from ord_schema.visualization import drawing
 
 # pylint: disable=invalid-name,no-member,inconsistent-return-statements,assigning-non-slot
-app = flask.Flask(__name__, template_folder='../html')
+bp = flask.Blueprint('editor', __name__, url_prefix='/editor',
+                     template_folder='../html')
 
 # For dataset merges operations like byte-value uploads and enumeration.
 TEMP = '/tmp/ord-editor'
@@ -69,19 +70,19 @@ REVIEWER = '8df09572f3c74dbcb6003e2eef8e48fc'
 TESTER = '680b0d9fe649417cb092d790907bd5a5'
 
 
-@app.route('/')
+@bp.route('/')
 def show_root():
     """The root path redirects to the "datasets" view."""
     return flask.redirect('/datasets')
 
 
-@app.route('/healthcheck')
+@bp.route('/healthcheck')
 def health_check():
     """Signals that the app is alive."""
     return flask.make_response('', 200)
 
 
-@app.route('/datasets')
+@bp.route('/datasets')
 def show_datasets():
     """Lists all the user's datasets in the datasets table."""
     names = []
@@ -101,7 +102,7 @@ def show_datasets():
                                  client_id=client_id)
 
 
-@app.route('/dataset/<name>')
+@bp.route('/dataset/<name>')
 def show_dataset(name):
     """Lists all Reactions contained in the named dataset."""
     dataset = get_dataset(name)
@@ -122,8 +123,8 @@ def show_dataset(name):
                                  client_id=client_id)
 
 
-@app.route('/dataset/<name>/download')
-@app.route('/dataset/<name>/download/<kind>')
+@bp.route('/dataset/<name>/download')
+@bp.route('/dataset/<name>/download/<kind>')
 def download_dataset(name, kind='pb'):
     """Returns a pb or pbtxt from the datasets table as an attachment."""
     dataset = get_dataset(name)
@@ -140,7 +141,7 @@ def download_dataset(name, kind='pb'):
                            attachment_filename=f'{name}.{kind}')
 
 
-@app.route('/dataset/<name>/upload', methods=['POST'])
+@bp.route('/dataset/<name>/upload', methods=['POST'])
 def upload_dataset(name):
     """Writes the request body to the datasets table without validation."""
     if exists_dataset(name):
@@ -162,7 +163,7 @@ def upload_dataset(name):
         flask.abort(flask.make_response(str(error), 406))
 
 
-@app.route('/dataset/<name>/new', methods=['POST'])
+@bp.route('/dataset/<name>/new', methods=['POST'])
 def new_dataset(name):
     """Creates a new dataset."""
     if exists_dataset(name):
@@ -176,7 +177,7 @@ def new_dataset(name):
     return 'ok'
 
 
-@app.route('/dataset/<name>/delete')
+@bp.route('/dataset/<name>/delete')
 def delete_dataset(name):
     """Removes a Dataset."""
     with flask.g.db.cursor() as cursor:
@@ -188,7 +189,7 @@ def delete_dataset(name):
     return flask.redirect('/datasets')
 
 
-@app.route('/dataset/enumerate', methods=['POST'])
+@bp.route('/dataset/enumerate', methods=['POST'])
 def enumerate_dataset():
     """Creates a new dataset based on a template reaction and a spreadsheet.
 
@@ -223,7 +224,7 @@ def enumerate_dataset():
         flask.abort(flask.make_response(str(error), 406))
 
 
-@app.route('/dataset/<name>/reaction/<index>')
+@bp.route('/dataset/<name>/reaction/<index>')
 def show_reaction(name, index):
     """Render the page representing a single Reaction."""
     dataset = get_dataset(name)
@@ -248,7 +249,7 @@ def show_reaction(name, index):
                                  client_id=client_id)
 
 
-@app.route('/reaction/id/<reaction_id>')
+@bp.route('/reaction/id/<reaction_id>')
 def show_reaction_id(reaction_id):
     """Displays the given reaction."""
     return flask.render_template('reaction.html',
@@ -256,7 +257,7 @@ def show_reaction_id(reaction_id):
                                  freeze=True)
 
 
-@app.route('/reaction/download', methods=['POST'])
+@bp.route('/reaction/download', methods=['POST'])
 def download_reaction():
     """Returns a pbtxt file parsed from POST data as an attachment."""
     reaction = reaction_pb2.Reaction()
@@ -268,7 +269,7 @@ def download_reaction():
                            attachment_filename='reaction.pbtxt')
 
 
-@app.route('/dataset/<name>/new/reaction')
+@bp.route('/dataset/<name>/new/reaction')
 def new_reaction(name):
     """Adds a new Reaction to the named Dataset and redirects to it."""
     dataset = get_dataset(name)
@@ -278,7 +279,7 @@ def new_reaction(name):
     return flask.redirect(f'/dataset/{name}')
 
 
-@app.route('/dataset/<name>/clone/<index>')
+@bp.route('/dataset/<name>/clone/<index>')
 def clone_reaction(name, index):
     """Copies a specific Reaction to the Dataset and view the Reaction."""
     dataset = get_dataset(name)
@@ -294,7 +295,7 @@ def clone_reaction(name, index):
     return flask.redirect(f'/dataset/{name}/reaction/{index}')
 
 
-@app.route('/dataset/<name>/delete/reaction/<index>')
+@bp.route('/dataset/<name>/delete/reaction/<index>')
 def delete_reaction(name, index):
     """Removes a specific Reaction from the Dataset and view the Dataset."""
     dataset = get_dataset(name)
@@ -309,7 +310,7 @@ def delete_reaction(name, index):
     return flask.redirect(f'/dataset/{name}')
 
 
-@app.route('/dataset/<name>/delete/reaction_id/<reaction_id>')
+@bp.route('/dataset/<name>/delete/reaction_id/<reaction_id>')
 def delete_reaction_id(name, reaction_id):
     """Removes a Reaction reference from the Dataset and view the Dataset."""
     dataset = get_dataset(name)
@@ -320,13 +321,13 @@ def delete_reaction_id(name, reaction_id):
     flask.abort(404)
 
 
-@app.route('/dataset/<name>/delete/reaction_id/')
+@bp.route('/dataset/<name>/delete/reaction_id/')
 def delete_reaction_id_blank(name):
     """Removes the first empty Reaction reference from the Dataset."""
     return delete_reaction_id(name, '')
 
 
-@app.route('/dataset/proto/read/<name>')
+@bp.route('/dataset/proto/read/<name>')
 def read_dataset(name):
     """Returns a Dataset as a serialized protobuf."""
     dataset = get_dataset(name)
@@ -336,7 +337,7 @@ def read_dataset(name):
     return response
 
 
-@app.route('/dataset/proto/write/<name>', methods=['POST'])
+@bp.route('/dataset/proto/write/<name>', methods=['POST'])
 def write_dataset(name):
     """Inserts a protobuf including upload tokens into the datasets table."""
     dataset = dataset_pb2.Dataset()
@@ -346,7 +347,7 @@ def write_dataset(name):
     return 'ok'
 
 
-@app.route('/dataset/proto/upload/<name>/<token>', methods=['POST'])
+@bp.route('/dataset/proto/upload/<name>/<token>', methods=['POST'])
 def write_upload(name, token):
     """Writes the POST body, names it <token>, and maybe updates the dataset.
 
@@ -377,7 +378,7 @@ def write_upload(name, token):
     return 'ok'
 
 
-@app.route('/dataset/proto/download/<token>', methods=['POST'])
+@bp.route('/dataset/proto/download/<token>', methods=['POST'])
 def read_upload(token):
     """Echoes a POST body back to the client as a file attachment.
 
@@ -409,7 +410,7 @@ def _adjust_error(error: str) -> str:
     return message.strip()
 
 
-@app.route('/dataset/proto/validate/<message_name>', methods=['POST'])
+@bp.route('/dataset/proto/validate/<message_name>', methods=['POST'])
 def validate_reaction(message_name):
     """Receives a serialized Reaction protobuf and runs validations."""
     message = message_helpers.create_message(message_name)
@@ -426,7 +427,7 @@ def validate_reaction(message_name):
     return json.dumps({'errors': errors, 'warnings': warnings})
 
 
-@app.route('/resolve/input', methods=['POST'])
+@bp.route('/resolve/input', methods=['POST'])
 def resolve_input():
     """Resolve an input string to a ReactionInput message."""
     string = flask.request.get_data().decode()
@@ -440,7 +441,7 @@ def resolve_input():
     return response
 
 
-@app.route('/resolve/<identifier_type>', methods=['POST'])
+@bp.route('/resolve/<identifier_type>', methods=['POST'])
 def resolve_compound(identifier_type):
     """Resolve a compound name to a SMILES string."""
     compound_name = flask.request.get_data()
@@ -454,7 +455,7 @@ def resolve_compound(identifier_type):
         return ''
 
 
-@app.route('/canonicalize', methods=['POST'])
+@bp.route('/canonicalize', methods=['POST'])
 def canonicalize_smiles():
     """Canonicalizes a SMILES string from a POST request."""
     return flask.jsonify(_canonicalize_smiles(flask.request.get_data()))
@@ -468,7 +469,7 @@ def _canonicalize_smiles(smiles):
         return smiles  # Return the original SMILES on failure.
 
 
-@app.route('/render/reaction', methods=['POST'])
+@bp.route('/render/reaction', methods=['POST'])
 def render_reaction():
     """Receives a serialized Reaction message and returns a block of HTML
     that contains a visual summary of the reaction."""
@@ -483,7 +484,7 @@ def render_reaction():
         return ''
 
 
-@app.route('/render/compound', methods=['POST'])
+@bp.route('/render/compound', methods=['POST'])
 def render_compound():
     """Returns an HTML-tagged SVG for the given Compound."""
     compound = reaction_pb2.Compound()
@@ -495,7 +496,7 @@ def render_compound():
         return ''
 
 
-@app.route('/dataset/proto/compare/<name>', methods=['POST'])
+@bp.route('/dataset/proto/compare/<name>', methods=['POST'])
 def compare(name):
     """For testing, compares a POST body to an entry in the datasets table.
 
@@ -522,7 +523,7 @@ def compare(name):
     return 'equals'
 
 
-@app.route('/js/<script>')
+@bp.route('/js/<script>')
 def js(script):
     """Accesses any built JS file by name from the Closure output directory."""
     path = flask.safe_join(
@@ -530,7 +531,7 @@ def js(script):
     return flask.send_file(get_file(path), attachment_filename=script)
 
 
-@app.route('/css/<sheet>')
+@bp.route('/css/<sheet>')
 def css(sheet):
     """Accesses any CSS file by name."""
     path = flask.safe_join(os.path.join(os.path.dirname(__file__), '../css'),
@@ -538,7 +539,7 @@ def css(sheet):
     return flask.send_file(get_file(path), attachment_filename=sheet)
 
 
-@app.route('/img/<image>')
+@bp.route('/img/<image>')
 def img(image):
     """For static images, currently used only by the template editor."""
     path = flask.safe_join(os.path.join(os.path.dirname(__file__), '../img'),
@@ -546,19 +547,19 @@ def img(image):
     return flask.send_file(get_file(path), attachment_filename=image)
 
 
-@app.route('/ketcher/iframe')
+@bp.route('/ketcher/iframe')
 def ketcher_iframe():
     """Accesses a website serving Ketcher."""
     return flask.render_template('ketcher_iframe.html')
 
 
-@app.route('/ketcher/info')
+@bp.route('/ketcher/info')
 def indigo():
     """Dummy indigo endpoint to prevent 404 errors."""
     return '', 204
 
 
-@app.route('/ketcher/<path:file>')
+@bp.route('/ketcher/<path:file>')
 def ketcher(file):
     """Accesses any built Ketcher file by name."""
     path = flask.safe_join(
@@ -566,18 +567,18 @@ def ketcher(file):
     return flask.send_file(get_file(path), attachment_filename=file)
 
 
-@app.route('/reaction/id/deps.js')
-@app.route('/reaction/id/<value>/deps.js')
-@app.route('/dataset/deps.js')
-@app.route('/dataset/<value>/deps.js')
-@app.route('/dataset/<value>/reaction/deps.js')
+@bp.route('/reaction/id/deps.js')
+@bp.route('/reaction/id/<value>/deps.js')
+@bp.route('/dataset/deps.js')
+@bp.route('/dataset/<value>/deps.js')
+@bp.route('/dataset/<value>/reaction/deps.js')
 def deps(value=None):
     """Returns empty for deps table requests since this app doesn't use them."""
     del value  # Unused.
     return ''
 
 
-@app.route('/ketcher/molfile', methods=['POST'])
+@bp.route('/ketcher/molfile', methods=['POST'])
 def get_molfile():
     """Retrieves a POSTed Compound message string and returns a MolFile."""
     compound = reaction_pb2.Compound()
@@ -589,7 +590,7 @@ def get_molfile():
         return 'no existing structural identifier', 204
 
 
-@app.route('/review')
+@bp.route('/review')
 def show_submissions():
     """For the review user only, render datasets with GitHub metadata."""
     if flask.g.user_id != REVIEWER:
@@ -609,7 +610,7 @@ def show_submissions():
                                  pull_requests=pull_requests)
 
 
-@app.route('/review/sync')
+@bp.route('/review/sync')
 def sync_reviews():
     """Import all current pull requests into the datasets table.
 
@@ -647,7 +648,7 @@ def sync_reviews():
     return flask.redirect('/review')
 
 
-@app.after_request
+@bp.after_request
 def prevent_caching(response):
     """Prevents caching any of this app's resources on the client."""
     response.headers['Cache-Control'] = 'no-cache,no-store,must-revalidate'
@@ -800,19 +801,19 @@ def exists_dataset(name):
         return cursor.rowcount > 0
 
 
-@app.route('/template')
+@bp.route('/template')
 def template():
     """Return a stateless web page for creating enumeration templates."""
     return flask.render_template('template.html')
 
 
-@app.route('/login')
+@bp.route('/login')
 def show_login():
     """Presents a form to set a new access token from a given user ID."""
     return flask.render_template('login.html', client_id=GH_CLIENT_ID)
 
 
-@app.route('/github-callback')
+@bp.route('/github-callback')
 def github_callback():
     """Grant an access token via GitHub OAuth.
 
@@ -868,7 +869,7 @@ def github_callback():
     return issue_access_token(user_id)
 
 
-@app.route('/authenticate', methods=['GET', 'POST'])
+@bp.route('/authenticate', methods=['GET', 'POST'])
 def authenticate():
     """Issue a new access token for a given user ID."""
     # GET authentications always login as the test user.
@@ -930,7 +931,7 @@ def migrate_user(name, user_id):
         flask.g.db.commit()
 
 
-@app.before_request
+@bp.before_request
 def init_user():
     """Connects to the DB and authenticates the user."""
     flask.g.db = psycopg2.connect(dbname='editor',
@@ -986,7 +987,7 @@ def init_user():
         os.mkdir(temp)
 
 
-@app.route('/logout')
+@bp.route('/logout')
 def logout():
     """Clear the access token and redirect to /login."""
     response = flask.redirect('/login')
