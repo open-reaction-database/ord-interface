@@ -24,6 +24,12 @@ RDKIT_SCHEMA = 'rdk'
 
 # Postgres table schema.
 TABLES = {
+    'datasets':
+        collections.OrderedDict([
+            ('dataset_id', 'text'),
+            ('name', 'text'),
+            ('description', 'text'),
+        ]),
     'reactions':
         collections.OrderedDict([
             ('reaction_id', 'text'),

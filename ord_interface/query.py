@@ -619,8 +619,8 @@ class ReactionComponentPredicate:
             args: List of arguments for `predicate`.
         """
         if self._mode in [
-                ReactionComponentPredicate.MatchMode.SIMILAR,
-                ReactionComponentPredicate.MatchMode.EXACT
+            ReactionComponentPredicate.MatchMode.SIMILAR,
+            ReactionComponentPredicate.MatchMode.EXACT
         ]:
             predicate = sql.SQL('{}%%morganbv_fp(%s)').format(
                 sql.Identifier('rdk', self._table, 'mfp2'))
@@ -657,6 +657,10 @@ class OrdPostgres:
                                             host=host,
                                             port=port)
         self._connection.set_session(readonly=True)
+
+    @property
+    def connection(self) -> psycopg2.extensions.connection:
+        return self._connection
 
     def cursor(self) -> psycopg2.extensions.cursor:
         return self._connection.cursor()
