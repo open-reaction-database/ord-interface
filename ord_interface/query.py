@@ -619,8 +619,8 @@ class ReactionComponentPredicate:
             args: List of arguments for `predicate`.
         """
         if self._mode in [
-            ReactionComponentPredicate.MatchMode.SIMILAR,
-            ReactionComponentPredicate.MatchMode.EXACT
+                ReactionComponentPredicate.MatchMode.SIMILAR,
+                ReactionComponentPredicate.MatchMode.EXACT
         ]:
             predicate = sql.SQL('{}%%morganbv_fp(%s)').format(
                 sql.Identifier('rdk', self._table, 'mfp2'))

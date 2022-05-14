@@ -58,8 +58,7 @@ POSTGRES_DATABASE = os.getenv('POSTGRES_DATABASE', 'ord')
 Query = NewType('Query', query.ReactionQueryBase)
 
 # Load custom Jinja filters.
-app.jinja_env.filters.update(
-    filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
+app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
 BOND_LENGTH = 20
 
 
