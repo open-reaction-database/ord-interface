@@ -17,7 +17,7 @@ set -e
 
 set -x
 ./build_test_database.sh
-docker build -f Dockerfile -t openreactiondatabase/ord-interface ..
+docker build -f Dockerfile -t openreactiondatabase/ord-interface .. "$@"
 docker compose up --detach
 set +x
 
