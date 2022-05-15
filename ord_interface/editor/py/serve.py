@@ -941,7 +941,8 @@ def init_user():
                                   password=POSTGRES_PASSWORD,
                                   host=POSTGRES_HOST,
                                   port=int(POSTGRES_PORT))
-    skip = [
+    root = flask.url_for('.show_root').rstrip('/')
+    skip = [f'{root}{value}' for value in [
         '/login',
         '/authenticate',
         '/github-callback',
@@ -953,10 +954,9 @@ def init_user():
         '/js/',
         '/ketcher/',
         '/dataset/proto/validate/',
-    ]
-    for value in skip:
-        if value in flask.request.path:
-            return
+    ]]
+    if flask.request.path.startswith(tuple(skip)):
+        return
     if 'ord-editor-user' in flask.request.cookies:
         # Respect legacy user ID's in cookies.
         user_id = flask.request.cookies.get('ord-editor-user')
