@@ -28,8 +28,9 @@ from ord_schema.proto import dataset_pb2
 
 def migrate_one(user_id, name, conn):
     """Slurp one named dataset from the db/ directory into Postgres."""
-    dataset = message_helpers.load_message(f'db/{user_id}/{name}',
-                                           dataset_pb2.Dataset)
+    dataset = message_helpers.load_message(
+        os.path.join(os.path.dirname(__file__), '..', 'db', user_id, name),
+        dataset_pb2.Dataset)
     serialized = dataset.SerializeToString().hex()
     query = psycopg2.sql.SQL(
         'INSERT INTO datasets VALUES (%s, %s, %s) '
@@ -44,7 +45,8 @@ def migrate_all():
                           host='localhost',
                           port=5432,
                           user='postgres') as conn:
-        for user_id in os.listdir('db'):
+        for user_id in os.listdir(
+                os.path.join(os.path.dirname(__file__), '..', 'db')):
             if re.match('^[0-9a-fA-F]{32}$', user_id) is None:
                 continue
             query = psycopg2.sql.SQL(
