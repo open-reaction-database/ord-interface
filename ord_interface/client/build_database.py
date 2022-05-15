@@ -35,7 +35,7 @@ from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
 from ord_schema.proto import reaction_pb2
 
-import ord_interface
+import ord_interface.client
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('input', None, 'Input pattern (glob).')
@@ -44,10 +44,12 @@ flags.DEFINE_boolean('downsample', False,
                      'Whether to downsample datasets for testing.')
 # Connection parameters.
 flags.DEFINE_string('host', 'localhost', 'PostgreSQL server host.')
-flags.DEFINE_string('dbname', ord_interface.POSTGRES_DB, 'Database name.')
-flags.DEFINE_string('user', ord_interface.POSTGRES_USER, 'Username.')
-flags.DEFINE_string('password', ord_interface.POSTGRES_PASSWORD, 'Password.')
-flags.DEFINE_integer('port', ord_interface.POSTGRES_PORT, 'Port.')
+flags.DEFINE_string('dbname', ord_interface.client.POSTGRES_DB,
+                    'Database name.')
+flags.DEFINE_string('user', ord_interface.client.POSTGRES_USER, 'Username.')
+flags.DEFINE_string('password', ord_interface.client.POSTGRES_PASSWORD,
+                    'Password.')
+flags.DEFINE_integer('port', ord_interface.client.POSTGRES_PORT, 'Port.')
 
 # Maximum number of reactions to keep when downsampling datasets for testing.
 _TEST_DATASET_SIZE = 100
@@ -141,7 +143,7 @@ def _inputs_table(reaction: reaction_pb2.Reaction) -> List[Mapping[str, str]]:
 
 
 def _outputs_table(
-    reaction: reaction_pb2.Reaction
+        reaction: reaction_pb2.Reaction
 ) -> List[Mapping[str, Union[str, float, None]]]:
     """Adds rows to the 'outputs' table.
 
@@ -168,15 +170,15 @@ def create_database(cursor: psycopg2.extensions.cursor, overwrite: bool):
     """Initializes the Postgres database."""
     if overwrite:
         logging.info('Removing existing tables')
-        for table in ord_interface.TABLES:
+        for table in ord_interface.client.TABLES:
             command = sql.SQL('DROP TABLE IF EXISTS {}')
             cursor.execute(command.format(sql.Identifier(table)))
     cursor.execute(sql.SQL('CREATE EXTENSION IF NOT EXISTS rdkit'))
     cursor.execute(sql.SQL('CREATE EXTENSION IF NOT EXISTS tsm_system_rows'))
     cursor.execute(
         sql.SQL('CREATE SCHEMA {}').format(
-            sql.Identifier(ord_interface.RDKIT_SCHEMA)))
-    for table, columns in ord_interface.TABLES.items():
+            sql.Identifier(ord_interface.client.RDKIT_SCHEMA)))
+    for table, columns in ord_interface.client.TABLES.items():
         dtypes = []
         for column, dtype in columns.items():
             if table == 'reactions' and column == 'reaction_id':
@@ -217,12 +219,12 @@ def _rdkit_reaction_smiles(cursor: psycopg2.extensions.cursor, table: str):
                    reaction_from_smiles(reaction_smiles::cstring) AS r
             FROM {}) tmp
         WHERE r IS NOT NULL""").format(
-            sql.Identifier(ord_interface.RDKIT_SCHEMA, table),
+            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table),
             sql.Identifier(table)))
     cursor.execute(
         sql.SQL('CREATE INDEX {} ON {} USING gist(r)').format(
             sql.Identifier(f'{table}_r'),
-            sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
+            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)))
 
 
 def _rdkit_smiles(cursor: psycopg2.extensions.cursor, table: str):
@@ -248,16 +250,16 @@ def _rdkit_smiles(cursor: psycopg2.extensions.cursor, table: str):
                    mol_from_smiles(smiles::cstring) AS m
             FROM {}) tmp
         WHERE m IS NOT NULL""").format(
-            sql.Identifier(ord_interface.RDKIT_SCHEMA, table),
+            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table),
             sql.Identifier(table)))
     cursor.execute(
         sql.SQL('CREATE INDEX {} ON {} USING gist(m)').format(
             sql.Identifier(f'{table}_m'),
-            sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
+            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)))
     cursor.execute(
         sql.SQL('CREATE INDEX {} ON {} USING gist(mfp2)').format(
             sql.Identifier(f'{table}_mfp2'),
-            sql.Identifier(ord_interface.RDKIT_SCHEMA, table)))
+            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)))
 
 
 def process_dataset(filename: str, cursor: psycopg2.extensions.cursor,
@@ -320,7 +322,7 @@ def main(argv):
                 process_dataset(filename=filename,
                                 cursor=cursor,
                                 downsample=FLAGS.downsample)
-            for table, columns in ord_interface.TABLES.items():
+            for table, columns in ord_interface.client.TABLES.items():
                 logging.info('Adding RDKit cartridge functionality')
                 if 'reaction_smiles' in columns:
                     _rdkit_reaction_smiles(cursor, table)

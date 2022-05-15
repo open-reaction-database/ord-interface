@@ -58,8 +58,8 @@ except FileExistsError:
 # Defaults for development, overridden in docker-compose.yml.
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', '')
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
 # Information for GitHub OAuth authentication.
 GH_CLIENT_ID = os.getenv('GH_CLIENT_ID')
 GH_CLIENT_SECRET = os.getenv('GH_CLIENT_SECRET')
