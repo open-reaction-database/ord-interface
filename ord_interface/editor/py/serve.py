@@ -941,13 +941,22 @@ def init_user():
                                   password=POSTGRES_PASSWORD,
                                   host=POSTGRES_HOST,
                                   port=int(POSTGRES_PORT))
-    if (flask.request.path
-            in ('/login', '/authenticate', '/github-callback',
-                '/render/reaction', '/render/compound', '/healthcheck') or
-            flask.request.path.startswith(
-                ('/reaction/id/', '/css/', '/js/', '/ketcher/',
-                 '/dataset/proto/validate/'))):
-        return
+    skip = [
+        '/login',
+        '/authenticate',
+        '/github-callback',
+        '/render/reaction',
+        '/render/compound',
+        '/healthcheck',
+        '/reaction/id/',
+        '/css/',
+        '/js/',
+        '/ketcher/',
+        '/dataset/proto/validate/',
+    ]
+    for value in skip:
+        if value in flask.request.path:
+            return
     if 'ord-editor-user' in flask.request.cookies:
         # Respect legacy user ID's in cookies.
         user_id = flask.request.cookies.get('ord-editor-user')
