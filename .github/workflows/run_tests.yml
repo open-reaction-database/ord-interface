@@ -19,6 +19,7 @@ on: [ pull_request, push ]
 env:
   # See https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei.
   CACHE_TARGET: "docker.pkg.github.com/open-reaction-database/ord-interface/interface-cache"
+  ORD_SCHEMA_TAG: v0.3.15
 
 
 jobs:
@@ -26,16 +27,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          path: ord-interface
+      - uses: actions/checkout@v2
+        with:
+          repository: "Open-Reaction-Database/ord-schema"
+          ref: ${{ env.ORD_SCHEMA_TAG }}
+          path: ord-schema
+      - uses: s-weigand/setup-conda@v1
+        with:
+          python-version: 3.7
       - name: Setup docker cache
         run: |
           docker login docker.pkg.github.com -u "${GITHUB_ACTOR}" --password="${{ secrets.GITHUB_TOKEN }}"
           docker pull "${CACHE_TARGET}"
+      - name: Install ord-schema
+        run: |
+          cd "${GITHUB_WORKSPACE}/ord-schema"
+          pip install -r requirements.txt
+          conda install -c rdkit rdkit
+          python setup.py install
+      - name: Install ord-interface
+        run: |
+          cd "${GITHUB_WORKSPACE}/ord-interface"
+          pip install -r requirements.txt
+          python setup.py install
       - name: Run interface tests
         run: |
-          cd "${GITHUB_WORKSPACE}"/ord_interface
+          cd "${GITHUB_WORKSPACE}/ord-interface/ord_interface"
           ./run_tests.sh "--cache-from=${CACHE_TARGET}"
       - name: Update docker cache
         run: |
