@@ -34,6 +34,7 @@ from google.protobuf import text_format
 import psycopg2
 import psycopg2.sql
 import requests
+from werkzeug import security
 
 from ord_schema import templating
 from ord_schema import message_helpers
@@ -73,7 +74,7 @@ TESTER = '680b0d9fe649417cb092d790907bd5a5'
 @bp.route('/')
 def show_root():
     """The root path redirects to the "datasets" view."""
-    return flask.redirect('/datasets')
+    return flask.redirect('/editor/datasets')
 
 
 @bp.route('/healthcheck')
@@ -526,7 +527,7 @@ def compare(name):
 @bp.route('/js/<script>')
 def js(script):
     """Accesses any built JS file by name from the Closure output directory."""
-    path = flask.safe_join(
+    path = security.safe_join(
         os.path.join(os.path.dirname(__file__), '../gen/js/ord'), script)
     return flask.send_file(get_file(path), attachment_filename=script)
 
@@ -534,16 +535,16 @@ def js(script):
 @bp.route('/css/<sheet>')
 def css(sheet):
     """Accesses any CSS file by name."""
-    path = flask.safe_join(os.path.join(os.path.dirname(__file__), '../css'),
-                           sheet)
+    path = security.safe_join(os.path.join(os.path.dirname(__file__), '../css'),
+                              sheet)
     return flask.send_file(get_file(path), attachment_filename=sheet)
 
 
 @bp.route('/img/<image>')
 def img(image):
     """For static images, currently used only by the template editor."""
-    path = flask.safe_join(os.path.join(os.path.dirname(__file__), '../img'),
-                           image)
+    path = security.safe_join(os.path.join(os.path.dirname(__file__), '../img'),
+                              image)
     return flask.send_file(get_file(path), attachment_filename=image)
 
 
@@ -562,7 +563,7 @@ def indigo():
 @bp.route('/ketcher/<path:file>')
 def ketcher(file):
     """Accesses any built Ketcher file by name."""
-    path = flask.safe_join(
+    path = security.safe_join(
         os.path.join(os.path.dirname(__file__), '../ketcher/dist'), file)
     return flask.send_file(get_file(path), attachment_filename=file)
 
@@ -768,18 +769,18 @@ def get_file(path):
 def get_user_path():
     """Returns the path of the current user's temp directory.
 
-    Uses flask.safe_join to check for directory traversal attacks.
+    Uses security.safe_join to check for directory traversal attacks.
 
     Returns:
         Path to the user directory.
     """
-    return flask.safe_join(TEMP, flask.g.user_id)
+    return security.safe_join(TEMP, flask.g.user_id)
 
 
 def get_path(file_name, suffix=''):
     """Returns a safe path in the user's temp directory.
 
-    Uses flask.safe_join to check for directory traversal attacks.
+    Uses security.safe_join to check for directory traversal attacks.
 
     Args:
         file_name: Text filename.
@@ -788,7 +789,7 @@ def get_path(file_name, suffix=''):
     Returns:
         Path to the requested file.
     """
-    return flask.safe_join(get_user_path(), f'{file_name}{suffix}')
+    return security.safe_join(get_user_path(), f'{file_name}{suffix}')
 
 
 def exists_dataset(name):
