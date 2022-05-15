@@ -18,5 +18,5 @@ from ord_interface.client import search
 from ord_interface.editor.py import serve
 
 app = flask.Flask(__name__)
-# app.register_blueprint(search.bp)
+app.register_blueprint(search.bp)
 app.register_blueprint(serve.bp)

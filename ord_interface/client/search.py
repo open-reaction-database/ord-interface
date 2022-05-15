@@ -96,7 +96,7 @@ def show_id(reaction_id):
     reaction = results[0].reaction
     reaction_summary = generate_text.generate_html(reaction,
                                                    bond_length=BOND_LENGTH)
-    return flask.render_template('reaction.html',
+    return flask.render_template('reaction_view.html',
                                  reaction=reaction,
                                  dataset_id=results[0].dataset_id,
                                  reaction_summary=reaction_summary,
