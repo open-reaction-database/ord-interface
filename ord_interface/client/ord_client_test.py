@@ -16,7 +16,7 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 
-from ord_interface import ord_client
+from ord_interface.client import ord_client
 
 
 class OrdClientTest(parameterized.TestCase, absltest.TestCase):
@@ -41,17 +41,19 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
             self.assertLen(dataset.reactions, expected)
 
     @parameterized.parameters(
-        ('ord-f0621fa47ac74fd59f9da027f6d13fc4', 'Jun Li'),
-        ('ord-c6fbf2aab30841d198a27068a65a9a98', 'Steven Kearnes'))
+        ('ord-cf0d04017ede4c8aab8a15119c53e57b', 'Connor W. Coley'),
+    )
     def test_fetch_reaction(self, reaction_id, created_by):
         reaction = self.client.fetch_reaction(reaction_id)
         self.assertEqual(reaction.provenance.record_created.person.name,
                          created_by)
 
-    @parameterized.parameters(([
-        'ord-f0621fa47ac74fd59f9da027f6d13fc4',
-        'ord-c6fbf2aab30841d198a27068a65a9a98'
-    ], ['Jun Li', 'Steven Kearnes']))
+    @parameterized.parameters(
+        ([
+             'ord-cf0d04017ede4c8aab8a15119c53e57b',
+             'ord-153de2a96e07484e93d525d81f966789'
+         ], ['Connor W. Coley', 'Connor W. Coley']),
+    )
     def test_fetch_reactions(self, reaction_ids, created_by):
         reactions = self.client.fetch_reactions(reaction_ids)
         self.assertLen(reaction_ids, len(created_by))
@@ -62,57 +64,56 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
 
     def test_query_dataset_ids(self):
         results = self.client.query(dataset_ids=[
-            'ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3',
-            'ord_dataset-7d8f5fd922d4497d91cb81489b052746'
+            'ord_dataset-89b083710e2d441aa0040c361d63359f'
         ])
-        self.assertLen(results, 200)
+        self.assertLen(results, 24)
 
     def test_query_reaction_ids(self):
         results = self.client.query(reaction_ids=[
-            'ord-f0621fa47ac74fd59f9da027f6d13fc4',
-            'ord-c6fbf2aab30841d198a27068a65a9a98'
+            'ord-cf0d04017ede4c8aab8a15119c53e57b',
+            'ord-153de2a96e07484e93d525d81f966789',
         ])
         self.assertLen(results, 2)
 
     def test_query_reaction_smarts(self):
         results = self.client.query(
-            reaction_smarts='FC(F)(F)c1ccc([F,Cl,Br,I])cc1>CS(=O)C>')
-        self.assertLen(results, 21)
+            reaction_smarts='[Br]C1=CC=C(C(C)=O)C=C1>CN(C)C=O>')
+        self.assertLen(results, 9)
 
     def test_query_dois(self):
-        doi = '10.1021/acscatal.0c02247'
+        doi = '10.1126/science.1255525'
         results = self.client.query(dois=[doi])
-        self.assertLen(results, 100)  # Downsampled size.
+        self.assertLen(results, 24)
         for result in results:
             self.assertEqual(result.reaction.provenance.doi, doi)
 
     def test_query_single_component(self):
-        component = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
+        component = ord_client.ComponentQuery('[Br]C1=CC=C(C(C)=O)C=C1',
                                               source='input',
                                               mode='exact')
         results = self.client.query(components=[component])
-        self.assertLen(results, 7)
+        self.assertLen(results, 10)
 
     def test_query_multiple_components(self):
-        component1 = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
+        component1 = ord_client.ComponentQuery('[Br]C1=CC=C(C(C)=O)C=C1',
                                                source='input',
                                                mode='exact')
-        component2 = ord_client.ComponentQuery('CN(C)C(=NC(C)(C)C)N(C)C',
+        component2 = ord_client.ComponentQuery('CC(C)(C)OC(=O)N1CCCCC1C(=O)O',
                                                source='input',
                                                mode='exact')
         results = self.client.query(components=[component1, component2])
-        self.assertLen(results, 2)
+        self.assertLen(results, 1)
 
     def test_query_stereochemistry(self):
         # TODO(kearnes): Add a test once we have more chiral stuff.
         pass
 
     def test_query_similarity(self):
-        component = ord_client.ComponentQuery('FC(F)(F)c1ccc(Br)cc1',
+        component = ord_client.ComponentQuery('[Br]C1=CC=C(C(C)=O)C=C1',
                                               source='input',
                                               mode='similar')
         results = self.client.query(components=[component], similarity=0.6)
-        self.assertLen(results, 14)
+        self.assertLen(results, 10)
 
 
 if __name__ == '__main__':

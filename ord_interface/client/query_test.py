@@ -18,7 +18,7 @@ from absl.testing import parameterized
 import numpy as np
 
 import ord_interface
-from ord_interface import query
+from ord_interface.client import query
 
 
 class QueryTest(parameterized.TestCase, absltest.TestCase):
@@ -26,12 +26,11 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.postgres = query.OrdPostgres(
-            dbname=ord_interface.POSTGRES_DB,
-            user=ord_interface.POSTGRES_USER,
-            password=ord_interface.POSTGRES_PASSWORD,
-            # Matches the service name in docker-compose.yml.
-            host='ord-postgres',
-            port=ord_interface.POSTGRES_PORT)
+            dbname=ord_interface.client.POSTGRES_DB,
+            user=ord_interface.client.POSTGRES_USER,
+            password=ord_interface.client.POSTGRES_PASSWORD,
+            host='localhost',
+            port=ord_interface.client.POSTGRES_PORT)
 
     def test_random_sample_query(self):
         command = query.RandomSampleQuery(16)
@@ -39,13 +38,13 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
         self.assertLen(results, 16)
 
     def test_dataset_id_query(self):
-        dataset_ids = ['ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3']
+        dataset_ids = ['ord_dataset-89b083710e2d441aa0040c361d63359f']
         command = query.DatasetIdQuery(dataset_ids)
         results = self.postgres.run_query(command, limit=10, return_ids=True)
         self.assertLen(results, 10)
 
     def test_reaction_id_query(self):
-        reaction_ids = ['ord-e49ed67da61e4cddabd3c84a72fed227']
+        reaction_ids = ['ord-cf0d04017ede4c8aab8a15119c53e57b']
         command = query.ReactionIdQuery(reaction_ids)
         results = self.postgres.run_query(command, limit=10, return_ids=False)
         self.assertCountEqual([result.reaction_id for result in results],
@@ -58,7 +57,7 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
         self.assertLen(results, 10)
 
     def test_doi_query(self):
-        dois = ['10.1021/acscatal.0c02247']
+        dois = ['10.1126/science.1255525']
         command = query.DoiQuery(dois)
         results = self.postgres.run_query(command, limit=10)
         self.assertLen(results, 10)
@@ -66,7 +65,7 @@ class QueryTest(parameterized.TestCase, absltest.TestCase):
             self.assertIn(result.reaction.provenance.doi, dois)
 
     def test_exact_query(self):
-        pattern = 'O=C1NC2=CC(Br)=CC3=C2N(C(CC(OC)=O)CC3)C1=O'
+        pattern = '[Br]C1=CC=C(C(C)=O)C=C1'
         mode = query.ReactionComponentPredicate.MatchMode.EXACT
         predicates = [
             query.ReactionComponentPredicate(pattern, table='inputs', mode=mode)

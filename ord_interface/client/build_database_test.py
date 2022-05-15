@@ -24,17 +24,16 @@ from ord_schema.proto import dataset_pb2
 from ord_schema.proto import reaction_pb2
 
 import ord_interface
-from ord_interface import build_database
+from ord_interface.client import build_database
 
 
 class BuildDatabaseTest(absltest.TestCase):
 
     def setUp(self):
         super().setUp()
-        # NOTE(kearnes): ord-postgres is the hostname in docker-compose.
-        self.host = 'ord-postgres'
+        self.host = 'localhost'
         # Create a test database.
-        connection = self._connect(ord_interface.POSTGRES_DB)
+        connection = self._connect(ord_interface.client.POSTGRES_DB)
         connection.set_session(autocommit=True)
         with connection.cursor() as cursor:
             cursor.execute('CREATE DATABASE test;')
@@ -61,7 +60,7 @@ class BuildDatabaseTest(absltest.TestCase):
 
     def tearDown(self):
         # Remove the test database.
-        connection = self._connect(ord_interface.POSTGRES_DB)
+        connection = self._connect(ord_interface.client.POSTGRES_DB)
         connection.set_session(autocommit=True)
         with connection.cursor() as cursor:
             cursor.execute('DROP DATABASE test;')
@@ -69,10 +68,10 @@ class BuildDatabaseTest(absltest.TestCase):
 
     def _connect(self, dbname):
         return psycopg2.connect(dbname=dbname,
-                                user=ord_interface.POSTGRES_USER,
-                                password=ord_interface.POSTGRES_PASSWORD,
+                                user=ord_interface.client.POSTGRES_USER,
+                                password=ord_interface.client.POSTGRES_PASSWORD,
                                 host=self.host,
-                                port=ord_interface.POSTGRES_PORT)
+                                port=ord_interface.client.POSTGRES_PORT)
 
     def test_main(self):
         input_pattern = os.path.join(self.test_subdirectory, '*.pb')
