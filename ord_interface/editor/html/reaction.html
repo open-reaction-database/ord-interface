@@ -57,10 +57,10 @@ limitations under the License.
       <nav id="breadcrumbs" aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item">
-            <a href="/">Home</a>
+            <a href="{{ url_for('.show_root') }}">Home</a>
           </li>
           <li class="breadcrumb-item">
-            <a href="/dataset/{{ name }}">{{ name }}</a>
+            <a href="{{ url_for('.show_dataset', name=name) }}">{{ name }}</a>
           </li>
           <li class="breadcrumb-item active" aria-current="page">
             <span id="reaction_id"></span>
@@ -69,8 +69,8 @@ limitations under the License.
       </nav>
       <div id="header_buttons">
         <button type="button" id="download" onclick="ord.reaction.commit(); ord.reaction.downloadReaction();">download</button>
-        <button type="button" class="add" onclick="location.href='/dataset/{{ name }}/clone/{{ index }}';">clone</button>
-        <button type="button" class="remove" id="delete" style="float: none;" onclick="location.href='/dataset/{{ name }}/delete/reaction/{{ index }}';"><i class="far fa-trash-alt"></i></button>
+        <button type="button" class="add" onclick="location.href='{{ url_for(".clone_reaction", name=name, index=index) }}';">clone</button>
+        <button type="button" class="remove" id="delete" style="float: none;" onclick="location.href={{ url_for(".delete_reaction", name=name, index=index) }}';"><i class="far fa-trash-alt"></i></button>
         <button type="button" id="save" onclick="ord.reaction.commit();" style="visibility: hidden;">save</button>
         <button type="button" id="toggle_autosave" onclick="ord.utils.toggleAutosave()"></button>
         <button type="button" id="reaction_validate_button" onclick="ord.reaction.validateReaction()">validate</button>
@@ -1124,7 +1124,7 @@ limitations under the License.
       <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
           <div class="modal-content" style="width: auto;">
               <div class="modal-body">
-                  <iframe id="ketcher-iframe" src="/ketcher/iframe"></iframe>
+                  <iframe id="ketcher-iframe" src="{{ url_for('.ketcher_iframe') }}"></iframe>
                   <div id="ketcher-spinner" class="spinner-border" role="status">
                       <span class="sr-only">Loading...</span>
                   </div>

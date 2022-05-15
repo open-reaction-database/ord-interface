@@ -23,87 +23,87 @@
 const puppeteer = require('puppeteer');
 
 (async () => {
-  const browser = await puppeteer.launch();
-  const [page] = await browser.pages();
+    const browser = await puppeteer.launch();
+    const [page] = await browser.pages();
 
-  // Relay console messages.
-  page.on('console', msg => console.log('console>', msg.text()));
+    // Relay console messages.
+    page.on('console', msg => console.log('console>', msg.text()));
 
-  // First authenticate as the test user.
-  page.goto('http://localhost:5000/authenticate');
-  await page.waitForNavigation();
+    // First authenticate as the test user.
+    page.goto('http://localhost:5000/editor/authenticate');
+    await page.waitForNavigation();
 
-  // Round-trip these reactions through the DOM and compare at the server.
-  const roundtripTests = [
-    'http://localhost:5000/dataset/empty/reaction/0',
-    'http://localhost:5000/dataset/full/reaction/0',
-    'http://localhost:5000/dataset/ord-nielsen-example/reaction/0',
-  ];
+    // Round-trip these reactions through the DOM and compare at the server.
+    const roundtripTests = [
+        'http://localhost:5000/editor/dataset/empty/reaction/0',
+        'http://localhost:5000/editor/dataset/full/reaction/0',
+        'http://localhost:5000/editor/dataset/ord-nielsen-example/reaction/0',
+    ];
 
-  for (let i = 0; i < roundtripTests.length; i++) {
-    const url = roundtripTests[i];
-    await page.goto(url);
-    await page.waitFor('body[ready=true]');
-    const testResult = await page.evaluate(function(url) {
-      const reaction = ord.reaction.unloadReaction();
-      const session = ord.utils.session;
-      const reactions = session.dataset.getReactionsList();
-      reactions[session.index] = reaction;
-      return ord.utils.compareDataset(session.fileName, session.dataset)
-          .then(() => {
-            console.log('PASS', url);
-            return 0;
-          })
-          .catch(() => {
-            console.log('FAIL', url);
-            return 1;
-          })
-    }, url);
+    for (let i = 0; i < roundtripTests.length; i++) {
+        const url = roundtripTests[i];
+        await page.goto(url);
+        await page.waitFor('body[ready=true]');
+        const testResult = await page.evaluate(function (url) {
+            const reaction = ord.reaction.unloadReaction();
+            const session = ord.utils.session;
+            const reactions = session.dataset.getReactionsList();
+            reactions[session.index] = reaction;
+            return ord.utils.compareDataset(session.fileName, session.dataset)
+                .then(() => {
+                    console.log('PASS', url);
+                    return 0;
+                })
+                .catch(() => {
+                    console.log('FAIL', url);
+                    return 1;
+                })
+        }, url);
 
-    // Report results of testing to environment (shell, Git CI, etc.)
-    // If _any_ test fails (i.e. testResult 1), then the entire process must
-    // fail too. We still run all tests though, for convenience's sake.
-    if (testResult === 1) {
-      process.exitCode = 1;
+        // Report results of testing to environment (shell, Git CI, etc.)
+        // If _any_ test fails (i.e. testResult 1), then the entire process must
+        // fail too. We still run all tests though, for convenience's sake.
+        if (testResult === 1) {
+            process.exitCode = 1;
+        }
     }
-  }
 
-  // Additional test to ensure that pretending to change field entries does
-  // not lead to a change in the number of validation errors.
-  const validationTests = [
-    'http://localhost:5000/dataset/ord-nielsen-example/reaction/0',
-  ];
+    // Additional test to ensure that pretending to change field entries does
+    // not lead to a change in the number of validation errors.
+    const validationTests = [
+        'http://localhost:5000/editor/dataset/ord-nielsen-example/reaction/0',
+    ];
 
-  for (let i = 0; i < validationTests.length; i++) {
-    const url = validationTests[i];
-    await page.goto(url);
-    await page.waitFor('body[ready=true]');
-    const testResult = await page.evaluate(function(url) {
-      ord.reaction.validateReaction();
-      const prevErrors =
-          parseInt($('.validate_status', '#reaction_validate').html()) || 0;
-      $('.edittext').trigger('blur');
-      ord.reaction.validateReaction();
-      const curErrors =
-          parseInt($('.validate_status', '#reaction_validate').html()) || 0;
-      if (prevErrors === curErrors) {
-        console.log('PASS', 'validation check', url);
-        return 0;
-      } else {
-        console.log('FAIL', 'validation check', url);
-        console.log('--> ' + prevErrors + ' before rechecking');
-        console.log('--> ' + curErrors + ' after rechecking');
-        return 1;
-      }
-    }, url);
+    for (let i = 0; i < validationTests.length; i++) {
+        const url = validationTests[i];
+        await page.goto(url);
+        await page.waitFor('body[ready=true]');
+        const testResult = await page.evaluate(function (url) {
+            ord.reaction.validateReaction();
+            const prevErrors =
+                parseInt($('.validate_status', '#reaction_validate').html()) || 0;
+            $('.edittext').trigger('blur');
+            ord.reaction.validateReaction();
+            const curErrors =
+                parseInt($('.validate_status', '#reaction_validate').html()) || 0;
+            if (prevErrors === curErrors) {
+                console.log('PASS', 'validation check', url);
+                return 0;
+            } else {
+                console.log('FAIL', 'validation check', url);
+                console.log('--> ' + prevErrors + ' before rechecking');
+                console.log('--> ' + curErrors + ' after rechecking');
+                return 1;
+            }
+        }, url);
 
-    // Report results of testing to environment (shell, Git CI, etc.)
-    // If _any_ test fails (i.e. testResult 1), then the entire process must
-    // fail too. We still run all tests though, for convenience's sake.
-    if (testResult === 1) {
-      process.exitCode = 1;
+        // Report results of testing to environment (shell, Git CI, etc.)
+        // If _any_ test fails (i.e. testResult 1), then the entire process must
+        // fail too. We still run all tests though, for convenience's sake.
+        if (testResult === 1) {
+            process.exitCode = 1;
+        }
     }
-  }
 
-  await browser.close();
+    await browser.close();
 })();

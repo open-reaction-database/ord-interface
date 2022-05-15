@@ -15,43 +15,51 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <html>
-  <style>
+<style>
     body {
-      padding: 48px;
-      font-family: Roboto;
+        padding: 48px;
+        font-family: Roboto;
     }
+
     table, th, td {
-      border: 1px solid black;
-      border-collapse: collapse;
+        border: 1px solid black;
+        border-collapse: collapse;
     }
+
     th, td {
-      padding: 5px;
+        padding: 5px;
     }
-  </style>
-  <body>
-    <center>
-      <h1>Open pull requests</h1>
-    </center>
-    <a href="/review/sync">sync</a>
-    <table>
-      <thead><tr><td>Number</td><td>Title</td><td>Datasets</td></tr></thead>
-      <tbody>
-        {% for (number, title), names in pull_requests.items() %}
-        <tr>
-          <td>
+</style>
+<body>
+<center>
+    <h1>Open pull requests</h1>
+</center>
+<a href="{{ url_for('.sync_reviews') }}">sync</a>
+<table>
+    <thead>
+    <tr>
+        <td>Number</td>
+        <td>Title</td>
+        <td>Datasets</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for (number, title), names in pull_requests.items() %}
+    <tr>
+        <td>
             <a href="https://github.com/Open-Reaction-Database/ord-data/pull/{{ number }}">{{ number }}</a>
-          </td>
-          <td>{{ title }}</td>
-          <td>
+        </td>
+        <td>{{ title }}</td>
+        <td>
             {% for short_name, name in names %}
             <div>
-              <a href="/dataset/{{ name }}">{{ short_name }}</a>
+                <a href="{{ url_for('.show_dataset', name=name) }}">{{ short_name }}</a>
             </div>
             {% endfor %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </body>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
 </html>

@@ -59,8 +59,8 @@ except FileExistsError:
 # Defaults for development, overridden in docker-compose.yml.
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'postgres')
 # Information for GitHub OAuth authentication.
 GH_CLIENT_ID = os.getenv('GH_CLIENT_ID')
 GH_CLIENT_SECRET = os.getenv('GH_CLIENT_SECRET')
@@ -74,7 +74,7 @@ TESTER = '680b0d9fe649417cb092d790907bd5a5'
 @bp.route('/')
 def show_root():
     """The root path redirects to the "datasets" view."""
-    return flask.redirect('/editor/datasets')
+    return flask.redirect(flask.url_for('.show_datasets'))
 
 
 @bp.route('/healthcheck')
@@ -187,7 +187,7 @@ def delete_dataset(name):
         user_id = flask.g.user_id
         cursor.execute(query, [user_id, name])
         flask.g.db.commit()
-    return flask.redirect('/datasets')
+    return flask.redirect(flask.url_for('.show_datasets'))
 
 
 @bp.route('/dataset/enumerate', methods=['POST'])
@@ -277,7 +277,7 @@ def new_reaction(name):
     reaction = dataset.reactions.add()
     reaction.reaction_id = f'ord-{uuid.uuid4().hex}'
     put_dataset(name, dataset)
-    return flask.redirect(f'/dataset/{name}')
+    return flask.redirect(flask.url_for(".show_dataset", name=name))
 
 
 @bp.route('/dataset/<name>/clone/<index>')
@@ -293,7 +293,8 @@ def clone_reaction(name, index):
     dataset.reactions.add().CopyFrom(dataset.reactions[index])
     index = len(dataset.reactions) - 1
     put_dataset(name, dataset)
-    return flask.redirect(f'/dataset/{name}/reaction/{index}')
+    return flask.redirect(
+        flask.url_for('.show_dataset', name=name, index=index))
 
 
 @bp.route('/dataset/<name>/delete/reaction/<index>')
@@ -308,7 +309,7 @@ def delete_reaction(name, index):
         flask.abort(404)
     del dataset.reactions[index]
     put_dataset(name, dataset)
-    return flask.redirect(f'/dataset/{name}')
+    return flask.redirect(flask.url_for(".show_dataset", name=name))
 
 
 @bp.route('/dataset/<name>/delete/reaction_id/<reaction_id>')
@@ -318,7 +319,7 @@ def delete_reaction_id(name, reaction_id):
     if reaction_id in dataset.reaction_ids:
         dataset.reaction_ids.remove(reaction_id)
         put_dataset(name, dataset)
-        return flask.redirect(f'/dataset/{name}')
+        return flask.redirect(flask.url_for(".show_dataset", name=name))
     flask.abort(404)
 
 
@@ -595,7 +596,7 @@ def get_molfile():
 def show_submissions():
     """For the review user only, render datasets with GitHub metadata."""
     if flask.g.user_id != REVIEWER:
-        return flask.redirect('/')
+        return flask.redirect(flask.url_for('.show_root'))
     pull_requests = collections.defaultdict(list)
     with flask.g.db.cursor() as cursor:
         query = psycopg2.sql.SQL('SELECT name FROM datasets WHERE user_id=%s')
@@ -619,7 +620,7 @@ def sync_reviews():
     the PR title text. These are encoded into the dataset name in Postgres
     using delimiters."""
     if flask.g.user_id != REVIEWER:
-        return flask.redirect('/')
+        return flask.redirect(flask.url_for('.show_root'))
     client = github.Github()
     repo = client.get_repo('Open-Reaction-Database/ord-data')
     user_id = flask.g.user_id
@@ -646,7 +647,7 @@ def sync_reviews():
                     query,
                     [user_id, name, serialize_for_db(dataset)])
     flask.g.db.commit()
-    return flask.redirect('/review')
+    return flask.redirect(flask.url_for('.show_submissions'))
 
 
 @bp.after_request
@@ -834,7 +835,7 @@ def github_callback():
                              headers=headers)
     access_token = response.json().get('access_token')
     if access_token is None:
-        return flask.redirect('/login')
+        return flask.redirect(flask.url_for('.show_login'))
     headers = {
         'Accept': 'application/json',
         'Authorization': f'token {access_token}',
@@ -878,7 +879,7 @@ def authenticate():
         return issue_access_token(TESTER)
     user_id = flask.request.form.get('user_id')
     if user_id is None or re.match('^[0-9a-fA-F]{32}$', user_id) is None:
-        return flask.redirect('/login')
+        return flask.redirect(flask.url_for('.show_login'))
     return issue_access_token(user_id)
 
 
@@ -890,7 +891,7 @@ def issue_access_token(user_id):
         timestamp = int(time.time())
         cursor.execute(query, [access_token, user_id, timestamp])
         flask.g.db.commit()
-        response = flask.redirect('/')
+        response = flask.redirect(flask.url_for('.show_root'))
         # Expires in a year.
         response.set_cookie('Access-Token', access_token, max_age=31536000)
         return response
@@ -991,7 +992,7 @@ def init_user():
 @bp.route('/logout')
 def logout():
     """Clear the access token and redirect to /login."""
-    response = flask.redirect('/login')
+    response = flask.redirect(flask.url_for('.show_login'))
     response.set_cookie('Access-Token', '', expires=0)
     return response
 

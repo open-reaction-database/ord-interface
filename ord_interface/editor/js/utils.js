@@ -56,47 +56,48 @@ const Wavelength = goog.require('proto.ord.Wavelength');
 let UnitMessage;
 
 exports = {
-  addChangeHandler,
-  addSlowly,
-  clean,
-  compareDataset,
-  getDataset,
-  getOptionalBool,
-  getReactionById,
-  getSelectorText,
-  freeze,
-  initOptionalBool,
-  initSelector,
-  initValidateNode,
-  isEmptyMessage,
-  isTemplateOrUndoBuffer,
-  listen,
-  prepareFloat,
-  putDataset,
-  ready,
-  readMetric,
-  removeSlowly,
-  setupObserver,
-  setOptionalBool,
-  setSelector,
-  setTextFromFile,
-  showOptionalSection,
-  toggleAutosave,
-  toggleValidateMessage,
-  undoSlowly,
-  updateSidebar,
-  validate,
-  writeMetric,
+    addChangeHandler,
+    addSlowly,
+    clean,
+    compareDataset,
+    getDataset,
+    getOptionalBool,
+    getReactionById,
+    getSelectorText,
+    freeze,
+    initOptionalBool,
+    initSelector,
+    initValidateNode,
+    isEmptyMessage,
+    isTemplateOrUndoBuffer,
+    listen,
+    prepareFloat,
+    putDataset,
+    ready,
+    readMetric,
+    removeSlowly,
+    setupObserver,
+    setOptionalBool,
+    setSelector,
+    setTextFromFile,
+    showOptionalSection,
+    toggleAutosave,
+    toggleValidateMessage,
+    undoSlowly,
+    updateSidebar,
+    validate,
+    writeMetric,
 };
 
 // Remember the dataset and reaction we are editing.
 const session = {
-  fileName: null,
-  dataset: null,
-  index: null,             // Ordinal position of the Reaction in its Dataset.
-  observer: null,          // IntersectionObserver used for the sidebar.
-  navSelectors: {},        // Dictionary from navigation to section.
-  timers: {'short': null}  // A timer used by autosave.
+    fileName: null,
+    dataset: null,
+    index: null,              // Ordinal position of the Reaction in its Dataset.
+    observer: null,           // IntersectionObserver used for the sidebar.
+    navSelectors: {},         // Dictionary from navigation to section.
+    timers: {'short': null},  // A timer used by autosave.
+    root: '/editor/',
 };
 // Export session, because it's used by test.js.
 exports.session = session;
@@ -109,23 +110,23 @@ const INTEGER_PATTERN = /^-?\d+$/;
  * @suppress {undefinedVars}
  */
 function ready() {
-  $('body').attr('ready', 'true');
+    $('body').attr('ready', 'true');
 }
 
 /**
  * Shows the 'save' button.
  */
 function dirty() {
-  $('#save').css('visibility', 'visible');
+    $('#save').css('visibility', 'visible');
 }
 
 /**
  * Hides the 'save' button.
  */
 function clean() {
-  const matcher = $('#save');
-  matcher.css('visibility', 'hidden');
-  matcher.text('save');
+    const matcher = $('#save');
+    matcher.css('visibility', 'hidden');
+    matcher.text('save');
 }
 
 /**
@@ -134,46 +135,46 @@ function clean() {
  * @param {!jQuery} node
  */
 function listen(node) {
-  addChangeHandler(node, dirty);
-  $('.edittext', node).on('focus', event => selectText(event.target));
-  $('.floattext', node).on('blur', event => checkFloat(event.target));
-  $('.integertext', node).on('blur', event => checkInteger(event.target));
+    addChangeHandler(node, dirty);
+    $('.edittext', node).on('focus', event => selectText(event.target));
+    $('.floattext', node).on('blur', event => checkFloat(event.target));
+    $('.integertext', node).on('blur', event => checkInteger(event.target));
 }
 
 /**
  * Clicks the 'save' button if ready for a save.
  */
 function clickSave() {
-  // Only save if there are unsaved changes still to be saved -- hence save
-  // button visible -- and if ready for a save (not in the process of saving
-  // already).
-  const saveButton = $('#save');
-  if (saveButton.css('visibility') === 'visible' &&
-      saveButton.text() === 'save') {
-    saveButton.trigger('click');
-    // Validate on autosave.
-    $('#reaction_validate_button').trigger('click');
-  }
+    // Only save if there are unsaved changes still to be saved -- hence save
+    // button visible -- and if ready for a save (not in the process of saving
+    // already).
+    const saveButton = $('#save');
+    if (saveButton.css('visibility') === 'visible' &&
+        saveButton.text() === 'save') {
+        saveButton.trigger('click');
+        // Validate on autosave.
+        $('#reaction_validate_button').trigger('click');
+    }
 }
 
 /**
  * Toggles autosave being active.
  */
 function toggleAutosave() {
-  const matcher = $('#toggle_autosave');
-  // We keep track of timers by holding references, only if they're active.
-  if (!session.timers.short) {
-    // Enable a simple timer that saves periodically.
-    session.timers.short =
-        setInterval(clickSave, 1000 * 15);  // Save after 15 seconds
-    matcher.text('autosave: on');
-  } else {
-    // Stop the interval timer itself, then remove reference in order to
-    // properly later detect that it's stopped.
-    clearInterval(session.timers.short);
-    session.timers.short = null;
-    matcher.text('autosave: off');
-  }
+    const matcher = $('#toggle_autosave');
+    // We keep track of timers by holding references, only if they're active.
+    if (!session.timers.short) {
+        // Enable a simple timer that saves periodically.
+        session.timers.short =
+            setInterval(clickSave, 1000 * 15);  // Save after 15 seconds
+        matcher.text('autosave: on');
+    } else {
+        // Stop the interval timer itself, then remove reference in order to
+        // properly later detect that it's stopped.
+        clearInterval(session.timers.short);
+        session.timers.short = null;
+        matcher.text('autosave: off');
+    }
 }
 
 /**
@@ -186,14 +187,14 @@ function toggleAutosave() {
  * @suppress {missingProperties}
  */
 function addSlowly(template, root) {
-  const node = $(template).clone();
-  node.removeAttr('id');
-  root.append(node);
-  node.show('slow');
-  dirty();
-  listen(node);
-  $('[data-toggle="tooltip"]', node).tooltip();
-  return node;
+    const node = $(template).clone();
+    node.removeAttr('id');
+    root.append(node);
+    node.show('slow');
+    dirty();
+    listen(node);
+    $('[data-toggle="tooltip"]', node).tooltip();
+    return node;
 }
 
 /**
@@ -202,22 +203,22 @@ function addSlowly(template, root) {
  * @param {string} pattern The pattern for the element to remove.
  */
 function removeSlowly(button, pattern) {
-  const node = $(button.closest(pattern));
-  // Must call necessary validators only after the node is removed,
-  // but we can only figure out which validators these are before removal.
-  // We do so, and after removal, click the corresponding buttons to trigger
-  // validation.
-  let buttonsToClick = $();
-  node.parents('fieldset').each(function() {
-    buttonsToClick =
-        buttonsToClick.add($(this).children('legend').find('.validate_button'));
-  });
-  makeUndoable(node);
-  node.hide('slow', function() {
-    buttonsToClick.trigger('click');
-    updateSidebar();
-  });
-  dirty();
+    const node = $(button.closest(pattern));
+    // Must call necessary validators only after the node is removed,
+    // but we can only figure out which validators these are before removal.
+    // We do so, and after removal, click the corresponding buttons to trigger
+    // validation.
+    let buttonsToClick = $();
+    node.parents('fieldset').each(function () {
+        buttonsToClick =
+            buttonsToClick.add($(this).children('legend').find('.validate_button'));
+    });
+    makeUndoable(node);
+    node.hide('slow', function () {
+        buttonsToClick.trigger('click');
+        updateSidebar();
+    });
+    dirty();
 }
 
 /**
@@ -225,12 +226,12 @@ function removeSlowly(button, pattern) {
  * Removes the node's "undo" button. Does not trigger validation.
  */
 function undoSlowly() {
-  $('.undoable').removeClass('undoable').show('slow');
-  $('.undo').not('#undo_template').hide('slow', function() {
-    $(this).remove();
-    updateSidebar();
-  });
-  dirty();
+    $('.undoable').removeClass('undoable').show('slow');
+    $('.undo').not('#undo_template').hide('slow', function () {
+        $(this).remove();
+        updateSidebar();
+    });
+    dirty();
 }
 
 /**
@@ -239,13 +240,13 @@ function undoSlowly() {
  * @param {!jQuery} node The DOM fragment to hide and re-show.
  */
 function makeUndoable(node) {
-  $('.undoable').remove();
-  node.addClass('undoable');
-  $('.undo').not('#undo_template').remove();
-  const button = $('#undo_template').clone();
-  button.removeAttr('id');
-  node.after(button);
-  button.show('slow');
+    $('.undoable').remove();
+    node.addClass('undoable');
+    $('.undo').not('#undo_template').remove();
+    const button = $('#undo_template').clone();
+    button.removeAttr('id');
+    node.after(button);
+    button.show('slow');
 }
 
 /**
@@ -254,8 +255,8 @@ function makeUndoable(node) {
  * @param {string} target ID of the target element.
  */
 function showOptionalSection(button, target) {
-  button.hide();
-  $('#' + target).toggle('slow');
+    button.hide();
+    $('#' + target).toggle('slow');
 }
 
 /**
@@ -264,22 +265,22 @@ function showOptionalSection(button, target) {
  * @param {!jQuery} node A node containing a `data-proto` attribute.
  */
 function initSelector(node) {
-  const protoName = node.attr('data-proto');
-  const protoEnum = nameToProto(asserts.assertString(protoName));
-  if (!protoEnum) {
-    console.log('missing require: "' + protoName + '"');
-  }
-  const types = Object.entries(asserts.assertObject(protoEnum));
-  const select = $('<select>');
-  for (let i = 0; i < types.length; i++) {
-    const option = $('<option>').text(types[i][0]);
-    option.attr('value', types[i][1]);
-    if (types[i][0] === 'UNSPECIFIED') {
-      option.attr('selected', 'selected');
+    const protoName = node.attr('data-proto');
+    const protoEnum = nameToProto(asserts.assertString(protoName));
+    if (!protoEnum) {
+        console.log('missing require: "' + protoName + '"');
     }
-    select.append(option);
-  }
-  node.append(select);
+    const types = Object.entries(asserts.assertObject(protoEnum));
+    const select = $('<select>');
+    for (let i = 0; i < types.length; i++) {
+        const option = $('<option>').text(types[i][0]);
+        option.attr('value', types[i][1]);
+        if (types[i][0] === 'UNSPECIFIED') {
+            option.attr('selected', 'selected');
+        }
+        select.append(option);
+    }
+    node.append(select);
 }
 
 /**
@@ -287,17 +288,17 @@ function initSelector(node) {
  * @param {!jQuery} node Target node for the new <select/> element.
  */
 function initOptionalBool(node) {
-  const select = $('<select>');
-  const options = ['UNSPECIFIED', 'TRUE', 'FALSE'];
-  for (let i = 0; i < options.length; i++) {
-    const option = $('<option>').text(options[i]);
-    option.attr('value', options[i]);
-    if (options[i] === 'UNSPECIFIED') {
-      option.attr('selected', 'selected');
+    const select = $('<select>');
+    const options = ['UNSPECIFIED', 'TRUE', 'FALSE'];
+    for (let i = 0; i < options.length; i++) {
+        const option = $('<option>').text(options[i]);
+        option.attr('value', options[i]);
+        if (options[i] === 'UNSPECIFIED') {
+            option.attr('selected', 'selected');
+        }
+        select.append(option);
     }
-    select.append(option);
-  }
-  node.append(select);
+    node.append(select);
 }
 
 /**
@@ -306,8 +307,8 @@ function initOptionalBool(node) {
  * @param {!jQuery} oldNode Target node for the new validation elements.
  */
 function initValidateNode(oldNode) {
-  const newNode = $('#validate_template').clone();
-  oldNode.append(newNode.children());
+    const newNode = $('#validate_template').clone();
+    oldNode.append(newNode.children());
 }
 
 /**
@@ -316,18 +317,18 @@ function initValidateNode(oldNode) {
  * @return {!Promise<!Uint8Array>}
  */
 function getReactionById(reactionId) {
-  return new Promise(resolve => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', '/reaction/id/' + reactionId + '/proto');
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function() {
-      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
-      const bytes = new Uint8Array(xhr.response);
-      const reaction = Reaction.deserializeBinary(bytes);
-      resolve(reaction);
-    };
-    xhr.send();
-  });
+    return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', session.root + 'reaction/id/' + reactionId + '/proto');
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function () {
+            asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+            const bytes = new Uint8Array(xhr.response);
+            const reaction = Reaction.deserializeBinary(bytes);
+            resolve(reaction);
+        };
+        xhr.send();
+    });
 }
 
 /**
@@ -337,14 +338,14 @@ function getReactionById(reactionId) {
  * @return {?typeof Message}
  */
 function nameToProto(protoName) {
-  let clazz = proto.ord;
-  protoName.split('_').forEach(function(name) {
-    clazz = clazz[name];
-    if (!clazz) {
-      return null;
-    }
-  });
-  return clazz;
+    let clazz = proto.ord;
+    protoName.split('_').forEach(function (name) {
+        clazz = clazz[name];
+        if (!clazz) {
+            return null;
+        }
+    });
+    return clazz;
 }
 
 /**
@@ -352,11 +353,11 @@ function nameToProto(protoName) {
  * @param {!Node} node
  */
 function selectText(node) {
-  const range = document.createRange();
-  range.selectNodeContents(node);
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
 }
 
 /**
@@ -366,14 +367,14 @@ function selectText(node) {
  * @param {!jQuery} node
  */
 function checkFloat(node) {
-  const stringValue = $(node).text().trim();
-  if (stringValue === '') {
-    $(node).removeClass('invalid');
-  } else if (FLOAT_PATTERN.test(stringValue)) {
-    $(node).removeClass('invalid');
-  } else {
-    $(node).addClass('invalid');
-  }
+    const stringValue = $(node).text().trim();
+    if (stringValue === '') {
+        $(node).removeClass('invalid');
+    } else if (FLOAT_PATTERN.test(stringValue)) {
+        $(node).removeClass('invalid');
+    } else {
+        $(node).addClass('invalid');
+    }
 }
 
 /**
@@ -382,14 +383,14 @@ function checkFloat(node) {
  * @param {!jQuery} node
  */
 function checkInteger(node) {
-  const stringValue = $(node).text().trim();
-  if (stringValue === '') {
-    $(node).removeClass('invalid');
-  } else if (INTEGER_PATTERN.test(stringValue)) {
-    $(node).removeClass('invalid');
-  } else {
-    $(node).addClass('invalid');
-  }
+    const stringValue = $(node).text().trim();
+    if (stringValue === '') {
+        $(node).removeClass('invalid');
+    } else if (INTEGER_PATTERN.test(stringValue)) {
+        $(node).removeClass('invalid');
+    } else {
+        $(node).addClass('invalid');
+    }
 }
 
 /**
@@ -398,15 +399,15 @@ function checkInteger(node) {
  * @return {number}
  */
 function prepareFloat(value) {
-  // Round to N significant digits; this avoid floating point precision issues
-  // that can be quite jarring to users.
-  //
-  // See:
-  //   * https://stackoverflow.com/a/3644302
-  //   * https://medium.com/swlh/ed74c471c1b8
-  //   * https://stackoverflow.com/a/19623253
-  const precision = 7;
-  return parseFloat(value.toPrecision(precision));
+    // Round to N significant digits; this avoid floating point precision issues
+    // that can be quite jarring to users.
+    //
+    // See:
+    //   * https://stackoverflow.com/a/3644302
+    //   * https://medium.com/swlh/ed74c471c1b8
+    //   * https://stackoverflow.com/a/19623253
+    const precision = 7;
+    return parseFloat(value.toPrecision(precision));
 }
 
 /**
@@ -418,15 +419,15 @@ function prepareFloat(value) {
  * @param {!Function} handler
  */
 function addChangeHandler(node, handler) {
-  // For textboxes
-  node.on('blur', '.edittext', handler);
-  // For selectors, optional bool selectors,
-  // and checkboxes/radio buttons/file upload, respectively
-  node.on('change', '.selector, .optional_bool, input', handler);
-  // For add buttons
-  node.on('click', '.add', handler);
-  // For validate divs.
-  node.on('click', '.validate', handler);
+    // For textboxes
+    node.on('blur', '.edittext', handler);
+    // For selectors, optional bool selectors,
+    // and checkboxes/radio buttons/file upload, respectively
+    node.on('change', '.selector, .optional_bool, input', handler);
+    // For add buttons
+    node.on('click', '.add', handler);
+    // For validate divs.
+    node.on('click', '.validate', handler);
 }
 
 /**
@@ -442,61 +443,61 @@ function addChangeHandler(node, handler) {
  * @suppress {missingProperties}
  */
 function validate(message, messageTypeString, node, validateNode) {
-  // eg message is a type of reaction, messageTypeString = 'Reaction'
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/dataset/proto/validate/' + messageTypeString);
-  const binary = message.serializeBinary();
-  if (!validateNode) {
-    validateNode = $('.validate', node).first();
-  }
-  xhr.responseType = 'json';
-  xhr.onload = function() {
-    const validationOutput = xhr.response;
-    const errors = validationOutput.errors;
-    const warnings = validationOutput.warnings;
-    // Add client-side validation errors.
-    node.find('.invalid').each(function() {
-      const invalidName = $(this).attr('class').split(' ')[0];
-      errors.push('Value for ' + invalidName + ' is invalid');
-    });
-    const statusNode = $('.validate_status', validateNode);
-    const messageNode = $('.validate_message', validateNode);
-    if (errors.length) {
-      statusNode.show();
-      statusNode.text(' ' + errors.length);
-      messageNode.show();
-      messageNode.html('<ul></ul>');
-      for (let index = 0; index < errors.length; index++) {
-        const error = errors[index];
-        const errorNode = $('<li></li>');
-        errorNode.text(error);
-        $('ul', messageNode).append(errorNode);
-      }
-    } else {
-      statusNode.hide();
-      messageNode.html('');
-      messageNode.hide();
+    // eg message is a type of reaction, messageTypeString = 'Reaction'
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', session.root + 'dataset/proto/validate/' + messageTypeString);
+    const binary = message.serializeBinary();
+    if (!validateNode) {
+        validateNode = $('.validate', node).first();
     }
-    const warningStatusNode = $('.validate_warning_status', validateNode);
-    const warningMessageNode = $('.validate_warning_message', validateNode);
-    if (warnings.length) {
-      warningStatusNode.show();
-      warningStatusNode.text(' ' + warnings.length);
-      warningMessageNode.show();
-      warningMessageNode.html('<ul></ul>');
-      for (let index = 0; index < warnings.length; index++) {
-        const warning = warnings[index];
-        const warningNode = $('<li></li>');
-        warningNode.text(warning);
-        $('ul', warningMessageNode).append(warningNode);
-      }
-    } else {
-      warningStatusNode.hide();
-      warningMessageNode.html('');
-      warningMessageNode.hide();
-    }
-  };
-  xhr.send(binary);
+    xhr.responseType = 'json';
+    xhr.onload = function () {
+        const validationOutput = xhr.response;
+        const errors = validationOutput.errors;
+        const warnings = validationOutput.warnings;
+        // Add client-side validation errors.
+        node.find('.invalid').each(function () {
+            const invalidName = $(this).attr('class').split(' ')[0];
+            errors.push('Value for ' + invalidName + ' is invalid');
+        });
+        const statusNode = $('.validate_status', validateNode);
+        const messageNode = $('.validate_message', validateNode);
+        if (errors.length) {
+            statusNode.show();
+            statusNode.text(' ' + errors.length);
+            messageNode.show();
+            messageNode.html('<ul></ul>');
+            for (let index = 0; index < errors.length; index++) {
+                const error = errors[index];
+                const errorNode = $('<li></li>');
+                errorNode.text(error);
+                $('ul', messageNode).append(errorNode);
+            }
+        } else {
+            statusNode.hide();
+            messageNode.html('');
+            messageNode.hide();
+        }
+        const warningStatusNode = $('.validate_warning_status', validateNode);
+        const warningMessageNode = $('.validate_warning_message', validateNode);
+        if (warnings.length) {
+            warningStatusNode.show();
+            warningStatusNode.text(' ' + warnings.length);
+            warningMessageNode.show();
+            warningMessageNode.html('<ul></ul>');
+            for (let index = 0; index < warnings.length; index++) {
+                const warning = warnings[index];
+                const warningNode = $('<li></li>');
+                warningNode.text(warning);
+                $('ul', warningMessageNode).append(warningNode);
+            }
+        } else {
+            warningStatusNode.hide();
+            warningMessageNode.html('');
+            warningMessageNode.hide();
+        }
+    };
+    xhr.send(binary);
 }
 
 /**
@@ -504,14 +505,14 @@ function validate(message, messageTypeString, node, validateNode) {
  * @param {!jQuery} target
  */
 function toggleValidateMessage(target) {
-  switch (target.css('visibility')) {
-    case 'visible':
-      target.css('visibility', 'hidden');
-      break;
-    case 'hidden':
-      target.css('visibility', 'visible');
-      break;
-  }
+    switch (target.css('visibility')) {
+        case 'visible':
+            target.css('visibility', 'hidden');
+            break;
+        case 'hidden':
+            target.css('visibility', 'visible');
+            break;
+    }
 }
 
 /**
@@ -520,18 +521,18 @@ function toggleValidateMessage(target) {
  * @return {!Promise<!Uint8Array>}
  */
 function getDataset(fileName) {
-  return new Promise(resolve => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', '/dataset/proto/read/' + fileName);
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function() {
-      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
-      const bytes = new Uint8Array(xhr.response);
-      const dataset = Dataset.deserializeBinary(bytes);
-      resolve(dataset);
-    };
-    xhr.send();
-  });
+    return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', session.root + 'dataset/proto/read/' + fileName);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function () {
+            asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+            const bytes = new Uint8Array(xhr.response);
+            const dataset = Dataset.deserializeBinary(bytes);
+            resolve(dataset);
+        };
+        xhr.send();
+    });
 }
 
 /**
@@ -540,12 +541,12 @@ function getDataset(fileName) {
  * @param {!Dataset} dataset
  */
 function putDataset(fileName, dataset) {
-  $('#save').text('saving');
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/dataset/proto/write/' + fileName);
-  const binary = dataset.serializeBinary();
-  xhr.onload = clean;
-  xhr.send(binary);
+    $('#save').text('saving');
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', session.root + 'dataset/proto/write/' + fileName);
+    const binary = dataset.serializeBinary();
+    xhr.onload = clean;
+    xhr.send(binary);
 }
 
 /**
@@ -555,20 +556,20 @@ function putDataset(fileName, dataset) {
  * @return {!Promise<!Uint8Array>}
  */
 async function compareDataset(fileName, dataset) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/dataset/proto/compare/' + fileName);
-    const binary = dataset.serializeBinary();
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        resolve();
-      } else {
-        reject();
-      }
-    };
-    xhr.onerror = reject;
-    xhr.send(binary);
-  });
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', session.root + 'dataset/proto/compare/' + fileName);
+        const binary = dataset.serializeBinary();
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                resolve();
+            } else {
+                reject();
+            }
+        };
+        xhr.onerror = reject;
+        xhr.send(binary);
+    });
 }
 
 /**
@@ -592,10 +593,10 @@ async function compareDataset(fileName, dataset) {
  * @suppress {missingProperties}
  */
 function isEmptyMessage(obj) {
-  const empty = new obj.constructor();
-  // Compare binary encodings to cover optional fields.
-  return JSON.stringify(obj.serializeBinary()) ===
-      JSON.stringify(empty.serializeBinary());
+    const empty = new obj.constructor();
+    // Compare binary encodings to cover optional fields.
+    return JSON.stringify(obj.serializeBinary()) ===
+        JSON.stringify(empty.serializeBinary());
 }
 
 /**
@@ -605,7 +606,7 @@ function isEmptyMessage(obj) {
  * @return {boolean} True means ignore this node.
  */
 function isTemplateOrUndoBuffer(node) {
-  return !!(node.attr('id') || node.hasClass('undoable'));
+    return !!(node.attr('id') || node.hasClass('undoable'));
 }
 
 /**
@@ -619,23 +620,23 @@ function isTemplateOrUndoBuffer(node) {
  * @template TYPE
  */
 function readMetric(prefix, proto, node = null) {
-  const value = parseFloat($(prefix + '_value', node).text());
-  if (!isNaN(value)) {
-    proto.setValue(value);
-  }
-  if (proto.setUnits) {
-    // proto.ord.Percentage doesn't have units.
-    const unitsNode = $(prefix + '_units', node);
-    const unitsName = unitsNode.attr('data-proto');
-    const unitsEnum = nameToProto(asserts.assertString(unitsName));
-    const units = getSelectorText(unitsNode[0]);
-    proto.setUnits(unitsEnum[units]);
-  }
-  const precision = parseFloat($(prefix + '_precision', node).text());
-  if (!isNaN(precision)) {
-    proto.setPrecision(precision);
-  }
-  return proto;
+    const value = parseFloat($(prefix + '_value', node).text());
+    if (!isNaN(value)) {
+        proto.setValue(value);
+    }
+    if (proto.setUnits) {
+        // proto.ord.Percentage doesn't have units.
+        const unitsNode = $(prefix + '_units', node);
+        const unitsName = unitsNode.attr('data-proto');
+        const unitsEnum = nameToProto(asserts.assertString(unitsName));
+        const units = getSelectorText(unitsNode[0]);
+        proto.setUnits(unitsEnum[units]);
+    }
+    const precision = parseFloat($(prefix + '_precision', node).text());
+    if (!isNaN(precision)) {
+        proto.setPrecision(precision);
+    }
+    return proto;
 }
 
 /**
@@ -647,19 +648,19 @@ function readMetric(prefix, proto, node = null) {
  * @param {?jQuery=} node The target node for the tuple.
  */
 function writeMetric(prefix, proto, node = null) {
-  if (!proto) {
-    return;
-  }
-  if (proto.hasValue()) {
-    $(prefix + '_value', node).text(proto.getValue());
-  }
-  if (proto.getUnits) {
-    // proto.ord.Percentage doesn't have units.
-    setSelector($(prefix + '_units', node), proto.getUnits());
-  }
-  if (proto.hasPrecision()) {
-    $(prefix + '_precision', node).text(proto.getPrecision());
-  }
+    if (!proto) {
+        return;
+    }
+    if (proto.hasValue()) {
+        $(prefix + '_value', node).text(proto.getValue());
+    }
+    if (proto.getUnits) {
+        // proto.ord.Percentage doesn't have units.
+        setSelector($(prefix + '_units', node), proto.getUnits());
+    }
+    if (proto.hasPrecision()) {
+        $(prefix + '_precision', node).text(proto.getPrecision());
+    }
 }
 
 /**
@@ -669,18 +670,18 @@ function writeMetric(prefix, proto, node = null) {
  * @param {string} valueClass The class containing `identifierNode`.
  */
 function setTextFromFile(identifierNode, valueClass) {
-  const input = document.createElement('input');
-  input.setAttribute('type', 'file');
-  input.onchange = (event => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.readAsText(file);
-    reader.onload = readerEvent => {
-      const contents = readerEvent.target.result;
-      $('.' + valueClass, identifierNode).text(contents);
-    };
-  });
-  input.click();
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.onchange = (event => {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = readerEvent => {
+            const contents = readerEvent.target.result;
+            $('.' + valueClass, identifierNode).text(contents);
+        };
+    });
+    input.click();
 }
 
 /**
@@ -689,8 +690,8 @@ function setTextFromFile(identifierNode, valueClass) {
  * @param {number} value
  */
 function setSelector(node, value) {
-  $('option', node).first().removeAttr('selected');
-  $('option[value=' + value + ']', node).first().attr('selected', 'selected');
+    $('option', node).first().removeAttr('selected');
+    $('option[value=' + value + ']', node).first().attr('selected', 'selected');
 }
 
 /**
@@ -699,9 +700,9 @@ function setSelector(node, value) {
  * @return {string}
  */
 function getSelectorText(node) {
-  const selectorElement = node.getElementsByTagName('select')[0];
-  asserts.assertInstanceof(selectorElement, HTMLSelectElement);  // Type hint.
-  return selectorElement.options[selectorElement.selectedIndex].text;
+    const selectorElement = node.getElementsByTagName('select')[0];
+    asserts.assertInstanceof(selectorElement, HTMLSelectElement);  // Type hint.
+    return selectorElement.options[selectorElement.selectedIndex].text;
 }
 
 /**
@@ -710,16 +711,16 @@ function getSelectorText(node) {
  * @param {boolean|null} value The value to select.
  */
 function setOptionalBool(node, value) {
-  $('option', node).removeAttr('selected');
-  if (value === true) {
-    $('option[value=TRUE]', node).attr('selected', 'selected');
-  }
-  if (value === false) {
-    $('option[value=FALSE]', node).attr('selected', 'selected');
-  }
-  if (value == null) {
-    $('option[value=UNSPECIFIED]', node).attr('selected', 'selected');
-  }
+    $('option', node).removeAttr('selected');
+    if (value === true) {
+        $('option[value=TRUE]', node).attr('selected', 'selected');
+    }
+    if (value === false) {
+        $('option[value=FALSE]', node).attr('selected', 'selected');
+    }
+    if (value == null) {
+        $('option[value=UNSPECIFIED]', node).attr('selected', 'selected');
+    }
 }
 
 /**
@@ -728,37 +729,37 @@ function setOptionalBool(node, value) {
  * @return {boolean|null}
  */
 function getOptionalBool(node) {
-  const value = $('select', node).val();
-  if (value === 'TRUE') {
-    return true;
-  }
-  if (value === 'FALSE') {
-    return false;
-  }
-  return null;
+    const value = $('select', node).val();
+    if (value === 'TRUE') {
+        return true;
+    }
+    if (value === 'FALSE') {
+        return false;
+    }
+    return null;
 }
 
 /**
  * Switches the UI into a read-only mode. This is irreversible.
  */
 function freeze() {
-  // Hide the header buttons...
-  $('#header_buttons').children().hide();
-  // ...except for "download".
-  $('#download').show();
-  $('#identity').hide();
-  $('select').attr('disabled', 'true');
-  $('input:radio').prop('disabled', 'true');
-  $('.validate').hide();
-  $('.add').hide();
-  $('.remove').hide();
-  $('.text_upload').hide();
-  $('#provenance_created button').hide();
-  $('.edittext').each((i, x) => {
-    const node = $(x);
-    node.attr('contenteditable', 'false');
-    node.css('background-color', '#ebebe4');
-  });
+    // Hide the header buttons...
+    $('#header_buttons').children().hide();
+    // ...except for "download".
+    $('#download').show();
+    $('#identity').hide();
+    $('select').attr('disabled', 'true');
+    $('input:radio').prop('disabled', 'true');
+    $('.validate').hide();
+    $('.add').hide();
+    $('.remove').hide();
+    $('.text_upload').hide();
+    $('#provenance_created button').hide();
+    $('.edittext').each((i, x) => {
+        const node = $(x);
+        node.attr('contenteditable', 'false');
+        node.css('background-color', '#ebebe4');
+    });
 }
 
 /**
@@ -767,20 +768,20 @@ function freeze() {
  * @param {!Array<!IntersectionObserverEntry>} entries
  */
 function observerCallback(entries) {
-  entries.forEach(entry => {
-    const target = $(entry.target);
-    let section;
-    if (target[0].hasAttribute('input_name')) {
-      section = target.attr('input_name');
-    } else {
-      section = target.attr('id').split('_')[1];
-    }
-    if (entry.isIntersecting) {
-      session.navSelectors[section].css('background-color', 'lightblue');
-    } else {
-      session.navSelectors[section].css('background-color', '');
-    }
-  });
+    entries.forEach(entry => {
+        const target = $(entry.target);
+        let section;
+        if (target[0].hasAttribute('input_name')) {
+            section = target.attr('input_name');
+        } else {
+            section = target.attr('id').split('_')[1];
+        }
+        if (entry.isIntersecting) {
+            session.navSelectors[section].css('background-color', 'lightblue');
+        } else {
+            session.navSelectors[section].css('background-color', '');
+        }
+    });
 }
 
 /**
@@ -788,36 +789,36 @@ function observerCallback(entries) {
  * in the sidebar.
  */
 function setupObserver() {
-  const headerSize = $('#header').outerHeight();
-  const observerOptions = {rootMargin: '-' + headerSize + 'px 0px 0px 0px'};
-  session.observer =
-      new IntersectionObserver(observerCallback, observerOptions);
-  updateObserver();
+    const headerSize = $('#header').outerHeight();
+    const observerOptions = {rootMargin: '-' + headerSize + 'px 0px 0px 0px'};
+    session.observer =
+        new IntersectionObserver(observerCallback, observerOptions);
+    updateObserver();
 }
 
 /**
  * Updates the set of elements watched by the IntersectionObserver.
  */
 function updateObserver() {
-  if (!session.observer) {
-    return;  // Do nothing until setupObserver has been run.
-  }
-  session.observer.disconnect();
-  $('.section:visible').not('.workup_input').each(function() {
-    session.observer.observe(this);
-  });
-  // Index the selector controls.
-  session.navSelectors = {};
-  $('.navSection').each((index, selector) => {
-    selector = $(selector);
-    const section = selector.attr('data-section');
-    session.navSelectors[section] = selector;
-  });
-  $('.inputNavSection').each((index, selector) => {
-    selector = $(selector);
-    const section = selector.attr('input_name');
-    session.navSelectors[section] = selector;
-  });
+    if (!session.observer) {
+        return;  // Do nothing until setupObserver has been run.
+    }
+    session.observer.disconnect();
+    $('.section:visible').not('.workup_input').each(function () {
+        session.observer.observe(this);
+    });
+    // Index the selector controls.
+    session.navSelectors = {};
+    $('.navSection').each((index, selector) => {
+        selector = $(selector);
+        const section = selector.attr('data-section');
+        session.navSelectors[section] = selector;
+    });
+    $('.inputNavSection').each((index, selector) => {
+        selector = $(selector);
+        const section = selector.attr('input_name');
+        session.navSelectors[section] = selector;
+    });
 }
 
 /**
@@ -825,28 +826,28 @@ function updateObserver() {
  * @param {!Event} event
  */
 function scrollToInput(event) {
-  const section = $(event.target).attr('input_name');
-  const target = $('.input[input_name=\'' + section + '\']');
-  target[0].scrollIntoView({behavior: 'smooth'});
+    const section = $(event.target).attr('input_name');
+    const target = $('.input[input_name=\'' + section + '\']');
+    target[0].scrollIntoView({behavior: 'smooth'});
 }
 
 /**
  * Updates the input entries in the sidebar.
  */
 function updateSidebar() {
-  $('#navInputs').empty();
-  $('.input:visible').not('.workup_input').each(function(index) {
-    const node = $(this);
-    let name = node.find('.input_name').first().text();
-    if (name === '') {
-      name = '(Input #' + (index + 1) + ')';
-    }
-    node.attr('input_name', 'INPUT-' + name);
-    const navNode = $('<div>&#8226; ' + name + '</div>');
-    navNode.addClass('inputNavSection');
-    navNode.attr('input_name', 'INPUT-' + name);
-    $('#navInputs').append(navNode);
-    navNode.on('click', scrollToInput);
-  });
-  updateObserver();
+    $('#navInputs').empty();
+    $('.input:visible').not('.workup_input').each(function (index) {
+        const node = $(this);
+        let name = node.find('.input_name').first().text();
+        if (name === '') {
+            name = '(Input #' + (index + 1) + ')';
+        }
+        node.attr('input_name', 'INPUT-' + name);
+        const navNode = $('<div>&#8226; ' + name + '</div>');
+        navNode.addClass('inputNavSection');
+        navNode.attr('input_name', 'INPUT-' + name);
+        $('#navInputs').append(navNode);
+        navNode.on('click', scrollToInput);
+    });
+    updateObserver();
 }

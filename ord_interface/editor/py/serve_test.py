@@ -16,8 +16,9 @@
 import base64
 import json
 import os
-import urllib
+from urllib import parse
 
+import flask
 from absl.testing import absltest
 from absl.testing import parameterized
 from google.protobuf import text_format
@@ -60,8 +61,10 @@ class ServeTest(parameterized.TestCase, absltest.TestCase):
     def setUp(self):
         super().setUp()
         self.test_directory = self.create_tempdir()
-        serve.app.config['TESTING'] = True
-        self.client = serve.app.test_client()
+        app = flask.Flask(__name__)
+        app.register_blueprint(serve.bp, url_prefix='')
+        app.testing = True
+        self.client = app.test_client()
         # GET requests automatically login as the test user.
         self.client.get('/authenticate')
         self.testdata = os.path.join(
@@ -114,7 +117,7 @@ class ServeTest(parameterized.TestCase, absltest.TestCase):
     @parameterized.parameters([
         ('dataset', 200),
         ('../dataset', 404),
-        (urllib.parse.quote_plus('../dataset'), 404),
+        (parse.quote_plus('../dataset'), 404),
         ('/foo/bar', 404),
         ('other', 404),
     ])
@@ -134,8 +137,8 @@ class ServeTest(parameterized.TestCase, absltest.TestCase):
         ('dataset', 'pbtxt', 200),
         ('../dataset', 'pb', 404),
         ('../dataset', 'pbtxt', 404),
-        (urllib.parse.quote_plus('../dataset'), 'pb', 404),
-        (urllib.parse.quote_plus('../dataset'), 'pbtxt', 404),
+        (parse.quote_plus('../dataset'), 'pb', 404),
+        (parse.quote_plus('../dataset'), 'pbtxt', 404),
         ('/foo/bar', 'pb', 404),
         ('/foo/bar', 'pbtxt', 404),
         ('other', 'pb', 404),
