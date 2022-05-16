@@ -39,6 +39,6 @@ elif command -v clang-format &> /dev/null; then
   find "${ROOT_DIR}" -name '*.js' -exec clang-format -i --style=file {} +
 else
   echo "Please install clang-format:"
-  echo "  Linux: apt install clang-format-14"
+  echo "  Linux: apt install clang-format-10"
   echo "  MacOS: brew install clang-format"
 fi
