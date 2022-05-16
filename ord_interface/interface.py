@@ -21,6 +21,7 @@ from ord_interface.editor.py import serve
 
 app = flask.Flask(__name__)
 # TODO(skearnes): Figure out bp.add_app_template_filter?
-app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)
+app.jinja_env.filters.update(
+    filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
 app.register_blueprint(search.bp)
 app.register_blueprint(serve.bp)
