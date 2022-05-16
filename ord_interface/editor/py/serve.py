@@ -46,7 +46,9 @@ from ord_schema.visualization import generate_text
 from ord_schema.visualization import drawing
 
 # pylint: disable=invalid-name,no-member,inconsistent-return-statements,assigning-non-slot
-bp = flask.Blueprint('editor', __name__, url_prefix='/editor',
+bp = flask.Blueprint('editor',
+                     __name__,
+                     url_prefix='/editor',
                      template_folder='../html')
 
 # For dataset merges operations like byte-value uploads and enumeration.
@@ -293,8 +295,8 @@ def clone_reaction(name, index):
     dataset.reactions.add().CopyFrom(dataset.reactions[index])
     index = len(dataset.reactions) - 1
     put_dataset(name, dataset)
-    return flask.redirect(
-        flask.url_for('.show_dataset', name=name, index=index))
+    return flask.redirect(flask.url_for('.show_dataset', name=name,
+                                        index=index))
 
 
 @bp.route('/dataset/<name>/delete/reaction/<index>')
@@ -942,19 +944,21 @@ def init_user():
                                   host=POSTGRES_HOST,
                                   port=int(POSTGRES_PORT))
     root = flask.url_for('.show_root').rstrip('/')
-    skip = [f'{root}{value}' for value in [
-        '/login',
-        '/authenticate',
-        '/github-callback',
-        '/render/reaction',
-        '/render/compound',
-        '/healthcheck',
-        '/reaction/id/',
-        '/css/',
-        '/js/',
-        '/ketcher/',
-        '/dataset/proto/validate/',
-    ]]
+    skip = [
+        f'{root}{value}' for value in [
+            '/login',
+            '/authenticate',
+            '/github-callback',
+            '/render/reaction',
+            '/render/compound',
+            '/healthcheck',
+            '/reaction/id/',
+            '/css/',
+            '/js/',
+            '/ketcher/',
+            '/dataset/proto/validate/',
+        ]
+    ]
     if flask.request.path.startswith(tuple(skip)):
         return
     if 'ord-editor-user' in flask.request.cookies:

@@ -41,8 +41,7 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
             self.assertLen(dataset.reactions, expected)
 
     @parameterized.parameters(
-        ('ord-cf0d04017ede4c8aab8a15119c53e57b', 'Connor W. Coley'),
-    )
+        ('ord-cf0d04017ede4c8aab8a15119c53e57b', 'Connor W. Coley'),)
     def test_fetch_reaction(self, reaction_id, created_by):
         reaction = self.client.fetch_reaction(reaction_id)
         self.assertEqual(reaction.provenance.record_created.person.name,
@@ -50,10 +49,9 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
 
     @parameterized.parameters(
         ([
-             'ord-cf0d04017ede4c8aab8a15119c53e57b',
-             'ord-153de2a96e07484e93d525d81f966789'
-         ], ['Connor W. Coley', 'Connor W. Coley']),
-    )
+            'ord-cf0d04017ede4c8aab8a15119c53e57b',
+            'ord-153de2a96e07484e93d525d81f966789'
+        ], ['Connor W. Coley', 'Connor W. Coley']),)
     def test_fetch_reactions(self, reaction_ids, created_by):
         reactions = self.client.fetch_reactions(reaction_ids)
         self.assertLen(reaction_ids, len(created_by))
@@ -63,9 +61,8 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
                              expected)
 
     def test_query_dataset_ids(self):
-        results = self.client.query(dataset_ids=[
-            'ord_dataset-89b083710e2d441aa0040c361d63359f'
-        ])
+        results = self.client.query(
+            dataset_ids=['ord_dataset-89b083710e2d441aa0040c361d63359f'])
         self.assertLen(results, 24)
 
     def test_query_reaction_ids(self):

@@ -98,9 +98,7 @@ function add() {
   const node = utils.addSlowly('#observation_template', $('#observations'));
   data.addData(node);
   // Add live validation handling.
-  utils.addChangeHandler(node, () => {
-    validateObservation(node);
-  });
+  utils.addChangeHandler(node, () => { validateObservation(node); });
   return node;
 }
 

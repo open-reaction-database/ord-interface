@@ -17,14 +17,14 @@
 goog.module('ord.dataset');
 goog.module.declareLegacyNamespace();
 exports = {
-    init,
-    download,
-    commit,
-    deleteReaction,
-    newReaction,
-    removeReactionId,
-    addReactionId,
-    freeze
+  init,
+  download,
+  commit,
+  deleteReaction,
+  newReaction,
+  removeReactionId,
+  addReactionId,
+  freeze
 };
 
 const asserts = goog.require('goog.asserts');
@@ -35,9 +35,9 @@ const Dataset = goog.require('proto.ord.Dataset');
 const Reaction = goog.require('proto.ord.Reaction');
 
 const session = {
-    fileName: null,
-    dataset: null,
-    root: null,
+  fileName: null,
+  dataset: null,
+  root: null,
 };
 
 /**
@@ -46,11 +46,11 @@ const session = {
  * @param {string} root URL root.
  */
 async function init(fileName, root) {
-    session.fileName = fileName;
-    session.root = root;
-    $('.edittext').attr('contentEditable', 'true');
-    await getDataset(fileName);
-    listenDirty($('#text_fields'));
+  session.fileName = fileName;
+  session.root = root;
+  $('.edittext').attr('contentEditable', 'true');
+  await getDataset(fileName);
+  listenDirty($('#text_fields'));
 }
 
 /**
@@ -58,24 +58,24 @@ async function init(fileName, root) {
  * @param {!jQuery} node Root node for the reaction or reaction ID.
  */
 function listenDirty(node) {
-    $('.edittext', node).on('input', dirty);
-    $('.selector', node).on('input', dirty);
+  $('.edittext', node).on('input', dirty);
+  $('.selector', node).on('input', dirty);
 }
 
 /**
  * Shows the 'save' button.
  */
 function dirty() {
-    $('#save').css('visibility', 'visible');
+  $('#save').css('visibility', 'visible');
 }
 
 /**
  * Hides the 'save' button.
  */
 function clean() {
-    const matcher = $('#save');
-    matcher.css('visibility', 'hidden');
-    matcher.text('save');
+  const matcher = $('#save');
+  matcher.css('visibility', 'hidden');
+  matcher.text('save');
 }
 
 /**
@@ -83,19 +83,20 @@ function clean() {
  * @return {!Promise<string>}
  */
 function commit() {
-    return new Promise(resolve => {
-        const dataset = unloadDataset();
-        $('#save').text('saving');
-        const xhr = new XMLHttpRequest();
-        xhr.open(
-            'POST', session.root + 'dataset/proto/write/' + session.fileName, true /* async */);
-        const binary = dataset.serializeBinary();
-        xhr.onload = function () {
-            clean();
-            resolve('saved');
-        };
-        xhr.send(binary);
-    });
+  return new Promise(resolve => {
+    const dataset = unloadDataset();
+    $('#save').text('saving');
+    const xhr = new XMLHttpRequest();
+    xhr.open(
+        'POST', session.root + 'dataset/proto/write/' + session.fileName,
+        true /* async */);
+    const binary = dataset.serializeBinary();
+    xhr.onload = function() {
+      clean();
+      resolve('saved');
+    };
+    xhr.send(binary);
+  });
 }
 
 /**
@@ -103,11 +104,12 @@ function commit() {
  * @param {string} kind Serialization format; one of 'pb' or 'pbtxt'.
  */
 function download(kind) {
-    const url = session.root + 'dataset/' + session.fileName + '/download/' + kind;
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    document.body.appendChild(link);
-    link.click();
+  const url =
+      session.root + 'dataset/' + session.fileName + '/download/' + kind;
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  document.body.appendChild(link);
+  link.click();
 }
 
 /**
@@ -116,21 +118,22 @@ function download(kind) {
  * @return {!Promise}
  */
 function getDataset(fileName) {
-    return new Promise(resolve => {
-        const xhr = new XMLHttpRequest();
-        xhr.open(
-            'GET', session.root + 'dataset/proto/read/' + session.fileName, true /* async */);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = () => {
-            asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
-            const bytes = new Uint8Array(xhr.response);
-            const dataset = Dataset.deserializeBinary(bytes);
-            session.dataset = dataset;
-            loadDataset(dataset);
-            resolve();
-        };
-        xhr.send();
-    });
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(
+        'GET', session.root + 'dataset/proto/read/' + session.fileName,
+        true /* async */);
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = () => {
+      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      const bytes = new Uint8Array(xhr.response);
+      const dataset = Dataset.deserializeBinary(bytes);
+      session.dataset = dataset;
+      loadDataset(dataset);
+      resolve();
+    };
+    xhr.send();
+  });
 }
 
 /**
@@ -138,17 +141,17 @@ function getDataset(fileName) {
  * @param {!Dataset} dataset
  */
 function loadDataset(dataset) {
-    $('#name').text(dataset.getName());
-    $('#description').text(dataset.getDescription());
-    $('#dataset_id').text(dataset.getDatasetId());
+  $('#name').text(dataset.getName());
+  $('#description').text(dataset.getDescription());
+  $('#dataset_id').text(dataset.getDatasetId());
 
-    const reactions = dataset.getReactionsList();
-    loadReactions(reactions);
+  const reactions = dataset.getReactionsList();
+  loadReactions(reactions);
 
-    const reactionIds = dataset.getReactionIdsList();
-    loadReactionIds(reactionIds);
+  const reactionIds = dataset.getReactionIdsList();
+  loadReactionIds(reactionIds);
 
-    clean();
+  clean();
 }
 
 /**
@@ -156,11 +159,11 @@ function loadDataset(dataset) {
  * @param {!Array<!Reaction>} reactions
  */
 function loadReactions(reactions) {
-    for (let i = 0; i < reactions.length; i++) {
-        const reaction = reactions[i];
-        const id = reaction.getReactionId();
-        addReaction(i, id);
-    }
+  for (let i = 0; i < reactions.length; i++) {
+    const reaction = reactions[i];
+    const id = reaction.getReactionId();
+    addReaction(i, id);
+  }
 }
 
 /**
@@ -168,7 +171,7 @@ function loadReactions(reactions) {
  * @param {!Array<string>} reactionIds
  */
 function loadReactionIds(reactionIds) {
-    reactionIds.forEach(reactionId => loadReactionId(reactionId));
+  reactionIds.forEach(reactionId => loadReactionId(reactionId));
 }
 
 /**
@@ -176,8 +179,8 @@ function loadReactionIds(reactionIds) {
  * @param {string} reactionId
  */
 function loadReactionId(reactionId) {
-    const node = addReactionId();
-    $('.other_reaction_id_text', node).text(reactionId);
+  const node = addReactionId();
+  $('.other_reaction_id_text', node).text(reactionId);
 }
 
 /**
@@ -185,21 +188,21 @@ function loadReactionId(reactionId) {
  * @return {!Dataset}
  */
 function unloadDataset() {
-    const dataset = session.dataset;
+  const dataset = session.dataset;
 
-    dataset.setName(asserts.assertString($('#name').text()));
-    dataset.setDescription(asserts.assertString($('#description').text()));
-    dataset.setDatasetId(asserts.assertString($('#dataset_id').text()));
-    const reactionIds = [];
-    $('.other_reaction_id').each(function (index, node) {
-        node = $(node);
-        if (!utils.isTemplateOrUndoBuffer(node)) {
-            reactionIds.push($('.other_reaction_id_text', node).text());
-        }
-    });
-    dataset.setReactionIdsList(reactionIds);
-    // Do not mutate Reactions. They are edited separately.
-    return dataset;
+  dataset.setName(asserts.assertString($('#name').text()));
+  dataset.setDescription(asserts.assertString($('#description').text()));
+  dataset.setDatasetId(asserts.assertString($('#dataset_id').text()));
+  const reactionIds = [];
+  $('.other_reaction_id').each(function(index, node) {
+    node = $(node);
+    if (!utils.isTemplateOrUndoBuffer(node)) {
+      reactionIds.push($('.other_reaction_id_text', node).text());
+    }
+  });
+  dataset.setReactionIdsList(reactionIds);
+  // Do not mutate Reactions. They are edited separately.
+  return dataset;
 }
 
 /**
@@ -209,21 +212,23 @@ function unloadDataset() {
  * @return {!jQuery} The newly added root node for the reaction.
  */
 function addReaction(index, reactionId) {
-    const node = $('#reaction_template').clone();
-    node.removeAttr('id');
-    const anchor = $('.reaction_index', node);
-    if (reactionId) {
-        anchor.text(reactionId);
-    } else {
-        anchor.text('Reaction ' + index);
-    }
-    anchor.attr('href', session.root + 'dataset/' + session.fileName + '/reaction/' + index);
-    const root = $('#reactions');
-    root.append(node);
-    node.show('slow');
-    listenDirty(node);
-    dirty();
-    return node;
+  const node = $('#reaction_template').clone();
+  node.removeAttr('id');
+  const anchor = $('.reaction_index', node);
+  if (reactionId) {
+    anchor.text(reactionId);
+  } else {
+    anchor.text('Reaction ' + index);
+  }
+  anchor.attr(
+      'href',
+      session.root + 'dataset/' + session.fileName + '/reaction/' + index);
+  const root = $('#reactions');
+  root.append(node);
+  node.show('slow');
+  listenDirty(node);
+  dirty();
+  return node;
 }
 
 /**
@@ -231,24 +236,25 @@ function addReaction(index, reactionId) {
  * @return {!jQuery} The newly added root node for the reaction ID.
  */
 function addReactionId() {
-    const node = $('#other_reaction_id_template').clone();
-    node.removeAttr('id');
-    const root = $('#other_reaction_ids');
-    root.append(node);
-    node.show('slow');
-    listenDirty(node);
-    dirty();
-    return node;
+  const node = $('#other_reaction_id_template').clone();
+  node.removeAttr('id');
+  const root = $('#other_reaction_ids');
+  root.append(node);
+  node.show('slow');
+  listenDirty(node);
+  dirty();
+  return node;
 }
 
 /**
  * Loads the Reaction editor after triggering 'save'.
  */
 async function newReaction() {
-    if ($('#save').css('visibility') === 'visible') {
-        await commit();
-    }
-    window.location.href = session.root + 'dataset/' + session.fileName + '/new/reaction';
+  if ($('#save').css('visibility') === 'visible') {
+    await commit();
+  }
+  window.location.href =
+      session.root + 'dataset/' + session.fileName + '/new/reaction';
 }
 
 /**
@@ -256,12 +262,13 @@ async function newReaction() {
  * @param {!jQuery} button The node of the 'remove' button.
  */
 async function deleteReaction(button) {
-    if ($('#save').css('visibility') === 'visible') {
-        await commit();
-    }
-    const node = $(button).closest('.reaction');
-    const index = parseInt($('a', node).text(), 10);
-    window.location.href = session.root + 'dataset/' + session.fileName + '/delete/reaction/' + index;
+  if ($('#save').css('visibility') === 'visible') {
+    await commit();
+  }
+  const node = $(button).closest('.reaction');
+  const index = parseInt($('a', node).text(), 10);
+  window.location.href = session.root + 'dataset/' + session.fileName +
+      '/delete/reaction/' + index;
 }
 
 /**
@@ -269,7 +276,7 @@ async function deleteReaction(button) {
  * @param {!jQuery} button The node of the 'remove' button.
  */
 function removeReactionId(button) {
-    removeSlowly(button, '.other_reaction_id');
+  removeSlowly(button, '.other_reaction_id');
 }
 
 /**
@@ -278,20 +285,20 @@ function removeReactionId(button) {
  * @param {string} pattern The element pattern to match.
  */
 function removeSlowly(button, pattern) {
-    const node = $(button).closest(pattern);
-    node.hide('slow', () => node.remove());
-    dirty();
+  const node = $(button).closest(pattern);
+  node.hide('slow', () => node.remove());
+  dirty();
 }
 
 /**
  * Switches the UI into a read-only mode. This is irreversible.
  */
 function freeze() {
-    $('.remove').hide();
-    $('#save').hide();
-    $('.edittext').each((i, x) => {
-        const node = $(x);
-        node.attr('contenteditable', 'false');
-        node.css('background-color', '#ebebe4');
-    });
+  $('.remove').hide();
+  $('#save').hide();
+  $('.edittext').each((i, x) => {
+    const node = $(x);
+    node.attr('contenteditable', 'false');
+    node.css('background-color', '#ebebe4');
+  });
 }

@@ -35,13 +35,13 @@ const Temperature = goog.require('proto.ord.Temperature');
 const Time = goog.require('proto.ord.Time');
 
 exports = {
-    load,
-    loadInputUnnamed,
-    unload,
-    unloadInputUnnamed,
-    add,
-    validateInput,
-    addInputByString,
+  load,
+  loadInputUnnamed,
+  unload,
+  unloadInputUnnamed,
+  add,
+  validateInput,
+  addInputByString,
 };
 
 const session = utils.session;
@@ -52,10 +52,10 @@ const session = utils.session;
  * @param {!JspbMap<string, !ReactionInput>} inputs
  */
 function load(inputs) {
-    inputs.forEach(function (input, name) {
-        loadInput($('#inputs'), name, input);
-    });
-    utils.updateSidebar();
+  inputs.forEach(function(input, name) {
+    loadInput($('#inputs'), name, input);
+  });
+  utils.updateSidebar();
 }
 
 /**
@@ -66,10 +66,10 @@ function load(inputs) {
  * @return {!jQuery} The new input node.
  */
 function loadInput(root, name, input) {
-    const node = add(root);
-    loadInputUnnamed(node, input);
-    $('.input_name', node).text(name);
-    return node;
+  const node = add(root);
+  loadInputUnnamed(node, input);
+  $('.input_name', node).text(name);
+  return node;
 }
 
 /**
@@ -78,32 +78,32 @@ function loadInput(root, name, input) {
  * @param {!jQuery} root Root node for the reaction input.
  */
 function addInputByString(root) {
-    const string =
-        prompt(`Please describe the input in one of the following forms:
+  const string =
+      prompt(`Please describe the input in one of the following forms:
 (1) [AMOUNT] of [NAME]
 (2) [AMOUNT] of [CONCENTRATION] [SOLUTE] in [SOLVENT]`);
-    if (!(string)) {
-        return;
+  if (!(string)) {
+    return;
+  }
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', session.root + 'resolve/input');
+  xhr.responseType = 'arraybuffer';
+  xhr.onload = () => {
+    if (xhr.status === 409) {
+      const decoder = new TextDecoder('utf-8');
+      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      alert('Could not parse: ' + decoder.decode(xhr.response));
+    } else {
+      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      const bytes = new Uint8Array(xhr.response);
+      const input = ReactionInput.deserializeBinary(bytes);
+      if (input) {
+        const input_node = loadInput(root, asserts.assertString(string), input);
+        $('.edittext', input_node).trigger('blur');
+      }
     }
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', session.root + 'resolve/input');
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = () => {
-        if (xhr.status === 409) {
-            const decoder = new TextDecoder('utf-8');
-            asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
-            alert('Could not parse: ' + decoder.decode(xhr.response));
-        } else {
-            asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
-            const bytes = new Uint8Array(xhr.response);
-            const input = ReactionInput.deserializeBinary(bytes);
-            if (input) {
-                const input_node = loadInput(root, asserts.assertString(string), input);
-                $('.edittext', input_node).trigger('blur');
-            }
-        }
-    };
-    xhr.send(string);
+  };
+  xhr.send(string);
 }
 
 /**
@@ -114,49 +114,49 @@ function addInputByString(root) {
  * @return {!jQuery} The original root node.
  */
 function loadInputUnnamed(node, input) {
-    if (!input) {
-        return node;
-    }
-    const componentsList = input.getComponentsList();
-    compounds.load(node, componentsList);
-
-    const crudeComponentsList = input.getCrudeComponentsList();
-    crudes.load(node, crudeComponentsList);
-
-    const additionOrder = input.getAdditionOrder();
-    if (additionOrder !== 0) {
-        $('.input_addition_order', node).text(additionOrder);
-    }
-
-    const additionTime = input.getAdditionTime();
-    if (additionTime) {
-        utils.writeMetric('.input_addition_time', additionTime, node);
-    }
-    const additionSpeed = input.getAdditionSpeed();
-    if (additionSpeed) {
-        utils.setSelector(
-            $('.input_addition_speed_type', node), additionSpeed.getType());
-        $('.input_addition_speed_details', node).text(additionSpeed.getDetails());
-    }
-    const additionDevice = input.getAdditionDevice();
-    if (additionDevice) {
-        utils.setSelector(
-            $('.input_addition_device_type', node), additionDevice.getType());
-        $('.input_addition_device_details', node).text(additionDevice.getDetails());
-    }
-    const duration = input.getAdditionDuration();
-    if (duration) {
-        utils.writeMetric('.input_addition_duration', duration, node);
-    }
-    const temperature = input.getAdditionTemperature();
-    if (temperature) {
-        utils.writeMetric('.input_addition_temperature', temperature, node);
-    }
-    const flowRate = input.getFlowRate();
-    if (flowRate) {
-        utils.writeMetric('.input_flow_rate', flowRate, node);
-    }
+  if (!input) {
     return node;
+  }
+  const componentsList = input.getComponentsList();
+  compounds.load(node, componentsList);
+
+  const crudeComponentsList = input.getCrudeComponentsList();
+  crudes.load(node, crudeComponentsList);
+
+  const additionOrder = input.getAdditionOrder();
+  if (additionOrder !== 0) {
+    $('.input_addition_order', node).text(additionOrder);
+  }
+
+  const additionTime = input.getAdditionTime();
+  if (additionTime) {
+    utils.writeMetric('.input_addition_time', additionTime, node);
+  }
+  const additionSpeed = input.getAdditionSpeed();
+  if (additionSpeed) {
+    utils.setSelector(
+        $('.input_addition_speed_type', node), additionSpeed.getType());
+    $('.input_addition_speed_details', node).text(additionSpeed.getDetails());
+  }
+  const additionDevice = input.getAdditionDevice();
+  if (additionDevice) {
+    utils.setSelector(
+        $('.input_addition_device_type', node), additionDevice.getType());
+    $('.input_addition_device_details', node).text(additionDevice.getDetails());
+  }
+  const duration = input.getAdditionDuration();
+  if (duration) {
+    utils.writeMetric('.input_addition_duration', duration, node);
+  }
+  const temperature = input.getAdditionTemperature();
+  if (temperature) {
+    utils.writeMetric('.input_addition_temperature', temperature, node);
+  }
+  const flowRate = input.getFlowRate();
+  if (flowRate) {
+    utils.writeMetric('.input_flow_rate', flowRate, node);
+  }
+  return node;
 }
 
 /**
@@ -164,12 +164,12 @@ function loadInputUnnamed(node, input) {
  * @param {!JspbMap<string, !ReactionInput>} inputs
  */
 function unload(inputs) {
-    $('#inputs > div.input').each(function (index, node) {
-        node = $(node);
-        if (!utils.isTemplateOrUndoBuffer(node)) {
-            unloadInput(inputs, node);
-        }
-    });
+  $('#inputs > div.input').each(function(index, node) {
+    node = $(node);
+    if (!utils.isTemplateOrUndoBuffer(node)) {
+      unloadInput(inputs, node);
+    }
+  });
 }
 
 /**
@@ -178,11 +178,11 @@ function unload(inputs) {
  * @param {!jQuery} node Root node for the reaction input.
  */
 function unloadInput(inputs, node) {
-    const name = $('.input_name', node).text();
-    const input = unloadInputUnnamed(node);
-    if (name || !utils.isEmptyMessage(input)) {
-        inputs.set(asserts.assertString(name), input);
-    }
+  const name = $('.input_name', node).text();
+  const input = unloadInputUnnamed(node);
+  if (name || !utils.isEmptyMessage(input)) {
+    inputs.set(asserts.assertString(name), input);
+  }
 }
 
 /**
@@ -191,66 +191,66 @@ function unloadInput(inputs, node) {
  * @return {!ReactionInput}
  */
 function unloadInputUnnamed(node) {
-    const input = new ReactionInput();
+  const input = new ReactionInput();
 
-    const componentsList = compounds.unload(node);
-    if (componentsList.some(e => !utils.isEmptyMessage(e))) {
-        input.setComponentsList(componentsList);
-    }
+  const componentsList = compounds.unload(node);
+  if (componentsList.some(e => !utils.isEmptyMessage(e))) {
+    input.setComponentsList(componentsList);
+  }
 
-    const crudeComponentsList = crudes.unload(node);
-    if (crudeComponentsList.some(e => !utils.isEmptyMessage(e))) {
-        input.setCrudeComponentsList(crudeComponentsList);
-    }
+  const crudeComponentsList = crudes.unload(node);
+  if (crudeComponentsList.some(e => !utils.isEmptyMessage(e))) {
+    input.setCrudeComponentsList(crudeComponentsList);
+  }
 
-    const additionOrder = parseInt($('.input_addition_order', node).text(), 10);
-    if (!isNaN(additionOrder)) {
-        input.setAdditionOrder(additionOrder);
-    }
-    const additionTime =
-        utils.readMetric('.input_addition_time', new Time(), node);
-    if (!utils.isEmptyMessage(additionTime)) {
-        input.setAdditionTime(additionTime);
-    }
+  const additionOrder = parseInt($('.input_addition_order', node).text(), 10);
+  if (!isNaN(additionOrder)) {
+    input.setAdditionOrder(additionOrder);
+  }
+  const additionTime =
+      utils.readMetric('.input_addition_time', new Time(), node);
+  if (!utils.isEmptyMessage(additionTime)) {
+    input.setAdditionTime(additionTime);
+  }
 
-    const additionSpeed = new AdditionSpeed();
-    const additionSpeedType =
-        utils.getSelectorText($('.input_addition_speed_type', node)[0]);
-    additionSpeed.setType(AdditionSpeedType[additionSpeedType]);
-    additionSpeed.setDetails(
-        asserts.assertString($('.input_addition_speed_details', node).text()));
-    if (!utils.isEmptyMessage(additionSpeed)) {
-        input.setAdditionSpeed(additionSpeed);
-    }
+  const additionSpeed = new AdditionSpeed();
+  const additionSpeedType =
+      utils.getSelectorText($('.input_addition_speed_type', node)[0]);
+  additionSpeed.setType(AdditionSpeedType[additionSpeedType]);
+  additionSpeed.setDetails(
+      asserts.assertString($('.input_addition_speed_details', node).text()));
+  if (!utils.isEmptyMessage(additionSpeed)) {
+    input.setAdditionSpeed(additionSpeed);
+  }
 
-    const additionDevice = new AdditionDevice();
-    const additionDeviceType =
-        utils.getSelectorText($('.input_addition_device_type', node)[0]);
-    additionDevice.setType(AdditionDeviceType[additionDeviceType]);
-    additionDevice.setDetails(
-        asserts.assertString($('.input_addition_device_details', node).text()));
-    if (!utils.isEmptyMessage(additionDevice)) {
-        input.setAdditionDevice(additionDevice);
-    }
+  const additionDevice = new AdditionDevice();
+  const additionDeviceType =
+      utils.getSelectorText($('.input_addition_device_type', node)[0]);
+  additionDevice.setType(AdditionDeviceType[additionDeviceType]);
+  additionDevice.setDetails(
+      asserts.assertString($('.input_addition_device_details', node).text()));
+  if (!utils.isEmptyMessage(additionDevice)) {
+    input.setAdditionDevice(additionDevice);
+  }
 
-    const additionDuration =
-        utils.readMetric('.input_addition_duration', new Time(), node);
-    if (!utils.isEmptyMessage(additionDuration)) {
-        input.setAdditionDuration(additionDuration);
-    }
+  const additionDuration =
+      utils.readMetric('.input_addition_duration', new Time(), node);
+  if (!utils.isEmptyMessage(additionDuration)) {
+    input.setAdditionDuration(additionDuration);
+  }
 
-    const additionTemperature =
-        utils.readMetric('.input_addition_temperature', new Temperature(), node);
-    if (!utils.isEmptyMessage(additionTemperature)) {
-        input.setAdditionTemperature(additionTemperature);
-    }
+  const additionTemperature =
+      utils.readMetric('.input_addition_temperature', new Temperature(), node);
+  if (!utils.isEmptyMessage(additionTemperature)) {
+    input.setAdditionTemperature(additionTemperature);
+  }
 
-    const flowRate = utils.readMetric('.input_flow_rate', new FlowRate(), node);
-    if (!utils.isEmptyMessage(flowRate)) {
-        input.setFlowRate(flowRate);
-    }
+  const flowRate = utils.readMetric('.input_flow_rate', new FlowRate(), node);
+  if (!utils.isEmptyMessage(flowRate)) {
+    input.setFlowRate(flowRate);
+  }
 
-    return input;
+  return input;
 }
 
 /**
@@ -260,19 +260,17 @@ function unloadInputUnnamed(node) {
  * @return {!jQuery} The newly added parent node for the reaction input.
  */
 function add(root, classes = null) {
-    const node = utils.addSlowly('#input_template', $(root));
-    if (Array.isArray(classes) && classes.length) {
-        node.addClass(classes);
-    }
-    utils.updateSidebar();
-    // Add live validation handling.
-    utils.addChangeHandler(node, () => {
-        validateInput(node);
-    });
-    // Update the sidebar when the input name is changed.
-    const nameNode = node.find('.input_name').first();
-    nameNode.on('blur', utils.updateSidebar);
-    return node;
+  const node = utils.addSlowly('#input_template', $(root));
+  if (Array.isArray(classes) && classes.length) {
+    node.addClass(classes);
+  }
+  utils.updateSidebar();
+  // Add live validation handling.
+  utils.addChangeHandler(node, () => { validateInput(node); });
+  // Update the sidebar when the input name is changed.
+  const nameNode = node.find('.input_name').first();
+  nameNode.on('blur', utils.updateSidebar);
+  return node;
 }
 
 /**
@@ -281,6 +279,6 @@ function add(root, classes = null) {
  * @param {?jQuery=} validateNode Target node for validation results.
  */
 function validateInput(node, validateNode = null) {
-    const input = unloadInputUnnamed(node);
-    utils.validate(input, 'ReactionInput', node, validateNode);
+  const input = unloadInputUnnamed(node);
+  utils.validate(input, 'ReactionInput', node, validateNode);
 }

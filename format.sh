@@ -33,10 +33,10 @@ fi
 yapf -p -r "${ROOT_DIR}" --exclude="*_pb2.py" --in-place
 # Format javascript.
 if command -v clang-format-10 &> /dev/null; then
-  find "${ROOT_DIR}/js" -name '*.js' -exec clang-format-10 -i --style=file {} +
+  find "${ROOT_DIR}/ord_interface/editor/js" -name '*.js' -exec clang-format-10 -i --style=file {} +
 elif command -v clang-format &> /dev/null; then
   # NOTE(kearnes): Make sure you have version 10 or higher!
-  find "${ROOT_DIR}/js" -name '*.js' -exec clang-format -i --style=file {} +
+  find "${ROOT_DIR}/ord_interface/editor/js" -name '*.js' -exec clang-format -i --style=file {} +
 else
   echo "Please install clang-format:"
   echo "  Linux: apt install clang-format-10"

@@ -143,7 +143,7 @@ def _inputs_table(reaction: reaction_pb2.Reaction) -> List[Mapping[str, str]]:
 
 
 def _outputs_table(
-        reaction: reaction_pb2.Reaction
+    reaction: reaction_pb2.Reaction
 ) -> List[Mapping[str, Union[str, float, None]]]:
     """Adds rows to the 'outputs' table.
 
