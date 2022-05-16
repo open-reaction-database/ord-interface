@@ -36,9 +36,7 @@ const Data = goog.require('proto.ord.Data');
  * @param {!JspbMap<string, !Data>} codes
  */
 function load(codes) {
-  codes.forEach(function(code, name) {
-    loadCode(name, code);
-  });
+  codes.forEach(function(code, name) { loadCode(name, code); });
 }
 
 /**

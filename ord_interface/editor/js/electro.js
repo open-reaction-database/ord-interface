@@ -22,11 +22,16 @@ const asserts = goog.require('goog.asserts');
 const utils = goog.require('ord.utils');
 
 const Current = goog.require('proto.ord.Current');
-const ElectrochemistryConditions = goog.require('proto.ord.ElectrochemistryConditions');
-const ElectrochemistryCell = goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryCell');
-const ElectrochemistryCellType = goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryCell.ElectrochemistryCellType');
-const ElectrochemistryType = goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryType');
-const Measurement = goog.require('proto.ord.ElectrochemistryConditions.Measurement');
+const ElectrochemistryConditions =
+    goog.require('proto.ord.ElectrochemistryConditions');
+const ElectrochemistryCell =
+    goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryCell');
+const ElectrochemistryCellType = goog.require(
+    'proto.ord.ElectrochemistryConditions.ElectrochemistryCell.ElectrochemistryCellType');
+const ElectrochemistryType =
+    goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryType');
+const Measurement =
+    goog.require('proto.ord.ElectrochemistryConditions.Measurement');
 const Length = goog.require('proto.ord.Length');
 const Time = goog.require('proto.ord.Time');
 const Voltage = goog.require('proto.ord.Voltage');
@@ -174,8 +179,8 @@ function unloadMeasurement(node) {
  * @return {!jQuery} The newly added parent node for the measurement.
  */
 function addMeasurement() {
-  const node = utils.addSlowly(
-      '#electro_measurement_template', $('#electro_measurements'));
+  const node = utils.addSlowly('#electro_measurement_template',
+                               $('#electro_measurements'));
 
   const metricButtons = $('input', node);
   metricButtons.attr('name', 'electro_' + radioGroupCounter++);

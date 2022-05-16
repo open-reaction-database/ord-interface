@@ -144,11 +144,11 @@ function load(node, amount) {
         .show()
         .css('display', 'inline-block');
     $('.amount_includes_solutes', node).show().css('display', 'inline-block');
-    const solutes = amount.hasVolumeIncludesSolutes() ?
-        amount.getVolumeIncludesSolutes() :
-        null;
-    utils.setOptionalBool(
-        $('.amount_includes_solutes.optional_bool', node), solutes);
+    const solutes = amount.hasVolumeIncludesSolutes()
+                        ? amount.getVolumeIncludesSolutes()
+                        : null;
+    utils.setOptionalBool($('.amount_includes_solutes.optional_bool', node),
+                          solutes);
   }
 }
 

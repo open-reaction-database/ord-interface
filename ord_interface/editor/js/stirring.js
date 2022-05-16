@@ -22,16 +22,17 @@ const asserts = goog.require('goog.asserts');
 const utils = goog.require('ord.utils');
 
 const StirringConditions = goog.require('proto.ord.StirringConditions');
-const StirringMethodType = goog.require('proto.ord.StirringConditions.StirringMethodType');
+const StirringMethodType =
+    goog.require('proto.ord.StirringConditions.StirringMethodType');
 const StirringRate = goog.require('proto.ord.StirringConditions.StirringRate');
-const StirringRateType = goog.require('proto.ord.StirringConditions.StirringRate.StirringRateType');
+const StirringRateType =
+    goog.require('proto.ord.StirringConditions.StirringRate.StirringRateType');
 
 exports = {
   load,
   unload,
   validateStirring
 };
-
 
 /**
  * Adds and populates the stirring conditions section in the form.

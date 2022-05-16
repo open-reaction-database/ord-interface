@@ -22,7 +22,7 @@ const Message = goog.require('jspb.Message');
 const asserts = goog.require('goog.asserts');
 
 /** @suppress {extraRequire} */
-const enums = goog.require('ord.enums');  // Used by nameToProto.
+const enums = goog.require('ord.enums'); // Used by nameToProto.
 
 const Dataset = goog.require('proto.ord.Dataset');
 const Current = goog.require('proto.ord.Current');
@@ -91,13 +91,13 @@ exports = {
 
 // Remember the dataset and reaction we are editing.
 const session = {
-  fileName: null,
-  dataset: null,
-  index: null,              // Ordinal position of the Reaction in its Dataset.
-  observer: null,           // IntersectionObserver used for the sidebar.
-  navSelectors: {},         // Dictionary from navigation to section.
-  timers: {'short': null},  // A timer used by autosave.
-  root: '/editor/',
+  fileName : null,
+  dataset : null,
+  index : null,              // Ordinal position of the Reaction in its Dataset.
+  observer : null,           // IntersectionObserver used for the sidebar.
+  navSelectors : {},         // Dictionary from navigation to section.
+  timers : {'short' : null}, // A timer used by autosave.
+  root : '/editor/',
 };
 // Export session, because it's used by test.js.
 exports.session = session;
@@ -109,16 +109,12 @@ const INTEGER_PATTERN = /^-?\d+$/;
  * Sets the `ready` value to true.
  * @suppress {undefinedVars}
  */
-function ready() {
-  $('body').attr('ready', 'true');
-}
+function ready() { $('body').attr('ready', 'true'); }
 
 /**
  * Shows the 'save' button.
  */
-function dirty() {
-  $('#save').css('visibility', 'visible');
-}
+function dirty() { $('#save').css('visibility', 'visible'); }
 
 /**
  * Hides the 'save' button.
@@ -166,7 +162,7 @@ function toggleAutosave() {
   if (!session.timers.short) {
     // Enable a simple timer that saves periodically.
     session.timers.short =
-        setInterval(clickSave, 1000 * 15);  // Save after 15 seconds
+        setInterval(clickSave, 1000 * 15); // Save after 15 seconds
     matcher.text('autosave: on');
   } else {
     // Stop the interval timer itself, then remove reference in order to
@@ -289,7 +285,7 @@ function initSelector(node) {
  */
 function initOptionalBool(node) {
   const select = $('<select>');
-  const options = ['UNSPECIFIED', 'TRUE', 'FALSE'];
+  const options = [ 'UNSPECIFIED', 'TRUE', 'FALSE' ];
   for (let i = 0; i < options.length; i++) {
     const option = $('<option>').text(options[i]);
     option.attr('value', options[i]);
@@ -322,7 +318,7 @@ function getReactionById(reactionId) {
     xhr.open('GET', session.root + 'reaction/id/' + reactionId + '/proto');
     xhr.responseType = 'arraybuffer';
     xhr.onload = function() {
-      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      asserts.assertInstanceof(xhr.response, ArrayBuffer); // Type hint.
       const bytes = new Uint8Array(xhr.response);
       const reaction = Reaction.deserializeBinary(bytes);
       resolve(reaction);
@@ -445,8 +441,8 @@ function addChangeHandler(node, handler) {
 function validate(message, messageTypeString, node, validateNode) {
   // eg message is a type of reaction, messageTypeString = 'Reaction'
   const xhr = new XMLHttpRequest();
-  xhr.open(
-      'POST', session.root + 'dataset/proto/validate/' + messageTypeString);
+  xhr.open('POST',
+           session.root + 'dataset/proto/validate/' + messageTypeString);
   const binary = message.serializeBinary();
   if (!validateNode) {
     validateNode = $('.validate', node).first();
@@ -507,12 +503,12 @@ function validate(message, messageTypeString, node, validateNode) {
  */
 function toggleValidateMessage(target) {
   switch (target.css('visibility')) {
-    case 'visible':
-      target.css('visibility', 'hidden');
-      break;
-    case 'hidden':
-      target.css('visibility', 'visible');
-      break;
+  case 'visible':
+    target.css('visibility', 'hidden');
+    break;
+  case 'hidden':
+    target.css('visibility', 'visible');
+    break;
   }
 }
 
@@ -527,7 +523,7 @@ function getDataset(fileName) {
     xhr.open('GET', session.root + 'dataset/proto/read/' + fileName);
     xhr.responseType = 'arraybuffer';
     xhr.onload = function() {
-      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      asserts.assertInstanceof(xhr.response, ArrayBuffer); // Type hint.
       const bytes = new Uint8Array(xhr.response);
       const dataset = Dataset.deserializeBinary(bytes);
       resolve(dataset);
@@ -597,7 +593,7 @@ function isEmptyMessage(obj) {
   const empty = new obj.constructor();
   // Compare binary encodings to cover optional fields.
   return JSON.stringify(obj.serializeBinary()) ===
-      JSON.stringify(empty.serializeBinary());
+         JSON.stringify(empty.serializeBinary());
 }
 
 /**
@@ -702,7 +698,7 @@ function setSelector(node, value) {
  */
 function getSelectorText(node) {
   const selectorElement = node.getElementsByTagName('select')[0];
-  asserts.assertInstanceof(selectorElement, HTMLSelectElement);  // Type hint.
+  asserts.assertInstanceof(selectorElement, HTMLSelectElement); // Type hint.
   return selectorElement.options[selectorElement.selectedIndex].text;
 }
 
@@ -791,7 +787,7 @@ function observerCallback(entries) {
  */
 function setupObserver() {
   const headerSize = $('#header').outerHeight();
-  const observerOptions = {rootMargin: '-' + headerSize + 'px 0px 0px 0px'};
+  const observerOptions = {rootMargin : '-' + headerSize + 'px 0px 0px 0px'};
   session.observer =
       new IntersectionObserver(observerCallback, observerOptions);
   updateObserver();
@@ -802,12 +798,12 @@ function setupObserver() {
  */
 function updateObserver() {
   if (!session.observer) {
-    return;  // Do nothing until setupObserver has been run.
+    return; // Do nothing until setupObserver has been run.
   }
   session.observer.disconnect();
-  $('.section:visible').not('.workup_input').each(function() {
-    session.observer.observe(this);
-  });
+  $('.section:visible')
+      .not('.workup_input')
+      .each(function() { session.observer.observe(this); });
   // Index the selector controls.
   session.navSelectors = {};
   $('.navSection').each((index, selector) => {
@@ -829,7 +825,7 @@ function updateObserver() {
 function scrollToInput(event) {
   const section = $(event.target).attr('input_name');
   const target = $('.input[input_name=\'' + section + '\']');
-  target[0].scrollIntoView({behavior: 'smooth'});
+  target[0].scrollIntoView({behavior : 'smooth'});
 }
 
 /**

@@ -23,14 +23,14 @@ const uploads = goog.require('ord.uploads');
 const utils = goog.require('ord.utils');
 
 const ReactionIdentifier = goog.require('proto.ord.ReactionIdentifier');
-const IdentifierType = goog.require('proto.ord.ReactionIdentifier.IdentifierType');
+const IdentifierType =
+    goog.require('proto.ord.ReactionIdentifier.IdentifierType');
 
 exports = {
   load,
   unload,
   add
 };
-
 
 /**
  * Adds and populates the reaction identifier sections in the form.

@@ -43,14 +43,11 @@ exports = {
   validateAnalysis
 };
 
-
 /**
  * Adds and populates the reaction outcome sections in the form.
  * @param {!Array<!ReactionOutcome>} outcomes
  */
-function load(outcomes) {
-  outcomes.forEach(outcome => loadOutcome(outcome));
-}
+function load(outcomes) { outcomes.forEach(outcome => loadOutcome(outcome)); }
 
 /**
  * Adds and populates a reaction outcome section in the form.
@@ -69,9 +66,8 @@ function loadOutcome(outcome) {
   }
 
   const analysesMap = outcome.getAnalysesMap();
-  analysesMap.forEach(function(analysis, name) {
-    loadAnalysis(node, name, analysis);
-  });
+  analysesMap.forEach(function(analysis,
+                               name) { loadAnalysis(node, name, analysis); });
 
   const productsList = outcome.getProductsList();
   products.load(node, productsList);
@@ -107,10 +103,10 @@ function loadAnalysis(outcomeNode, name, analysis) {
   if (calibrated) {
     $('.outcome_analysis_calibrated', node).text(calibrated.getValue());
   }
-  utils.setOptionalBool(
-      $('.outcome_analysis_is_of_isolated_species', node),
-      analysis.hasIsOfIsolatedSpecies() ? analysis.getIsOfIsolatedSpecies() :
-                                          null);
+  utils.setOptionalBool($('.outcome_analysis_is_of_isolated_species', node),
+                        analysis.hasIsOfIsolatedSpecies()
+                            ? analysis.getIsOfIsolatedSpecies()
+                            : null);
 }
 
 /**
@@ -259,8 +255,8 @@ function add() {
  * @return {!jQuery} The newly added parent node for the reaction analysis.
  */
 function addAnalysis(node) {
-  const analysisNode = utils.addSlowly(
-      '#outcome_analysis_template', $('.outcome_analyses', node));
+  const analysisNode = utils.addSlowly('#outcome_analysis_template',
+                                       $('.outcome_analyses', node));
 
   // Handle name changes.
   const nameNode = $('.outcome_analysis_name', analysisNode);
@@ -292,8 +288,8 @@ function addAnalysis(node) {
   });
 
   // Add live validation handling.
-  utils.addChangeHandler(
-      analysisNode, () => { validateAnalysis(analysisNode); });
+  utils.addChangeHandler(analysisNode,
+                         () => { validateAnalysis(analysisNode); });
   return analysisNode;
 }
 
@@ -303,8 +299,8 @@ function addAnalysis(node) {
  * @return {!jQuery} The newly added parent node for the Data record.
  */
 function addData(node) {
-  const processNode = utils.addSlowly(
-      '#outcome_data_template', $('.outcome_data_repeated', node));
+  const processNode = utils.addSlowly('#outcome_data_template',
+                                      $('.outcome_data_repeated', node));
   data.addData(processNode);
   return processNode;
 }

@@ -28,9 +28,11 @@ const utils = goog.require('ord.utils');
 const FlowRate = goog.require('proto.ord.FlowRate');
 const ReactionInput = goog.require('proto.ord.ReactionInput');
 const AdditionDevice = goog.require('proto.ord.ReactionInput.AdditionDevice');
-const AdditionDeviceType = goog.require('proto.ord.ReactionInput.AdditionDevice.AdditionDeviceType');
+const AdditionDeviceType =
+    goog.require('proto.ord.ReactionInput.AdditionDevice.AdditionDeviceType');
 const AdditionSpeed = goog.require('proto.ord.ReactionInput.AdditionSpeed');
-const AdditionSpeedType = goog.require('proto.ord.ReactionInput.AdditionSpeed.AdditionSpeedType');
+const AdditionSpeedType =
+    goog.require('proto.ord.ReactionInput.AdditionSpeed.AdditionSpeedType');
 const Temperature = goog.require('proto.ord.Temperature');
 const Time = goog.require('proto.ord.Time');
 
@@ -46,15 +48,13 @@ exports = {
 
 const session = utils.session;
 
-
 /**
  * Adds and populates the reaction input sections in the form.
  * @param {!JspbMap<string, !ReactionInput>} inputs
  */
 function load(inputs) {
-  inputs.forEach(function(input, name) {
-    loadInput($('#inputs'), name, input);
-  });
+  inputs.forEach(function(input,
+                          name) { loadInput($('#inputs'), name, input); });
   utils.updateSidebar();
 }
 
@@ -91,10 +91,10 @@ function addInputByString(root) {
   xhr.onload = () => {
     if (xhr.status === 409) {
       const decoder = new TextDecoder('utf-8');
-      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      asserts.assertInstanceof(xhr.response, ArrayBuffer); // Type hint.
       alert('Could not parse: ' + decoder.decode(xhr.response));
     } else {
-      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      asserts.assertInstanceof(xhr.response, ArrayBuffer); // Type hint.
       const bytes = new Uint8Array(xhr.response);
       const input = ReactionInput.deserializeBinary(bytes);
       if (input) {
@@ -134,14 +134,14 @@ function loadInputUnnamed(node, input) {
   }
   const additionSpeed = input.getAdditionSpeed();
   if (additionSpeed) {
-    utils.setSelector(
-        $('.input_addition_speed_type', node), additionSpeed.getType());
+    utils.setSelector($('.input_addition_speed_type', node),
+                      additionSpeed.getType());
     $('.input_addition_speed_details', node).text(additionSpeed.getDetails());
   }
   const additionDevice = input.getAdditionDevice();
   if (additionDevice) {
-    utils.setSelector(
-        $('.input_addition_device_type', node), additionDevice.getType());
+    utils.setSelector($('.input_addition_device_type', node),
+                      additionDevice.getType());
     $('.input_addition_device_details', node).text(additionDevice.getDetails());
   }
   const duration = input.getAdditionDuration();

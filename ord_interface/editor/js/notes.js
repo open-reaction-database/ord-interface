@@ -29,33 +29,32 @@ exports = {
   validateNotes
 };
 
-
 /**
  * Adds and populates the reaction nodes section in the form.
  * @param {!ReactionNotes} notes
  */
 function load(notes) {
-  utils.setOptionalBool(
-      $('#notes_heterogeneous'),
-      notes.hasIsHeterogeneous() ? notes.getIsHeterogeneous() : null);
+  utils.setOptionalBool($('#notes_heterogeneous'),
+                        notes.hasIsHeterogeneous() ? notes.getIsHeterogeneous()
+                                                   : null);
   utils.setOptionalBool(
       $('#notes_precipitate'),
       notes.hasFormsPrecipitate() ? notes.getFormsPrecipitate() : null);
-  utils.setOptionalBool(
-      $('#notes_exothermic'),
-      notes.hasIsExothermic() ? notes.getIsExothermic() : null);
-  utils.setOptionalBool(
-      $('#notes_offgas'), notes.hasOffgasses() ? notes.getOffgasses() : null);
-  utils.setOptionalBool(
-      $('#notes_moisture'),
-      notes.hasIsSensitiveToMoisture() ? notes.getIsSensitiveToMoisture() :
-                                         null);
-  utils.setOptionalBool(
-      $('#notes_oxygen'),
-      notes.hasIsSensitiveToOxygen() ? notes.getIsSensitiveToOxygen() : null);
-  utils.setOptionalBool(
-      $('#notes_light'),
-      notes.hasIsSensitiveToLight() ? notes.getIsSensitiveToLight() : null);
+  utils.setOptionalBool($('#notes_exothermic'), notes.hasIsExothermic()
+                                                    ? notes.getIsExothermic()
+                                                    : null);
+  utils.setOptionalBool($('#notes_offgas'),
+                        notes.hasOffgasses() ? notes.getOffgasses() : null);
+  utils.setOptionalBool($('#notes_moisture'),
+                        notes.hasIsSensitiveToMoisture()
+                            ? notes.getIsSensitiveToMoisture()
+                            : null);
+  utils.setOptionalBool($('#notes_oxygen'), notes.hasIsSensitiveToOxygen()
+                                                ? notes.getIsSensitiveToOxygen()
+                                                : null);
+  utils.setOptionalBool($('#notes_light'), notes.hasIsSensitiveToLight()
+                                               ? notes.getIsSensitiveToLight()
+                                               : null);
   $('#notes_safety').text(notes.getSafetyNotes());
   $('#notes_details').text(notes.getProcedureDetails());
 }

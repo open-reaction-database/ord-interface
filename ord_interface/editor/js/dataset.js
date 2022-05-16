@@ -35,9 +35,9 @@ const Dataset = goog.require('proto.ord.Dataset');
 const Reaction = goog.require('proto.ord.Reaction');
 
 const session = {
-  fileName: null,
-  dataset: null,
-  root: null,
+  fileName : null,
+  dataset : null,
+  root : null,
 };
 
 /**
@@ -65,9 +65,7 @@ function listenDirty(node) {
 /**
  * Shows the 'save' button.
  */
-function dirty() {
-  $('#save').css('visibility', 'visible');
-}
+function dirty() { $('#save').css('visibility', 'visible'); }
 
 /**
  * Hides the 'save' button.
@@ -87,9 +85,8 @@ function commit() {
     const dataset = unloadDataset();
     $('#save').text('saving');
     const xhr = new XMLHttpRequest();
-    xhr.open(
-        'POST', session.root + 'dataset/proto/write/' + session.fileName,
-        true /* async */);
+    xhr.open('POST', session.root + 'dataset/proto/write/' + session.fileName,
+             true /* async */);
     const binary = dataset.serializeBinary();
     xhr.onload = function() {
       clean();
@@ -120,12 +117,11 @@ function download(kind) {
 function getDataset(fileName) {
   return new Promise(resolve => {
     const xhr = new XMLHttpRequest();
-    xhr.open(
-        'GET', session.root + 'dataset/proto/read/' + session.fileName,
-        true /* async */);
+    xhr.open('GET', session.root + 'dataset/proto/read/' + session.fileName,
+             true /* async */);
     xhr.responseType = 'arraybuffer';
     xhr.onload = () => {
-      asserts.assertInstanceof(xhr.response, ArrayBuffer);  // Type hint.
+      asserts.assertInstanceof(xhr.response, ArrayBuffer); // Type hint.
       const bytes = new Uint8Array(xhr.response);
       const dataset = Dataset.deserializeBinary(bytes);
       session.dataset = dataset;
@@ -220,9 +216,8 @@ function addReaction(index, reactionId) {
   } else {
     anchor.text('Reaction ' + index);
   }
-  anchor.attr(
-      'href',
-      session.root + 'dataset/' + session.fileName + '/reaction/' + index);
+  anchor.attr('href', session.root + 'dataset/' + session.fileName +
+                          '/reaction/' + index);
   const root = $('#reactions');
   root.append(node);
   node.show('slow');
@@ -268,7 +263,7 @@ async function deleteReaction(button) {
   const node = $(button).closest('.reaction');
   const index = parseInt($('a', node).text(), 10);
   window.location.href = session.root + 'dataset/' + session.fileName +
-      '/delete/reaction/' + index;
+                         '/delete/reaction/' + index;
 }
 
 /**

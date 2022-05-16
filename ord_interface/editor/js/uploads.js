@@ -61,9 +61,7 @@ function newFile(file) {
  * @param {string} token A key into `tokenFiles`.
  * @return {string}
  */
-function getFile(token) {
-  return tokenFiles[token];
-}
+function getFile(token) { return tokenFiles[token]; }
 
 /**
  * Stores bytes at load() so they can be restored at unload().
@@ -81,9 +79,7 @@ function stashUpload(bytesValue) {
  * @param {string} token A key into `tokenBytes`.
  * @return {!Uint8Array} The stored bytes.
  */
-function unstashUpload(token) {
-  return tokenBytes[token];
-}
+function unstashUpload(token) { return tokenBytes[token]; }
 
 /**
  * Sends all files referenced in tokenFiles to the server.
@@ -97,9 +93,8 @@ function putAll(dirName) {
     reader.readAsArrayBuffer(file);
     reader.onload = (event) => {
       const xhr = new XMLHttpRequest();
-      xhr.open(
-          'POST',
-          session.root + 'dataset/proto/upload/' + dirName + '/' + token);
+      xhr.open('POST',
+               session.root + 'dataset/proto/upload/' + dirName + '/' + token);
       const payload = event.target.result;
       xhr.send(payload);
     };
@@ -117,7 +112,7 @@ function retrieve(uploader) {
   xhr.open('POST', session.root + 'dataset/proto/download/' + token);
   xhr.onload = () => {
     // Make the browser write the file.
-    const url = URL.createObjectURL(new Blob([xhr.response]));
+    const url = URL.createObjectURL(new Blob([ xhr.response ]));
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', token);

@@ -27,8 +27,6 @@ const Tubing = goog.require('proto.ord.FlowConditions.Tubing');
 const TubingType = goog.require('proto.ord.FlowConditions.Tubing.TubingType');
 const Length = goog.require('proto.ord.Length');
 
-
-
 exports = {
   load,
   unload,

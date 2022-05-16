@@ -48,13 +48,16 @@ const session = utils.session;
 
 const Compound = goog.require('proto.ord.Compound');
 const CompoundIdentifier = goog.require('proto.ord.CompoundIdentifier');
-const IdentifierType = goog.require('proto.ord.CompoundIdentifier.IdentifierType');
+const IdentifierType =
+    goog.require('proto.ord.CompoundIdentifier.IdentifierType');
 const CompoundPreparation = goog.require('proto.ord.CompoundPreparation');
-const PreparationType = goog.require('proto.ord.CompoundPreparation.PreparationType');
+const PreparationType =
+    goog.require('proto.ord.CompoundPreparation.PreparationType');
 const Source = goog.require('proto.ord.Compound.Source');
 const Data = goog.require('proto.ord.Data');
 const ProductCompound = goog.require('proto.ord.ProductCompound');
-const ReactionRoleType = goog.require('proto.ord.ReactionRole.ReactionRoleType');
+const ReactionRoleType =
+    goog.require('proto.ord.ReactionRole.ReactionRoleType');
 
 /**
  * Adds and populates the form's fields describing multiple compounds for a
@@ -355,8 +358,8 @@ function add(root) {
  * @return {!jQuery} The node of the new compound identifier div.
  */
 function addIdentifier(node) {
-  const identifierNode = utils.addSlowly(
-      '#component_identifier_template', $('.identifiers', node).first());
+  const identifierNode = utils.addSlowly('#component_identifier_template',
+                                         $('.identifiers', node).first());
 
   const uploadButton = $('.component_identifier_upload', identifierNode);
   uploadButton.on('change', function() {
@@ -516,8 +519,8 @@ function drawIdentifier(node) {
  * @return {!jQuery} The div corresponding to the new compound preparation.
  */
 function addPreparation(node) {
-  const PreparationNode = utils.addSlowly(
-      '#component_preparation_template', $('.preparations', node));
+  const PreparationNode = utils.addSlowly('#component_preparation_template',
+                                          $('.preparations', node));
 
   const typeSelector =
       $('.component_compound_preparation_type', PreparationNode);

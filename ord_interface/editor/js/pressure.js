@@ -24,11 +24,15 @@ const utils = goog.require('ord.utils');
 const Pressure = goog.require('proto.ord.Pressure');
 const PressureConditions = goog.require('proto.ord.PressureConditions');
 const Atmosphere = goog.require('proto.ord.PressureConditions.Atmosphere');
-const AtmosphereType = goog.require('proto.ord.PressureConditions.Atmosphere.AtmosphereType');
+const AtmosphereType =
+    goog.require('proto.ord.PressureConditions.Atmosphere.AtmosphereType');
 const Measurement = goog.require('proto.ord.PressureConditions.Measurement');
-const MeasurementType = goog.require('proto.ord.PressureConditions.Measurement.MeasurementType');
-const PressureControl = goog.require('proto.ord.PressureConditions.PressureControl');
-const PressureControlType = goog.require('proto.ord.PressureConditions.PressureControl.PressureControlType');
+const MeasurementType =
+    goog.require('proto.ord.PressureConditions.Measurement.MeasurementType');
+const PressureControl =
+    goog.require('proto.ord.PressureConditions.PressureControl');
+const PressureControlType = goog.require(
+    'proto.ord.PressureConditions.PressureControl.PressureControlType');
 const Time = goog.require('proto.ord.Time');
 
 exports = {
@@ -37,7 +41,6 @@ exports = {
   addMeasurement,
   validatePressure
 };
-
 
 /**
  * Adds and populates the pressure conditions section in the form.
@@ -157,8 +160,8 @@ function unloadMeasurement(node) {
  * @return {!jQuery} The node of the new measurement div.
  */
 function addMeasurement() {
-  return utils.addSlowly(
-      '#pressure_measurement_template', $('#pressure_measurements'));
+  return utils.addSlowly('#pressure_measurement_template',
+                         $('#pressure_measurements'));
 }
 
 /**

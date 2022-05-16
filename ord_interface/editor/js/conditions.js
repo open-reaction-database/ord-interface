@@ -75,9 +75,9 @@ function load(conditions) {
   if (conditions.hasPh()) {
     $('#condition_ph').text(conditions.getPh());
   }
-  const dynamic = conditions.hasConditionsAreDynamic() ?
-      conditions.getConditionsAreDynamic() :
-      null;
+  const dynamic = conditions.hasConditionsAreDynamic()
+                      ? conditions.getConditionsAreDynamic()
+                      : null;
   utils.setOptionalBool($('#condition_dynamic'), dynamic);
   $('#condition_details').text(conditions.getDetails());
 }

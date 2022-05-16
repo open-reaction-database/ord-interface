@@ -100,7 +100,7 @@ async function initFromDataset(fileName, index) {
   session.index = index;
   // Fetch the Dataset containing the Reaction proto.
   session.dataset = await utils.getDataset(fileName);
-  asserts.assertInstanceof(session.dataset, Dataset);  // Type hint.
+  asserts.assertInstanceof(session.dataset, Dataset); // Type hint.
   const reaction = session.dataset.getReactionsList()[index];
   await init(reaction);
 }
@@ -111,7 +111,7 @@ async function initFromDataset(fileName, index) {
  */
 async function initFromReactionId(reactionId) {
   const reaction = await utils.getReactionById(reactionId);
-  asserts.assertInstanceof(reaction, Reaction);  // Type hint.
+  asserts.assertInstanceof(reaction, Reaction); // Type hint.
   // NOTE(kearnes): Without this next line, `reaction` will be
   // partial/incomplete, and I have no idea why.
   console.log(reaction.toObject());
@@ -164,7 +164,7 @@ function downloadReaction() {
   xhr.open('POST', session.root + 'reaction/download');
   xhr.onload = () => {
     // Make the browser write the file.
-    const url = URL.createObjectURL(new Blob([xhr.response]));
+    const url = URL.createObjectURL(new Blob([ xhr.response ]));
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', 'reaction.pbtxt');
@@ -300,13 +300,13 @@ function initValidateHandlers() {
 
   // For pressure
   const pressureNode = $('#section_conditions_pressure');
-  utils.addChangeHandler(
-      pressureNode, () => { pressure.validatePressure(pressureNode); });
+  utils.addChangeHandler(pressureNode,
+                         () => { pressure.validatePressure(pressureNode); });
 
   // For stirring
   const stirringNode = $('#section_conditions_stirring');
-  utils.addChangeHandler(
-      stirringNode, () => { stirring.validateStirring(stirringNode); });
+  utils.addChangeHandler(stirringNode,
+                         () => { stirring.validateStirring(stirringNode); });
 
   // For illumination
   const illuminationNode = $('#section_conditions_illumination');
@@ -316,8 +316,8 @@ function initValidateHandlers() {
 
   // For electro
   const electroNode = $('#section_conditions_electro');
-  utils.addChangeHandler(
-      electroNode, () => { electro.validateElectro(electroNode); });
+  utils.addChangeHandler(electroNode,
+                         () => { electro.validateElectro(electroNode); });
 
   // For flow
   const flowNode = $('#section_conditions_flow');
@@ -342,7 +342,7 @@ function commit() {
     return;
   }
   const reaction = unloadReaction();
-  asserts.assertInstanceof(session.dataset, Dataset);  // Type hint.
+  asserts.assertInstanceof(session.dataset, Dataset); // Type hint.
   const reactions = session.dataset.getReactionsList();
   reactions[asserts.assertNumber(session.index)] = reaction;
   const fileName = asserts.assertString(session.fileName);

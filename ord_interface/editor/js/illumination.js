@@ -22,7 +22,8 @@ const asserts = goog.require('goog.asserts');
 const utils = goog.require('ord.utils');
 
 const IlluminationConditions = goog.require('proto.ord.IlluminationConditions');
-const IlluminationType = goog.require('proto.ord.IlluminationConditions.IlluminationType');
+const IlluminationType =
+    goog.require('proto.ord.IlluminationConditions.IlluminationType');
 const Length = goog.require('proto.ord.Length');
 const Wavelength = goog.require('proto.ord.Wavelength');
 
@@ -31,7 +32,6 @@ exports = {
   unload,
   validateIllumination
 };
-
 
 /**
  * Adds and populates the illumination conditions section in the form.

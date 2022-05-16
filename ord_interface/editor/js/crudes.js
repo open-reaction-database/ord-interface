@@ -34,9 +34,7 @@ const CrudeComponent = goog.require('proto.ord.CrudeComponent');
  * @param {!jQuery} node Root node for the parent reaction input.
  * @param {!Array<!CrudeComponent>} crudes
  */
-function load(node, crudes) {
-  crudes.forEach(crude => loadCrude(node, crude));
-}
+function load(node, crudes) { crudes.forEach(crude => loadCrude(node, crude)); }
 
 /**
  * Adds and populates a single crude component section in the form.

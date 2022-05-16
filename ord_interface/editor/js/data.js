@@ -75,47 +75,47 @@ function loadData(node, data) {
   $('.data_format', node).text(data.getFormat());
   let value;
   switch (data.getKindCase()) {
-    case KindCase.FLOAT_VALUE:
-      value = data.getFloatValue().toString();
-      if (value.indexOf('.') === -1) {
-        value = value.concat('.0');
-      }
-      $('.data_text', node).show();
-      $('.data_uploader', node).hide();
-      $('.data_text', node).text(value);
-      $('input[value=\'number\']', node).prop('checked', true);
-      break;
-    case KindCase.INTEGER_VALUE:
-      value = data.getIntegerValue();
-      $('.data_text', node).show();
-      $('.data_uploader', node).hide();
-      $('.data_text', node).text(value);
-      $('input[value=\'number\']', node).prop('checked', true);
-      break;
-    case KindCase.BYTES_VALUE:
-      value = data.getBytesValue();
-      $('.data_text', node).hide();
-      $('.data_uploader', node).show();
-      asserts.assertInstanceof(value, Uint8Array);  // Type hint.
-      uploads.load(node, value);
-      $('input[value=\'upload\']', node).prop('checked', true);
-      break;
-    case KindCase.STRING_VALUE:
-      value = data.getStringValue();
-      $('.data_text', node).show();
-      $('.data_uploader', node).hide();
-      $('.data_text', node).text(value);
-      $('input[value=\'text\']', node).prop('checked', true);
-      break;
-    case KindCase.URL:
-      value = data.getUrl();
-      $('.data_text', node).show();
-      $('.data_uploader', node).hide();
-      $('.data_text', node).text(value);
-      $('input[value=\'url\']', node).prop('checked', true);
-      break;
-    default:
-      break;
+  case KindCase.FLOAT_VALUE:
+    value = data.getFloatValue().toString();
+    if (value.indexOf('.') === -1) {
+      value = value.concat('.0');
+    }
+    $('.data_text', node).show();
+    $('.data_uploader', node).hide();
+    $('.data_text', node).text(value);
+    $('input[value=\'number\']', node).prop('checked', true);
+    break;
+  case KindCase.INTEGER_VALUE:
+    value = data.getIntegerValue();
+    $('.data_text', node).show();
+    $('.data_uploader', node).hide();
+    $('.data_text', node).text(value);
+    $('input[value=\'number\']', node).prop('checked', true);
+    break;
+  case KindCase.BYTES_VALUE:
+    value = data.getBytesValue();
+    $('.data_text', node).hide();
+    $('.data_uploader', node).show();
+    asserts.assertInstanceof(value, Uint8Array); // Type hint.
+    uploads.load(node, value);
+    $('input[value=\'upload\']', node).prop('checked', true);
+    break;
+  case KindCase.STRING_VALUE:
+    value = data.getStringValue();
+    $('.data_text', node).show();
+    $('.data_uploader', node).hide();
+    $('.data_text', node).text(value);
+    $('input[value=\'text\']', node).prop('checked', true);
+    break;
+  case KindCase.URL:
+    value = data.getUrl();
+    $('.data_text', node).show();
+    $('.data_uploader', node).hide();
+    $('.data_text', node).text(value);
+    $('input[value=\'url\']', node).prop('checked', true);
+    break;
+  default:
+    break;
   }
 }
 

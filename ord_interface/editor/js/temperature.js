@@ -24,9 +24,12 @@ const utils = goog.require('ord.utils');
 const Temperature = goog.require('proto.ord.Temperature');
 const TemperatureConditions = goog.require('proto.ord.TemperatureConditions');
 const Measurement = goog.require('proto.ord.TemperatureConditions.Measurement');
-const MeasurementType = goog.require('proto.ord.TemperatureConditions.Measurement.MeasurementType');
-const TemperatureControl = goog.require('proto.ord.TemperatureConditions.TemperatureControl');
-const TemperatureControlType = goog.require('proto.ord.TemperatureConditions.TemperatureControl.TemperatureControlType');
+const MeasurementType =
+    goog.require('proto.ord.TemperatureConditions.Measurement.MeasurementType');
+const TemperatureControl =
+    goog.require('proto.ord.TemperatureConditions.TemperatureControl');
+const TemperatureControlType = goog.require(
+    'proto.ord.TemperatureConditions.TemperatureControl.TemperatureControlType');
 const Time = goog.require('proto.ord.Time');
 
 exports = {
@@ -123,8 +126,8 @@ function unloadMeasurement(node) {
   measurement.setType(MeasurementType[measurementType]);
   measurement.setDetails(
       asserts.assertString($('.temperature_measurement_details', node).text()));
-  const temperature = utils.readMetric(
-      '.temperature_measurement_temperature', new Temperature(), node);
+  const temperature = utils.readMetric('.temperature_measurement_temperature',
+                                       new Temperature(), node);
   if (!utils.isEmptyMessage(temperature)) {
     measurement.setTemperature(temperature);
   }
@@ -142,9 +145,8 @@ function unloadMeasurement(node) {
  * @return {!jQuery} The node of the new measurement div.
  */
 function addMeasurement(target) {
-  return utils.addSlowly(
-      '#temperature_measurement_template',
-      $('.temperature_measurements', target));
+  return utils.addSlowly('#temperature_measurement_template',
+                         $('.temperature_measurements', target));
 }
 
 /**

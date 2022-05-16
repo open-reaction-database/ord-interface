@@ -35,7 +35,8 @@ goog.require('proto.ord.PressureConditions.Atmosphere.AtmosphereType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.PressureConditions.Measurement.MeasurementType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.PressureConditions.PressureControl.PressureControlType');
+goog.require(
+    'proto.ord.PressureConditions.PressureControl.PressureControlType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.ReactionIdentifier.IdentifierType');
 /** @suppress {extraRequire} */
@@ -47,7 +48,8 @@ goog.require('proto.ord.StirringConditions.StirringRate.StirringRateType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.TemperatureConditions.Measurement.MeasurementType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.TemperatureConditions.TemperatureControl.TemperatureControlType');
+goog.require(
+    'proto.ord.TemperatureConditions.TemperatureControl.TemperatureControlType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.Vessel.VesselType');
 /** @suppress {extraRequire} */

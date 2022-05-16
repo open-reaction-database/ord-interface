@@ -27,14 +27,20 @@ const FloatValue = goog.require('proto.ord.FloatValue');
 const Percentage = goog.require('proto.ord.Percentage');
 const ProductCompound = goog.require('proto.ord.ProductCompound');
 const Texture = goog.require('proto.ord.ProductCompound.Texture');
-const TextureType = goog.require('proto.ord.ProductCompound.Texture.TextureType');
+const TextureType =
+    goog.require('proto.ord.ProductCompound.Texture.TextureType');
 const ProductMeasurement = goog.require('proto.ord.ProductMeasurement');
-const MeasurementType = goog.require('proto.ord.ProductMeasurement.MeasurementType');
-const MassSpecMeasurementDetails = goog.require('proto.ord.ProductMeasurement.MassSpecMeasurementDetails');
-const MassSpecMeasurementType = goog.require('proto.ord.ProductMeasurement.MassSpecMeasurementDetails.MassSpecMeasurementType');
-const ReactionRoleType = goog.require('proto.ord.ReactionRole.ReactionRoleType');
+const MeasurementType =
+    goog.require('proto.ord.ProductMeasurement.MeasurementType');
+const MassSpecMeasurementDetails =
+    goog.require('proto.ord.ProductMeasurement.MassSpecMeasurementDetails');
+const MassSpecMeasurementType = goog.require(
+    'proto.ord.ProductMeasurement.MassSpecMeasurementDetails.MassSpecMeasurementType');
+const ReactionRoleType =
+    goog.require('proto.ord.ReactionRole.ReactionRoleType');
 const Selectivity = goog.require('proto.ord.ProductMeasurement.Selectivity');
-const SelectivityType = goog.require('proto.ord.ProductMeasurement.Selectivity.SelectivityType');
+const SelectivityType =
+    goog.require('proto.ord.ProductMeasurement.Selectivity.SelectivityType');
 const Time = goog.require('proto.ord.Time');
 const Wavelength = goog.require('proto.ord.Wavelength');
 
@@ -77,13 +83,13 @@ function loadProduct(outcomeNode, product) {
   utils.setOptionalBool(
       $('.outcome_product_desired', node),
       product.hasIsDesiredProduct() ? product.getIsDesiredProduct() : null);
-  product.getMeasurementsList().forEach(
-      measurement => loadMeasurement(node, measurement));
+  product.getMeasurementsList().forEach(measurement =>
+                                            loadMeasurement(node, measurement));
   $('.outcome_product_color', node).text(product.getIsolatedColor());
   const texture = product.getTexture();
   if (texture) {
-    utils.setSelector(
-        $('.outcome_product_texture_type', node), texture.getType());
+    utils.setSelector($('.outcome_product_texture_type', node),
+                      texture.getType());
     $('.outcome_product_texture_details', node).text(texture.getDetails());
   }
   const features = product.getFeaturesMap();
@@ -202,8 +208,8 @@ function unloadAnalysisKeys(node, tag) {
  * @return {!jQuery} The newly created node.
  */
 function add(node) {
-  const productNode = utils.addSlowly(
-      '#outcome_product_template', $('.outcome_products', node));
+  const productNode = utils.addSlowly('#outcome_product_template',
+                                      $('.outcome_products', node));
   amounts.init(node);
 
   // Connect reaction role selection to is_desired_product.
@@ -244,9 +250,9 @@ function populateAnalysisSelector(node, analysisSelectorNode) {
  * @return {!jQuery} The newly created node.
  */
 function addMeasurement(node) {
-  const measurementNode = utils.addSlowly(
-      '#product_measurement_template',
-      $('.product_measurement_repeated', node));
+  const measurementNode =
+      utils.addSlowly('#product_measurement_template',
+                      $('.product_measurement_repeated', node));
   amounts.init(measurementNode);
   populateAnalysisSelector(
       node, $('.product_measurement_analysis_key', measurementNode));
@@ -292,8 +298,8 @@ function addMeasurement(node) {
   usesAuthenticStandard.trigger('change');
 
   // Add live validation handling.
-  utils.addChangeHandler(
-      measurementNode, () => { validateMeasurement(measurementNode); });
+  utils.addChangeHandler(measurementNode,
+                         () => { validateMeasurement(measurementNode); });
 
   // Show/hide fields based on the measurement type.
   const measurementTypeSelector =
@@ -382,23 +388,21 @@ function addMeasurement(node) {
 function loadMeasurement(productNode, measurement) {
   const node = addMeasurement(productNode);
   $('.analysis_key_selector', node).val(measurement.getAnalysisKey());
-  utils.setSelector(
-      $('.product_measurement_type', node), measurement.getType());
+  utils.setSelector($('.product_measurement_type', node),
+                    measurement.getType());
   $('.product_measurement_type select', node).trigger('change');
   $('.product_measurement_details', node).text(measurement.getDetails());
-  utils.setOptionalBool(
-      $('.product_measurement_uses_internal_standard', node),
-      measurement.hasUsesInternalStandard() ?
-          measurement.getUsesInternalStandard() :
-          null);
+  utils.setOptionalBool($('.product_measurement_uses_internal_standard', node),
+                        measurement.hasUsesInternalStandard()
+                            ? measurement.getUsesInternalStandard()
+                            : null);
   utils.setOptionalBool(
       $('.product_measurement_is_normalized', node),
       measurement.hasIsNormalized() ? measurement.getIsNormalized() : null);
-  utils.setOptionalBool(
-      $('.product_measurement_uses_authentic_standard', node),
-      measurement.hasUsesAuthenticStandard() ?
-          measurement.getUsesAuthenticStandard() :
-          null);
+  utils.setOptionalBool($('.product_measurement_uses_authentic_standard', node),
+                        measurement.hasUsesAuthenticStandard()
+                            ? measurement.getUsesAuthenticStandard()
+                            : null);
 
   const authenticStandard = measurement.getAuthenticStandard();
   if (authenticStandard) {
@@ -442,14 +446,14 @@ function loadMeasurement(productNode, measurement) {
 
   const retentionTime = measurement.getRetentionTime();
   if (retentionTime) {
-    utils.writeMetric(
-        '.product_measurement_retention_time', retentionTime, node);
+    utils.writeMetric('.product_measurement_retention_time', retentionTime,
+                      node);
   }
 
   const massSpec = measurement.getMassSpecDetails();
   if (massSpec) {
-    utils.setSelector(
-        $('.product_measurement_mass_spec_type', node), massSpec.getType());
+    utils.setSelector($('.product_measurement_mass_spec_type', node),
+                      massSpec.getType());
     $('.product_measurement_mass_spec_details', node)
         .text(massSpec.getDetails());
     if (massSpec.hasTicMinimumMz()) {
@@ -466,9 +470,8 @@ function loadMeasurement(productNode, measurement) {
 
   const selectivity = measurement.getSelectivity();
   if (selectivity) {
-    utils.setSelector(
-        $('.product_measurement_selectivity_type', node),
-        selectivity.getType());
+    utils.setSelector($('.product_measurement_selectivity_type', node),
+                      selectivity.getType());
     $('.product_measurement_selectivity_details', node)
         .text(selectivity.getDetails());
   }
@@ -601,8 +604,8 @@ function unloadMeasurement(node) {
     measurement.setSelectivity(selectivity);
   }
 
-  const wavelength = utils.readMetric(
-      '.product_measurement_wavelength', new Wavelength(), node);
+  const wavelength = utils.readMetric('.product_measurement_wavelength',
+                                      new Wavelength(), node);
   if (!utils.isEmptyMessage(wavelength)) {
     measurement.setWavelength(wavelength);
   }

@@ -33,7 +33,6 @@ exports = {
   validateProvenance
 };
 
-
 /**
  * Adds and populates the provenance section in the form.
  * @param {!ReactionProvenance} provenance
@@ -182,8 +181,8 @@ function unloadPerson(node) {
  * @return {!jQuery} The div containing the new event.
  */
 function addModification() {
-  return utils.addSlowly(
-      '#provenance_modified_template', $('#provenance_modifieds'));
+  return utils.addSlowly('#provenance_modified_template',
+                         $('#provenance_modifieds'));
 }
 
 /**

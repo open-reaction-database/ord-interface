@@ -23,15 +23,20 @@ const codes = goog.require('ord.codes');
 const utils = goog.require('ord.utils');
 
 const ReactionSetup = goog.require('proto.ord.ReactionSetup');
-const ReactionEnvironment = goog.require('proto.ord.ReactionSetup.ReactionEnvironment');
-const ReactionEnvironmentType = goog.require('proto.ord.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType');
+const ReactionEnvironment =
+    goog.require('proto.ord.ReactionSetup.ReactionEnvironment');
+const ReactionEnvironmentType = goog.require(
+    'proto.ord.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType');
 const Vessel = goog.require('proto.ord.Vessel');
 const VesselAttachment = goog.require('proto.ord.VesselAttachment');
-const VesselAttachmentType = goog.require('proto.ord.VesselAttachment.VesselAttachmentType');
+const VesselAttachmentType =
+    goog.require('proto.ord.VesselAttachment.VesselAttachmentType');
 const VesselMaterial = goog.require('proto.ord.VesselMaterial');
-const VesselMaterialType = goog.require('proto.ord.VesselMaterial.VesselMaterialType');
+const VesselMaterialType =
+    goog.require('proto.ord.VesselMaterial.VesselMaterialType');
 const VesselPreparation = goog.require('proto.ord.VesselPreparation');
-const VesselPreparationType = goog.require('proto.ord.VesselPreparation.VesselPreparationType');
+const VesselPreparationType =
+    goog.require('proto.ord.VesselPreparation.VesselPreparationType');
 const VesselType = goog.require('proto.ord.Vessel.VesselType');
 const Volume = goog.require('proto.ord.Volume');
 
@@ -95,15 +100,15 @@ function loadVessel(vessel) {
   const preparations = vessel.getPreparationsList();
   preparations.forEach(preparation => {
     const node = addVesselPreparation();
-    utils.setSelector(
-        $('.setup_vessel_preparation_type', node), preparation.getType());
+    utils.setSelector($('.setup_vessel_preparation_type', node),
+                      preparation.getType());
     $('.setup_vessel_preparation_details', node).text(preparation.getDetails());
   });
   const attachments = vessel.getAttachmentsList();
   attachments.forEach(attachment => {
     const node = addVesselAttachment();
-    utils.setSelector(
-        $('.setup_vessel_attachment_type', node), attachment.getType());
+    utils.setSelector($('.setup_vessel_attachment_type', node),
+                      attachment.getType());
     $('.setup_vessel_attachment_details', node).text(attachment.getDetails());
   });
   if (vessel.hasVolume()) {
@@ -217,8 +222,8 @@ function unloadVessel() {
  * @return {!jQuery} The node of the newly added div.
  */
 function addVesselPreparation() {
-  return utils.addSlowly(
-      '#setup_vessel_preparation_template', $('#setup_vessel_preparations'));
+  return utils.addSlowly('#setup_vessel_preparation_template',
+                         $('#setup_vessel_preparations'));
 }
 
 /**
@@ -226,8 +231,8 @@ function addVesselPreparation() {
  * @return {!jQuery} The node of the newly added div.
  */
 function addVesselAttachment() {
-  return utils.addSlowly(
-      '#setup_vessel_attachment_template', $('#setup_vessel_attachments'));
+  return utils.addSlowly('#setup_vessel_attachment_template',
+                         $('#setup_vessel_attachments'));
 }
 
 /**

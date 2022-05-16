@@ -32,7 +32,6 @@ exports = {
   validateObservation
 };
 
-
 /**
  * Adds and populates the reaction observation sections in the form.
  * @param {!Array<!ReactionObservation>} observations
