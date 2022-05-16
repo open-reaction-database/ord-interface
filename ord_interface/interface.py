@@ -14,9 +14,13 @@
 """Entrypoint for the web interface."""
 import flask
 
+from ord_schema.visualization import filters
+
 from ord_interface.client import search
 from ord_interface.editor.py import serve
 
 app = flask.Flask(__name__)
+# TODO(skearnes): Figure out bp.add_app_template_filter?
+app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)
 app.register_blueprint(search.bp)
 app.register_blueprint(serve.bp)

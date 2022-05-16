@@ -43,7 +43,6 @@ from typing import Optional, Tuple
 
 import flask
 
-from ord_schema.visualization import filters
 from ord_schema.visualization import generate_text
 
 from ord_interface.client import query
@@ -55,9 +54,6 @@ POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
 POSTGRES_DATABASE = os.getenv('POSTGRES_DATABASE', 'ord')
 
-# Load custom Jinja filters.
-for name, function in filters.TEMPLATE_FILTERS.items():
-    bp.add_app_template_filter(name, function)
 BOND_LENGTH = 20
 
 
