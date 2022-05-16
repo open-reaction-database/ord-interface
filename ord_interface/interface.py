@@ -24,3 +24,8 @@ app = flask.Flask(__name__)
 app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
 app.register_blueprint(search.bp)
 app.register_blueprint(serve.bp)
+
+
+@app.route('/')
+def show_root():
+    return flask.redirect(search.bp.url_prefix)

@@ -61,16 +61,18 @@ def fetch_dataset(dataset_id: str) -> dataset_pb2.Dataset:
 class OrdClient:
     """Client for the Open Reaction Database."""
 
-    def __init__(self, target: Optional[str] = None) -> None:
+    def __init__(self, target: Optional[str] = None, prefix: str = '/client') -> None:
         """Initializes the client.
 
         Args:
             target: Endpoint URL for client queries. Defaults to the public
                 ORD client URL (defined in TARGET).
+            prefix: URL prefix.
         """
         if not target:
             target = TARGET
         self._target = target
+        self._prefix = prefix
 
     def fetch_datasets(self,
                        dataset_ids: List[str]) -> List[dataset_pb2.Dataset]:
@@ -117,7 +119,7 @@ class OrdClient:
         for reaction_id in reaction_ids:
             if not validations.is_valid_reaction_id(reaction_id):
                 raise ValueError(f'Invalid reaction ID: {reaction_id}')
-        target = urllib.parse.urljoin(self._target, '/api/fetch_reactions')
+        target = self._target + self._prefix + '/api/fetch_reactions'
         response = requests.post(target, json=list(set(reaction_ids)))
         results = response.json()
         # NOTE(kearnes): Return reactions in the same order as requested.
@@ -192,7 +194,7 @@ class OrdClient:
             'use_stereochemistry': use_stereochemistry,
             'similarity': similarity,
         }
-        target = urllib.parse.urljoin(self._target, '/api/query')
+        target = self._target + self._prefix + '/api/query'
         response = requests.get(target, params=params)
         results = response.json()
         return [query.Result(**result) for result in results]

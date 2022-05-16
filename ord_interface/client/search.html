@@ -213,6 +213,7 @@
 </div>
 
 <script>
+    const root = '{{ url_for(".show_root") }}';
     // Add a component field, for "+ component" button (and initialization).
     function addComponent() {
         const component = $('#component_template').clone();
@@ -269,7 +270,7 @@
 
     // Read back the user inputs and build a query URL.
     function exportQuery() {
-        let path = '/?'
+        let path = root + '/?';
         let hasReagent = false;
 
         // Components.
@@ -431,14 +432,14 @@
                 ],
                 "createdRow": function (row, data) {
                     const reactionId = data["Reaction ID"];
-                    fetch('/render/' + reactionId)
+                    fetch(root + '/render/' + reactionId)
                         .then(response => response.json())
                         .then(responseData => {
                             const content = $('td', row).eq(0);
                             content.html(responseData);
                             content.css('cursor', 'pointer');
                             content.on('click', function () {
-                                window.open('/id/' + reactionId, '_blank');
+                                window.open(root + '/id/' + reactionId, '_blank');
                             })
                         });
                 },

@@ -155,11 +155,11 @@
     <nav id="breadcrumbs" aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="/">Home</a>
+                <a href="{{ url_for('.show_root') }}">Home</a>
             </li>
             {% if dataset_id %}
                 <li class="breadcrumb-item">
-                    <a href="/?dataset_ids={{ dataset_id }}&limit=100">{{ dataset_id }}</a>
+                    <a href="{{ url_for('.show_root') }}?dataset_ids={{ dataset_id }}&limit=100">{{ dataset_id }}</a>
                 </li>
             {% endif %}
             <li class="breadcrumb-item active" aria-current="page">

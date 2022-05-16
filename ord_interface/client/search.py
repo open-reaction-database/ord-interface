@@ -47,7 +47,7 @@ from ord_schema.visualization import generate_text
 
 from ord_interface.client import query
 
-bp = flask.Blueprint('client', __name__, template_folder='.')
+bp = flask.Blueprint('client', __name__, url_prefix='/client', template_folder='.')
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
