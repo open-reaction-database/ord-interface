@@ -61,7 +61,9 @@ def fetch_dataset(dataset_id: str) -> dataset_pb2.Dataset:
 class OrdClient:
     """Client for the Open Reaction Database."""
 
-    def __init__(self, target: Optional[str] = None, prefix: str = '/client') -> None:
+    def __init__(self,
+                 target: Optional[str] = None,
+                 prefix: str = '/client') -> None:
         """Initializes the client.
 
         Args:
