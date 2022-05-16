@@ -74,6 +74,6 @@ jobs:
       - name: clang-format
         run: |
           cd "${GITHUB_WORKSPACE}"
-          sudo apt update && sudo apt install clang-format-10 --yes
+          sudo apt update && sudo apt install clang-format-14 --yes
           # NOTE(kearnes): Run clang-format before installing anything with npm.
-          find . -name '*.js' -exec clang-format-10 -n -Werror --style=file {} +
+          find . -name '*.js' -exec clang-format-14 -n -Werror --style=file {} +
