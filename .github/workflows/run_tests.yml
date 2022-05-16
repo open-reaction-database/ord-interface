@@ -55,6 +55,7 @@ jobs:
       - name: Run interface tests
         run: |
           cd "${GITHUB_WORKSPACE}/ord-interface/ord_interface"
+          npm install puppeteer
           ./run_tests.sh "--cache-from=${CACHE_TARGET}"
       - name: Update docker cache
         run: |
