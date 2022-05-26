@@ -45,21 +45,21 @@ limitations under the License.
 <div id="identity">
     <div style="display: flex;"><img src="{{ user_avatar }}">{{ user_name }}</div>
     {% if client_id %}
-    <div style="display: flex;">
-        <div style="padding: 10px; font-size: 16pt"><a
-                href="https://docs.open-reaction-database.org/en/latest/editor.html#guest-mode" target="_blank">Guest
-            Mode</a>
+        <div style="display: flex;">
+            <div style="padding: 10px; font-size: 16pt"><a
+                    href="https://docs.open-reaction-database.org/en/latest/editor.html#guest-mode" target="_blank">Guest
+                Mode</a>
+            </div>
+            <div id="login">
+                <img src="https://github.githubassets.com/images/modules/logos_page/Octocat.png">
+                <span>Sign in with GitHub</span>
+            </div>
         </div>
-        <div id="login">
-            <img src="https://github.githubassets.com/images/modules/logos_page/Octocat.png">
-            <span>Sign in with GitHub</span>
-        </div>
-    </div>
-    <script>
-        $('#login').on('click', () => {
-            location.href = "https://github.com/login/oauth/authorize?client_id={{ client_id }}";
-        });
-    </script>
+        <script>
+            $('#login').on('click', () => {
+                location.href = "https://github.com/login/oauth/authorize?client_id={{ client_id }}";
+            });
+        </script>
     {% endif %}
 </div>
 <div style="margin-bottom: 30px;">
@@ -86,7 +86,7 @@ limitations under the License.
     <div id="tab-list" class="tab-pane fade show active" role="presentation">
         <ul>
             {% for name in names %}
-            <li><a href="{{ url_for('.show_dataset', name=name) }}">{{ name }}</a></li>
+                <li><a href="{{ url_for('.show_dataset', name=name) }}">{{ name }}</a></li>
             {% endfor %}
         </ul>
     </div>
@@ -143,7 +143,7 @@ limitations under the License.
         Please send questions, comments, or issues to
         <a href="mailto:help@open-reaction-database.org">help@open-reaction-database.org</a>
         or create a new issue on the
-        <nobr><a href="https://github.com/Open-Reaction-Database/ord-editor/issues">ord-editor GitHub
+        <nobr><a href="https://github.com/Open-Reaction-Database/ord-interface/issues">ord-interface GitHub
             repository</a></nobr>
         .
     </p>
