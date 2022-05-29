@@ -86,6 +86,7 @@ COPY ord_interface/editor/img/ img/
 COPY ord_interface/editor/py/ py/
 WORKDIR ../..
 COPY ord_interface/client/ ord_interface/client/
+COPY ord_interface/visualization/ ord_interface/visualization/
 COPY setup.py .
 COPY ord_interface/interface.py ord_interface/
 RUN python setup.py install
