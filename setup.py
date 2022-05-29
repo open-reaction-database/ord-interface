@@ -22,4 +22,11 @@ if __name__ == '__main__':
         description='Interface for the Open Reaction Database',
         url='https://github.com/Open-Reaction-Database/ord-interface',
         license='Apache License, Version 2.0',
-        packages=setuptools.find_packages())
+        packages=setuptools.find_packages(),
+        package_data={
+            "ord_interface.visualization": [
+                "template.html",
+                "template.txt",
+            ],
+        },
+    )
