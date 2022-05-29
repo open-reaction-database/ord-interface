@@ -23,6 +23,7 @@ from ord_interface.visualization import generate_text
 
 
 class GenerateTextTest(absltest.TestCase):
+
     def setUp(self):
         super().setUp()
         self._resolver = units.UnitResolver()
@@ -35,38 +36,34 @@ class GenerateTextTest(absltest.TestCase):
                 smiles="CCCCCC",
                 role="reactant",
                 amount="1 milliliters",
-            )
-        )
+            ))
         reaction.inputs["dummy_input"].components.add().CopyFrom(
             message_helpers.build_compound(
                 name="THF",
                 smiles="C1OCCC1",
                 role="solvent",
                 amount="40 liters",
-            )
-        )
+            ))
         reaction.inputs["dummy_input2"].components.add().CopyFrom(
             message_helpers.build_compound(
                 name="Pd",
                 smiles="[Pd]",
                 role="catalyst",
                 amount="catalytic",
-            )
-        )
+            ))
         reaction.conditions.pressure.atmosphere.type = reaction_pb2.PressureConditions.Atmosphere.OXYGEN
         reaction.conditions.stirring.rate.rpm = 100
         reaction.conditions.temperature.control.type = reaction_pb2.TemperatureConditions.TemperatureControl.OIL_BATH
         reaction.conditions.temperature.setpoint.CopyFrom(
-            reaction_pb2.Temperature(value=100, units=reaction_pb2.Temperature.CELSIUS)
-        )
+            reaction_pb2.Temperature(value=100,
+                                     units=reaction_pb2.Temperature.CELSIUS))
         outcome = reaction.outcomes.add()
         outcome.reaction_time.CopyFrom(self._resolver.resolve("40 minutes"))
         outcome.products.add().identifiers.extend(
             message_helpers.build_compound(
                 name="hexanone",
                 smiles="CCCCC(=O)C",
-            ).identifiers
-        )
+            ).identifiers)
         self._reaction = reaction
 
     def test_text(self):
