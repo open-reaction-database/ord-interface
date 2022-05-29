@@ -22,7 +22,7 @@ docker compose up --detach
 set +x
 
 echo "Waiting for the server to start..."
-sleep 10
+sleep 15
 
 set +e
 status=0
@@ -35,6 +35,9 @@ python client/query_test.py || status=1
 # Editor tests.
 python editor/py/serve_test.py || status=1
 node editor/js/test.js || status=1
+
+# Visualization tests.
+python visualization/generate_text_test.py || status=1
 
 # Shut down the containers.
 docker compose down

@@ -42,8 +42,9 @@ from ord_schema import resolvers
 from ord_schema import validations
 from ord_schema.proto import dataset_pb2
 from ord_schema.proto import reaction_pb2
-from ord_schema.visualization import generate_text
-from ord_schema.visualization import drawing
+
+from ord_interface.visualization import drawing
+from ord_interface.visualization import generate_text
 
 # pylint: disable=invalid-name,no-member,inconsistent-return-statements,assigning-non-slot
 bp = flask.Blueprint('editor',

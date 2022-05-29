@@ -14,10 +14,9 @@
 """Entrypoint for the web interface."""
 import flask
 
-from ord_schema.visualization import filters
-
 from ord_interface.client import search
 from ord_interface.editor.py import serve
+from ord_interface.visualization import filters
 
 app = flask.Flask(__name__)
 # TODO(skearnes): Figure out bp.add_app_template_filter?

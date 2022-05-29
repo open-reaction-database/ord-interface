@@ -43,9 +43,8 @@ from typing import Optional, Tuple
 
 import flask
 
-from ord_schema.visualization import generate_text
-
 from ord_interface.client import query
+from ord_interface.visualization import generate_text
 
 bp = flask.Blueprint('client',
                      __name__,
