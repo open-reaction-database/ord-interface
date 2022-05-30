@@ -32,10 +32,14 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
     <!-- https://datatables.net/download/ -->
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.css"/>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.css"/>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.js"></script>
     <style>
         #add_component {
             font-size: medium;
@@ -108,13 +112,13 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link"  href="/browse">Browse</a>
+                    <a class="nav-link" href="/browse">Browse</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active" aria-current="page" href="#">Search</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="https://editor.open-reaction-database.org">Contribute</a>
+                    <a class="nav-link" href="/editor">Contribute</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="https://open-reaction-database.org">Docs</a>
@@ -124,13 +128,16 @@
     </div>
 </nav>
 <div class="container mt-3">
-    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByReagent" aria-expanded="false" aria-controls="searchByReagent">
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByReagent"
+            aria-expanded="false" aria-controls="searchByReagent">
         Reagents
     </button>
-    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByReaction" aria-expanded="false" aria-controls="searchByReaction">
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByReaction"
+            aria-expanded="false" aria-controls="searchByReaction">
         Reactions
     </button>
-    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByDataset" aria-expanded="false" aria-controls="searchByDataset">
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#searchByDataset"
+            aria-expanded="false" aria-controls="searchByDataset">
         Datasets
     </button>
     <div class="collapse" id="searchByReagent">
@@ -200,6 +207,7 @@
 
 <script>
     const root = '{{ url_for(".show_root") }}';
+
     // Add a component field, for "+ component" button (and initialization).
     function addComponent() {
         const component = $('#component_template').clone();
@@ -397,8 +405,7 @@
         $('#reactions_tab').trigger('click');
     } else if ('dois' in query || 'datasetIds' in query) {
         $('#datasets_tab').trigger('click');
-    }
-    else {
+    } else {
         $('#reagents_tab').trigger('click');
     }
 
