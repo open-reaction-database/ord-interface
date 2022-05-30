@@ -14,7 +14,7 @@
 
 name: Lint
 
-on: [pull_request, push]
+on: [ pull_request, push ]
 
 env:
   ORD_SCHEMA_TAG: v0.3.15
@@ -23,17 +23,17 @@ jobs:
   check_licenses:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '>=1.16'
-    - name: Install dependencies
-      run: |
-        go install github.com/google/addlicense@latest
-    - name: addlicense
-      run: |
-        cd "${GITHUB_WORKSPACE}"
-        "${HOME}/go/bin/addlicense" -check -c "Open Reaction Database Project Authors" -l apache .
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '>=1.16'
+      - name: Install dependencies
+        run: |
+          go install github.com/google/addlicense@latest
+      - name: addlicense
+        run: |
+          cd "${GITHUB_WORKSPACE}"
+          "${HOME}/go/bin/addlicense" -check -c "Open Reaction Database Project Authors" -l apache .
 
   check_python:
     runs-on: ubuntu-latest
@@ -66,3 +66,14 @@ jobs:
           pip install -r requirements.txt
           pip install flask pylint
           pylint ord_interface *.py
+
+  check_javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: clang-format
+        run: |
+          cd "${GITHUB_WORKSPACE}"
+          sudo apt update && sudo apt install clang-format-10 --yes
+          # NOTE(kearnes): Run clang-format before installing anything with npm.
+          find . -name '*.js' -exec clang-format-10 -n -Werror {} +

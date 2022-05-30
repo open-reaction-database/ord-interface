@@ -14,16 +14,20 @@
 
 version: "3"
 services:
-  ord-postgres:
-    image: "openreactiondatabase/ord-postgres:${ORD_POSTGRES_TAG:-latest}"
-    command: ["postgres", "-c", "log_statement=all"]
+  database:
+    image: "openreactiondatabase/ord-postgres:test"
+    command: [ "postgres", "-c", "log_statement=all" ]
     ports:
       - "5432:5432"
   web:
     depends_on:
-      - ord-postgres
+      - database
     environment:
-      - POSTGRES_HOST=ord-postgres
+      - POSTGRES_HOST=database
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - GH_CLIENT_ID=${GH_CLIENT_ID}
+      - GH_CLIENT_SECRET=${GH_CLIENT_SECRET}
     image: "openreactiondatabase/ord-interface:latest"
     ports:
       - "5000:5000"
