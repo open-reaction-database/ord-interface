@@ -1,0 +1,107 @@
+/**
+ * Copyright 2021 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+:root {
+    --body-width: 968px;
+}
+
+body {
+    padding: 100px 20px 20px;
+    width: 968px;
+    margin: auto;
+}
+
+#pageLoad {
+  text-align: center;
+}
+
+#header {
+  background: white;
+  border: black 1px;
+  border-style: none none solid none;
+  padding: 10px 0;
+  position: fixed;
+  top: 0;
+  width: var(--body-width);
+  z-index: 1;
+}
+
+#name, #description, .edittext, .reaction_id {
+    display: inline-block;
+}
+
+.edittext {
+    width: 200px;
+    height: auto;
+    min-height: 20px;
+    padding: 2px;
+    margin: 2px;
+    border: 1px solid #c0c0c0;
+}
+
+.longtext {
+    width: 400px;
+}
+
+.paratext {
+    height: 100px;
+}
+
+button {
+  font-size: small;
+  border: 1px solid black;
+  vertical-align: middle;
+}
+
+.remove {
+  border: none;
+  background-color: unset;
+  font-size: medium;
+}
+
+.add {
+    margin-top: 12px;
+}
+
+.reaction_list {
+    margin-top: 16px;
+}
+
+#identity {
+    float: right;
+    align-items: center;
+}
+
+#identity img {
+    height: 24px;
+    width: 24px;
+    margin-right: 8px;
+    border-radius: 12px;
+}
+
+#login {
+    padding: 10px;
+    border-style: solid;
+    border-color: lightgray;
+    border-radius: 30px;
+    cursor: pointer;
+    width: fit-content;
+    display: flex;
+}
+
+#login:hover {
+    border-color: black;
+}

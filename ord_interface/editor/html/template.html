@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!--
+Copyright 2020 Open Reaction Database Project Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+<head>
+    <title>ORD Template Editor</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S334YDGZB8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'G-S334YDGZB8');
+    </script>
+</head>
+<body style="padding: 16px;">
+<div>
+    Create a template for a large factorial dataset. Read about templates at
+    <img style="float: right;" src="/editor/img/template-editor-how.png">
+    <a href="https://docs.open-reaction-database.org/en/latest/guides/templates.html">
+        https://docs.open-reaction-database.org/en/latest/guides/templates.html
+    </a>
+    <p>
+        1) Define a reaction in the Editor and export it using the "download" button.
+    <p>
+        2) Import the reaction here using the "Choose File" button.
+    <p>
+        3) Click on the fields that vary. You can give a name to each one if you like.
+    <p>
+        4) Download your template using the "download" button on this page.
+    <p>
+        If you make a mistake, click the field's label (left of the name) to revert it.
+</div>
+<input id="input" type="file"/>
+<a id="output" download="reaction.pbtxt" style="display: none;"></a>
+<button id="download" type="button">download</button>
+<div>
+    <pre id="text"/>
+</div>
+<script>
+
+    /* Variable names must be unique. See validate(). */
+    const names = new Set();
+
+    /* A location in pbtxt specified by a text node and a character position. */
+    function Position(node, offset) {
+        this.node = node;
+        this.offset = offset;
+        this.content = node.textContent;
+    }
+
+    /* Return the Interval bounding the line of text at this position. */
+    Position.prototype.line = function () {
+        let start = this.offset;
+        while ((start >= 0) && (this.content[start] != "\n")) {
+            start--;
+        }
+        start += 1;
+        let end = this.offset;
+        while ((end < this.content.length) && (this.content[end] != "\n")) {
+            end++;
+        }
+        return new Interval(this.node, start, end);
+    }
+
+    /* An line of pbtxt specified by a text node and two character positions. */
+    function Interval(node, start, end) {
+        this.node = node;
+        this.start = start;
+        this.end = end;
+        this.content = node.textContent;
+    }
+
+    /* The text bounded by this Interval. */
+    Interval.prototype.text = function () {
+        return this.content.slice(this.start, this.end);
+    }
+
+    /* Return the text of the field name on this line, or null. */
+    Interval.prototype.keyName = function () {
+        const pattern = /^\s*(\w+)[ :].*/;
+        const match = this.text().match(pattern);
+        if (match == null) {
+            return null;
+        }
+        return match[1];
+    }
+
+    /* Return the interval of the value on this line, or null. */
+    Interval.prototype.value = function () {
+        const line = this.text();
+        const pattern = /: (.*)$/;
+        const colon = line.search(pattern);
+        if (colon < 0) {
+            return null;
+        }
+        return new Interval(this.node, this.start + colon + 2, this.end);
+    }
+
+    /* Return the indent level of a line. Assumes two spaces per indent. */
+    function getIndent(interval) {
+        let pointer = interval.start;
+        const content = interval.content;
+        while (content[pointer] == " ") {
+            pointer++;
+        }
+        return (pointer - interval.start) / 2;
+    }
+
+    /* Return the Interval of the preceding line, or null. */
+    function getPreviousLine(interval) {
+        if (interval.start == 0) {
+            return null;
+        }
+        if (interval.start > 1) {
+            // The current line is preceded by more text.
+            const position = new Position(interval.node, interval.start - 2);
+            return position.line();
+        } else {
+            // The current line is preceded by a span.
+            const span = interval.node.previousSibling;
+            const previous = span.previousSibling;
+            return new Position(previous, previous.length - 1).line();
+        }
+    }
+
+    /* Return the bounds of the first preceding line of lesser indent. */
+    function getParent(interval) {
+        const indent = getIndent(interval);
+        if (indent == 0) {
+            return null;
+        }
+        interval = getPreviousLine(interval);
+        let outdent = getIndent(interval);
+        while (outdent >= indent) {
+            interval = getPreviousLine(interval);
+            outdent = getIndent(interval);
+        }
+        return interval;
+    }
+
+    /* Return the sequence of field names leading to the given line. */
+    function getPath(interval) {
+        const tags = [];
+        while (interval != null) {
+            const tag = interval.keyName();
+            tags.push(tag);
+            interval = getParent(interval);
+        }
+        return tags.reverse();
+    }
+
+    /* To make names unique, we sometimes append a number. */
+    function increment(name) {
+        const match = name.match(/_(?<number>[0-9]+)$/);
+        if (match == null) {
+            return name + "_2";
+        }
+        const n = parseInt(match.groups.number);
+        return name.replace(/_[0-9]+$/, "_" + (n + 1));
+    }
+
+    /* Get the string in the middle that needs to remain unique. */
+    function strip(name) {
+        return name.replace(/["$]/g, "");
+    }
+
+    /* Macros must be unique, bounded by "$", and also sometimes by '"'. */
+    function normalize(newName, oldName) {
+        newName = strip(newName);
+        while (names.has(newName)) {
+            newName = increment(newName);
+        }
+        names.add(newName);
+        newName = "$" + newName + "$";
+        if (oldName.indexOf('"') >= 0) {
+            newName = '"' + newName + '"';
+        }
+        names.delete(strip(oldName));
+        return newName;
+    }
+
+    /* Split up the text at this position and insert a span around the value. */
+    function macrotize(position) {
+        const interval = position.line();
+        const path = getPath(interval);
+
+        const name = path.join("_");
+
+        let macro = "$" + name + "$";
+
+        const value = interval.value();
+        if (value == null) {
+            return;
+        }
+        names.add(name);
+
+        if (value.text().search('"') >= 0) {
+            macro = '"' + macro + '"';
+        }
+        const before = position.content.slice(0, value.start);
+        const left = document.createTextNode(before);
+
+        const middle = document.createElement("span");
+        middle.innerText = macro;
+        middle.dataset.value = value.text();
+        middle.setAttribute("name", macro);
+        middle.contentEditable = "true";
+        middle.style.color = "red";
+
+        // Allow the enter key to blur the text field.
+        middle.addEventListener("keydown", (event) => {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                middle.blur();
+            }
+        });
+        // When the text field loses focus, normalize the given variable name.
+        middle.addEventListener("focusout", () => {
+            const oldName = middle.getAttribute("name");
+            const newName = normalize(middle.innerText, oldName);
+            middle.setAttribute("name", newName);
+            middle.innerText = newName;
+        });
+        const after = position.content.slice(value.end, position.content.length);
+        const right = document.createTextNode(after);
+
+        const parent = position.node.parentNode;
+        parent.insertBefore(left, position.node);
+        parent.insertBefore(middle, position.node);
+        parent.insertBefore(right, position.node);
+
+        position.node.remove();
+    }
+
+    /* Reverse the effects of macrotize(). */
+    function unmacrotize(position) {
+        const name = strip(position.node.textContent);
+        names.delete(name);
+        const span = position.node.parentNode;
+        const content = span.dataset.value;
+        span.replaceWith(content);
+        pre.normalize();
+    }
+
+    function isSpan(position) {
+        return (position.node.parentNode.tagName == "SPAN");
+    }
+
+    function getSpanAfter(position) {
+        const line = position.line().text();
+        if (line.endsWith(": ")) {
+            return new Position(position.node.nextSibling.lastChild, 0);
+        }
+        return null;
+    }
+
+    /* Replace the text at the event with a template macro. */
+    function templatize(e) {
+        if (document.caretPositionFromPoint) {
+            // Firefox, Safari
+            range = document.caretPositionFromPoint(e.clientX, e.clientY);
+            text = range.offsetNode;
+            offset = range.offset;
+        } else if (document.caretRangeFromPoint) {
+            // Chrome, Edge, Opera, Safari
+            range = document.caretRangeFromPoint(e.clientX, e.clientY);
+            text = range.startContainer;
+            offset = range.startOffset;
+        }
+        if (text) {
+            let position = new Position(text, offset);
+            if (isSpan(position)) {
+                // They clicked on a span. Allow its macro to be edited.
+                return;
+            }
+            const span = getSpanAfter(position);
+            if (span) {
+                // They click on a line adjacent to a span. Unmacrotize the span.
+                unmacrotize(span);
+                return;
+            }
+            // They clicked on a line with no span. Macrotize the value.
+            macrotize(position);
+        }
+    }
+
+    /* Receive and display a pbtxt from the user's file system. */
+    function upload() {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            text = event.target.result;
+            const pre = document.getElementById("text");
+            pre.textContent = text;
+        };
+        const file = input.files[0];
+        const output = document.getElementById("output");
+        output.setAttribute("download", file.name);
+        reader.readAsText(file);
+    }
+
+    /* Send back the current text as text/plain. */
+    function download() {
+        const pre = document.getElementById("text");
+        const text = pre.textContent;
+        const output = document.getElementById("output");
+        const blob = new Blob([text], {type: "text/plain"});
+        url = URL.createObjectURL(blob);
+        output.href = url;
+        output.click();
+        URL.revokeObjectURL(url);
+    }
+
+    const input = document.getElementById("input");
+    input.addEventListener("change", upload);
+
+    const button = document.getElementById("download");
+    button.addEventListener("click", download);
+
+    const pre = document.getElementById("text");
+    pre.addEventListener("click", templatize);
+</script>
+</body>
+</html>

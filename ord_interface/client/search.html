@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2020 Open Reaction Database Project Authors
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Open Reaction Database - Search Interface</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-REEDLYB0ZJ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'G-REEDLYB0ZJ');
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
+    <style>
+        body {
+            padding: 48px;
+        }
+
+        #add_component {
+            font-size: medium;
+            border: 1px solid black;
+            width: 160px;
+        }
+
+        .remove {
+            font-size: medium;
+            border: 1px solid black;
+        }
+
+        #go_button {
+            font-size: medium;
+            border: 1px solid black;
+            margin-left: 18px;
+        }
+
+        #form {
+            grid-column: form;
+            display: grid;
+            grid-template-rows: [controls] auto [go] auto [spacer] 40px;
+            grid-template-columns: [overview] 300px [query] 650px;
+        }
+
+        #tabs {
+            grid-row: controls;
+            grid-column: query;
+            justify-content: center;
+        }
+
+        #reagents_content {
+            margin-top: 10px;
+            display: grid;
+            grid-row-gap: 10px;
+            grid-column-gap: 18px;
+            grid-template-columns: [text] 300px [source] 100px [mode] 150px [remove] 30px;
+            align-items: center;
+        }
+
+        #reactions_content, #datasets_content {
+            margin-top: 10px;
+            display: grid;
+            grid-row-gap: 18px;
+            grid-column-gap: 18px;
+            grid-template-columns: [labels] 150px [text] 450px;
+            align-items: center;
+        }
+
+        label {
+            text-align: right;
+        }
+
+        #limit {
+            margin-left: 18px;
+        }
+
+        #go {
+            border-top: 1px solid black;
+            padding-top: 18px;
+            margin-top: 18px;
+            grid-row: go;
+            grid-column: query;
+            text-align: center;
+        }
+
+        #spacer {
+            grid-row: spacer;
+            grid-column: query;
+        }
+
+        #error {
+            grid-row: spacer;
+            grid-column: query;
+            color: red;
+            font-style: italic;
+            text-align: center;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div id="form">
+    <div id="overview">
+        <a href="https://open-reaction-database.org">
+            <img src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg" height="50px">
+        </a>
+        <h2 style="margin-block-start: 0;">Search Interface</h2>
+    </div>
+    <div id="query">
+        <ul id="tabs" class="nav nav-pills justify-content-center" role="tablist">
+            <li class="nav-item">
+                <button type="button" id="reagents_tab" class="nav-link active" data-bs-toggle="pill" data-bs-target="#reagents" role="tab" aria-controls="reagents" aria-selected="true">
+                    Search by Reagent
+                </button>
+            </li>
+            <li>
+                <button type="button" id="reactions_tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#reactions" role="tab" aria-controls="reactions" aria-selected="false">
+                    Search by Reaction
+                </button>
+            </li>
+            <li>
+                <button type="button" id="datasets_tab" class="nav-link" data-bs-toggle="pill" data-bs-target="#datasets" role="tab" aria-controls="datasets" aria-selected="false">
+                    Search by Dataset
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div id="reagents" class="tab-pane show active" role="tabpanel" aria-labelledby="reagents_tab">
+                <div id="reagents_content">
+                    <b style="grid-column: text">SMILES/SMARTS</b>
+                    <b>Source</b>
+                    <b>Match Mode</b>
+                    <button type="button" id="add_component" onclick="addComponent();">
+                        <i class="fas fa-plus"></i> Add Component
+                    </button>
+                    <label for="stereo" style="grid-column: text">Use Stereochemistry</label>
+                    <input type="checkbox" id="stereo">
+                    <label for="similarity" style="grid-column: text">Similarity Threshold</label>
+                    <input id="similarity" type="text" value="0.5" style="width: 60px">
+                </div>
+            </div>
+            <div id="reactions" class="tab-pane" role="tabpanel" aria-labelledby="reactions_tab">
+                <div id="reactions_content">
+                    <label for="reaction_ids">Reaction IDs</label><textarea id="reaction_ids"></textarea>
+                    <label for="reaction_smarts">Reaction SMARTS</label><textarea id="reaction_smarts"></textarea>
+                </div>
+            </div>
+            <div id="datasets" class="tab-pane" role="tabpanel" aria-labelledby="datasets_tab">
+                <div id="datasets_content">
+                    <label for="dataset_ids">Dataset IDs</label><textarea id="dataset_ids"></textarea>
+                    <label for="dois">DOIs</label><textarea id="dois"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="go">
+        <label for="limit">Result Limit</label>
+        <input id="limit" type="text" value="100" min="0" style="width: 60px">
+        <button id="go_button"><b>Search</b></button>
+    </div>
+    {% if error %}
+        <div id="error">{{ error }}</div>
+    {% else %}
+        <div id="spacer"></div>
+    {% endif %}
+</div>
+
+<div id="results">
+    <table id="results_table" class="table"></table>
+</div>
+
+<div id="component_template" style="display: none">
+    <input style="grid-column: text" class="component" type="text">
+    <select class="source" style="grid-column: source">
+        <option value="input">input</option>
+        <option value="output">output</option>
+    </select>
+    <select class="mode" style="grid-column: mode">
+        <option value="exact">exact</option>
+        <option value="similar">similar</option>
+        <option value="substructure">substructure</option>
+        <option value="smarts">smarts</option>
+    </select>
+    <button type="button" class="remove">
+        <i class="far fa-trash-alt"></i>
+    </button>
+</div>
+
+<script>
+    const root = '{{ url_for(".show_root") }}';
+    // Add a component field, for "+ component" button (and initialization).
+    function addComponent() {
+        const component = $('#component_template').clone();
+        // Hook up the "remove" button.
+        $('.remove', component).click(function () {
+            $(this).prevAll('.component').first().remove();
+            $(this).prevAll('.source').first().remove();
+            $(this).prevAll('.mode').first().remove();
+            $(this).remove();
+        });
+        // Insert the component into the form.
+        const anchor = $('#add_component');
+        component.children().each((index, node) => {
+            anchor.before(node);
+        });
+        // Return value is the text field of the new component.
+        return anchor.prevAll('.component').first();
+    }
+
+    // Get the component source (input/output).
+    function getComponentSource(node) {
+        return $('option:selected', node.next()).text()
+    }
+
+    // Get the matching option for a text field.
+    function getMatchMode(node) {
+        return $('option:selected', node.next().next()).text()
+    }
+
+    // Get the stereochemistry option.
+    function getUseStereochemistry() {
+        return $('#stereo').is(":checked")
+    }
+
+    // Get the current value of the similarity threshold.
+    function getSimilarity() {
+        return $('#similarity').val();
+    }
+
+    // Set the value of the similarity threshold.
+    function setSimilarity(similarity) {
+        $('#similarity').val(similarity);
+    }
+
+    // Get the current result limit.
+    function getLimit() {
+        return $('#limit').val();
+    }
+
+    // Set the result limit.
+    function setLimit(limit) {
+        $('#limit').val(limit);
+    }
+
+    // Read back the user inputs and build a query URL.
+    function exportQuery() {
+        let path = root + '/?';
+        let hasReagent = false;
+
+        // Components.
+        const components = $('.component');
+        components.each((index, node) => {
+            const component = $(node);
+            if (component.is(':hidden')) {
+                // The template.
+                return;
+            }
+            const componentText = component.val().trim();
+            if (componentText) {
+                const sourceTable = getComponentSource(component);
+                const matchMode = getMatchMode(component);
+                path += 'component=' + encodeURIComponent(componentText) + ';' + sourceTable + ';' + matchMode + '&';
+            }
+            hasReagent = true;
+        });
+        // Fingerprint similarity options.
+        if (hasReagent) {
+            const useStereochemistry = getUseStereochemistry();
+            path += 'use_stereochemistry=' + encodeURIComponent(useStereochemistry) + '&';
+            const similarity = getSimilarity();
+            path += 'similarity=' + encodeURIComponent(similarity) + '&';
+        }
+        // Dataset IDS.
+        const datasetsNode = $('#dataset_ids');
+        const datasetIdsText = datasetsNode.val();
+        const datasetMatches = datasetIdsText.matchAll(/ord_dataset-[0-9a-f]+/g);
+        const datasetIds = [];
+        for (const match of datasetMatches) {
+            datasetIds.push(match[0]);
+        }
+        if (datasetIds.length > 0) {
+            path += 'dataset_ids=' + encodeURIComponent(datasetIds.join(',')) + '&';
+        }
+        // Reaction IDs.
+        const reactionsNode = $('#reaction_ids');
+        const reactionIdsText = reactionsNode.val();
+        const reactionMatches = reactionIdsText.matchAll(/ord-[0-9a-f]+/g);
+        const reactionIds = [];
+        for (const match of reactionMatches) {
+            reactionIds.push(match[0]);
+        }
+        if (reactionIds.length > 0) {
+            path += 'reaction_ids=' + encodeURIComponent(reactionIds.join(',')) + '&';
+        }
+        // Reaction SMARTS.
+        const reactionSmarts = $('#reaction_smarts');
+        const reactionSmartsText = reactionSmarts.val().trim();
+        if (reactionSmartsText) {
+            path += 'reaction_smarts=' + encodeURIComponent(reactionSmartsText) + '&';
+        }
+        // DOIs.
+        const doiNode = $('#dois');
+        const doiText = doiNode.val();
+        const doiMatches = doiText.matchAll(/10\.[\d.]+\/[a-zA-Z\d.]+/g);
+        const dois = [];
+        for (const match of doiMatches) {
+            dois.push(match[0]);
+        }
+        if (dois.length > 0) {
+            path += 'dois=' + encodeURIComponent(dois.join(',')) + '&';
+        }
+        const limit = getLimit();
+        if (limit > 0) {
+            path += 'limit=' + encodeURIComponent(limit) + '&';
+        }
+        if (path.slice(-1) === '&') {
+            path = path.slice(0, -1);
+        }
+        return path;
+    }
+
+    // Initialize the user inputs from the current predicate.
+    function importQuery() {
+        const query = JSON.parse('{{ query|safe }}');
+        console.log(query);
+
+        // Components.
+        if ('components' in query && (query.components.length > 0)) {
+            query.components.forEach(component => {
+                const node = addComponent();
+                node.val(component.pattern);
+                node.nextAll('.source').first().val(component.source);
+                node.nextAll('.mode').first().val(component.mode);
+            });
+        } else {
+            // Make sure there is at least one component for convenience.
+            addComponent();
+        }
+
+        // Fingerprint similarity options.
+        if ('useStereochemistry' in query) {
+            $('#stereo').prop("checked", query.useStereochemistry === "true");
+        }
+        if ('similarity' in query) {
+            const similarity = query.similarity;
+            setSimilarity(similarity);
+        }
+
+        // Dataset IDs.
+        if ('datasetIds' in query) {
+            const datasetIds = $('#dataset_ids');
+            datasetIds.val(query.datasetIds.join('\n'));
+        }
+
+        // Reaction IDs.
+        if ('reactionIds' in query) {
+            const reactionIds = $('#reaction_ids');
+            reactionIds.val(query.reactionIds.join('\n'));
+        }
+
+        // Reaction SMILES.
+        if ('reactionSmarts' in query) {
+            const reactionSmarts = $('#reaction_smarts');
+            reactionSmarts.val(query.reactionSmarts);
+        }
+
+        // DOI.
+        if ('dois' in query) {
+            const dois = $('#dois');
+            dois.val(query.dois.join('\n'));
+        }
+
+        return query;
+    }
+
+    // Hook up the query button.
+    $('#go_button').click(() => {
+        window.location.href = exportQuery();
+    });
+
+    const query = importQuery();
+
+    // Show the tab appropriate to the current predicate.
+    if ('reactionIds' in query || 'reactionSmarts' in query) {
+        $('#reactions_tab').trigger('click');
+    } else if ('dois' in query || 'datasetIds' in query) {
+        $('#datasets_tab').trigger('click');
+    }
+    else {
+        $('#reagents_tab').trigger('click');
+    }
+
+    const resultsData = [
+        {% if results -%}
+            {% for result in results -%}
+                {"Reaction ID": "{{ result.reaction_id }}", "Summary": ""},
+            {% endfor %}
+        {% endif %}
+    ];
+
+    $(document).ready(function () {
+            $('#results_table').DataTable({
+                "data": resultsData,
+                "columns": [
+                    {data: "Summary"}
+                ],
+                "createdRow": function (row, data) {
+                    const reactionId = data["Reaction ID"];
+                    fetch(root + '/render/' + reactionId)
+                        .then(response => response.json())
+                        .then(responseData => {
+                            const content = $('td', row).eq(0);
+                            content.html(responseData);
+                            content.css('cursor', 'pointer');
+                            content.on('click', function () {
+                                window.open(root + '/id/' + reactionId, '_blank');
+                            })
+                        });
+                },
+                "deferRender": true,
+                "searching": false,
+            });
+        }
+    );
+</script>
+</body>
+</html>
