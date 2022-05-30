@@ -37,8 +37,8 @@ def _is_true(boolean: Any) -> bool:
 
 
 def _count_addition_order(
-        inputs: Mapping[str,
-                        reaction_pb2.ReactionInput]) -> Iterable[Tuple[int, int]]:
+    inputs: Mapping[str,
+                    reaction_pb2.ReactionInput]) -> Iterable[Tuple[int, int]]:
     """Returns the number of inputs for each addition_order value.
 
     Args:
@@ -56,7 +56,7 @@ def _count_addition_order(
 
 
 def _sort_addition_order(
-        inputs: Mapping[str, reaction_pb2.ReactionInput]
+    inputs: Mapping[str, reaction_pb2.ReactionInput]
 ) -> Iterable[Tuple[str, reaction_pb2.ReactionInput]]:
     """Sorts inputs by addition order, sorting again within stages/steps.
 
@@ -77,7 +77,7 @@ def _sort_addition_order(
 
 
 def _get_input_borders(
-        components: List[reaction_pb2.Compound],
+    components: List[reaction_pb2.Compound],
 ) -> Iterable[Tuple[reaction_pb2.Compound, str]]:
     """Returns the CSS class for a Compound cell.
 
@@ -270,7 +270,7 @@ def _temperature_conditions(
 
 
 def _temperature_conditions_html(
-        temperature: reaction_pb2.TemperatureConditions, ) -> str:
+    temperature: reaction_pb2.TemperatureConditions,) -> str:
     """Generates an HTML-ready description of temperature conditions.
 
     Args:
@@ -319,7 +319,7 @@ def _product_color_texture(product: reaction_pb2.ProductCompound) -> str:
 
 
 def _selectivity_type(
-        selectivity: reaction_pb2.ProductMeasurement.Selectivity.SelectivityType,
+    selectivity: reaction_pb2.ProductMeasurement.Selectivity.SelectivityType,
 ) -> str:
     """Returns a string version of the selectivity type."""
     return {
@@ -513,14 +513,14 @@ def _compound_source_prep(compound: reaction_pb2.Compound) -> str:
         txt.append(f"lot #{compound.source.lot}")
     for preparation in compound.preparations:
         txt.append({
-                       preparation.UNSPECIFIED: "",
-                       preparation.CUSTOM: "",
-                       preparation.NONE: "",
-                       preparation.REPURIFIED: "repurified",
-                       preparation.SPARGED: "sparged",
-                       preparation.DRIED: "dried",
-                       preparation.SYNTHESIZED: "synthesized in-house",
-                   }[preparation.type])
+            preparation.UNSPECIFIED: "",
+            preparation.CUSTOM: "",
+            preparation.NONE: "",
+            preparation.REPURIFIED: "repurified",
+            preparation.SPARGED: "sparged",
+            preparation.DRIED: "dried",
+            preparation.SYNTHESIZED: "synthesized in-house",
+        }[preparation.type])
         txt.append(preparation.details)
     if any(elem for elem in txt):
         return "(" + ", ".join([elem for elem in txt if elem]) + ")"
@@ -551,11 +551,11 @@ def _vessel_prep(vessel: reaction_pb2.Vessel) -> str:
     preparation_strings = []
     for preparation in vessel.preparations:
         preparation_strings.append({
-                                       preparation.UNSPECIFIED: "",
-                                       preparation.CUSTOM: "prepared",
-                                       preparation.NONE: "",
-                                       preparation.OVEN_DRIED: "oven-dried",
-                                   }[preparation.type])
+            preparation.UNSPECIFIED: "",
+            preparation.CUSTOM: "prepared",
+            preparation.NONE: "",
+            preparation.OVEN_DRIED: "oven-dried",
+        }[preparation.type])
     return ", ".join(preparation_strings)
 
 
@@ -622,12 +622,12 @@ def _input_addition(reaction_input: reaction_pb2.ReactionInput) -> str:
         txt.append(
             f"after {units.format_message(reaction_input.addition_time)}")
     txt.append({
-                   reaction_input.addition_speed.UNSPECIFIED: "",
-                   reaction_input.addition_speed.ALL_AT_ONCE: "all at once",
-                   reaction_input.addition_speed.FAST: "quickly",
-                   reaction_input.addition_speed.SLOW: "slowly",
-                   reaction_input.addition_speed.DROPWISE: "dropwise",
-               }[reaction_input.addition_speed.type])
+        reaction_input.addition_speed.UNSPECIFIED: "",
+        reaction_input.addition_speed.ALL_AT_ONCE: "all at once",
+        reaction_input.addition_speed.FAST: "quickly",
+        reaction_input.addition_speed.SLOW: "slowly",
+        reaction_input.addition_speed.DROPWISE: "dropwise",
+    }[reaction_input.addition_speed.type])
     if reaction_input.addition_duration.value:
         txt.append(
             f"over {units.format_message(reaction_input.addition_duration)}")
@@ -655,7 +655,7 @@ def _datetimeformat(message: reaction_pb2.DateTime,
 
 
 def _get_compact_components(
-        inputs: Mapping[str, reaction_pb2.ReactionInput]
+    inputs: Mapping[str, reaction_pb2.ReactionInput]
 ) -> Iterable[Tuple[reaction_pb2.Compound, bool]]:
     """Returns a list of input components for 'compact' visualization.
 
@@ -683,7 +683,7 @@ def _get_compact_components(
 
 
 def _get_compact_products(
-        products: Iterable[reaction_pb2.ProductCompound],
+    products: Iterable[reaction_pb2.ProductCompound],
 ) -> List[reaction_pb2.ProductCompound]:
     """Returns a list of product compounds for 'compact' visualization."""
     roles_to_keep = [
@@ -761,7 +761,7 @@ def _type_and_details(message):
 
 
 def _events(
-        message: reaction_pb2.ReactionProvenance,
+    message: reaction_pb2.ReactionProvenance,
 ) -> Iterable[reaction_pb2.RecordEvent]:
     """Returns a generator of RecordEvent messages."""
     events = [message.record_created]
