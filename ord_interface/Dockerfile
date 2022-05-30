@@ -76,10 +76,14 @@ RUN pip install -r requirements.txt
 RUN pip install gunicorn
 
 # Copy the local state.
-COPY ord_interface/editor/ ord_interface/editor/
+COPY ord_interface/editor/js/ ord_interface/editor/js/
+COPY ord_interface/editor/Makefile ord_interface/editor
 WORKDIR ord_interface/editor
 RUN make
 WORKDIR ../..
+# Copy the rest of the editor files.
+COPY ord_interface/editor/ ord_interface/editor/
+# Now copy everything else.
 COPY ord_interface/interface.py ord_interface/
 COPY ord_interface/client/ ord_interface/client/
 COPY ord_interface/visualization/ ord_interface/visualization/
