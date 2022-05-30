@@ -60,6 +60,10 @@ BOND_LENGTH = 20
 
 
 @bp.route('/')
+def show_root():
+    flask.redirect(flask.url_for(".show_browse"))
+
+
 @bp.route('/browse')
 def show_browse():
     """Shows the browser interface."""
