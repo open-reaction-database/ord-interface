@@ -91,9 +91,9 @@ COPY setup.py .
 RUN python setup.py install
 
 # Build and launch the interface.
-EXPOSE 5000
+EXPOSE 5001
 CMD gunicorn ord_interface.interface:app \
-    --bind 0.0.0.0:5000 \
+    --bind 0.0.0.0:5001 \
     --workers 2 \
     --access-logfile - \
     --access-logformat '%(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'

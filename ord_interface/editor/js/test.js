@@ -30,14 +30,14 @@ const puppeteer = require('puppeteer');
   page.on('console', msg => console.log('console>', msg.text()));
 
   // First authenticate as the test user.
-  page.goto('http://localhost:5000/editor/authenticate');
+  page.goto('http://localhost:5001/editor/authenticate');
   await page.waitForNavigation();
 
   // Round-trip these reactions through the DOM and compare at the server.
   const roundtripTests = [
-    'http://localhost:5000/editor/dataset/empty/reaction/0',
-    'http://localhost:5000/editor/dataset/full/reaction/0',
-    'http://localhost:5000/editor/dataset/ord-nielsen-example/reaction/0',
+    'http://localhost:5001/editor/dataset/empty/reaction/0',
+    'http://localhost:5001/editor/dataset/full/reaction/0',
+    'http://localhost:5001/editor/dataset/ord-nielsen-example/reaction/0',
   ];
 
   for (let i = 0; i < roundtripTests.length; i++) {
@@ -71,7 +71,7 @@ const puppeteer = require('puppeteer');
   // Additional test to ensure that pretending to change field entries does
   // not lead to a change in the number of validation errors.
   const validationTests = [
-    'http://localhost:5000/editor/dataset/ord-nielsen-example/reaction/0',
+    'http://localhost:5001/editor/dataset/ord-nielsen-example/reaction/0',
   ];
 
   for (let i = 0; i < validationTests.length; i++) {
