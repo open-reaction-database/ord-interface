@@ -658,6 +658,10 @@ class OrdPostgres:
                                             port=port)
         self._connection.set_session(readonly=True)
 
+    @property
+    def connection(self) -> psycopg2.extensions.connection:
+        return self._connection
+
     def cursor(self) -> psycopg2.extensions.cursor:
         return self._connection.cursor()
 

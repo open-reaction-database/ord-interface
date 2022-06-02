@@ -39,7 +39,7 @@ be URL-encoded.
 
 import dataclasses
 import os
-from typing import Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import flask
 
@@ -61,7 +61,18 @@ BOND_LENGTH = 20
 
 @bp.route('/')
 def show_root():
-    """Shows the web form.
+    flask.redirect(flask.url_for(".show_browse"))
+
+
+@bp.route('/browse')
+def show_browse():
+    """Shows the browser interface."""
+    return flask.render_template('browse.html', datasets=fetch_datasets())
+
+
+@bp.route('/search')
+def show_search():
+    """Shows the search interface.
 
     Creates a query to show a set of randomly selected reactions so the
     page won't be empty.
@@ -135,6 +146,30 @@ def fetch_reactions():
         return flask.jsonify([dataclasses.asdict(result) for result in results])
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
+
+
+def fetch_datasets() -> List[Dict[str, Union[str, int]]]:
+    """Fetches info about the current datasets."""
+    engine = connect()
+    rows = {}
+    with engine.connection, engine.cursor() as cursor:
+        cursor.execute("SELECT dataset_id, name, description FROM datasets")
+        for dataset_id, name, description in cursor:
+            rows[dataset_id] = {
+                'Dataset ID': dataset_id,
+                'Name': name,
+                'Description': description,
+                'Size': 0,
+            }
+        # Get dataset sizes.
+        cursor.execute("""
+            SELECT dataset_id, COUNT(reaction_id)
+            FROM reactions
+            GROUP BY dataset_id
+            """)
+        for dataset_id, count in cursor:
+            rows[dataset_id]['Size'] = count
+        return list(rows.values())
 
 
 @bp.route('/api/query')

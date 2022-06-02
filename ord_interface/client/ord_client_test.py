@@ -23,7 +23,7 @@ class OrdClientTest(parameterized.TestCase, absltest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.client = ord_client.OrdClient(target='http://localhost:5000')
+        self.client = ord_client.OrdClient(target='http://localhost:5001')
 
     @parameterized.parameters(
         ('ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c', 264))

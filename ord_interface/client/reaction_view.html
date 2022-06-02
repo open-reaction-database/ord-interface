@@ -22,52 +22,28 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-REEDLYB0ZJ"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-REEDLYB0ZJ');
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'G-REEDLYB0ZJ');
     </script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <!-- https://datatables.net/download/ -->
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.css"/>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.js"></script>
     <style>
-        body {
-            padding: 10px 20px;
-        }
-
-        #header {
-            background: white;
-            padding: 10px 0;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1;
-        }
-
-        #nav {
-            margin-top: 48px;
-            margin-right: 26px;
-            position: fixed;
-            width: 150px;
-            background-color: white;
-        }
-
-        .navSection {
-            padding: 8px;
-            margin-bottom: 4px;
-            cursor: pointer;
-        }
-
-        .navSection:hover {
-            background-color: lightblue;
-        }
-
-        #sections {
-            margin-left: 168px;
-        }
-
         .section {
-            scroll-margin-top: 60px;
+            scroll-margin-top: 100px;
             margin-top: 48px;
         }
 
@@ -89,8 +65,8 @@
         .tab-content {
             border-left: 1px solid lightgray;
             padding: 10px;
-            max-width: 800px;
-            width: max-content;
+            /*max-width: 800px;*/
+            /*width: max-content;*/
         }
 
         table {
@@ -135,7 +111,7 @@
         }
 
         .tooltip-inner {
-            max-width: 600px;
+            /*max-width: 600px;*/
             white-space: pre-wrap;
             text-align: left;
         }
@@ -146,53 +122,105 @@
         }
 
         .pbtxt {
-            font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+            font-family: var(--bs-font-monospace) !important;
         }
     </style>
 </head>
-<body>
-<div id="header">
-    <nav id="breadcrumbs" aria-label="breadcrumb">
+<body class="d-flex flex-column min-vh-100" data-bs-spy="scroll" data-bs-target="#sections_nav"
+      data-bs-smooth-scroll="true" tabindex="0">
+<nav class="navbar navbar-expand-lg bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="https://open-reaction-database.org">
+            <img src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg" alt=""
+                 height="30px">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/browse">Browse</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/search">Search</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/editor">Contribute</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://open-reaction-database.org">Docs</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<nav id="breadcrumbs" aria-label="breadcrumb">
+    <div class="container pt-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ url_for('.show_root') }}">Home</a>
-            </li>
             {% if dataset_id %}
                 <li class="breadcrumb-item">
-                    <a href="{{ url_for('.show_root') }}?dataset_ids={{ dataset_id }}&limit=100">{{ dataset_id }}</a>
+                    <a href="{{ url_for('.show_search', dataset_ids=dataset_id, limit=100) }}">{{ dataset_id }}</a>
                 </li>
             {% endif %}
             <li class="breadcrumb-item active" aria-current="page">
                 <span id="reaction_id">{{ reaction.reaction_id }}</span>
             </li>
         </ol>
-    </nav>
-</div>
-<div id="nav">
-    <div class="navSection" data-section="summary">Summary</div>
-    <div class="navSection" data-section="identifiers">Identifiers</div>
-    <div class="navSection" data-section="inputs">Inputs</div>
-    {% if reaction.setup|defined %}
-        <div class="navSection" data-section="setup">Setup</div>
-    {% endif %}
-    {% if reaction.conditions|defined %}
-        <div class="navSection" data-section="conditions">Conditions</div>
-    {% endif %}
-    {% if reaction.notes|defined %}
-        <div class="navSection" data-section="notes">Notes</div>
-    {% endif %}
-    {% if reaction.observations %}
-        <div class="navSection" data-section="observations">Observations</div>
-    {% endif %}
-    {% if reaction.workups %}
-        <div class="navSection" data-section="workups">Workups</div>
-    {% endif %}
-    <div class="navSection" data-section="outcomes">Outcomes</div>
-    <div class="navSection" data-section="provenance">Provenance</div>
-    <div class="navSection" data-section="record">Full Record</div>
-</div>
-<div id="sections">
-    <div id="summary" class="section">
+    </div>
+</nav>
+<nav id="sections_nav" class="navbar sticky-top bg-white">
+    <div class="container">
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a class="list-group-item list-group-item-action" href="#summary">Summary</a>
+            </li>
+            <li class="nav-item">
+                <a class="list-group-item list-group-item-action" href="#identifiers">Identifiers</a>
+            </li>
+            <li class="nav-item">
+                <a class="list-group-item list-group-item-action" href="#inputs">Inputs</a>
+            </li>
+            {% if reaction.setup|defined %}
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action" href="#setup">Setup</a>
+                </li>
+            {% endif %}
+            {% if reaction.conditions|defined %}
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action" href="#conditions">Conditions</a>
+                </li>
+            {% endif %}
+            {% if reaction.notes|defined %}
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action" href="#notes">Notes</a>
+                </li>
+            {% endif %}
+            {% if reaction.observations %}
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action" href="#observations">Observations</a>
+                </li>
+            {% endif %}
+            {% if reaction.workups %}
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action" href="#workups">Workups</a>
+                </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="list-group-item list-group-item-action" href="#outcomes">Outcomes</a>
+            </li>
+            <li class="nav-item">
+                <a class="list-group-item list-group-item-action" href="#provenance">Provenance</a>
+            </li>
+            <li class="nav-item">
+                <a class="list-group-item list-group-item-action" href="#record">Full Record</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div id="sections" class="container mb-3">
+    <div id="summary" class="section" style="margin-top: 12px;">
         {{ reaction_summary|safe }}
     </div>
     <div id="identifiers" class="section">
@@ -214,7 +242,8 @@
                 {% for key, value in reaction.inputs|sort_addition_order %}
                     <button type="button" class="nav-link" data-bs-toggle="tab"
                             data-bs-target="#input_tabs-{{ loop.index }}"
-                            role="tab">{{ key }}</button>
+                            role="tab">{{ key }}
+                    </button>
                 {% endfor %}
             </div>
         </nav>
@@ -887,7 +916,8 @@
                 {% for outcome in reaction.outcomes %}
                     <button type="button" class="nav-link" data-bs-toggle="tab"
                             data-bs-target="#outcome-{{ loop.index }}"
-                            role="tab">Outcome #{{ loop.index }}</button>
+                            role="tab">Outcome #{{ loop.index }}
+                    </button>
                 {% endfor %}
             </div>
         </nav>
@@ -917,7 +947,8 @@
                                 <button type="button" class="nav-link" data-bs-toggle="tab"
                                         data-bs-target="#outcome-{{ outcome_loop.index }}_product-{{ loop.index }}"
                                         role="tab">Product
-                                    #{{ loop.index }}</button>
+                                    #{{ loop.index }}
+                                </button>
                             {% endfor %}
                         </div>
                     </nav>
@@ -991,7 +1022,8 @@
                                 {% for key, value in outcome.analyses.items() %}
                                     <button type="button" class="nav-link" data-bs-toggle="tab"
                                             data-bs-target="#outcome-{{ outcome_loop.index }}_analysis-{{ loop.index }}"
-                                            role="tab">{{ key }}</button>
+                                            role="tab">{{ key }}
+                                    </button>
                                 {% endfor %}
                             </div>
                         </nav>
@@ -1101,7 +1133,8 @@
                     {% for event in reaction.provenance|events %}
                         <button type="button" class="nav-link" data-bs-toggle="tab"
                                 data-bs-target="#record_event-{{ loop.index }}"
-                                role="tab">{{ event.time|datetimeformat }}</button>
+                                role="tab">{{ event.time|datetimeformat }}
+                        </button>
                     {% endfor %}
                 </div>
             </nav>
@@ -1157,42 +1190,28 @@
         </div>
     </div>
     <div id="record" class="section">
-        <h2>Full Record</h2>
+        <h3>Full Record</h3>
         <div>
-            <button class="toggle_raw_button">Show</button>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#pbtxt"
+                    aria-expanded="false" aria-controls="pbtxt">Toggle Full Record
+            </button>
         </div>
-        <pre class="raw hidden">{{ reaction|pbtxt|safe }}</pre>
+        <div id="pbtxt" class="collapse pt-3">
+            <pre>{{ reaction|pbtxt|safe }}</pre>
+        </div>
     </div>
 </div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
-        crossorigin="anonymous"></script>
+<!-- https://radu.link/make-footer-stay-bottom-page-bootstrap/ -->
+<footer class="bg-light text-center mt-auto">
+    <div class="p-3">
+        &copy; Copyright 2022 Open Reaction Database Project Authors
+    </div>
+</footer>
 <script>
     document.body.onload = function () {
+        // Select the first tab in each group.
         $('.nav-tabs').each(function () {
-            // Select the first tab in each group.
             $('.nav-link', this).first().trigger('click');
-        });
-        const navSections = $('.navSection');
-        navSections.click(event => {
-            const section = $(event.target).attr('data-section');
-            $('#' + section)[0].scrollIntoView({behavior: 'smooth'});
-        });
-        if (location.hash) {
-            const section = location.hash.replace('#', '');
-            $('#' + section)[0].scrollIntoView({behavior: 'smooth'});
-        }
-        $('.toggle_raw_button').on('click', function () {
-            const element = $(this);
-            const target = element.parent().siblings('.raw');
-            if (element.text() === 'Show') {
-                target.show();
-                element.text('Hide');
-            } else {
-                target.hide();
-                element.text('Show');
-            }
         });
         // Initialize tooltips.
         $(function () {
@@ -1200,29 +1219,6 @@
                 placement: 'right',  // See https://stackoverflow.com/a/54092070.
                 trigger: 'click',
             });
-        });
-        // Set up the sidebar observer.
-        const navSelectors = {};
-        navSections.each((index, selector) => {
-            selector = $(selector);
-            const section = selector.attr('data-section');
-            navSelectors[section] = selector;
-        });
-        const headerSize = $('#header').outerHeight();
-        const observerOptions = {rootMargin: '-' + headerSize + 'px 0px 0px 0px'};
-        const observer = new IntersectionObserver(function (entries) {
-            entries.forEach(entry => {
-                const target = $(entry.target);
-                const section = target.attr('id');
-                if (entry.isIntersecting) {
-                    navSelectors[section].css('background-color', 'lightblue');
-                } else {
-                    navSelectors[section].css('background-color', '');
-                }
-            });
-        }, observerOptions);
-        $('.section').each(function () {
-            observer.observe(this);
         });
     };
 </script>

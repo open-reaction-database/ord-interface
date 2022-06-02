@@ -742,7 +742,8 @@ def _oneof(message, name="kind"):
 
 def _defined(message):
     """Returns whether the message is defined (not empty)."""
-    return message != type(message)()
+    # NOTE(skearnes): Add the first bool check to avoid mysterious segfaults.
+    return bool(str(message)) and message != type(message)()
 
 
 def _type(message):

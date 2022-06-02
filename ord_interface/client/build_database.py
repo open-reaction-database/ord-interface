@@ -270,6 +270,9 @@ def process_dataset(filename: str, cursor: psycopg2.extensions.cursor,
         logging.info('TESTING: Dataset is not in _TEST_DATASETS')
         return
     dataset = message_helpers.load_message(filename, dataset_pb2.Dataset)
+    # Update datasets table.
+    cursor.execute('INSERT INTO datasets VALUES (%s, %s, %s)',
+                   (dataset.dataset_id, dataset.name, dataset.description))
     if downsample and len(dataset.reactions) > _TEST_DATASET_SIZE:
         # Downsample ord-data Datasets for testing.
         logging.info('TESTING: Downsampling from %d->%d reactions',

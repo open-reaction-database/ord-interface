@@ -13,7 +13,7 @@ $ docker-compose up
 ```
 That builds the editor, launches it in a container, and points it at a second
 container running Postgres where the editor keeps its state. You can see the
-editor at [http://localhost:5000/](http://localhost:5000).
+editor at [http://localhost:5001/](http://localhost:5001).
 
 The first time you do this runs, you must initialize the Postgres schema.
 ```

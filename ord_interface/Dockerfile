@@ -64,7 +64,7 @@ RUN npm install google-closure-compiler
 WORKDIR /usr/src/app
 RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
 WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.3.15
+ARG ORD_SCHEMA_TAG=v0.3.16
 RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
 RUN pip install -r requirements.txt
 RUN python setup.py install
@@ -76,10 +76,14 @@ RUN pip install -r requirements.txt
 RUN pip install gunicorn
 
 # Copy the local state.
-COPY ord_interface/editor/ ord_interface/editor/
+COPY ord_interface/editor/js/ ord_interface/editor/js/
+COPY ord_interface/editor/Makefile ord_interface/editor
 WORKDIR ord_interface/editor
 RUN make
 WORKDIR ../..
+# Copy the rest of the editor files.
+COPY ord_interface/editor/ ord_interface/editor/
+# Now copy everything else.
 COPY ord_interface/interface.py ord_interface/
 COPY ord_interface/client/ ord_interface/client/
 COPY ord_interface/visualization/ ord_interface/visualization/
@@ -87,9 +91,9 @@ COPY setup.py .
 RUN python setup.py install
 
 # Build and launch the interface.
-EXPOSE 5000
+EXPOSE 5001
 CMD gunicorn ord_interface.interface:app \
-    --bind 0.0.0.0:5000 \
+    --bind 0.0.0.0:5001 \
     --workers 2 \
     --access-logfile - \
     --access-logformat '%(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
