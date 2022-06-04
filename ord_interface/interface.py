@@ -44,8 +44,3 @@ def show_browse():
 def show_search():
     return flask.redirect(
         flask.url_for('client.show_search', **flask.request.args))
-
-
-@app.route('/docs')
-def show_docs():
-    return flask.redirect('docs.open-reaction-database.org')
