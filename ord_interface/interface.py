@@ -13,12 +13,15 @@
 # limitations under the License.
 """Entrypoint for the web interface."""
 import flask
+# import flask_talisman
 
 from ord_interface.client import search
 from ord_interface.editor.py import serve
 from ord_interface.visualization import filters
 
 app = flask.Flask(__name__)
+# https://flask.palletsprojects.com/en/2.1.x/security/#security-headers
+# flask_talisman.Talisman(app)
 # TODO(skearnes): Figure out bp.add_app_template_filter?
 app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
 app.register_blueprint(search.bp)

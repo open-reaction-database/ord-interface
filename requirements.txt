@@ -1,5 +1,6 @@
 absl-py>=0.9.0
 flask>=1.1.2
+flask-talisman>=1.0.0
 jinja2>=2.0.0
 pandas>=1.0.4
 protobuf<=3.20.0

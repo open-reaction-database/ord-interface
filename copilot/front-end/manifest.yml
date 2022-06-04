@@ -26,7 +26,9 @@ http:
   # To match all requests you can use the "/" path.
   path: '/'
   # You can specify a custom health check path. The default is "/".
-  healthcheck: '/editor/healthcheck'
+  healthcheck:
+    path: '/editor/healthcheck'
+    success_codes: '200,302'
 
 # Configuration for your containers and service.
 image:
@@ -46,7 +48,6 @@ count:          # Number of tasks that should be running in your service.
   memory_percentage: 80
   requests: 10000
   response_time: 2s
-exec: true     # Enable running commands in your container.
 
 secrets:
   GH_CLIENT_ID: /copilot/ord-editor/secrets/GH_CLIENT_ID
