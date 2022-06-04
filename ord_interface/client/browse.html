@@ -39,6 +39,7 @@
             src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript"
             src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.0/b-2.2.3/b-html5-2.2.3/fh-3.2.3/sb-1.3.3/sp-2.0.1/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.12.1/dataRender/ellipsis.js"></script>
     <style>
         .dataset_id :not(th) {
             font-family: var(--bs-font-monospace) !important;
@@ -79,7 +80,7 @@
     </div>
 </nav>
 <div id="datasets" class="container mt-3">
-    <table id="datasets_table" class="display">
+    <table id="datasets_table" class="display table">
         <thead>
         <tr>
             <th>Dataset ID</th>
@@ -118,10 +119,14 @@
                         render: function (data) {
                             const link = '/search?dataset_ids=' + data + '&limit=100';
                             return '<a href="' + link + '">' + data + '</a>';
-                        }
+                        },
                     },
                     {data: "Name", className: "dataset_table_cell"},
-                    {data: "Description", className: "dataset_table_cell"},
+                    {
+                        data: "Description",
+                        className: "dataset_table_cell",
+                        render: $.fn.dataTable.render.ellipsis(50),
+                    },
                     {data: "Size", className: "dataset_table_cell"},
                 ],
             });
