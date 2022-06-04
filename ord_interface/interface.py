@@ -13,6 +13,7 @@
 # limitations under the License.
 """Entrypoint for the web interface."""
 import flask
+# TODO(skearnes): Figure out how to use this.
 # import flask_talisman
 
 from ord_interface.client import search
@@ -21,6 +22,7 @@ from ord_interface.visualization import filters
 
 app = flask.Flask(__name__)
 # https://flask.palletsprojects.com/en/2.1.x/security/#security-headers
+# TODO(skearnes): Figure out how to use this.
 # flask_talisman.Talisman(app)
 # TODO(skearnes): Figure out bp.add_app_template_filter?
 app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
@@ -42,3 +44,8 @@ def show_browse():
 def show_search():
     return flask.redirect(
         flask.url_for('client.show_search', **flask.request.args))
+
+
+@app.route('/docs')
+def show_docs():
+    return flask.redirect('docs.open-reaction-database.org')
