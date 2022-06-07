@@ -306,11 +306,11 @@ def main(kwargs):
     if not filenames:
         raise ValueError("--input did not match any files")
     connection = psycopg2.connect(
-        dbname=kwargs.get("--dbname", ord_interface.client.POSTGRES_DB),
-        user=kwargs.get("--user", ord_interface.client.POSTGRES_USER),
-        password=kwargs.get("--password", ord_interface.client.POSTGRES_PASSWORD),
+        dbname=kwargs["--dbname"] or ord_interface.client.POSTGRES_DB,
+        user=kwargs["--user"] or ord_interface.client.POSTGRES_USER,
+        password=kwargs["--password"] or ord_interface.client.POSTGRES_PASSWORD,
         host=kwargs["--host"],
-        port=kwargs.get("--port", ord_interface.client.POSTGRES_PORT),
+        port=kwargs["--port"] or ord_interface.client.POSTGRES_PORT,
     )
     with connection:
         with connection.cursor() as cursor:

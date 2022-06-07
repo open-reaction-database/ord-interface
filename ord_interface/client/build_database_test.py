@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for ord_interface.build_database."""
-import contextlib
 import os
 
 import docopt
@@ -27,25 +26,24 @@ import ord_interface
 from ord_interface.client import build_database
 
 
-@contextlib.contextmanager
 def connect(dbname):
-    with psycopg2.connect(
+    return psycopg2.connect(
         dbname=dbname,
         user=ord_interface.client.POSTGRES_USER,
         password=ord_interface.client.POSTGRES_PASSWORD,
         host="localhost",
         port=ord_interface.client.POSTGRES_PORT,
-    ) as connection:
-        yield connection
+    )
 
 
 @pytest.fixture
-def dataset_filename(tmp_path):
+def dataset_filename(tmp_path) -> str:
     # Create a test database.
-    with connect(ord_interface.client.POSTGRES_DB) as connection:
-        connection.set_session(autocommit=True)
-        with connection.cursor() as cursor:
-            cursor.execute("CREATE DATABASE test;")
+    connection = connect(ord_interface.client.POSTGRES_DB)
+    connection.set_session(autocommit=True)
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE DATABASE test;")
+    connection.close()
     # Create a test dataset.
     reaction = reaction_pb2.Reaction()
     reaction.reaction_id = "test"
@@ -65,10 +63,11 @@ def dataset_filename(tmp_path):
     message_helpers.write_message(dataset, dataset_filename)
     yield dataset_filename
     # Remove the test database.
-    with connect(ord_interface.client.POSTGRES_DB) as connection:
-        connection.set_session(autocommit=True)
-        with connection.cursor() as cursor:
-            cursor.execute("DROP DATABASE test;")
+    connection = connect(ord_interface.client.POSTGRES_DB)
+    connection.set_session(autocommit=True)
+    with connection.cursor() as cursor:
+        cursor.execute("DROP DATABASE test;")
+    connection.close()
 
 
 def test_main(dataset_filename):
@@ -76,7 +75,8 @@ def test_main(dataset_filename):
     argv = ["--input", input_pattern, "--dbname", "test"]
     build_database.main(docopt.docopt(build_database.__doc__, argv))
     # Sanity checks.
-    with connect("test") as connection:
+    connection = connect("test")
+    with connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT * from reactions LIMIT 1;")
             row = cursor.fetchone()
@@ -87,3 +87,4 @@ def test_main(dataset_filename):
             cursor.execute("SELECT * from outputs LIMIT 1;")
             row = cursor.fetchone()
             assert len(row) == 3
+    connection.close()

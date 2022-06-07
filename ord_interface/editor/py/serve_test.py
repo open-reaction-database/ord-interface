@@ -98,7 +98,7 @@ def test_show_root(client):
     assert response.status_code == 200
 
 
-def test_show_datasets():
+def test_show_datasets(client):
     response = client.get("/datasets", follow_redirects=True)
     assert response.status_code == 200
 
@@ -145,8 +145,8 @@ def test_download_dataset(client, filename, expected, tmp_path):
         ("other", "pbtxt", 404),
     ),
 )
-def test_download_dataset_with_kind(self, filename, kind, expected, tmp_path):
-    response = self.client.get(f"/dataset/{filename}/download/{kind}", follow_redirects=True)
+def test_download_dataset_with_kind(client, filename, kind, expected, tmp_path):
+    response = client.get(f"/dataset/{filename}/download/{kind}", follow_redirects=True)
     assert response.status_code == expected
     if response.status_code == 200:
         # Make sure it parses.
@@ -321,8 +321,8 @@ def test_read_upload(client):
 @pytest.mark.parametrize(
     "message,expected_num_errors,expected_num_warnings",
     (
-        ("percentage", reaction_pb2.Percentage(value=15.6), 0, 0),
-        ("bad_precision", reaction_pb2.Percentage(precision=-15.6), 2, 0),
+        (reaction_pb2.Percentage(value=15.6), 0, 0),
+        (reaction_pb2.Percentage(precision=-15.6), 2, 0),
     ),
 )
 def test_validate_reaction(client, message, expected_num_errors, expected_num_warnings):

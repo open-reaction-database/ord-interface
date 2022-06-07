@@ -49,21 +49,21 @@ jobs:
       - uses: s-weigand/setup-conda@v1
         with:
           python-version: 3.7
-      - name: Run black
-        run: |
-          cd "${GITHUB_WORKSPACE}/ord-interface"
-          black --check .
       - name: Install ord-schema
         run: |
           cd "${GITHUB_WORKSPACE}/ord-schema"
           pip install -r requirements.txt
           conda install -c rdkit rdkit
           python setup.py install
-      - name: Run pylint
+      - name: Run black
         run: |
           cd "${GITHUB_WORKSPACE}/ord-interface"
           pip install -r requirements.txt
           pip install flask pylint
+          black --check .
+      - name: Run pylint
+        run: |
+          cd "${GITHUB_WORKSPACE}/ord-interface"
           pylint ord_interface *.py
       - name: Run pytype
         run: |
