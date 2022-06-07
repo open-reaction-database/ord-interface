@@ -13,6 +13,7 @@
 # limitations under the License.
 """Entrypoint for the web interface."""
 import flask
+
 # TODO(skearnes): Figure out how to use this.
 # import flask_talisman
 
