@@ -36,9 +36,7 @@ def _is_true(boolean: Any) -> bool:
     return bool(boolean)
 
 
-def _count_addition_order(
-    inputs: Mapping[str,
-                    reaction_pb2.ReactionInput]) -> Iterable[Tuple[int, int]]:
+def _count_addition_order(inputs: Mapping[str, reaction_pb2.ReactionInput]) -> Iterable[Tuple[int, int]]:
     """Returns the number of inputs for each addition_order value.
 
     Args:
@@ -225,8 +223,7 @@ def _pressure_conditions_html(pressure: reaction_pb2.PressureConditions) -> str:
     return txt
 
 
-def _temperature_conditions(
-        temperature: reaction_pb2.TemperatureConditions) -> str:
+def _temperature_conditions(temperature: reaction_pb2.TemperatureConditions) -> str:
     """Generates a text description of temperature conditions.
 
     Args:
@@ -239,28 +236,17 @@ def _temperature_conditions(
     if temperature.control.type != temperature.control.UNSPECIFIED:
         txt += "The reaction was run "
         txt += {
-            temperature.control.CUSTOM:
-                "under custom temperature conditions",
-            temperature.control.AMBIENT:
-                "under ambient temperature conditions",
-            temperature.control.OIL_BATH:
-                "in an oil bath",
-            temperature.control.WATER_BATH:
-                "in a water bath",
-            temperature.control.SAND_BATH:
-                "in a sand bath",
-            temperature.control.ICE_BATH:
-                "in an ice bath",
-            temperature.control.DRY_ALUMINUM_PLATE:
-                "using an aluminum heating block",
-            temperature.control.MICROWAVE:
-                "in a microwave reactor",
-            temperature.control.DRY_ICE_BATH:
-                "in a dry ice bath",
-            temperature.control.AIR_FAN:
-                "using a fan for temperautre control",
-            temperature.control.LIQUID_NITROGEN:
-                "using liquid nitrogen for temperature control",
+            temperature.control.CUSTOM: "under custom temperature conditions",
+            temperature.control.AMBIENT: "under ambient temperature conditions",
+            temperature.control.OIL_BATH: "in an oil bath",
+            temperature.control.WATER_BATH: "in a water bath",
+            temperature.control.SAND_BATH: "in a sand bath",
+            temperature.control.ICE_BATH: "in an ice bath",
+            temperature.control.DRY_ALUMINUM_PLATE: "using an aluminum heating block",
+            temperature.control.MICROWAVE: "in a microwave reactor",
+            temperature.control.DRY_ICE_BATH: "in a dry ice bath",
+            temperature.control.AIR_FAN: "using a fan for temperautre control",
+            temperature.control.LIQUID_NITROGEN: "using liquid nitrogen for temperature control",
         }[temperature.control.type]
         txt += f" {_parenthetical_if_def(temperature.control.details)}"
         setpoint = units.format_message(temperature.setpoint)
@@ -270,7 +256,8 @@ def _temperature_conditions(
 
 
 def _temperature_conditions_html(
-    temperature: reaction_pb2.TemperatureConditions,) -> str:
+    temperature: reaction_pb2.TemperatureConditions,
+) -> str:
     """Generates an HTML-ready description of temperature conditions.
 
     Args:
@@ -302,16 +289,11 @@ def _product_color_texture(product: reaction_pb2.ProductCompound) -> str:
     txt = ""
     txt += f"{product.isolated_color} "
     txt += {
-        product.Texture.UNSPECIFIED:
-            "",
-        product.Texture.CUSTOM:
-            product.texture.details,
-        product.Texture.POWDER:
-            f"powder {_parenthetical_if_def(product.texture.details)}",
-        product.Texture.CRYSTAL:
-            f"set of crystals {_parenthetical_if_def(product.texture.details)}",
-        product.Texture.OIL:
-            f"oil {_parenthetical_if_def(product.texture.details)}",
+        product.Texture.UNSPECIFIED: "",
+        product.Texture.CUSTOM: product.texture.details,
+        product.Texture.POWDER: f"powder {_parenthetical_if_def(product.texture.details)}",
+        product.Texture.CRYSTAL: f"set of crystals {_parenthetical_if_def(product.texture.details)}",
+        product.Texture.OIL: f"oil {_parenthetical_if_def(product.texture.details)}",
     }[product.texture.type]
     if not txt.strip():
         return ""
@@ -357,8 +339,7 @@ def _analysis_format(analysis: reaction_pb2.Analysis.AnalysisType) -> str:
     }[analysis.type]
 
 
-def _compound_svg(compound: reaction_pb2.Compound,
-                  bond_length: int = 25) -> str:
+def _compound_svg(compound: reaction_pb2.Compound, bond_length: int = 25) -> str:
     """Returns an SVG string for the given compound.
 
     If the compound does not have a structural identifier, a sentinel value
@@ -376,8 +357,7 @@ def _compound_svg(compound: reaction_pb2.Compound,
         if mol:
             svg = drawing.mol_to_svg(mol, bond_length=bond_length)
             if svg is None:
-                return message_helpers.get_compound_smiles(
-                    compound) or "[Compound]"
+                return message_helpers.get_compound_smiles(compound) or "[Compound]"
             return svg
     except ValueError:
         pass
@@ -461,24 +441,15 @@ def _compound_role(compound: reaction_pb2.Compound, text: bool = False) -> str:
         limiting = ""
     if text:
         options = {
-            reaction_pb2.ReactionRole.UNSPECIFIED:
-                "",
-            reaction_pb2.ReactionRole.REACTANT:
-                f"as a {limiting} reactant",
-            reaction_pb2.ReactionRole.REAGENT:
-                "as a reagent",
-            reaction_pb2.ReactionRole.SOLVENT:
-                "as a solvent",
-            reaction_pb2.ReactionRole.CATALYST:
-                "as a catalyst",
-            reaction_pb2.ReactionRole.INTERNAL_STANDARD:
-                "as an internal standard",
-            reaction_pb2.ReactionRole.WORKUP:
-                "",
-            reaction_pb2.ReactionRole.AUTHENTIC_STANDARD:
-                "as an authentic standard",
-            reaction_pb2.ReactionRole.PRODUCT:
-                "as a product",
+            reaction_pb2.ReactionRole.UNSPECIFIED: "",
+            reaction_pb2.ReactionRole.REACTANT: f"as a {limiting} reactant",
+            reaction_pb2.ReactionRole.REAGENT: "as a reagent",
+            reaction_pb2.ReactionRole.SOLVENT: "as a solvent",
+            reaction_pb2.ReactionRole.CATALYST: "as a catalyst",
+            reaction_pb2.ReactionRole.INTERNAL_STANDARD: "as an internal standard",
+            reaction_pb2.ReactionRole.WORKUP: "",
+            reaction_pb2.ReactionRole.AUTHENTIC_STANDARD: "as an authentic standard",
+            reaction_pb2.ReactionRole.PRODUCT: "as a product",
         }
     else:
         options = {
@@ -512,15 +483,17 @@ def _compound_source_prep(compound: reaction_pb2.Compound) -> str:
     if compound.source.lot:
         txt.append(f"lot #{compound.source.lot}")
     for preparation in compound.preparations:
-        txt.append({
-            preparation.UNSPECIFIED: "",
-            preparation.CUSTOM: "",
-            preparation.NONE: "",
-            preparation.REPURIFIED: "repurified",
-            preparation.SPARGED: "sparged",
-            preparation.DRIED: "dried",
-            preparation.SYNTHESIZED: "synthesized in-house",
-        }[preparation.type])
+        txt.append(
+            {
+                preparation.UNSPECIFIED: "",
+                preparation.CUSTOM: "",
+                preparation.NONE: "",
+                preparation.REPURIFIED: "repurified",
+                preparation.SPARGED: "sparged",
+                preparation.DRIED: "dried",
+                preparation.SYNTHESIZED: "synthesized in-house",
+            }[preparation.type]
+        )
         txt.append(preparation.details)
     if any(elem for elem in txt):
         return "(" + ", ".join([elem for elem in txt if elem]) + ")"
@@ -550,12 +523,14 @@ def _vessel_prep(vessel: reaction_pb2.Vessel) -> str:
     """Returns a description of the vessel preparation."""
     preparation_strings = []
     for preparation in vessel.preparations:
-        preparation_strings.append({
-            preparation.UNSPECIFIED: "",
-            preparation.CUSTOM: "prepared",
-            preparation.NONE: "",
-            preparation.OVEN_DRIED: "oven-dried",
-        }[preparation.type])
+        preparation_strings.append(
+            {
+                preparation.UNSPECIFIED: "",
+                preparation.CUSTOM: "prepared",
+                preparation.NONE: "",
+                preparation.OVEN_DRIED: "oven-dried",
+            }[preparation.type]
+        )
     return ", ".join(preparation_strings)
 
 
@@ -587,24 +562,15 @@ def _vessel_type(vessel: reaction_pb2.Vessel) -> str:
         String description of the vessel type.
     """
     return {
-        vessel.UNSPECIFIED:
-            "vessel",
-        vessel.CUSTOM:
-            "vessel",
-        vessel.ROUND_BOTTOM_FLASK:
-            "round bottom flask",
-        vessel.VIAL:
-            "vial",
-        vessel.WELL_PLATE:
-            "well-plate",
-        vessel.MICROWAVE_VIAL:
-            "microwave vial",
-        vessel.TUBE:
-            "tube",
-        vessel.CONTINUOUS_STIRRED_TANK_REACTOR:
-            "continuous stirred-tank reactor",
-        vessel.PACKED_BED_REACTOR:
-            "packed bed reactor",
+        vessel.UNSPECIFIED: "vessel",
+        vessel.CUSTOM: "vessel",
+        vessel.ROUND_BOTTOM_FLASK: "round bottom flask",
+        vessel.VIAL: "vial",
+        vessel.WELL_PLATE: "well-plate",
+        vessel.MICROWAVE_VIAL: "microwave vial",
+        vessel.TUBE: "tube",
+        vessel.CONTINUOUS_STIRRED_TANK_REACTOR: "continuous stirred-tank reactor",
+        vessel.PACKED_BED_REACTOR: "packed bed reactor",
     }[vessel.type]
 
 
@@ -619,18 +585,18 @@ def _input_addition(reaction_input: reaction_pb2.ReactionInput) -> str:
     """
     txt = []
     if reaction_input.addition_time.value:
-        txt.append(
-            f"after {units.format_message(reaction_input.addition_time)}")
-    txt.append({
-        reaction_input.addition_speed.UNSPECIFIED: "",
-        reaction_input.addition_speed.ALL_AT_ONCE: "all at once",
-        reaction_input.addition_speed.FAST: "quickly",
-        reaction_input.addition_speed.SLOW: "slowly",
-        reaction_input.addition_speed.DROPWISE: "dropwise",
-    }[reaction_input.addition_speed.type])
+        txt.append(f"after {units.format_message(reaction_input.addition_time)}")
+    txt.append(
+        {
+            reaction_input.addition_speed.UNSPECIFIED: "",
+            reaction_input.addition_speed.ALL_AT_ONCE: "all at once",
+            reaction_input.addition_speed.FAST: "quickly",
+            reaction_input.addition_speed.SLOW: "slowly",
+            reaction_input.addition_speed.DROPWISE: "dropwise",
+        }[reaction_input.addition_speed.type]
+    )
     if reaction_input.addition_duration.value:
-        txt.append(
-            f"over {units.format_message(reaction_input.addition_duration)}")
+        txt.append(f"over {units.format_message(reaction_input.addition_duration)}")
     if any(elem for elem in txt):
         return "(" + ", ".join([elem for elem in txt if elem]) + ")"
     return ""
@@ -647,8 +613,7 @@ def _round(value: float, places=2) -> str:
     return fstring.format(value)
 
 
-def _datetimeformat(message: reaction_pb2.DateTime,
-                    format_string: str = "%Y-%m-%d / %H:%M") -> str:
+def _datetimeformat(message: reaction_pb2.DateTime, format_string: str = "%Y-%m-%d / %H:%M") -> str:
     """Formats a date/time string."""
     value = parser.parse(message.value)
     return value.strftime(format_string)
@@ -690,10 +655,7 @@ def _get_compact_products(
         reaction_pb2.ReactionRole.PRODUCT,
         reaction_pb2.ReactionRole.UNSPECIFIED,
     ]
-    return [
-        compound for compound in products
-        if compound.reaction_role in roles_to_keep
-    ]
+    return [compound for compound in products if compound.reaction_role in roles_to_keep]
 
 
 def _value_and_precision(message) -> str:

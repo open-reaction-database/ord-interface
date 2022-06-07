@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for ord_interface.build_database."""
-
 import os
 
-from absl.testing import absltest
-from absl.testing import flagsaver
+import docopt
 import psycopg2
+import pytest
 
 from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
@@ -27,71 +26,65 @@ import ord_interface
 from ord_interface.client import build_database
 
 
-class BuildDatabaseTest(absltest.TestCase):
+def connect(dbname):
+    return psycopg2.connect(
+        dbname=dbname,
+        user=ord_interface.client.POSTGRES_USER,
+        password=ord_interface.client.POSTGRES_PASSWORD,
+        host="localhost",
+        port=ord_interface.client.POSTGRES_PORT,
+    )
 
-    def setUp(self):
-        super().setUp()
-        self.host = 'localhost'
-        # Create a test database.
-        connection = self._connect(ord_interface.client.POSTGRES_DB)
-        connection.set_session(autocommit=True)
+
+@pytest.fixture
+def dataset_filename(tmp_path) -> str:
+    # Create a test database.
+    connection = connect(ord_interface.client.POSTGRES_DB)
+    connection.set_session(autocommit=True)
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE DATABASE test;")
+    connection.close()
+    # Create a test dataset.
+    reaction = reaction_pb2.Reaction()
+    reaction.reaction_id = "test"
+    reaction.identifiers.add(value="reaction", type="REACTION_SMILES")
+    input1 = reaction.inputs["input1"]
+    input1.components.add().identifiers.add(value="input1", type="SMILES")
+    input2 = reaction.inputs["input2"]
+    input2.components.add().identifiers.add(value="input2a", type="SMILES")
+    input2.components.add().identifiers.add(value="input2b", type="SMILES")
+    outcome = reaction.outcomes.add()
+    product = outcome.products.add()
+    product.measurements.add(type="YIELD", percentage={"value": 2.5})
+    product.identifiers.add(value="product", type="SMILES")
+    reaction.provenance.doi = "10.0000/test.foo"
+    dataset = dataset_pb2.Dataset(dataset_id="test_dataset", reactions=[reaction])
+    dataset_filename = (tmp_path / "test.pb").as_posix()
+    message_helpers.write_message(dataset, dataset_filename)
+    yield dataset_filename
+    # Remove the test database.
+    connection = connect(ord_interface.client.POSTGRES_DB)
+    connection.set_session(autocommit=True)
+    with connection.cursor() as cursor:
+        cursor.execute("DROP DATABASE test;")
+    connection.close()
+
+
+def test_main(dataset_filename):
+    input_pattern = os.path.join(os.path.dirname(dataset_filename), "*.pb")
+    argv = ["--input", input_pattern, "--dbname", "test"]
+    build_database.main(docopt.docopt(build_database.__doc__, argv))
+    # Sanity checks.
+    connection = connect("test")
+    with connection:
         with connection.cursor() as cursor:
-            cursor.execute('CREATE DATABASE test;')
-        connection.close()
-        # Create a test dataset.
-        self.test_subdirectory = self.create_tempdir()
-        reaction = reaction_pb2.Reaction()
-        reaction.reaction_id = 'test'
-        reaction.identifiers.add(value='reaction', type='REACTION_SMILES')
-        input1 = reaction.inputs['input1']
-        input1.components.add().identifiers.add(value='input1', type='SMILES')
-        input2 = reaction.inputs['input2']
-        input2.components.add().identifiers.add(value='input2a', type='SMILES')
-        input2.components.add().identifiers.add(value='input2b', type='SMILES')
-        outcome = reaction.outcomes.add()
-        product = outcome.products.add()
-        product.measurements.add(type='YIELD', percentage={'value': 2.5})
-        product.identifiers.add(value='product', type='SMILES')
-        reaction.provenance.doi = '10.0000/test.foo'
-        self.dataset = dataset_pb2.Dataset(dataset_id='test_dataset',
-                                           reactions=[reaction])
-        message_helpers.write_message(
-            self.dataset, os.path.join(self.test_subdirectory, 'test.pb'))
-
-    def tearDown(self):
-        # Remove the test database.
-        connection = self._connect(ord_interface.client.POSTGRES_DB)
-        connection.set_session(autocommit=True)
-        with connection.cursor() as cursor:
-            cursor.execute('DROP DATABASE test;')
-        connection.close()
-
-    def _connect(self, dbname):
-        return psycopg2.connect(dbname=dbname,
-                                user=ord_interface.client.POSTGRES_USER,
-                                password=ord_interface.client.POSTGRES_PASSWORD,
-                                host=self.host,
-                                port=ord_interface.client.POSTGRES_PORT)
-
-    def test_main(self):
-        input_pattern = os.path.join(self.test_subdirectory, '*.pb')
-        with flagsaver.flagsaver(input=input_pattern,
-                                 dbname='test',
-                                 host=self.host):
-            build_database.main(())
-        # Sanity checks.
-        with self._connect('test') as connection:
-            with connection.cursor() as cursor:
-                cursor.execute('SELECT * from reactions LIMIT 1;')
-                row = cursor.fetchone()
-                self.assertLen(row, 5)
-                cursor.execute('SELECT * from inputs LIMIT 1;')
-                row = cursor.fetchone()
-                self.assertLen(row, 2)
-                cursor.execute('SELECT * from outputs LIMIT 1;')
-                row = cursor.fetchone()
-                self.assertLen(row, 3)
-
-
-if __name__ == '__main__':
-    absltest.main()
+            cursor.execute("SELECT * from reactions LIMIT 1;")
+            row = cursor.fetchone()
+            assert len(row) == 5
+            cursor.execute("SELECT * from inputs LIMIT 1;")
+            row = cursor.fetchone()
+            assert len(row) == 2
+            cursor.execute("SELECT * from outputs LIMIT 1;")
+            row = cursor.fetchone()
+            assert len(row) == 3
+    connection.close()

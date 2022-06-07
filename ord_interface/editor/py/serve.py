@@ -47,51 +47,48 @@ from ord_interface.visualization import drawing
 from ord_interface.visualization import generate_text
 
 # pylint: disable=invalid-name,no-member,inconsistent-return-statements,assigning-non-slot
-bp = flask.Blueprint('editor',
-                     __name__,
-                     url_prefix='/editor',
-                     template_folder='../html')
+bp = flask.Blueprint("editor", __name__, url_prefix="/editor", template_folder="../html")
 
 # For dataset merges operations like byte-value uploads and enumeration.
-TEMP = '/tmp/ord-editor'
+TEMP = "/tmp/ord-editor"
 try:
     os.mkdir(TEMP)
 except FileExistsError:
     pass
 
 # Defaults for development, overridden in docker-compose.yml.
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'postgres')
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
 # Information for GitHub OAuth authentication.
-GH_CLIENT_ID = os.getenv('GH_CLIENT_ID')
-GH_CLIENT_SECRET = os.getenv('GH_CLIENT_SECRET')
+GH_CLIENT_ID = os.getenv("GH_CLIENT_ID")
+GH_CLIENT_SECRET = os.getenv("GH_CLIENT_SECRET")
 
 # System user for immutable reactions imported from GitHub pull requests.
-REVIEWER = '8df09572f3c74dbcb6003e2eef8e48fc'
+REVIEWER = "8df09572f3c74dbcb6003e2eef8e48fc"
 # System user for automated testing.
-TESTER = '680b0d9fe649417cb092d790907bd5a5'
+TESTER = "680b0d9fe649417cb092d790907bd5a5"
 
 
-@bp.route('/')
+@bp.route("/")
 def show_root():
     """The root path redirects to the "datasets" view."""
-    return flask.redirect(flask.url_for('.show_datasets'))
+    return flask.redirect(flask.url_for(".show_datasets"))
 
 
-@bp.route('/healthcheck')
+@bp.route("/healthcheck")
 def health_check():
     """Signals that the app is alive."""
-    return flask.make_response('', 200)
+    return flask.make_response("", 200)
 
 
-@bp.route('/datasets')
+@bp.route("/datasets")
 def show_datasets():
     """Lists all the user's datasets in the datasets table."""
     names = []
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL('SELECT name FROM datasets WHERE user_id=%s')
+        query = psycopg2.sql.SQL("SELECT name FROM datasets WHERE user_id=%s")
         cursor.execute(query, [flask.g.user_id])
         for row in cursor:
             names.append(row[0])
@@ -99,14 +96,16 @@ def show_datasets():
         client_id = GH_CLIENT_ID
     else:
         client_id = None
-    return flask.render_template('datasets.html',
-                                 names=sorted(names),
-                                 user_avatar=flask.g.user_avatar,
-                                 user_name=flask.g.user_name,
-                                 client_id=client_id)
+    return flask.render_template(
+        "datasets.html",
+        names=sorted(names),
+        user_avatar=flask.g.user_avatar,
+        user_name=flask.g.user_name,
+        client_id=client_id,
+    )
 
 
-@bp.route('/dataset/<name>')
+@bp.route("/dataset/<name>")
 def show_dataset(name):
     """Lists all Reactions contained in the named dataset."""
     dataset = get_dataset(name)
@@ -119,37 +118,38 @@ def show_dataset(name):
         client_id = GH_CLIENT_ID
     else:
         client_id = None
-    return flask.render_template('dataset.html',
-                                 name=name,
-                                 freeze=freeze,
-                                 user_avatar=flask.g.user_avatar,
-                                 user_name=flask.g.user_name,
-                                 client_id=client_id)
+    return flask.render_template(
+        "dataset.html",
+        name=name,
+        freeze=freeze,
+        user_avatar=flask.g.user_avatar,
+        user_name=flask.g.user_name,
+        client_id=client_id,
+    )
 
 
-@bp.route('/dataset/<name>/download')
-@bp.route('/dataset/<name>/download/<kind>')
-def download_dataset(name, kind='pb'):
+@bp.route("/dataset/<name>/download")
+@bp.route("/dataset/<name>/download/<kind>")
+def download_dataset(name, kind="pb"):
     """Returns a pb or pbtxt from the datasets table as an attachment."""
     dataset = get_dataset(name)
     data = None
-    if kind == 'pb':
+    if kind == "pb":
         data = io.BytesIO(dataset.SerializeToString(deterministic=True))
-    elif kind == 'pbtxt':
+    elif kind == "pbtxt":
         data = io.BytesIO(text_format.MessageToBytes(dataset))
     else:
-        flask.abort(flask.make_response(f'unsupported format: {kind}', 406))
-    return flask.send_file(data,
-                           mimetype='application/protobuf',
-                           as_attachment=True,
-                           attachment_filename=f'{name}.{kind}')
+        flask.abort(flask.make_response(f"unsupported format: {kind}", 406))
+    return flask.send_file(
+        data, mimetype="application/protobuf", as_attachment=True, attachment_filename=f"{name}.{kind}"
+    )
 
 
-@bp.route('/dataset/<name>/upload', methods=['POST'])
+@bp.route("/dataset/<name>/upload", methods=["POST"])
 def upload_dataset(name):
     """Writes the request body to the datasets table without validation."""
     if exists_dataset(name):
-        response = flask.make_response(f'dataset already exists: {name}', 409)
+        response = flask.make_response(f"dataset already exists: {name}", 409)
         flask.abort(response)
     try:
         try:
@@ -159,41 +159,40 @@ def upload_dataset(name):
             text_format.Parse(flask.request.get_data(as_text=True), dataset)
         user_id = flask.g.user_id
         with flask.g.db.cursor() as cursor:
-            query = psycopg2.sql.SQL('INSERT INTO datasets VALUES (%s, %s, %s)')
+            query = psycopg2.sql.SQL("INSERT INTO datasets VALUES (%s, %s, %s)")
             cursor.execute(query, [user_id, name, serialize_for_db(dataset)])
             flask.g.db.commit()
-        return 'ok'
+        return "ok"
     except Exception as error:  # pylint: disable=broad-except
         flask.abort(flask.make_response(str(error), 406))
 
 
-@bp.route('/dataset/<name>/new', methods=['POST'])
+@bp.route("/dataset/<name>/new", methods=["POST"])
 def new_dataset(name):
     """Creates a new dataset."""
     if exists_dataset(name):
-        response = flask.make_response(f'dataset already exists: {name}', 409)
+        response = flask.make_response(f"dataset already exists: {name}", 409)
         flask.abort(response)
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL('INSERT INTO datasets VALUES (%s, %s, %s)')
+        query = psycopg2.sql.SQL("INSERT INTO datasets VALUES (%s, %s, %s)")
         user_id = flask.g.user_id
-        cursor.execute(query, [user_id, name, ''])
+        cursor.execute(query, [user_id, name, ""])
         flask.g.db.commit()
-    return 'ok'
+    return "ok"
 
 
-@bp.route('/dataset/<name>/delete')
+@bp.route("/dataset/<name>/delete")
 def delete_dataset(name):
     """Removes a Dataset."""
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL(
-            'DELETE FROM datasets WHERE user_id=%s AND name=%s')
+        query = psycopg2.sql.SQL("DELETE FROM datasets WHERE user_id=%s AND name=%s")
         user_id = flask.g.user_id
         cursor.execute(query, [user_id, name])
         flask.g.db.commit()
-    return flask.redirect(flask.url_for('.show_datasets'))
+    return flask.redirect(flask.url_for(".show_datasets"))
 
 
-@bp.route('/dataset/enumerate', methods=['POST'])
+@bp.route("/dataset/enumerate", methods=["POST"])
 def enumerate_dataset():
     """Creates a new dataset based on a template reaction and a spreadsheet.
 
@@ -208,27 +207,26 @@ def enumerate_dataset():
     """
     try:
         data = flask.request.get_json(force=True)
-        basename, suffix = os.path.splitext(data['spreadsheet_name'])
-        if data['spreadsheet_data'].startswith('data:'):
+        basename, suffix = os.path.splitext(data["spreadsheet_name"])
+        if data["spreadsheet_data"].startswith("data:"):
             # Remove the data URL prefix; see
             # https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL.
-            match = re.fullmatch('data:.*?;base64,(.*)',
-                                 data['spreadsheet_data'])
+            match = re.fullmatch("data:.*?;base64,(.*)", data["spreadsheet_data"])
+            if not match:
+                raise ValueError(f"Could not remove data URL prefix from {data['spreadsheet_name']}")
             spreadsheet_data = match.group(1)
         else:
-            spreadsheet_data = data['spreadsheet_data']
+            spreadsheet_data = data["spreadsheet_data"]
         spreadsheet_data = io.BytesIO(base64.b64decode(spreadsheet_data))
         dataframe = templating.read_spreadsheet(spreadsheet_data, suffix=suffix)
-        dataset = templating.generate_dataset(data['template_string'],
-                                              dataframe,
-                                              validate=False)
-        put_dataset(f'{basename}_dataset', dataset)
-        return 'ok'
+        dataset = templating.generate_dataset(data["template_string"], dataframe, validate=False)
+        put_dataset(f"{basename}_dataset", dataset)
+        return "ok"
     except Exception as error:  # pylint: disable=broad-except
         flask.abort(flask.make_response(str(error), 406))
 
 
-@bp.route('/dataset/<name>/reaction/<index>')
+@bp.route("/dataset/<name>/reaction/<index>")
 def show_reaction(name, index):
     """Render the page representing a single Reaction."""
     dataset = get_dataset(name)
@@ -244,46 +242,45 @@ def show_reaction(name, index):
         client_id = GH_CLIENT_ID
     else:
         client_id = None
-    return flask.render_template('reaction.html',
-                                 name=name,
-                                 index=index,
-                                 freeze=freeze,
-                                 user_avatar=flask.g.user_avatar,
-                                 user_name=flask.g.user_name,
-                                 client_id=client_id)
+    return flask.render_template(
+        "reaction.html",
+        name=name,
+        index=index,
+        freeze=freeze,
+        user_avatar=flask.g.user_avatar,
+        user_name=flask.g.user_name,
+        client_id=client_id,
+    )
 
 
-@bp.route('/reaction/id/<reaction_id>')
+@bp.route("/reaction/id/<reaction_id>")
 def show_reaction_id(reaction_id):
     """Displays the given reaction."""
-    return flask.render_template('reaction.html',
-                                 reaction_id=reaction_id,
-                                 freeze=True)
+    return flask.render_template("reaction.html", reaction_id=reaction_id, freeze=True)
 
 
-@bp.route('/reaction/download', methods=['POST'])
+@bp.route("/reaction/download", methods=["POST"])
 def download_reaction():
     """Returns a pbtxt file parsed from POST data as an attachment."""
     reaction = reaction_pb2.Reaction()
     reaction.ParseFromString(flask.request.get_data())
     data = io.BytesIO(text_format.MessageToBytes(reaction))
-    return flask.send_file(data,
-                           mimetype='application/protobuf',
-                           as_attachment=True,
-                           attachment_filename='reaction.pbtxt')
+    return flask.send_file(
+        data, mimetype="application/protobuf", as_attachment=True, attachment_filename="reaction.pbtxt"
+    )
 
 
-@bp.route('/dataset/<name>/new/reaction')
+@bp.route("/dataset/<name>/new/reaction")
 def new_reaction(name):
     """Adds a new Reaction to the named Dataset and redirects to it."""
     dataset = get_dataset(name)
     reaction = dataset.reactions.add()
-    reaction.reaction_id = f'ord-{uuid.uuid4().hex}'
+    reaction.reaction_id = f"ord-{uuid.uuid4().hex}"
     put_dataset(name, dataset)
     return flask.redirect(flask.url_for(".show_dataset", name=name))
 
 
-@bp.route('/dataset/<name>/clone/<index>')
+@bp.route("/dataset/<name>/clone/<index>")
 def clone_reaction(name, index):
     """Copies a specific Reaction to the Dataset and view the Reaction."""
     dataset = get_dataset(name)
@@ -296,11 +293,10 @@ def clone_reaction(name, index):
     dataset.reactions.add().CopyFrom(dataset.reactions[index])
     index = len(dataset.reactions) - 1
     put_dataset(name, dataset)
-    return flask.redirect(flask.url_for('.show_dataset', name=name,
-                                        index=index))
+    return flask.redirect(flask.url_for(".show_dataset", name=name, index=index))
 
 
-@bp.route('/dataset/<name>/delete/reaction/<index>')
+@bp.route("/dataset/<name>/delete/reaction/<index>")
 def delete_reaction(name, index):
     """Removes a specific Reaction from the Dataset and view the Dataset."""
     dataset = get_dataset(name)
@@ -315,7 +311,7 @@ def delete_reaction(name, index):
     return flask.redirect(flask.url_for(".show_dataset", name=name))
 
 
-@bp.route('/dataset/<name>/delete/reaction_id/<reaction_id>')
+@bp.route("/dataset/<name>/delete/reaction_id/<reaction_id>")
 def delete_reaction_id(name, reaction_id):
     """Removes a Reaction reference from the Dataset and view the Dataset."""
     dataset = get_dataset(name)
@@ -326,33 +322,33 @@ def delete_reaction_id(name, reaction_id):
     flask.abort(404)
 
 
-@bp.route('/dataset/<name>/delete/reaction_id/')
+@bp.route("/dataset/<name>/delete/reaction_id/")
 def delete_reaction_id_blank(name):
     """Removes the first empty Reaction reference from the Dataset."""
-    return delete_reaction_id(name, '')
+    return delete_reaction_id(name, "")
 
 
-@bp.route('/dataset/proto/read/<name>')
+@bp.route("/dataset/proto/read/<name>")
 def read_dataset(name):
     """Returns a Dataset as a serialized protobuf."""
     dataset = get_dataset(name)
     bites = dataset.SerializeToString(deterministic=True)
     response = flask.make_response(bites)
-    response.headers.set('Content-Type', 'application/protobuf')
+    response.headers.set("Content-Type", "application/protobuf")
     return response
 
 
-@bp.route('/dataset/proto/write/<name>', methods=['POST'])
+@bp.route("/dataset/proto/write/<name>", methods=["POST"])
 def write_dataset(name):
     """Inserts a protobuf including upload tokens into the datasets table."""
     dataset = dataset_pb2.Dataset()
     dataset.ParseFromString(flask.request.get_data())
     resolve_tokens(dataset)
     put_dataset(name, dataset)
-    return 'ok'
+    return "ok"
 
 
-@bp.route('/dataset/proto/upload/<name>/<token>', methods=['POST'])
+@bp.route("/dataset/proto/upload/<name>/<token>", methods=["POST"])
 def write_upload(name, token):
     """Writes the POST body, names it <token>, and maybe updates the dataset.
 
@@ -374,16 +370,16 @@ def write_upload(name, token):
         A 200 response.
     """
     path = get_path(token)
-    with open(path, 'wb') as upload:
+    with open(path, "wb") as upload:
         upload.write(flask.request.get_data())
     with lock(name):
         dataset = get_dataset(name)
         if resolve_tokens(dataset):
             put_dataset(name, dataset)
-    return 'ok'
+    return "ok"
 
 
-@bp.route('/dataset/proto/download/<token>', methods=['POST'])
+@bp.route("/dataset/proto/download/<token>", methods=["POST"])
 def read_upload(token):
     """Echoes a POST body back to the client as a file attachment.
 
@@ -399,40 +395,35 @@ def read_upload(token):
         The POST body from the request, after passing through a file.
     """
     data = io.BytesIO(flask.request.get_data())
-    return flask.send_file(data,
-                           mimetype='application/protobuf',
-                           as_attachment=True,
-                           attachment_filename=token)
+    return flask.send_file(data, mimetype="application/protobuf", as_attachment=True, attachment_filename=token)
 
 
 def _adjust_error(error: str) -> str:
     """Strips the message name from errors to make them more readable."""
-    fields = error.split(':')
-    location = '.'.join(fields[0].strip().split('.')[1:])
-    message = ':'.join(fields[1:])
+    fields = error.split(":")
+    location = ".".join(fields[0].strip().split(".")[1:])
+    message = ":".join(fields[1:])
     if location:
-        return f'{location}: {message.strip()}'
+        return f"{location}: {message.strip()}"
     return message.strip()
 
 
-@bp.route('/dataset/proto/validate/<message_name>', methods=['POST'])
+@bp.route("/dataset/proto/validate/<message_name>", methods=["POST"])
 def validate_reaction(message_name):
     """Receives a serialized Reaction protobuf and runs validations."""
     message = message_helpers.create_message(message_name)
     message.ParseFromString(flask.request.get_data())
     if message == type(message)():
         # Do not try to validate empty messages.
-        return json.dumps({'errors': [], 'warnings': []})
+        return json.dumps({"errors": [], "warnings": []})
     options = validations.ValidationOptions(require_provenance=True)
-    output = validations.validate_message(message,
-                                          raise_on_error=False,
-                                          options=options)
+    output = validations.validate_message(message, raise_on_error=False, options=options)
     errors = list(map(_adjust_error, output.errors))
     warnings = list(map(_adjust_error, output.warnings))
-    return json.dumps({'errors': errors, 'warnings': warnings})
+    return json.dumps({"errors": errors, "warnings": warnings})
 
 
-@bp.route('/resolve/input', methods=['POST'])
+@bp.route("/resolve/input", methods=["POST"])
 def resolve_input():
     """Resolve an input string to a ReactionInput message."""
     string = flask.request.get_data().decode()
@@ -440,27 +431,26 @@ def resolve_input():
         reaction_input = resolvers.resolve_input(string)
         bites = reaction_input.SerializeToString(deterministic=True)
         response = flask.make_response(bites)
-        response.headers.set('Content-Type', 'application/protobuf')
+        response.headers.set("Content-Type", "application/protobuf")
     except (ValueError, KeyError) as error:
         return flask.abort(flask.make_response(str(error), 409))
     return response
 
 
-@bp.route('/resolve/<identifier_type>', methods=['POST'])
+@bp.route("/resolve/<identifier_type>", methods=["POST"])
 def resolve_compound(identifier_type):
     """Resolve a compound name to a SMILES string."""
     compound_name = flask.request.get_data()
     if not compound_name:
-        return ''
+        return ""
     try:
-        smiles, resolver = resolvers.name_resolve(identifier_type,
-                                                  compound_name)
+        smiles, resolver = resolvers.name_resolve(identifier_type, compound_name)
         return flask.jsonify((_canonicalize_smiles(smiles), resolver))
     except ValueError:
-        return ''
+        return ""
 
 
-@bp.route('/canonicalize', methods=['POST'])
+@bp.route("/canonicalize", methods=["POST"])
 def canonicalize_smiles():
     """Canonicalizes a SMILES string from a POST request."""
     return flask.jsonify(_canonicalize_smiles(flask.request.get_data()))
@@ -474,22 +464,22 @@ def _canonicalize_smiles(smiles):
         return smiles  # Return the original SMILES on failure.
 
 
-@bp.route('/render/reaction', methods=['POST'])
+@bp.route("/render/reaction", methods=["POST"])
 def render_reaction():
     """Receives a serialized Reaction message and returns a block of HTML
     that contains a visual summary of the reaction."""
     reaction = reaction_pb2.Reaction()
     reaction.ParseFromString(flask.request.get_data())
     if not (reaction.inputs or reaction.outcomes):
-        return ''
+        return ""
     try:
         html = generate_text.generate_html(reaction)
         return flask.jsonify(html)
     except (ValueError, KeyError):
-        return ''
+        return ""
 
 
-@bp.route('/render/compound', methods=['POST'])
+@bp.route("/render/compound", methods=["POST"])
 def render_compound():
     """Returns an HTML-tagged SVG for the given Compound."""
     compound = reaction_pb2.Compound()
@@ -498,10 +488,10 @@ def render_compound():
         mol = message_helpers.mol_from_compound(compound)
         return flask.jsonify(drawing.mol_to_svg(mol))
     except ValueError:
-        return ''
+        return ""
 
 
-@bp.route('/dataset/proto/compare/<name>', methods=['POST'])
+@bp.route("/dataset/proto/compare/<name>", methods=["POST"])
 def compare(name):
     """For testing, compares a POST body to an entry in the datasets table.
 
@@ -520,70 +510,64 @@ def compare(name):
     remote_ascii = text_format.MessageToString(remote)
     local_ascii = text_format.MessageToString(local)
     if remote_ascii != local_ascii:
-        diff = difflib.context_diff(local_ascii.splitlines(),
-                                    remote_ascii.splitlines(),
-                                    n=10)
-        print(f'Datasets differ:\n{pprint.pformat(list(diff))}')
-        return 'differs', 409  # "Conflict"
-    return 'equals'
+        diff = difflib.context_diff(local_ascii.splitlines(), remote_ascii.splitlines(), n=10)
+        print(f"Datasets differ:\n{pprint.pformat(list(diff))}")
+        return "differs", 409  # "Conflict"
+    return "equals"
 
 
-@bp.route('/js/<script>')
+@bp.route("/js/<script>")
 def js(script):
     """Accesses any built JS file by name from the Closure output directory."""
-    path = security.safe_join(
-        os.path.join(os.path.dirname(__file__), '../gen/js/ord'), script)
+    path = security.safe_join(os.path.join(os.path.dirname(__file__), "../gen/js/ord"), script)
     return flask.send_file(get_file(path), attachment_filename=script)
 
 
-@bp.route('/css/<sheet>')
+@bp.route("/css/<sheet>")
 def css(sheet):
     """Accesses any CSS file by name."""
-    path = security.safe_join(os.path.join(os.path.dirname(__file__), '../css'),
-                              sheet)
+    path = security.safe_join(os.path.join(os.path.dirname(__file__), "../css"), sheet)
     return flask.send_file(get_file(path), attachment_filename=sheet)
 
 
-@bp.route('/img/<image>')
+@bp.route("/img/<image>")
 def img(image):
     """For static images, currently used only by the template editor."""
-    path = security.safe_join(os.path.join(os.path.dirname(__file__), '../img'),
-                              image)
+    path = security.safe_join(os.path.join(os.path.dirname(__file__), "../img"), image)
     return flask.send_file(get_file(path), attachment_filename=image)
 
 
-@bp.route('/ketcher/iframe')
+@bp.route("/ketcher/iframe")
 def ketcher_iframe():
     """Accesses a website serving Ketcher."""
-    return flask.render_template('ketcher_iframe.html')
+    return flask.render_template("ketcher_iframe.html")
 
 
-@bp.route('/ketcher/info')
+@bp.route("/ketcher/info")
 def indigo():
     """Dummy indigo endpoint to prevent 404 errors."""
-    return '', 204
+    return "", 204
 
 
-@bp.route('/ketcher/<path:file>')
+@bp.route("/ketcher/<path:file>")
 def ketcher(file):
     """Accesses any built Ketcher file by name."""
-    path = security.safe_join(
-        os.path.join(os.path.dirname(__file__), '../ketcher/dist'), file)
+    path = security.safe_join(os.path.join(os.path.dirname(__file__), "../ketcher/dist"), file)
     return flask.send_file(get_file(path), attachment_filename=file)
 
 
-@bp.route('/reaction/id/deps.js')
-@bp.route('/reaction/id/<value>/deps.js')
-@bp.route('/dataset/deps.js')
-@bp.route('/dataset/<value>/deps.js')
-@bp.route('/dataset/<value>/reaction/deps.js')
+@bp.route("/reaction/id/deps.js")
+@bp.route("/reaction/id/<value>/deps.js")
+@bp.route("/dataset/deps.js")
+@bp.route("/dataset/<value>/deps.js")
+@bp.route("/dataset/<value>/reaction/deps.js")
 def deps(value=None):
     """Returns empty for deps table requests since this app doesn't use them."""
     del value  # Unused.
-    return ''
+    return ""
 
 
-@bp.route('/ketcher/molfile', methods=['POST'])
+@bp.route("/ketcher/molfile", methods=["POST"])
 def get_molfile():
     """Retrieves a POSTed Compound message string and returns a MolFile."""
     compound = reaction_pb2.Compound()
@@ -592,30 +576,29 @@ def get_molfile():
         molblock = message_helpers.molblock_from_compound(compound)
         return flask.jsonify(molblock)
     except ValueError:
-        return 'no existing structural identifier', 204
+        return "no existing structural identifier", 204
 
 
-@bp.route('/review')
+@bp.route("/review")
 def show_submissions():
     """For the review user only, render datasets with GitHub metadata."""
     if flask.g.user_id != REVIEWER:
-        return flask.redirect(flask.url_for('.show_root'))
+        return flask.redirect(flask.url_for(".show_root"))
     pull_requests = collections.defaultdict(list)
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL('SELECT name FROM datasets WHERE user_id=%s')
+        query = psycopg2.sql.SQL("SELECT name FROM datasets WHERE user_id=%s")
         cursor.execute(query, [REVIEWER])
         for row in cursor:
             name = row[0]
-            match = re.match('^PR_([0-9]+) ___(.*)___ (.*)', name)
+            match = re.match("^PR_([0-9]+) ___(.*)___ (.*)", name)
             if match is None:
                 continue
             number, title, short_name = match.groups()
             pull_requests[(number, title)].append((short_name, name))
-    return flask.render_template('submissions.html',
-                                 pull_requests=pull_requests)
+    return flask.render_template("submissions.html", pull_requests=pull_requests)
 
 
-@bp.route('/review/sync')
+@bp.route("/review/sync")
 def sync_reviews():
     """Import all current pull requests into the datasets table.
 
@@ -623,53 +606,49 @@ def sync_reviews():
     the PR title text. These are encoded into the dataset name in Postgres
     using delimiters."""
     if flask.g.user_id != REVIEWER:
-        return flask.redirect(flask.url_for('.show_root'))
+        return flask.redirect(flask.url_for(".show_root"))
     client = github.Github()
-    repo = client.get_repo('Open-Reaction-Database/ord-data')
+    repo = client.get_repo("Open-Reaction-Database/ord-data")
     user_id = flask.g.user_id
     with flask.g.db.cursor() as cursor:
         # First reset all datasets under review.
-        query = psycopg2.sql.SQL('DELETE FROM datasets WHERE user_id=%s')
+        query = psycopg2.sql.SQL("DELETE FROM datasets WHERE user_id=%s")
         cursor.execute(query, [REVIEWER])
         # Then import all datasets from open PR's.
         for pr in repo.get_pulls():
             for remote in pr.get_files():
                 response = requests.get(remote.raw_url)
-                if remote.filename.endswith('.pbtxt'):
+                if remote.filename.endswith(".pbtxt"):
                     dataset = dataset_pb2.Dataset()
                     text_format.Parse(response.text, dataset)
-                elif remote.filename.endswith('.pb'):
+                elif remote.filename.endswith(".pb"):
                     dataset = dataset_pb2.Dataset.FromString(response.content)
                 else:
                     continue
                 prefix = remote.filename[:-6]
-                name = f'PR_{pr.number} ___{pr.title}___ {prefix}'
-                query = psycopg2.sql.SQL(
-                    'INSERT INTO datasets VALUES (%s, %s, %s)')
-                cursor.execute(
-                    query,
-                    [user_id, name, serialize_for_db(dataset)])
+                name = f"PR_{pr.number} ___{pr.title}___ {prefix}"
+                query = psycopg2.sql.SQL("INSERT INTO datasets VALUES (%s, %s, %s)")
+                cursor.execute(query, [user_id, name, serialize_for_db(dataset)])
     flask.g.db.commit()
-    return flask.redirect(flask.url_for('.show_submissions'))
+    return flask.redirect(flask.url_for(".show_submissions"))
 
 
 @bp.after_request
 def prevent_caching(response):
     """Prevents caching any of this app's resources on the client."""
-    response.headers['Cache-Control'] = 'no-cache,no-store,must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    response.headers['Cache-Control'] = 'public, max-age=0'
+    response.headers["Cache-Control"] = "no-cache,no-store,must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.headers["Cache-Control"] = "public, max-age=0"
     # Make the user ID accessible for logging.
-    response.headers['User-Id'] = flask.g.get('user_id', 'unknown')
+    response.headers["User-Id"] = flask.g.get("user_id", "unknown")
     return response
 
 
 def get_dataset(name):
     """Reads a serialized proto from the datasets table and parses it."""
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL(
-            'SELECT serialized FROM datasets WHERE user_id=%s AND name=%s')
+        query = psycopg2.sql.SQL("SELECT serialized FROM datasets WHERE user_id=%s AND name=%s")
         cursor.execute(query, [flask.g.user_id, name])
         if cursor.rowcount == 0:
             flask.abort(404)
@@ -681,8 +660,8 @@ def put_dataset(name, dataset):
     """Write a dataset proto to the dataset table, clobbering if needed."""
     with flask.g.db.cursor() as cursor:
         query = psycopg2.sql.SQL(
-            'INSERT INTO datasets VALUES (%s, %s, %s) '
-            'ON CONFLICT (user_id, name) DO UPDATE SET serialized=%s')
+            "INSERT INTO datasets VALUES (%s, %s, %s) " "ON CONFLICT (user_id, name) DO UPDATE SET serialized=%s"
+        )
         user_id = flask.g.user_id
         serialized = serialize_for_db(dataset)
         cursor.execute(query, [user_id, name, serialized, serialized])
@@ -705,8 +684,8 @@ def lock(file_name):
     Yields:
         The locked file descriptor.
     """
-    path = get_path(file_name, suffix='.lock')
-    with open(path, 'wt') as lock_file:
+    path = get_path(file_name, suffix=".lock")
+    with open(path, "wt") as lock_file:
         fcntl.lockf(lock_file, fcntl.LOCK_EX)
         try:
             yield lock_file
@@ -729,11 +708,11 @@ def resolve_tokens(proto):
         True if a bytes_value was matched anywhere in the tree.
     """
     matched = False
-    if 'ListFields' in dir(proto):
+    if "ListFields" in dir(proto):
         for descriptor, message in proto.ListFields():
-            if descriptor.name == 'bytes_value':
+            if descriptor.name == "bytes_value":
                 try:
-                    token = message[:20].decode('utf8')
+                    token = message[:20].decode("utf8")
                 except UnicodeDecodeError:
                     # Client generated tokens are utf-8 decodable.
                     # (see js/uploads.js) So if the value is not utf-8
@@ -742,17 +721,17 @@ def resolve_tokens(proto):
                     # actual binary data from an upload that's already been
                     # processed.)
                     continue
-                if token.startswith('upload_'):
+                if token.startswith("upload_"):
                     path = get_path(token)
                     if os.path.isfile(path):
-                        with open(path, 'rb') as f:
+                        with open(path, "rb") as f:
                             proto.bytes_value = f.read()
                         matched = True
             matched |= resolve_tokens(message)
-    elif 'append' in dir(proto):
+    elif "append" in dir(proto):
         for message in proto:
             matched |= resolve_tokens(message)
-    elif 'keys' in dir(proto):
+    elif "keys" in dir(proto):
         for key in proto.keys():
             message = proto[key]
             matched |= resolve_tokens(message)
@@ -763,7 +742,7 @@ def get_file(path):
     """Get file contents as a BytesIO object."""
     if not os.path.exists(path):
         flask.abort(404)
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         # NOTE(kearnes): Workaround for unclosed file warnings. See
         # https://github.com/pallets/werkzeug/issues/1785.
         data = io.BytesIO(f.read())
@@ -781,7 +760,7 @@ def get_user_path():
     return security.safe_join(TEMP, flask.g.user_id)
 
 
-def get_path(file_name, suffix=''):
+def get_path(file_name, suffix=""):
     """Returns a safe path in the user's temp directory.
 
     Uses security.safe_join to check for directory traversal attacks.
@@ -793,32 +772,31 @@ def get_path(file_name, suffix=''):
     Returns:
         Path to the requested file.
     """
-    return security.safe_join(get_user_path(), f'{file_name}{suffix}')
+    return security.safe_join(get_user_path(), f"{file_name}{suffix}")
 
 
 def exists_dataset(name):
     """True if a dataset with the given name is defined for the current user."""
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL(
-            'SELECT 1 FROM datasets WHERE user_id=%s AND name=%s')
+        query = psycopg2.sql.SQL("SELECT 1 FROM datasets WHERE user_id=%s AND name=%s")
         user_id = flask.g.user_id
         cursor.execute(query, [user_id, name])
         return cursor.rowcount > 0
 
 
-@bp.route('/template')
+@bp.route("/template")
 def template():
     """Return a stateless web page for creating enumeration templates."""
-    return flask.render_template('template.html')
+    return flask.render_template("template.html")
 
 
-@bp.route('/login')
+@bp.route("/login")
 def show_login():
     """Presents a form to set a new access token from a given user ID."""
-    return flask.render_template('login.html', client_id=GH_CLIENT_ID)
+    return flask.render_template("login.html", client_id=GH_CLIENT_ID)
 
 
-@bp.route('/github-callback')
+@bp.route("/github-callback")
 def github_callback():
     """Grant an access token via GitHub OAuth.
 
@@ -826,29 +804,27 @@ def github_callback():
     secret key at
     https://github.com/organizations/Open-Reaction-Database/settings/applications/
     """
-    code = flask.request.args.get('code')
+    code = flask.request.args.get("code")
     data = {
-        'client_id': GH_CLIENT_ID,
-        'client_secret': GH_CLIENT_SECRET,
-        'code': code,
+        "client_id": GH_CLIENT_ID,
+        "client_secret": GH_CLIENT_SECRET,
+        "code": code,
     }
-    headers = {'Accept': 'application/json'}
-    response = requests.post('https://github.com/login/oauth/access_token',
-                             data=data,
-                             headers=headers)
-    access_token = response.json().get('access_token')
+    headers = {"Accept": "application/json"}
+    response = requests.post("https://github.com/login/oauth/access_token", data=data, headers=headers)
+    access_token = response.json().get("access_token")
     if access_token is None:
-        return flask.redirect(flask.url_for('.show_login'))
+        return flask.redirect(flask.url_for(".show_login"))
     headers = {
-        'Accept': 'application/json',
-        'Authorization': f'token {access_token}',
+        "Accept": "application/json",
+        "Authorization": f"token {access_token}",
     }
-    user = requests.get('https://api.github.com/user', headers=headers).json()
-    login = user['login']
+    user = requests.get("https://api.github.com/user", headers=headers).json()
+    login = user["login"]
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL('SELECT user_id FROM users WHERE name=%s')
+        query = psycopg2.sql.SQL("SELECT user_id FROM users WHERE name=%s")
         cursor.execute(query, [login])
-        access_token = flask.request.cookies.get('Access-Token')
+        access_token = flask.request.cookies.get("Access-Token")
         if cursor.rowcount > 0:
             # This GitHub username is already associated with an account.
             # NOTE(kearnes): This will overwrite any data that the user created
@@ -863,8 +839,7 @@ def github_callback():
         else:
             # Migrate the current user ID (from a guest account).
             with flask.g.db.cursor() as cursor:
-                query = psycopg2.sql.SQL(
-                    'SELECT user_id FROM logins WHERE access_token=%s')
+                query = psycopg2.sql.SQL("SELECT user_id FROM logins WHERE access_token=%s")
                 cursor.execute(query, [access_token])
                 user_id = cursor.fetchone()[0]
             try:
@@ -874,29 +849,29 @@ def github_callback():
     return issue_access_token(user_id)
 
 
-@bp.route('/authenticate', methods=['GET', 'POST'])
+@bp.route("/authenticate", methods=["GET", "POST"])
 def authenticate():
     """Issue a new access token for a given user ID."""
     # GET authentications always login as the test user.
-    if flask.request.method == 'GET':
+    if flask.request.method == "GET":
         return issue_access_token(TESTER)
-    user_id = flask.request.form.get('user_id')
-    if user_id is None or re.match('^[0-9a-fA-F]{32}$', user_id) is None:
-        return flask.redirect(flask.url_for('.show_login'))
+    user_id = flask.request.form.get("user_id")
+    if user_id is None or re.match("^[0-9a-fA-F]{32}$", user_id) is None:
+        return flask.redirect(flask.url_for(".show_login"))
     return issue_access_token(user_id)
 
 
 def issue_access_token(user_id):
     """Login as the given user and set the access token in a response."""
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL('INSERT INTO logins VALUES (%s, %s, %s)')
+        query = psycopg2.sql.SQL("INSERT INTO logins VALUES (%s, %s, %s)")
         access_token = uuid.uuid4().hex
         timestamp = int(time.time())
         cursor.execute(query, [access_token, user_id, timestamp])
         flask.g.db.commit()
-        response = flask.redirect(flask.url_for('.show_root'))
+        response = flask.redirect(flask.url_for(".show_root"))
         # Expires in a year.
-        response.set_cookie('Access-Token', access_token, max_age=31536000)
+        response.set_cookie("Access-Token", access_token, max_age=31536000)
         return response
 
 
@@ -907,7 +882,7 @@ def make_user():
         The 32-character generated UUID of the user, currently used in the UI.
     """
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL('INSERT INTO users VALUES (%s, %s, %s)')
+        query = psycopg2.sql.SQL("INSERT INTO users VALUES (%s, %s, %s)")
         user_id = uuid.uuid4().hex
         timestamp = int(time.time())
         cursor.execute(query, [user_id, None, timestamp])
@@ -926,12 +901,11 @@ def migrate_user(name, user_id):
         ValueError: This user_id is already associated with a GitHub account.
     """
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL('SELECT name from users WHERE user_id=%s')
+        query = psycopg2.sql.SQL("SELECT name from users WHERE user_id=%s")
         cursor.execute(query, [user_id])
         if cursor.fetchone()[0] is not None:
-            raise ValueError(
-                f'user_id {user_id} is already associated with a name')
-        query = psycopg2.sql.SQL('UPDATE users SET name=%s WHERE user_id=%s')
+            raise ValueError(f"user_id {user_id} is already associated with a name")
+        query = psycopg2.sql.SQL("UPDATE users SET name=%s WHERE user_id=%s")
         cursor.execute(query, [name, user_id])
         flask.g.db.commit()
 
@@ -939,75 +913,72 @@ def migrate_user(name, user_id):
 @bp.before_request
 def init_user():
     """Connects to the DB and authenticates the user."""
-    flask.g.db = psycopg2.connect(dbname='editor',
-                                  user=POSTGRES_USER,
-                                  password=POSTGRES_PASSWORD,
-                                  host=POSTGRES_HOST,
-                                  port=int(POSTGRES_PORT))
-    root = flask.url_for('.show_root').rstrip('/')
+    flask.g.db = psycopg2.connect(
+        dbname="editor", user=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST, port=int(POSTGRES_PORT)
+    )
+    root = flask.url_for(".show_root").rstrip("/")
     skip = [
-        f'{root}{value}' for value in [
-            '/login',
-            '/authenticate',
-            '/github-callback',
-            '/render/reaction',
-            '/render/compound',
-            '/healthcheck',
-            '/reaction/id/',
-            '/css/',
-            '/js/',
-            '/ketcher/',
-            '/dataset/proto/validate/',
+        f"{root}{value}"
+        for value in [
+            "/login",
+            "/authenticate",
+            "/github-callback",
+            "/render/reaction",
+            "/render/compound",
+            "/healthcheck",
+            "/reaction/id/",
+            "/css/",
+            "/js/",
+            "/ketcher/",
+            "/dataset/proto/validate/",
         ]
     ]
     if flask.request.path.startswith(tuple(skip)):
         return
-    if 'ord-editor-user' in flask.request.cookies:
+    if "ord-editor-user" in flask.request.cookies:
         # Respect legacy user ID's in cookies.
-        user_id = flask.request.cookies.get('ord-editor-user')
+        user_id = flask.request.cookies.get("ord-editor-user")
         response = issue_access_token(user_id)
         # Delete the old cookie to avoid a redirect loop.
-        response.set_cookie('ord-editor-user', '', expires=0)
+        response.set_cookie("ord-editor-user", "", expires=0)
         return response
-    if 'user' in flask.request.args:
+    if "user" in flask.request.args:
         # Respect legacy user ID's in URLs.
-        user_id = flask.request.args.get('user')
+        user_id = flask.request.args.get("user")
         return issue_access_token(user_id)
-    access_token = flask.request.cookies.get('Access-Token')
+    access_token = flask.request.cookies.get("Access-Token")
     if access_token is None:
         # Automatically login as a new user.
         user_id = make_user()
         return issue_access_token(user_id)
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL(
-            'SELECT user_id FROM logins WHERE access_token=%s')
+        query = psycopg2.sql.SQL("SELECT user_id FROM logins WHERE access_token=%s")
         cursor.execute(query, [access_token])
         if cursor.rowcount == 0:
             # Automatically login as a new user.
             user_id = make_user()
             return issue_access_token(user_id)
         user_id = cursor.fetchone()[0]
-        query = psycopg2.sql.SQL('SELECT name FROM users WHERE user_id=%s')
+        query = psycopg2.sql.SQL("SELECT name FROM users WHERE user_id=%s")
         cursor.execute(query, [user_id])
         name = cursor.fetchone()[0]
     flask.g.user_id = user_id
     if name is not None:
         flask.g.user_name = name
-        flask.g.user_avatar = f'https://github.com/{name}.png'
+        flask.g.user_avatar = f"https://github.com/{name}.png"
     else:
         flask.g.user_name = user_id
-        flask.g.user_avatar = \
-            'https://avatars2.githubusercontent.com/u/60754754?s=200&v=4'
+        flask.g.user_avatar = "https://avatars2.githubusercontent.com/u/60754754?s=200&v=4"
     temp = get_user_path()
     if not os.path.isdir(temp):
         os.mkdir(temp)
 
 
-@bp.route('/logout')
+@bp.route("/logout")
 def logout():
     """Clear the access token and redirect to /login."""
-    response = flask.redirect(flask.url_for('.show_login'))
-    response.set_cookie('Access-Token', '', expires=0)
+    response = flask.redirect(flask.url_for(".show_login"))
+    response.set_cookie("Access-Token", "", expires=0)
     return response
 
 
