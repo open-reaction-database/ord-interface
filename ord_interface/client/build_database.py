@@ -204,7 +204,7 @@ def _rdkit_reaction_smiles(cursor: psycopg2.extensions.cursor, table: str):
         SELECT reaction_id,
                r
         INTO {} FROM (
-            SELECT reaction_id, 
+            SELECT reaction_id,
                    reaction_from_smiles(reaction_smiles::cstring) AS r
             FROM {}) tmp
         WHERE r IS NOT NULL"""
@@ -235,9 +235,9 @@ def _rdkit_smiles(cursor: psycopg2.extensions.cursor, table: str):
             """
         SELECT reaction_id,
                m,
-               morganbv_fp(m) AS mfp2 
+               morganbv_fp(m) AS mfp2
         INTO {} FROM (
-            SELECT reaction_id, 
+            SELECT reaction_id,
                    mol_from_smiles(smiles::cstring) AS m
             FROM {}) tmp
         WHERE m IS NOT NULL"""

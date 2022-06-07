@@ -39,7 +39,6 @@ For example, a reaction query might have the following predicates:
 
 Note that a predicate is matched if it applies to _any_ input/output.
 """
-
 import abc
 import binascii
 import dataclasses
@@ -158,8 +157,8 @@ class RandomSampleQuery(ReactionQueryBase):
         del limit  # Unused.
         query = sql.SQL(
             """
-            SELECT DISTINCT dataset_id, reaction_id, serialized 
-            FROM reactions 
+            SELECT DISTINCT dataset_id, reaction_id, serialized
+            FROM reactions
             TABLESAMPLE SYSTEM_ROWS (%s)"""
         )
         args = [self._num_rows]
@@ -207,8 +206,8 @@ class DatasetIdQuery(ReactionQueryBase):
         components = [
             sql.SQL(
                 """
-            SELECT DISTINCT dataset_id, reaction_id, serialized 
-            FROM reactions 
+            SELECT DISTINCT dataset_id, reaction_id, serialized
+            FROM reactions
             WHERE dataset_id = ANY (%s)"""
             )
         ]
@@ -260,8 +259,8 @@ class ReactionIdQuery(ReactionQueryBase):
         del limit  # Unused.
         query = sql.SQL(
             """
-            SELECT DISTINCT dataset_id, reaction_id, serialized 
-            FROM reactions 
+            SELECT DISTINCT dataset_id, reaction_id, serialized
+            FROM reactions
             WHERE reaction_id = ANY (%s)"""
         )
         args = [self._reaction_ids]
@@ -373,8 +372,8 @@ class DoiQuery(ReactionQueryBase):
         components = [
             sql.SQL(
                 """
-            SELECT DISTINCT dataset_id, reaction_id, serialized 
-            FROM reactions 
+            SELECT DISTINCT dataset_id, reaction_id, serialized
+            FROM reactions
             WHERE doi = ANY (%s)"""
             )
         ]
