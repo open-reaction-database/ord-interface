@@ -46,31 +46,28 @@ import flask
 from ord_interface.client import query
 from ord_interface.visualization import generate_text
 
-bp = flask.Blueprint('client',
-                     __name__,
-                     url_prefix='/client',
-                     template_folder='.')
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'ord-postgres')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'ord-postgres')
-POSTGRES_DATABASE = os.getenv('POSTGRES_DATABASE', 'ord')
+bp = flask.Blueprint("client", __name__, url_prefix="/client", template_folder=".")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "ord-postgres")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "ord-postgres")
+POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE", "ord")
 
 BOND_LENGTH = 20
 
 
-@bp.route('/')
+@bp.route("/")
 def show_root():
     flask.redirect(flask.url_for(".show_browse"))
 
 
-@bp.route('/browse')
+@bp.route("/browse")
 def show_browse():
     """Shows the browser interface."""
-    return flask.render_template('browse.html', datasets=fetch_datasets())
+    return flask.render_template("browse.html", datasets=fetch_datasets())
 
 
-@bp.route('/search')
+@bp.route("/search")
 def show_search():
     """Shows the search interface.
 
@@ -86,33 +83,31 @@ def show_search():
         error = None
     except query.QueryException as exception:
         results = None
-        error = f'(Error) {exception}'
+        error = f"(Error) {exception}"
     if results is not None and not results:
         results = None
-        error = 'query did not match any reactions'
-    return flask.render_template('search.html',
-                                 results=results,
-                                 error=error,
-                                 query=query_json)
+        error = "query did not match any reactions"
+    return flask.render_template("search.html", results=results, error=error, query=query_json)
 
 
-@bp.route('/id/<reaction_id>')
+@bp.route("/id/<reaction_id>")
 def show_id(reaction_id):
     """Returns the pbtxt of a single reaction as plain text."""
     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
     if len(results) == 0:
         return flask.abort(404)
     reaction = results[0].reaction
-    reaction_summary = generate_text.generate_html(reaction,
-                                                   bond_length=BOND_LENGTH)
-    return flask.render_template('reaction_view.html',
-                                 reaction=reaction,
-                                 dataset_id=results[0].dataset_id,
-                                 reaction_summary=reaction_summary,
-                                 bond_length=BOND_LENGTH)
+    reaction_summary = generate_text.generate_html(reaction, bond_length=BOND_LENGTH)
+    return flask.render_template(
+        "reaction_view.html",
+        reaction=reaction,
+        dataset_id=results[0].dataset_id,
+        reaction_summary=reaction_summary,
+        bond_length=BOND_LENGTH,
+    )
 
 
-@bp.route('/render/<reaction_id>')
+@bp.route("/render/<reaction_id>")
 def render_reaction(reaction_id):
     """Renders a reaction as an HTML table with images and text."""
     command = query.ReactionIdQuery([reaction_id])
@@ -121,22 +116,23 @@ def render_reaction(reaction_id):
         return flask.abort(404)
     result = results[0]
     try:
-        html = generate_text.generate_html(reaction=result.reaction,
-                                           compact=True)
+        html = generate_text.generate_html(reaction=result.reaction, compact=True)
         return flask.jsonify(html)
     except (ValueError, KeyError):
-        return flask.jsonify('[Reaction cannot be displayed]')
+        return flask.jsonify("[Reaction cannot be displayed]")
 
 
 def connect():
-    return query.OrdPostgres(dbname=POSTGRES_DATABASE,
-                             user=POSTGRES_USER,
-                             password=POSTGRES_PASSWORD,
-                             host=POSTGRES_HOST,
-                             port=int(POSTGRES_PORT))
+    return query.OrdPostgres(
+        dbname=POSTGRES_DATABASE,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD,
+        host=POSTGRES_HOST,
+        port=int(POSTGRES_PORT),
+    )
 
 
-@bp.route('/api/fetch_reactions', methods=['POST'])
+@bp.route("/api/fetch_reactions", methods=["POST"])
 def fetch_reactions():
     """Fetches a list of Reactions by ID."""
     reaction_ids = flask.request.get_json()
@@ -156,23 +152,25 @@ def fetch_datasets() -> List[Dict[str, Union[str, int]]]:
         cursor.execute("SELECT dataset_id, name, description FROM datasets")
         for dataset_id, name, description in cursor:
             rows[dataset_id] = {
-                'Dataset ID': dataset_id,
-                'Name': name,
-                'Description': description,
-                'Size': 0,
+                "Dataset ID": dataset_id,
+                "Name": name,
+                "Description": description,
+                "Size": 0,
             }
         # Get dataset sizes.
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT dataset_id, COUNT(reaction_id)
             FROM reactions
             GROUP BY dataset_id
-            """)
+            """
+        )
         for dataset_id, count in cursor:
-            rows[dataset_id]['Size'] = count
+            rows[dataset_id]["Size"] = count
         return list(rows.values())
 
 
-@bp.route('/api/query')
+@bp.route("/api/query")
 def run_query():
     """Builds and executes a GET query.
 
@@ -181,7 +179,7 @@ def run_query():
     """
     command, limit = build_query()
     if command is None:
-        return flask.abort(flask.make_response('no query defined', 400))
+        return flask.abort(flask.make_response("no query defined", 400))
     try:
         results = connect().run_query(command, limit=limit)
         return flask.jsonify([dataclasses.asdict(result) for result in results])
@@ -196,38 +194,36 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
         query: ReactionQueryBase subclass instance.
         limit: Maximum number of results to return.
     """
-    dataset_ids = flask.request.args.get('dataset_ids')
-    reaction_ids = flask.request.args.get('reaction_ids')
-    reaction_smarts = flask.request.args.get('reaction_smarts')
-    dois = flask.request.args.get('dois')
-    components = flask.request.args.getlist('component')
-    use_stereochemistry = flask.request.args.get('use_stereochemistry')
-    similarity = flask.request.args.get('similarity')
-    limit = flask.request.args.get('limit')
+    dataset_ids = flask.request.args.get("dataset_ids")
+    reaction_ids = flask.request.args.get("reaction_ids")
+    reaction_smarts = flask.request.args.get("reaction_smarts")
+    dois = flask.request.args.get("dois")
+    components = flask.request.args.getlist("component")
+    use_stereochemistry = flask.request.args.get("use_stereochemistry")
+    similarity = flask.request.args.get("similarity")
+    limit = flask.request.args.get("limit")
     if limit is not None:
         limit = int(limit)
     if dataset_ids is not None:
-        command = query.DatasetIdQuery(dataset_ids.split(','))
+        command = query.DatasetIdQuery(dataset_ids.split(","))
     elif reaction_ids is not None:
-        command = query.ReactionIdQuery(reaction_ids.split(','))
+        command = query.ReactionIdQuery(reaction_ids.split(","))
     elif reaction_smarts is not None:
         command = query.ReactionSmartsQuery(reaction_smarts)
     elif dois is not None:
-        command = query.DoiQuery(dois.split(','))
+        command = query.DoiQuery(dois.split(","))
     elif components:
         predicates = []
         for component in components:
-            pattern, source, mode_name = component.split(';')
+            pattern, source, mode_name = component.split(";")
             table = query.ReactionComponentPredicate.SOURCE_TO_TABLE[source]
-            mode = query.ReactionComponentPredicate.MatchMode.from_name(
-                mode_name)
-            predicates.append(
-                query.ReactionComponentPredicate(pattern, table, mode))
+            mode = query.ReactionComponentPredicate.MatchMode.from_name(mode_name)
+            predicates.append(query.ReactionComponentPredicate(pattern, table, mode))
         kwargs = {}
         if use_stereochemistry is not None:
-            kwargs['do_chiral_sss'] = use_stereochemistry
+            kwargs["do_chiral_sss"] = use_stereochemistry
         if similarity is not None:
-            kwargs['tanimoto_threshold'] = float(similarity)
+            kwargs["tanimoto_threshold"] = float(similarity)
         command = query.ReactionComponentQuery(predicates, **kwargs)
     else:
         command = None

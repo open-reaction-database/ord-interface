@@ -45,9 +45,9 @@ import binascii
 import dataclasses
 import enum
 import json
+import logging
 from typing import Dict, List, Optional, Tuple
 
-from absl import logging
 import psycopg2
 import psycopg2.extensions
 from psycopg2 import sql
@@ -58,22 +58,23 @@ from ord_schema import message_helpers
 from ord_schema import validations
 from ord_schema.proto import reaction_pb2
 
+logger = logging.getLogger()
+
 
 @dataclasses.dataclass(frozen=True)
 class Result:
     """Container for a single result from database query."""
+
     dataset_id: str
     reaction_id: str
     serialized: Optional[str] = None
 
     @property
     def reaction(self) -> reaction_pb2.Reaction:
-        return reaction_pb2.Reaction.FromString(
-            binascii.unhexlify(self.serialized))
+        return reaction_pb2.Reaction.FromString(binascii.unhexlify(self.serialized))
 
-    def __eq__(self, other: 'Result') -> bool:
-        return (self.dataset_id == other.dataset_id and
-                self.reaction_id == other.reaction_id)
+    def __eq__(self, other: "Result") -> bool:
+        return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
 def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
@@ -87,10 +88,7 @@ def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
     """
     results = []
     for dataset_id, reaction_id, serialized in cursor:
-        results.append(
-            Result(reaction_id=reaction_id,
-                   dataset_id=dataset_id,
-                   serialized=serialized.tobytes().decode()))
+        results.append(Result(reaction_id=reaction_id, dataset_id=dataset_id, serialized=serialized.tobytes().decode()))
     return results
 
 
@@ -110,9 +108,7 @@ class ReactionQueryBase(abc.ABC):
         """
 
     @abc.abstractmethod
-    def run(self,
-            cursor: psycopg2.extensions.cursor,
-            limit: Optional[str] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[str] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -138,7 +134,7 @@ class RandomSampleQuery(ReactionQueryBase):
 
     def json(self) -> str:
         """Returns a JSON representation of the query."""
-        return json.dumps({'num_rows': self._num_rows})
+        return json.dumps({"num_rows": self._num_rows})
 
     def validate(self) -> None:
         """Checks the query for correctness.
@@ -147,11 +143,9 @@ class RandomSampleQuery(ReactionQueryBase):
             QueryException if the query is not valid.
         """
         if self._num_rows <= 0:
-            raise QueryException('num_rows must be greater than zero')
+            raise QueryException("num_rows must be greater than zero")
 
-    def run(self,
-            cursor: psycopg2.extensions.cursor,
-            limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -162,13 +156,14 @@ class RandomSampleQuery(ReactionQueryBase):
             List of Result instances.
         """
         del limit  # Unused.
-        query = sql.SQL("""
+        query = sql.SQL(
+            """
             SELECT DISTINCT dataset_id, reaction_id, serialized 
             FROM reactions 
-            TABLESAMPLE SYSTEM_ROWS (%s)""")
+            TABLESAMPLE SYSTEM_ROWS (%s)"""
+        )
         args = [self._num_rows]
-        logging.info('Running SQL command:%s',
-                     cursor.mogrify(query, args).decode())
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -186,7 +181,7 @@ class DatasetIdQuery(ReactionQueryBase):
 
     def json(self) -> str:
         """Returns a JSON representation of the query."""
-        return json.dumps({'datasetIds': self._dataset_ids})
+        return json.dumps({"datasetIds": self._dataset_ids})
 
     def validate(self) -> None:
         """Checks the query for correctness.
@@ -196,11 +191,9 @@ class DatasetIdQuery(ReactionQueryBase):
         """
         for dataset_id in self._dataset_ids:
             if not validations.is_valid_dataset_id(dataset_id):
-                raise QueryException(f'invalid dataset ID: {dataset_id}')
+                raise QueryException(f"invalid dataset ID: {dataset_id}")
 
-    def run(self,
-            cursor: psycopg2.extensions.cursor,
-            limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -212,18 +205,19 @@ class DatasetIdQuery(ReactionQueryBase):
             List of Result instances.
         """
         components = [
-            sql.SQL("""
+            sql.SQL(
+                """
             SELECT DISTINCT dataset_id, reaction_id, serialized 
             FROM reactions 
-            WHERE dataset_id = ANY (%s)""")
+            WHERE dataset_id = ANY (%s)"""
+            )
         ]
         args = [self._dataset_ids]
         if limit:
-            components.append(sql.SQL(' LIMIT %s'))
+            components.append(sql.SQL(" LIMIT %s"))
             args.append(limit)
-        query = sql.Composed(components).join('')
-        logging.info('Running SQL command:%s',
-                     cursor.mogrify(query, args).decode())
+        query = sql.Composed(components).join("")
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -241,7 +235,7 @@ class ReactionIdQuery(ReactionQueryBase):
 
     def json(self) -> str:
         """Returns a JSON representation of the query."""
-        return json.dumps({'reactionIds': self._reaction_ids})
+        return json.dumps({"reactionIds": self._reaction_ids})
 
     def validate(self) -> None:
         """Checks the query for correctness.
@@ -251,11 +245,9 @@ class ReactionIdQuery(ReactionQueryBase):
         """
         for reaction_id in self._reaction_ids:
             if not validations.is_valid_reaction_id(reaction_id):
-                raise QueryException(f'invalid reaction ID: {reaction_id}')
+                raise QueryException(f"invalid reaction ID: {reaction_id}")
 
-    def run(self,
-            cursor: psycopg2.extensions.cursor,
-            limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -266,13 +258,14 @@ class ReactionIdQuery(ReactionQueryBase):
             List of Result instances.
         """
         del limit  # Unused.
-        query = sql.SQL("""
+        query = sql.SQL(
+            """
             SELECT DISTINCT dataset_id, reaction_id, serialized 
             FROM reactions 
-            WHERE reaction_id = ANY (%s)""")
+            WHERE reaction_id = ANY (%s)"""
+        )
         args = [self._reaction_ids]
-        logging.info('Running SQL command:%s',
-                     cursor.mogrify(query, args).decode())
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -290,7 +283,7 @@ class ReactionSmartsQuery(ReactionQueryBase):
 
     def json(self) -> str:
         """Returns a JSON representation of the query."""
-        return json.dumps({'reactionSmarts': self._reaction_smarts})
+        return json.dumps({"reactionSmarts": self._reaction_smarts})
 
     def validate(self) -> None:
         """Checks the query for correctness.
@@ -301,15 +294,11 @@ class ReactionSmartsQuery(ReactionQueryBase):
         try:
             rxn = rdChemReactions.ReactionFromSmarts(self._reaction_smarts)
             if not rxn:
-                raise ValueError('cannot parse reaction SMARTS')
+                raise ValueError("cannot parse reaction SMARTS")
         except ValueError as error:
-            raise QueryException(
-                f'cannot parse reaction SMARTS: {self._reaction_smarts}'
-            ) from error
+            raise QueryException(f"cannot parse reaction SMARTS: {self._reaction_smarts}") from error
 
-    def run(self,
-            cursor: psycopg2.extensions.cursor,
-            limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -321,19 +310,20 @@ class ReactionSmartsQuery(ReactionQueryBase):
             List of Result instances.
         """
         components = [
-            sql.SQL("""
+            sql.SQL(
+                """
             SELECT DISTINCT dataset_id, reaction_id, serialized
             FROM reactions
             INNER JOIN rdk.reactions USING (reaction_id)
-            WHERE rdk.reactions.r@>reaction_from_smarts(%s)""")
+            WHERE rdk.reactions.r@>reaction_from_smarts(%s)"""
+            )
         ]
         args = [self._reaction_smarts]
         if limit:
-            components.append(sql.SQL(' LIMIT %s'))
+            components.append(sql.SQL(" LIMIT %s"))
             args.append(limit)
-        query = sql.Composed(components).join('')
-        logging.info('Running SQL command:%s',
-                     cursor.mogrify(query, args).decode())
+        query = sql.Composed(components).join("")
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -351,7 +341,7 @@ class DoiQuery(ReactionQueryBase):
 
     def json(self) -> str:
         """Returns a JSON representation of the query."""
-        return json.dumps({'dois': self._dois})
+        return json.dumps({"dois": self._dois})
 
     def validate(self) -> None:
         """Checks the query for correctness.
@@ -363,15 +353,13 @@ class DoiQuery(ReactionQueryBase):
             try:
                 parsed = message_helpers.parse_doi(doi)
             except ValueError as error:
-                raise QueryException(f'invalid DOI: {doi}') from error
+                raise QueryException(f"invalid DOI: {doi}") from error
             if doi != parsed:
                 # Trim the DOI as needed to match the database contents.
-                logging.info(f'Updating DOI: {doi} -> {parsed}')
+                logger.info(f"Updating DOI: {doi} -> {parsed}")
                 self._dois[i] = parsed
 
-    def run(self,
-            cursor: psycopg2.extensions.cursor,
-            limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -383,18 +371,19 @@ class DoiQuery(ReactionQueryBase):
             List of Result instances.
         """
         components = [
-            sql.SQL("""
+            sql.SQL(
+                """
             SELECT DISTINCT dataset_id, reaction_id, serialized 
             FROM reactions 
-            WHERE doi = ANY (%s)""")
+            WHERE doi = ANY (%s)"""
+            )
         ]
         args = [self._dois]
         if limit:
-            components.append(sql.SQL(' LIMIT %s'))
+            components.append(sql.SQL(" LIMIT %s"))
             args.append(limit)
-        query = sql.Composed(components).join('')
-        logging.info('Running SQL command:%s',
-                     cursor.mogrify(query, args).decode())
+        query = sql.Composed(components).join("")
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -402,10 +391,12 @@ class DoiQuery(ReactionQueryBase):
 class ReactionComponentQuery(ReactionQueryBase):
     """Matches reactions by reaction component predicates."""
 
-    def __init__(self,
-                 predicates: List['ReactionComponentPredicate'],
-                 do_chiral_sss: bool = False,
-                 tanimoto_threshold: float = 0.5) -> None:
+    def __init__(
+        self,
+        predicates: List["ReactionComponentPredicate"],
+        do_chiral_sss: bool = False,
+        tanimoto_threshold: float = 0.5,
+    ) -> None:
         """Initializes the query.
 
         Args:
@@ -421,37 +412,32 @@ class ReactionComponentQuery(ReactionQueryBase):
 
     def json(self) -> str:
         """Returns a JSON representation of the query."""
-        return json.dumps({
-            'useStereochemistry':
-                self._do_chiral_sss,
-            'similarity':
-                self._tanimoto_threshold,
-            'components': [
-                predicate.to_dict() for predicate in self._predicates
-            ],
-        })
+        return json.dumps(
+            {
+                "useStereochemistry": self._do_chiral_sss,
+                "similarity": self._tanimoto_threshold,
+                "components": [predicate.to_dict() for predicate in self._predicates],
+            }
+        )
 
-    def _setup(self, predicates: List['ReactionComponentPredicate'],
-               cursor: psycopg2.extensions.cursor) -> None:
+    def _setup(self, predicates: List["ReactionComponentPredicate"], cursor: psycopg2.extensions.cursor) -> None:
         """Prepares the database for a query.
 
         Args:
             cursor: psycopg.cursor instance.
             predicates: Predicates included in this query.
         """
-        command = sql.SQL('SET rdkit.do_chiral_sss=%s')
+        command = sql.SQL("SET rdkit.do_chiral_sss=%s")
         args = [self._do_chiral_sss]
-        logging.info('Running SQL command: %s',
-                     cursor.mogrify(command, args).decode())
+        logger.info("Running SQL command: %s", cursor.mogrify(command, args).decode())
         cursor.execute(command, args)
-        command = sql.SQL('SET rdkit.tanimoto_threshold=%s')
+        command = sql.SQL("SET rdkit.tanimoto_threshold=%s")
         tanimoto_threshold = self._tanimoto_threshold
         for predicate in predicates:
             if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
                 tanimoto_threshold = 1.0
         args = [tanimoto_threshold]
-        logging.info('Running SQL command: %s',
-                     cursor.mogrify(command, args).decode())
+        logger.info("Running SQL command: %s", cursor.mogrify(command, args).decode())
         cursor.execute(command, args)
 
     def _get_tables(self) -> List[sql.SQL]:
@@ -460,18 +446,24 @@ class ReactionComponentQuery(ReactionQueryBase):
         requires_rdk_inputs = False
         requires_rdk_outputs = False
         for predicate in self._predicates:
-            if predicate.table == 'inputs':
+            if predicate.table == "inputs":
                 requires_rdk_inputs = True
-            elif predicate.table == 'outputs':
+            elif predicate.table == "outputs":
                 requires_rdk_outputs = True
         if requires_rdk_inputs:
             tables.append(
-                sql.SQL("""
-            INNER JOIN rdk.inputs USING (reaction_id) """))
+                sql.SQL(
+                    """
+            INNER JOIN rdk.inputs USING (reaction_id) """
+                )
+            )
         if requires_rdk_outputs:
             tables.append(
-                sql.SQL("""
-            INNER JOIN rdk.outputs USING (reaction_id) """))
+                sql.SQL(
+                    """
+            INNER JOIN rdk.outputs USING (reaction_id) """
+                )
+            )
         return tables
 
     def validate(self) -> None:
@@ -486,12 +478,9 @@ class ReactionComponentQuery(ReactionQueryBase):
             else:
                 mol = Chem.MolFromSmiles(predicate.pattern)
             if not mol:
-                raise QueryException(
-                    f'cannot parse pattern: {predicate.pattern}')
+                raise QueryException(f"cannot parse pattern: {predicate.pattern}")
 
-    def run(self,
-            cursor: psycopg2.extensions.cursor,
-            limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -521,10 +510,12 @@ class ReactionComponentQuery(ReactionQueryBase):
             return other_results
         return []
 
-    def _run(self,
-             predicates: List['ReactionComponentPredicate'],
-             cursor: psycopg2.extensions.cursor,
-             limit: Optional[int] = None) -> List[Result]:
+    def _run(
+        self,
+        predicates: List["ReactionComponentPredicate"],
+        cursor: psycopg2.extensions.cursor,
+        limit: Optional[int] = None,
+    ) -> List[Result]:
         """Runs the query for a set of predicates."""
         if not predicates:
             return []
@@ -533,24 +524,29 @@ class ReactionComponentQuery(ReactionQueryBase):
         args = []
         for predicate in predicates:
             components = [
-                sql.SQL("""
+                sql.SQL(
+                    """
                 SELECT DISTINCT dataset_id, reaction_id, serialized
-                FROM reactions """)
+                FROM reactions """
+                )
             ]
             components.extend(self._get_tables())
-            components.append(sql.SQL("""
-                WHERE """))
+            components.append(
+                sql.SQL(
+                    """
+                WHERE """
+                )
+            )
             predicate_sql, predicate_args = predicate.get()
             components.append(predicate_sql)
             args.extend(predicate_args)
             predicate_components.append(sql.Composed(components))
-        components = [sql.Composed(predicate_components).join(' INTERSECT ')]
+        components = [sql.Composed(predicate_components).join(" INTERSECT ")]
         if limit:
-            components.append(sql.SQL(' LIMIT %s'))
+            components.append(sql.SQL(" LIMIT %s"))
             args.append(limit)
-        query = sql.Composed(components).join('')
-        logging.info('Running SQL command:%s',
-                     cursor.mogrify(query, args).decode())
+        query = sql.Composed(components).join("")
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -558,19 +554,20 @@ class ReactionComponentQuery(ReactionQueryBase):
 class ReactionComponentPredicate:
     """Specifies a single reaction component predicate."""
 
-    _ALLOWED_TABLES: List[str] = ['inputs', 'outputs']
-    SOURCE_TO_TABLE: Dict[str, str] = {'input': 'inputs', 'output': 'outputs'}
-    _TABLE_TO_SOURCE: Dict[str, str] = {'inputs': 'input', 'outputs': 'output'}
+    _ALLOWED_TABLES: List[str] = ["inputs", "outputs"]
+    SOURCE_TO_TABLE: Dict[str, str] = {"input": "inputs", "output": "outputs"}
+    _TABLE_TO_SOURCE: Dict[str, str] = {"inputs": "input", "outputs": "output"}
 
     class MatchMode(enum.Enum):
         """Interpretations for SMILES and SMARTS strings."""
+
         EXACT = 1
         SIMILAR = 2
         SUBSTRUCTURE = 3
         SMARTS = 4
 
         @classmethod
-        def from_name(cls, name: str) -> 'ReactionComponentPredicate.MatchMode':
+        def from_name(cls, name: str) -> "ReactionComponentPredicate.MatchMode":
             """Takes a matching criterion from a URL param."""
             return cls[name.upper()]
 
@@ -586,7 +583,7 @@ class ReactionComponentPredicate:
             ValueError: If `table` is not allowed.
         """
         if table not in self._ALLOWED_TABLES:
-            raise ValueError(f'table must be in {self._ALLOWED_TABLES}')
+            raise ValueError(f"table must be in {self._ALLOWED_TABLES}")
         self._pattern = pattern
         self._table = table
         self._mode = mode
@@ -606,9 +603,9 @@ class ReactionComponentPredicate:
     def to_dict(self) -> Dict[str, str]:
         """Returns a dict representation of the predicate."""
         return {
-            'pattern': self._pattern,
-            'source': self._TABLE_TO_SOURCE[self._table],
-            'mode': self._mode.name.lower(),
+            "pattern": self._pattern,
+            "source": self._TABLE_TO_SOURCE[self._table],
+            "mode": self._mode.name.lower(),
         }
 
     def get(self) -> Tuple[sql.Composed, List[str]]:
@@ -618,30 +615,23 @@ class ReactionComponentPredicate:
             predicate: sql.SQL query object.
             args: List of arguments for `predicate`.
         """
-        if self._mode in [
-                ReactionComponentPredicate.MatchMode.SIMILAR,
-                ReactionComponentPredicate.MatchMode.EXACT
-        ]:
-            predicate = sql.SQL('{}%%morganbv_fp(%s)').format(
-                sql.Identifier('rdk', self._table, 'mfp2'))
+        if self._mode in [ReactionComponentPredicate.MatchMode.SIMILAR, ReactionComponentPredicate.MatchMode.EXACT]:
+            predicate = sql.SQL("{}%%morganbv_fp(%s)").format(sql.Identifier("rdk", self._table, "mfp2"))
         elif self._mode == ReactionComponentPredicate.MatchMode.SUBSTRUCTURE:
-            predicate = sql.SQL('{}@>%s').format(
-                sql.Identifier('rdk', self._table, 'm'))
+            predicate = sql.SQL("{}@>%s").format(sql.Identifier("rdk", self._table, "m"))
         elif self._mode == ReactionComponentPredicate.MatchMode.SMARTS:
-            predicate = sql.SQL('{}@>%s::qmol').format(
-                sql.Identifier('rdk', self._table, 'm'))
+            predicate = sql.SQL("{}@>%s::qmol").format(sql.Identifier("rdk", self._table, "m"))
         else:
             # NOTE(kearnes): This should never happen, so I'm leaving it out of
             # the docstring.
-            raise ValueError(f'unsupported mode: {self._mode}')
+            raise ValueError(f"unsupported mode: {self._mode}")
         return predicate, [self._pattern]
 
 
 class OrdPostgres:
     """Class for performing SQL queries on the ORD."""
 
-    def __init__(self, dbname: str, user: str, password: str, host: str,
-                 port: int) -> None:
+    def __init__(self, dbname: str, user: str, password: str, host: str, port: int) -> None:
         """Initializes an instance of OrdPostgres.
 
         Args:
@@ -651,11 +641,7 @@ class OrdPostgres:
             host: Text host name.
             port: Integer port.
         """
-        self._connection = psycopg2.connect(dbname=dbname,
-                                            user=user,
-                                            password=password,
-                                            host=host,
-                                            port=port)
+        self._connection = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
         self._connection.set_session(readonly=True)
 
     @property
@@ -665,10 +651,9 @@ class OrdPostgres:
     def cursor(self) -> psycopg2.extensions.cursor:
         return self._connection.cursor()
 
-    def run_query(self,
-                  query: ReactionQueryBase,
-                  limit: Optional[int] = None,
-                  return_ids: bool = False) -> List[Result]:
+    def run_query(
+        self, query: ReactionQueryBase, limit: Optional[int] = None, return_ids: bool = False
+    ) -> List[Result]:
         """Runs a query against the database.
 
         Args:
@@ -688,9 +673,7 @@ class OrdPostgres:
         if return_ids:
             only_ids = []
             for result in results:
-                only_ids.append(
-                    Result(dataset_id=result.dataset_id,
-                           reaction_id=result.reaction_id))
+                only_ids.append(Result(dataset_id=result.dataset_id, reaction_id=result.reaction_id))
             return only_ids
         return results
 

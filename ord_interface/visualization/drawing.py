@@ -69,8 +69,7 @@ def trim_image_whitespace(image: Image.Image, padding: int = 0) -> Image.Image:
         max([min(ys_nonzero) - margin, 0]),
         min([max(ys_nonzero) + margin, as_array.shape[1]]),
     )
-    as_array_cropped = as_array[x_range[0]:x_range[1], y_range[0]:y_range[1],
-                                0:3]
+    as_array_cropped = as_array[x_range[0] : x_range[1], y_range[0] : y_range[1], 0:3]
 
     image = Image.fromarray(as_array_cropped, mode="RGB")
     return ImageOps.expand(image, border=padding, fill=255)
@@ -97,10 +96,7 @@ def mol_to_svg(  # pylint: disable=inconsistent-return-statements
     """
     Chem.Kekulize(mol)
     rdDepictor.Compute2DCoords(mol)
-    drawer = _draw_svg(mol,
-                       size_x=max_size,
-                       size_y=max_size,
-                       bond_length=bond_length)
+    drawer = _draw_svg(mol, size_x=max_size, size_y=max_size, bond_length=bond_length)
     # Find the extent of the drawn image so we can crop the canvas.
     min_x, max_x, min_y, max_y = np.inf, -np.inf, np.inf, -np.inf
     for atom in mol.GetAtoms():
@@ -115,15 +111,12 @@ def mol_to_svg(  # pylint: disable=inconsistent-return-statements
         size_y=max(min_size, int(max_y - min_y + 2 * padding)),
         bond_length=bond_length,
     )
-    match = re.search(r"(<svg\s+.*</svg>)",
-                      drawer.GetDrawingText(),
-                      flags=re.DOTALL)
+    match = re.search(r"(<svg\s+.*</svg>)", drawer.GetDrawingText(), flags=re.DOTALL)
     if match:
         return match.group(1)
 
 
-def _draw_svg(mol: Chem.Mol, size_x: int, size_y: int,
-              bond_length: int) -> Draw.MolDraw2DSVG:
+def _draw_svg(mol: Chem.Mol, size_x: int, size_y: int, bond_length: int) -> Draw.MolDraw2DSVG:
     """Creates a canvas and draws a SVG.
 
     Args:
@@ -143,10 +136,7 @@ def _draw_svg(mol: Chem.Mol, size_x: int, size_y: int,
     return drawer
 
 
-def mol_to_png(mol: Chem.Mol,
-               max_size: int = 1000,
-               bond_length: int = 25,
-               png_quality: int = 70) -> str:
+def mol_to_png(mol: Chem.Mol, max_size: int = 1000, bond_length: int = 25, png_quality: int = 70) -> str:
     """Creates a (cropped) PNG molecule drawing as a string.
 
     Args:
