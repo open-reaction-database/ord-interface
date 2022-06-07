@@ -27,17 +27,9 @@ sleep 15
 set +e
 status=0
 
-# Client tests.
-python client/build_database_test.py || status=1
-python client/ord_client_test.py || status=1
-python client/query_test.py || status=1
-
-# Editor tests.
-python editor/py/serve_test.py || status=1
+# Run tests.
+pytest || status=1
 node editor/js/test.js || status=1
-
-# Visualization tests.
-python visualization/generate_text_test.py || status=1
 
 # Shut down the containers.
 docker compose down

@@ -27,8 +27,8 @@ from ord_schema.proto import reaction_pb2
 
 from ord_interface.client import query
 
-TARGET = 'https://client.open-reaction-database.org'
-ORD_DATA_URL = 'https://github.com/Open-Reaction-Database/ord-data/raw/main/'
+TARGET = "https://client.open-reaction-database.org"
+ORD_DATA_URL = "https://github.com/Open-Reaction-Database/ord-data/raw/main/"
 
 
 def fetch_dataset(dataset_id: str) -> dataset_pb2.Dataset:
@@ -48,22 +48,18 @@ def fetch_dataset(dataset_id: str) -> dataset_pb2.Dataset:
         ValueError: The dataset ID is invalid.
     """
     if not validations.is_valid_dataset_id(dataset_id):
-        raise ValueError(f'Invalid dataset ID: {dataset_id}')
-    url = urllib.parse.urljoin(
-        ORD_DATA_URL, f'{message_helpers.id_filename(dataset_id)}.pb.gz')
+        raise ValueError(f"Invalid dataset ID: {dataset_id}")
+    url = urllib.parse.urljoin(ORD_DATA_URL, f"{message_helpers.id_filename(dataset_id)}.pb.gz")
     response = requests.get(url)
     if response.status_code != 200:
-        raise RuntimeError(
-            f'Request {url} failed with status {response.status_code}')
+        raise RuntimeError(f"Request {url} failed with status {response.status_code}")
     return dataset_pb2.Dataset.FromString(gzip.decompress(response.content))
 
 
 class OrdClient:
     """Client for the Open Reaction Database."""
 
-    def __init__(self,
-                 target: Optional[str] = None,
-                 prefix: str = '/client') -> None:
+    def __init__(self, target: Optional[str] = None, prefix: str = "/client") -> None:
         """Initializes the client.
 
         Args:
@@ -76,8 +72,7 @@ class OrdClient:
         self._target = target
         self._prefix = prefix
 
-    def fetch_datasets(self,
-                       dataset_ids: List[str]) -> List[dataset_pb2.Dataset]:
+    def fetch_datasets(self, dataset_ids: List[str]) -> List[dataset_pb2.Dataset]:
         """Fetches one or more Dataset messages.
 
         Args:
@@ -87,10 +82,7 @@ class OrdClient:
             List of Dataset messages.
         """
         # NOTE(kearnes): Return datasets in the same order as requested.
-        datasets = {
-            dataset_id: self.fetch_dataset(dataset_id)
-            for dataset_id in set(dataset_ids)
-        }
+        datasets = {dataset_id: self.fetch_dataset(dataset_id) for dataset_id in set(dataset_ids)}
         return [datasets[dataset_id] for dataset_id in dataset_ids]
 
     @staticmethod
@@ -105,8 +97,7 @@ class OrdClient:
         """
         return fetch_dataset(dataset_id)
 
-    def fetch_reactions(self,
-                        reaction_ids: List[str]) -> List[reaction_pb2.Reaction]:
+    def fetch_reactions(self, reaction_ids: List[str]) -> List[reaction_pb2.Reaction]:
         """Fetches one or more Reaction messages.
 
         Args:
@@ -120,15 +111,16 @@ class OrdClient:
         """
         for reaction_id in reaction_ids:
             if not validations.is_valid_reaction_id(reaction_id):
-                raise ValueError(f'Invalid reaction ID: {reaction_id}')
-        target = self._target + self._prefix + '/api/fetch_reactions'
+                raise ValueError(f"Invalid reaction ID: {reaction_id}")
+        target = self._target + self._prefix + "/api/fetch_reactions"
         response = requests.post(target, json=list(set(reaction_ids)))
         results = response.json()
         # NOTE(kearnes): Return reactions in the same order as requested.
         reactions = {}
         for result in results:
-            reactions[result['reaction_id']] = reaction_pb2.Reaction.FromString(
-                binascii.unhexlify(result['serialized']))
+            reactions[result["reaction_id"]] = reaction_pb2.Reaction.FromString(
+                binascii.unhexlify(result["serialized"])
+            )
         return [reactions[reaction_id] for reaction_id in reaction_ids]
 
     def fetch_reaction(self, reaction_id: str) -> reaction_pb2.Reaction:
@@ -145,14 +137,15 @@ class OrdClient:
         return reactions[0]
 
     def query(  # pylint: disable=too-many-arguments
-            self,
-            dataset_ids: Optional[List[str]] = None,
-            reaction_ids: Optional[List[str]] = None,
-            reaction_smarts: Optional[str] = None,
-            dois: Optional[List[str]] = None,
-            components: Optional[List['ComponentQuery']] = None,
-            use_stereochemistry: Optional[bool] = None,
-            similarity: Optional[float] = None) -> List[query.Result]:
+        self,
+        dataset_ids: Optional[List[str]] = None,
+        reaction_ids: Optional[List[str]] = None,
+        reaction_smarts: Optional[str] = None,
+        dois: Optional[List[str]] = None,
+        components: Optional[List["ComponentQuery"]] = None,
+        use_stereochemistry: Optional[bool] = None,
+        similarity: Optional[float] = None,
+    ) -> List[query.Result]:
         """Executes a query against the Open Reaction Database.
 
         Args:
@@ -176,27 +169,25 @@ class OrdClient:
         if dataset_ids:
             for dataset_id in dataset_ids:
                 if not validations.is_valid_dataset_id(dataset_id):
-                    raise ValueError(f'Invalid dataset ID: {dataset_id}')
+                    raise ValueError(f"Invalid dataset ID: {dataset_id}")
         if reaction_ids:
             for reaction_id in reaction_ids:
                 if not validations.is_valid_reaction_id(reaction_id):
-                    raise ValueError(f'Invalid reaction ID: {reaction_id}')
+                    raise ValueError(f"Invalid reaction ID: {reaction_id}")
         if components is not None:
-            component_params = [
-                component.get_params() for component in components
-            ]
+            component_params = [component.get_params() for component in components]
         else:
             component_params = None
         params = {
-            'dataset_ids': ','.join(dataset_ids) if dataset_ids else None,
-            'reaction_ids': ','.join(reaction_ids) if reaction_ids else None,
-            'reaction_smarts': reaction_smarts,
-            'dois': ','.join(dois) if dois else None,
-            'component': component_params,
-            'use_stereochemistry': use_stereochemistry,
-            'similarity': similarity,
+            "dataset_ids": ",".join(dataset_ids) if dataset_ids else None,
+            "reaction_ids": ",".join(reaction_ids) if reaction_ids else None,
+            "reaction_smarts": reaction_smarts,
+            "dois": ",".join(dois) if dois else None,
+            "component": component_params,
+            "use_stereochemistry": use_stereochemistry,
+            "similarity": similarity,
         }
-        target = self._target + self._prefix + '/api/query'
+        target = self._target + self._prefix + "/api/query"
         response = requests.get(target, params=params)
         results = response.json()
         return [query.Result(**result) for result in results]
@@ -205,8 +196,7 @@ class OrdClient:
 class ComponentQuery:
     """Client-side implementation of ReactionComponentPredicate."""
 
-    _ALLOWED_SOURCES: List[str] = list(
-        query.ReactionComponentPredicate.SOURCE_TO_TABLE.keys())
+    _ALLOWED_SOURCES: List[str] = list(query.ReactionComponentPredicate.SOURCE_TO_TABLE.keys())
 
     def __init__(self, pattern: str, source: str, mode: str):
         """Initializes the query.
@@ -218,16 +208,14 @@ class ComponentQuery:
         """
         self._pattern = pattern
         if source not in self._ALLOWED_SOURCES:
-            raise ValueError(f'source is not in {self._ALLOWED_SOURCES}')
+            raise ValueError(f"source is not in {self._ALLOWED_SOURCES}")
         self._source = source
         try:
             query.ReactionComponentPredicate.MatchMode.from_name(mode)
         except KeyError as error:
-            raise ValueError(
-                f'mode is not in {query.ReactionComponentPredicate.MatchMode}'
-            ) from error
+            raise ValueError(f"mode is not in {query.ReactionComponentPredicate.MatchMode}") from error
         self._mode = mode
 
     def get_params(self):
         """Returns URL parameters for GET requests."""
-        return ';'.join([self._pattern, self._source, self._mode])
+        return ";".join([self._pattern, self._source, self._mode])

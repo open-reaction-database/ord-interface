@@ -15,18 +15,28 @@
 
 For simplicity, and to aid in debugging, we write tables to individual CSV
 files and load them into PostgreSQL with the COPY command.
-"""
 
+Usage:
+    build_database.py --input=<str> [options]
+
+Options:
+    --input=<str>       Input pattern (glob)
+    --overwrite         If True, overwrite existing tables
+    --downsample        Whether to downsample datasets for testing
+    --host=<str>        PostgreSQL server host [default: localhost]
+    --dbname=<str>      Database name
+    --user=<str>        Username
+    --password=<str>    Password
+    --port=<int>        Port
+"""
 import dataclasses
 import glob
 import itertools
+import logging
 import os
-import sys
 from typing import Iterable, List, Mapping, Union
 
-from absl import app
-from absl import flags
-from absl import logging
+import docopt
 import psycopg2
 from psycopg2 import extras
 from psycopg2 import sql
@@ -37,43 +47,31 @@ from ord_schema.proto import reaction_pb2
 
 import ord_interface.client
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string('input', None, 'Input pattern (glob).')
-flags.DEFINE_boolean('overwrite', False, 'If True, overwrite existing tables.')
-flags.DEFINE_boolean('downsample', False,
-                     'Whether to downsample datasets for testing.')
-# Connection parameters.
-flags.DEFINE_string('host', 'localhost', 'PostgreSQL server host.')
-flags.DEFINE_string('dbname', ord_interface.client.POSTGRES_DB,
-                    'Database name.')
-flags.DEFINE_string('user', ord_interface.client.POSTGRES_USER, 'Username.')
-flags.DEFINE_string('password', ord_interface.client.POSTGRES_PASSWORD,
-                    'Password.')
-flags.DEFINE_integer('port', ord_interface.client.POSTGRES_PORT, 'Port.')
+logger = logging.getLogger()
 
 # Maximum number of reactions to keep when downsampling datasets for testing.
 _TEST_DATASET_SIZE = 100
 # Datasets to use for testing.
 _TEST_DATASETS = [
-    'ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c',
-    'ord_dataset-cbcc4048add7468e850b6ec42549c70d',
-    'ord_dataset-b440f8c90b6343189093770060fc4098',
-    'ord_dataset-33320f511ffb4f89905448c7a5153111',
-    'ord_dataset-7d8f5fd922d4497d91cb81489b052746',
-    'ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3',
+    "ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c",
+    "ord_dataset-cbcc4048add7468e850b6ec42549c70d",
+    "ord_dataset-b440f8c90b6343189093770060fc4098",
+    "ord_dataset-33320f511ffb4f89905448c7a5153111",
+    "ord_dataset-7d8f5fd922d4497d91cb81489b052746",
+    "ord_dataset-46ff9a32d9e04016b9380b1b1ef949c3",
 ]
 
 
 @dataclasses.dataclass(frozen=True)
 class InsertValues:
     """Container for INSERT VALUES for a single Reaction."""
+
     reactions: Mapping[str, Union[str, bytes]]
     inputs: Iterable[Mapping[str, str]]
     outputs: Iterable[Mapping[str, Union[str, float]]]
 
 
-def process_reaction(reaction: reaction_pb2.Reaction,
-                     dataset_id: str) -> InsertValues:
+def process_reaction(reaction: reaction_pb2.Reaction, dataset_id: str) -> InsertValues:
     """Adds a Reaction to the database.
 
     Args:
@@ -83,15 +81,13 @@ def process_reaction(reaction: reaction_pb2.Reaction,
     Returns:
         InsertValues instance.
     """
-    reactions_values = _reactions_table(reaction=reaction,
-                                        dataset_id=dataset_id)
+    reactions_values = _reactions_table(reaction=reaction, dataset_id=dataset_id)
     inputs_values = _inputs_table(reaction=reaction)
     outputs_values = _outputs_table(reaction=reaction)
     return InsertValues(reactions_values, inputs_values, outputs_values)
 
 
-def _reactions_table(reaction: reaction_pb2.Reaction,
-                     dataset_id: str) -> Mapping[str, Union[str, bytes, None]]:
+def _reactions_table(reaction: reaction_pb2.Reaction, dataset_id: str) -> Mapping[str, Union[str, bytes, None]]:
     """Adds a Reaction to the 'reactions' table.
 
     Args:
@@ -102,21 +98,20 @@ def _reactions_table(reaction: reaction_pb2.Reaction,
         Dict mapping string column names to values.
     """
     values = {
-        'dataset_id': dataset_id,
-        'reaction_id': reaction.reaction_id,
-        'serialized': reaction.SerializeToString().hex()
+        "dataset_id": dataset_id,
+        "reaction_id": reaction.reaction_id,
+        "serialized": reaction.SerializeToString().hex(),
     }
     try:
-        reaction_smiles = message_helpers.get_reaction_smiles(
-            reaction, generate_if_missing=True)
+        reaction_smiles = message_helpers.get_reaction_smiles(reaction, generate_if_missing=True)
         # Control for REACTION_CXSMILES.
-        values['reaction_smiles'] = reaction_smiles.split()[0]
+        values["reaction_smiles"] = reaction_smiles.split()[0]
     except ValueError:
-        values['reaction_smiles'] = None
+        values["reaction_smiles"] = None
     if reaction.provenance.doi:
-        values['doi'] = reaction.provenance.doi
+        values["doi"] = reaction.provenance.doi
     else:
-        values['doi'] = None
+        values["doi"] = None
     return values
 
 
@@ -133,18 +128,16 @@ def _inputs_table(reaction: reaction_pb2.Reaction) -> List[Mapping[str, str]]:
     for key in sorted(reaction.inputs):
         reaction_input = reaction.inputs[key]
         for compound in reaction_input.components:
-            row = {'reaction_id': reaction.reaction_id}
+            row = {"reaction_id": reaction.reaction_id}
             try:
-                row['smiles'] = message_helpers.smiles_from_compound(compound)
+                row["smiles"] = message_helpers.smiles_from_compound(compound)
             except ValueError:
                 continue
             values.append(row)
     return values
 
 
-def _outputs_table(
-    reaction: reaction_pb2.Reaction
-) -> List[Mapping[str, Union[str, float, None]]]:
+def _outputs_table(reaction: reaction_pb2.Reaction) -> List[Mapping[str, Union[str, float, None]]]:
     """Adds rows to the 'outputs' table.
 
     Args:
@@ -156,12 +149,12 @@ def _outputs_table(
     values = []
     for outcome in reaction.outcomes:
         for product in outcome.products:
-            row = {'reaction_id': reaction.reaction_id}
+            row = {"reaction_id": reaction.reaction_id}
             try:
-                row['smiles'] = message_helpers.smiles_from_compound(product)
+                row["smiles"] = message_helpers.smiles_from_compound(product)
             except ValueError:
                 continue
-            row['yield'] = message_helpers.get_product_yield(product)
+            row["yield"] = message_helpers.get_product_yield(product)
             values.append(row)
     return values
 
@@ -169,32 +162,27 @@ def _outputs_table(
 def create_database(cursor: psycopg2.extensions.cursor, overwrite: bool):
     """Initializes the Postgres database."""
     if overwrite:
-        logging.info('Removing existing tables')
+        logger.info("Removing existing tables")
         for table in ord_interface.client.TABLES:
-            command = sql.SQL('DROP TABLE IF EXISTS {}')
+            command = sql.SQL("DROP TABLE IF EXISTS {}")
             cursor.execute(command.format(sql.Identifier(table)))
-    cursor.execute(sql.SQL('CREATE EXTENSION IF NOT EXISTS rdkit'))
-    cursor.execute(sql.SQL('CREATE EXTENSION IF NOT EXISTS tsm_system_rows'))
-    cursor.execute(
-        sql.SQL('CREATE SCHEMA {}').format(
-            sql.Identifier(ord_interface.client.RDKIT_SCHEMA)))
+    cursor.execute(sql.SQL("CREATE EXTENSION IF NOT EXISTS rdkit"))
+    cursor.execute(sql.SQL("CREATE EXTENSION IF NOT EXISTS tsm_system_rows"))
+    cursor.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(ord_interface.client.RDKIT_SCHEMA)))
     for table, columns in ord_interface.client.TABLES.items():
         dtypes = []
         for column, dtype in columns.items():
-            if table == 'reactions' and column == 'reaction_id':
-                component = sql.SQL('{} {} PRIMARY KEY')
+            if table == "reactions" and column == "reaction_id":
+                component = sql.SQL("{} {} PRIMARY KEY")
             else:
-                component = sql.SQL('{} {}')
+                component = sql.SQL("{} {}")
             # NOTE(kearnes): sql.Identifier(dtype) does not work for the
             # 'double precision' type.
-            dtypes.append(
-                component.format(sql.Identifier(column), sql.SQL(dtype)))
-        command = sql.Composed([
-            sql.SQL('CREATE TABLE {} (').format(sql.Identifier(table)),
-            sql.Composed(dtypes).join(', '),
-            sql.SQL(')')
-        ])
-        logging.info('Running:\n%s', command.as_string(cursor))
+            dtypes.append(component.format(sql.Identifier(column), sql.SQL(dtype)))
+        command = sql.Composed(
+            [sql.SQL("CREATE TABLE {} (").format(sql.Identifier(table)), sql.Composed(dtypes).join(", "), sql.SQL(")")]
+        )
+        logger.info("Running:\n%s", command.as_string(cursor))
         cursor.execute(command)
 
 
@@ -211,20 +199,22 @@ def _rdkit_reaction_smiles(cursor: psycopg2.extensions.cursor, table: str):
         table: Table name.
     """
     cursor.execute(
-        sql.SQL("""
+        sql.SQL(
+            """
         SELECT reaction_id,
                r
         INTO {} FROM (
-            SELECT reaction_id, 
+            SELECT reaction_id,
                    reaction_from_smiles(reaction_smiles::cstring) AS r
             FROM {}) tmp
-        WHERE r IS NOT NULL""").format(
-            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table),
-            sql.Identifier(table)))
+        WHERE r IS NOT NULL"""
+        ).format(sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table), sql.Identifier(table))
+    )
     cursor.execute(
-        sql.SQL('CREATE INDEX {} ON {} USING gist(r)').format(
-            sql.Identifier(f'{table}_r'),
-            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)))
+        sql.SQL("CREATE INDEX {} ON {} USING gist(r)").format(
+            sql.Identifier(f"{table}_r"), sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)
+        )
+    )
 
 
 def _rdkit_smiles(cursor: psycopg2.extensions.cursor, table: str):
@@ -241,42 +231,42 @@ def _rdkit_smiles(cursor: psycopg2.extensions.cursor, table: str):
         table: Table name.
     """
     cursor.execute(
-        sql.SQL("""
+        sql.SQL(
+            """
         SELECT reaction_id,
                m,
-               morganbv_fp(m) AS mfp2 
+               morganbv_fp(m) AS mfp2
         INTO {} FROM (
-            SELECT reaction_id, 
+            SELECT reaction_id,
                    mol_from_smiles(smiles::cstring) AS m
             FROM {}) tmp
-        WHERE m IS NOT NULL""").format(
-            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table),
-            sql.Identifier(table)))
+        WHERE m IS NOT NULL"""
+        ).format(sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table), sql.Identifier(table))
+    )
     cursor.execute(
-        sql.SQL('CREATE INDEX {} ON {} USING gist(m)').format(
-            sql.Identifier(f'{table}_m'),
-            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)))
+        sql.SQL("CREATE INDEX {} ON {} USING gist(m)").format(
+            sql.Identifier(f"{table}_m"), sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)
+        )
+    )
     cursor.execute(
-        sql.SQL('CREATE INDEX {} ON {} USING gist(mfp2)').format(
-            sql.Identifier(f'{table}_mfp2'),
-            sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)))
+        sql.SQL("CREATE INDEX {} ON {} USING gist(mfp2)").format(
+            sql.Identifier(f"{table}_mfp2"), sql.Identifier(ord_interface.client.RDKIT_SCHEMA, table)
+        )
+    )
 
 
-def process_dataset(filename: str, cursor: psycopg2.extensions.cursor,
-                    downsample: bool):
+def process_dataset(filename: str, cursor: psycopg2.extensions.cursor, downsample: bool):
     """Processes a single Dataset."""
-    dataset_id = os.path.basename(filename).split('.')[0]
+    dataset_id = os.path.basename(filename).split(".")[0]
     if downsample and dataset_id not in _TEST_DATASETS:
-        logging.info('TESTING: Dataset is not in _TEST_DATASETS')
+        logger.info("TESTING: Dataset is not in _TEST_DATASETS")
         return
     dataset = message_helpers.load_message(filename, dataset_pb2.Dataset)
     # Update datasets table.
-    cursor.execute('INSERT INTO datasets VALUES (%s, %s, %s)',
-                   (dataset.dataset_id, dataset.name, dataset.description))
+    cursor.execute("INSERT INTO datasets VALUES (%s, %s, %s)", (dataset.dataset_id, dataset.name, dataset.description))
     if downsample and len(dataset.reactions) > _TEST_DATASET_SIZE:
         # Downsample ord-data Datasets for testing.
-        logging.info('TESTING: Downsampling from %d->%d reactions',
-                     len(dataset.reactions), _TEST_DATASET_SIZE)
+        logger.info("TESTING: Downsampling from %d->%d reactions", len(dataset.reactions), _TEST_DATASET_SIZE)
         reactions = dataset.reactions[:_TEST_DATASET_SIZE]
     else:
         reactions = dataset.reactions
@@ -284,56 +274,58 @@ def process_dataset(filename: str, cursor: psycopg2.extensions.cursor,
     for reaction in reactions:
         values.append(process_reaction(reaction, dataset_id=dataset.dataset_id))
     # Update reactions table.
-    extras.execute_values(cursor,
-                          'INSERT INTO reactions VALUES %s',
-                          [value.reactions for value in values],
-                          template="""(%(reaction_id)s,
+    extras.execute_values(
+        cursor,
+        "INSERT INTO reactions VALUES %s",
+        [value.reactions for value in values],
+        template="""(%(reaction_id)s,
                                        %(reaction_smiles)s,
                                        %(doi)s,
                                        %(dataset_id)s,
-                                       %(serialized)s)""")
+                                       %(serialized)s)""",
+    )
     # Update inputs table.
-    extras.execute_values(cursor,
-                          'INSERT INTO inputs VALUES %s',
-                          itertools.chain.from_iterable(
-                              [value.inputs for value in values]),
-                          template='(%(reaction_id)s, %(smiles)s)')
+    extras.execute_values(
+        cursor,
+        "INSERT INTO inputs VALUES %s",
+        itertools.chain.from_iterable([value.inputs for value in values]),
+        template="(%(reaction_id)s, %(smiles)s)",
+    )
     # Update outputs table.
-    extras.execute_values(cursor,
-                          'INSERT INTO outputs VALUES %s',
-                          itertools.chain.from_iterable(
-                              [value.outputs for value in values]),
-                          template='(%(reaction_id)s, %(smiles)s, %(yield)s)')
+    extras.execute_values(
+        cursor,
+        "INSERT INTO outputs VALUES %s",
+        itertools.chain.from_iterable([value.outputs for value in values]),
+        template="(%(reaction_id)s, %(smiles)s, %(yield)s)",
+    )
 
 
-def main(argv):
-    del argv  # Only used by app.run().
-    filenames = glob.glob(FLAGS.input)
-    logging.info('Found %d datasets', len(filenames))
+def main(kwargs):
+    filenames = glob.glob(kwargs["--input"])
+    logger.info("Found %d datasets", len(filenames))
     if not filenames:
-        sys.exit(1)
-    connection = psycopg2.connect(dbname=FLAGS.dbname,
-                                  user=FLAGS.user,
-                                  password=FLAGS.password,
-                                  host=FLAGS.host,
-                                  port=FLAGS.port)
+        raise ValueError("--input did not match any files")
+    connection = psycopg2.connect(
+        dbname=kwargs["--dbname"] or ord_interface.client.POSTGRES_DB,
+        user=kwargs["--user"] or ord_interface.client.POSTGRES_USER,
+        password=kwargs["--password"] or ord_interface.client.POSTGRES_PASSWORD,
+        host=kwargs["--host"],
+        port=kwargs["--port"] or ord_interface.client.POSTGRES_PORT,
+    )
     with connection:
         with connection.cursor() as cursor:
-            create_database(overwrite=FLAGS.overwrite, cursor=cursor)
+            create_database(overwrite=kwargs["--overwrite"], cursor=cursor)
             for filename in filenames:
-                logging.info(filename)
-                process_dataset(filename=filename,
-                                cursor=cursor,
-                                downsample=FLAGS.downsample)
+                logger.info(filename)
+                process_dataset(filename=filename, cursor=cursor, downsample=kwargs["--downsample"])
             for table, columns in ord_interface.client.TABLES.items():
-                logging.info('Adding RDKit cartridge functionality')
-                if 'reaction_smiles' in columns:
+                logger.info("Adding RDKit cartridge functionality")
+                if "reaction_smiles" in columns:
                     _rdkit_reaction_smiles(cursor, table)
-                elif 'smiles' in columns:
+                elif "smiles" in columns:
                     _rdkit_smiles(cursor, table)
             connection.commit()
 
 
-if __name__ == '__main__':
-    flags.mark_flag_as_required('input')
-    app.run(main)
+if __name__ == "__main__":
+    main(docopt.docopt(__doc__))

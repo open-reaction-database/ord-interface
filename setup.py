@@ -16,12 +16,12 @@
 
 import setuptools
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setuptools.setup(
-        name='ord-interface',
-        description='Interface for the Open Reaction Database',
-        url='https://github.com/Open-Reaction-Database/ord-interface',
-        license='Apache License, Version 2.0',
+        name="ord-interface",
+        description="Interface for the Open Reaction Database",
+        url="https://github.com/Open-Reaction-Database/ord-interface",
+        license="Apache License, Version 2.0",
         packages=setuptools.find_packages(),
         package_data={
             "ord_interface.visualization": [
