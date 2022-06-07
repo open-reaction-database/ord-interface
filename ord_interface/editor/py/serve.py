@@ -212,6 +212,8 @@ def enumerate_dataset():
             # Remove the data URL prefix; see
             # https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL.
             match = re.fullmatch("data:.*?;base64,(.*)", data["spreadsheet_data"])
+            if not match:
+                raise ValueError(f"Could not remove data URL prefix from {data['spreadsheet_name']}")
             spreadsheet_data = match.group(1)
         else:
             spreadsheet_data = data["spreadsheet_data"]
