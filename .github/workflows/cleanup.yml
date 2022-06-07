@@ -59,15 +59,16 @@ jobs:
         run: |
           cd "${GITHUB_WORKSPACE}/ord-interface"
           pip install -r requirements.txt
-          pip install flask pylint
           black --check .
       - name: Run pylint
         run: |
           cd "${GITHUB_WORKSPACE}/ord-interface"
+          pip install flask pylint
           pylint ord_interface *.py
       - name: Run pytype
         run: |
           cd "${GITHUB_WORKSPACE}/ord-interface"
+          pip install pytype
           pytype --config=pytype.cfg
 
   check_javascript:
