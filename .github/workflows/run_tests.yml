@@ -36,7 +36,7 @@ jobs:
           docker login docker.pkg.github.com -u "${GITHUB_ACTOR}" --password="${{ secrets.GITHUB_TOKEN }}"
           docker pull "${CACHE_TARGET}"
       - name: Install ord-schema
-        run: python -m pip install ord-schema=="${ORD_SCHEMA_VERSION}"[rdkit]
+        run: python -m pip install ord-schema[rdkit]=="${ORD_SCHEMA_VERSION}"
       - name: Install ord-interface
         run: |
           cd "${GITHUB_WORKSPACE}/ord-interface"
