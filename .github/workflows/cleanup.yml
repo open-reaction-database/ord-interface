@@ -17,58 +17,41 @@ name: Lint
 on: [ pull_request, push ]
 
 env:
-  ORD_SCHEMA_TAG: v0.3.16
+  ORD_SCHEMA_VERSION: 0.3.19
 
 jobs:
   check_licenses:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: '>=1.16'
       - name: Install dependencies
-        run: |
-          go install github.com/google/addlicense@latest
+        run: go install github.com/google/addlicense@latest
       - name: addlicense
-        run: |
-          cd "${GITHUB_WORKSPACE}"
-          "${HOME}/go/bin/addlicense" -check -c "Open Reaction Database Project Authors" -l apache .
+        run: addlicense -check -c "Open Reaction Database Project Authors" -l apache .
 
   check_python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          path: ord-interface
-      - uses: actions/checkout@v2
-        with:
-          repository: "Open-Reaction-Database/ord-schema"
-          ref: ${{ env.ORD_SCHEMA_TAG }}
-          path: ord-schema
-      - uses: s-weigand/setup-conda@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7
       - name: Install ord-schema
-        run: |
-          cd "${GITHUB_WORKSPACE}/ord-schema"
-          pip install -r requirements.txt
-          conda install -c rdkit rdkit
-          python setup.py install
+        run: python -m pip install ord-schema="${ORD_SCHEMA_VERSION}"[rdkit]
       - name: Run black
         run: |
-          cd "${GITHUB_WORKSPACE}/ord-interface"
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
           black --check .
       - name: Run pylint
         run: |
-          cd "${GITHUB_WORKSPACE}/ord-interface"
-          pip install flask pylint
+          python -m pip install flask pylint
           pylint ord_interface *.py
       - name: Run pytype
         run: |
-          cd "${GITHUB_WORKSPACE}/ord-interface"
-          pip install pytype
+          python -m pip install pytype
           pytype --config=pytype.cfg
 
   check_javascript:
@@ -77,7 +60,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: clang-format
         run: |
-          cd "${GITHUB_WORKSPACE}"
           sudo apt update && sudo apt install clang-format-10 --yes
           # NOTE(kearnes): Run clang-format before installing anything with npm.
           find . -name '*.js' -exec clang-format-10 -n -Werror {} +

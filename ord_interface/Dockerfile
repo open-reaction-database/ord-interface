@@ -61,16 +61,11 @@ RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contri
 RUN npm install google-closure-compiler
 
 # Install ord-schema.
-WORKDIR /usr/src/app
-RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
-WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.3.16
-RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
-RUN pip install -r requirements.txt
-RUN python setup.py install
+ARG ORD_SCHEMA_VERSION=0.3.19
+RUN python -m pip install ord-schema="${ORD_SCHEMA_VERSION}"[rdkit]
 
 # Install interface dependencies.
-WORKDIR ../ord-interface
+WORKDIR /usr/src/app/ord-interface
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 RUN pip install gunicorn
