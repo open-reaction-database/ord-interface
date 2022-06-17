@@ -16,7 +16,7 @@
 # $ cd path/to/ord-interface/ord_interface
 # $ docker build --file=Dockerfile -t openreactiondatabase/ord-interface ..
 
-FROM continuumio/miniconda3
+FROM python:latest
 
 # default-jre is required for running the closure compiler linter.
 # For this next line, see:
@@ -31,12 +31,6 @@ RUN apt-get update \
     unzip \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-
-RUN conda install -c rdkit \
-    psycopg2 \
-    python=3.7 \
-    rdkit \
- && conda clean -afy
 
 # Fetch and build editor dependencies.
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.

@@ -8,6 +8,8 @@ jquery = externs/jquery-3.3.js
 # https://github.com/protocolbuffers/protobuf/releases
 protobuf = protobuf-3.14.0
 
+ord_schema = $(shell python -m pip show ord-schema | grep Location | awk '{ print $2; }')
+
 # Check that the present ketcher code is compatible.
 ketcher-req = v0.1.0+ord
 ketcher-cur = $(shell cd ketcher && git describe --tags)
@@ -15,19 +17,16 @@ ifneq ($(ketcher-req), $(ketcher-cur))
   $(error ketcher needs update, see editor readme)
 endif
 
-all : prep py js
+all : prep js
 
 prep :
 	# Ensure output directories exist.
 	mkdir -p gen/js/ord gen/js/proto/ord
 
 js : gen/js/proto/ord/dataset.js \
-	   gen/js/proto/ord/reaction.js \
-	   gen/js/ord/dataset.js \
-	   gen/js/ord/reaction.js \
-
-py : ../../../ord-schema/build/lib/ord_schema/proto/dataset_pb2.py \
-	   ../../../ord-schema/build/lib/ord_schema/proto/reaction_pb2.py
+     gen/js/proto/ord/reaction.js \
+     gen/js/ord/dataset.js \
+     gen/js/ord/reaction.js
 
 gen/js/ord/dataset.js : js/dataset.js gen/js/proto/ord/dataset.js
 	java -jar node_modules/google-closure-compiler-java/compiler.jar \
@@ -67,39 +66,12 @@ gen/js/ord/reaction.js : js/*.js gen/js/proto/ord/reaction.js
 	  --hide_warnings_for=gen/js/proto/ord \
 	  || (rm -f gen/js/ord/reaction.js && false)
 
-gen/js/proto/ord/%.js : ../../../ord-schema/ord_schema/proto/%.proto
+gen/js/proto/ord/%.js : $(ord_schema)/ord_schema/proto/%.proto
 	protoc \
 	  --experimental_allow_proto3_optional \
 	  --js_out=binary:gen/js/proto/ord \
-	  --proto_path=../../../ord-schema \
+	  --proto_path=$(ord_schema) \
 	  $<
-
-../../../ord-schema/build/lib/ord_schema/proto/%_pb2.py : ../../../ord-schema/ord_schema/proto/%.proto
-	$(error $< not found--run setup?)
-
-package : all
-	rm -rf package
-	mkdir -p package/ord
-
-	cp -r \
-	  css \
-	  gen \
-	  html \
-	  py \
-	  serve.sh \
-	  package/ord
-
-	cp -r ../../../ord-schema/build/lib/ord_schema package/ord/py
-
-	mkdir package/ord/ketcher
-	cp -r ketcher/dist package/ord/ketcher
-
-	mkdir package/ord/db
-
-	tar --create --directory=package --gzip --file=package/ord.tgz ord
-
-test : all
-	node js/test.js
 
 clean :
 	rm -rf gen
