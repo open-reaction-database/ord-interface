@@ -49,6 +49,9 @@ RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
 RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protobuf-js-3.14.0.tar.gz \
  && tar -xzf protobuf-js-3.14.0.tar.gz \
  && rm protobuf-js-3.14.0.tar.gz
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip \
+ && unzip protoc-3.14.0-linux-x86_64.zip
+ENV PATH="/usr/src/app/ord-interface/ord_interface/editor/bin:${PATH}"
 RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
  && mkdir -p externs \
  && mv jquery-3.3.js externs
@@ -66,9 +69,9 @@ RUN pip install gunicorn
 
 # Copy the local state.
 COPY ord_interface/editor/js/ ord_interface/editor/js/
-COPY ord_interface/editor/Makefile ord_interface/editor
+COPY ord_interface/editor/build.sh ord_interface/editor
 WORKDIR ord_interface/editor
-RUN make
+RUN ./build.sh
 WORKDIR ../..
 # Copy the rest of the editor files.
 COPY ord_interface/editor/ ord_interface/editor/

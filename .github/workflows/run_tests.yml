@@ -44,7 +44,6 @@ jobs:
       - name: Install test dependencies
         run: |
           cd "${GITHUB_WORKSPACE}/ord_interface"
-          python -m pip install protoc-wheel-0
           npm install puppeteer
       - name: Run tests
         run: |
