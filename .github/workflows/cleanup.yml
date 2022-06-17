@@ -57,7 +57,7 @@ jobs:
   check_javascript:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: clang-format
         run: |
           sudo apt update && sudo apt install clang-format-10 --yes
