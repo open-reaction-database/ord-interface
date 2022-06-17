@@ -58,8 +58,8 @@ RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contri
 RUN npm install google-closure-compiler
 
 # Install ord-schema.
-ARG ORD_SCHEMA_VERSION=0.3.19
-RUN python -m pip install ord-schema[rdkit]=="${ORD_SCHEMA_VERSION}"
+ARG ORD_SCHEMA_VERSION=0.3.20
+RUN python -m pip install ord-schema=="${ORD_SCHEMA_VERSION}"
 
 # Install interface dependencies.
 WORKDIR /usr/src/app/ord-interface
