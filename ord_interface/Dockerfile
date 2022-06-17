@@ -16,7 +16,7 @@
 # $ cd path/to/ord-interface/ord_interface
 # $ docker build --file=Dockerfile -t openreactiondatabase/ord-interface ..
 
-FROM continuumio/miniconda3
+FROM python:latest
 
 # default-jre is required for running the closure compiler linter.
 # For this next line, see:
@@ -31,12 +31,6 @@ RUN apt-get update \
     unzip \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-
-RUN conda install -c rdkit \
-    psycopg2 \
-    python=3.7 \
-    rdkit \
- && conda clean -afy
 
 # Fetch and build editor dependencies.
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.
@@ -55,31 +49,29 @@ RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
 RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protobuf-js-3.14.0.tar.gz \
  && tar -xzf protobuf-js-3.14.0.tar.gz \
  && rm protobuf-js-3.14.0.tar.gz
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip \
+ && unzip protoc-3.14.0-linux-x86_64.zip
+ENV PATH="/usr/src/app/ord-interface/ord_interface/editor/bin:${PATH}"
 RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
  && mkdir -p externs \
  && mv jquery-3.3.js externs
 RUN npm install google-closure-compiler
 
 # Install ord-schema.
-WORKDIR /usr/src/app
-RUN git clone https://github.com/Open-Reaction-Database/ord-schema.git
-WORKDIR ord-schema
-ARG ORD_SCHEMA_TAG=v0.3.16
-RUN git fetch --tags && git checkout "${ORD_SCHEMA_TAG}"
-RUN pip install -r requirements.txt
-RUN python setup.py install
+ARG ORD_SCHEMA_VERSION=0.3.20
+RUN python -m pip install ord-schema=="${ORD_SCHEMA_VERSION}"
 
 # Install interface dependencies.
-WORKDIR ../ord-interface
+WORKDIR /usr/src/app/ord-interface
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 RUN pip install gunicorn
 
 # Copy the local state.
 COPY ord_interface/editor/js/ ord_interface/editor/js/
-COPY ord_interface/editor/Makefile ord_interface/editor
+COPY ord_interface/editor/build.sh ord_interface/editor
 WORKDIR ord_interface/editor
-RUN make
+RUN ./build.sh
 WORKDIR ../..
 # Copy the rest of the editor files.
 COPY ord_interface/editor/ ord_interface/editor/
