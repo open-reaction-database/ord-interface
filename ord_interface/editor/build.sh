@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -ex
+# https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -Eeuxo pipefail
 
 rm -rf gen  # Clean up from previous run.
 mkdir -p gen/js/ord gen/js/proto/ord
