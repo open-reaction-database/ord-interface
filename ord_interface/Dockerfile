@@ -62,7 +62,7 @@ RUN npm install google-closure-compiler
 
 # Install ord-schema.
 ARG ORD_SCHEMA_VERSION=0.3.19
-RUN python -m pip install ord-schema="${ORD_SCHEMA_VERSION}"[rdkit]
+RUN python -m pip install ord-schema=="${ORD_SCHEMA_VERSION}"[rdkit]
 
 # Install interface dependencies.
 WORKDIR /usr/src/app/ord-interface
