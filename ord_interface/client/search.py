@@ -38,10 +38,13 @@ be URL-encoded.
 # pylint: disable=too-many-locals
 
 import dataclasses
+import io
 import os
 from typing import Dict, List, Optional, Tuple, Union
 
 import flask
+from rdkit import Chem
+from werkzeug import security
 
 from ord_interface.client import query
 from ord_interface.visualization import generate_text
@@ -228,3 +231,43 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     else:
         command = None
     return command, limit
+
+
+@bp.route("/ketcher/iframe")
+def ketcher_iframe():
+    """Accesses a website serving Ketcher."""
+    return flask.render_template("ketcher_iframe.html")
+
+
+@bp.route("/ketcher/info")
+def indigo():
+    """Dummy indigo endpoint to prevent 404 errors."""
+    return "", 204
+
+
+@bp.route("/ketcher/<path:file>")
+def ketcher(file):
+    """Accesses any built Ketcher file by name."""
+    path = security.safe_join(os.path.join(os.path.dirname(__file__), "../editor/ketcher/dist"), file)
+    return flask.send_file(get_file(path), attachment_filename=file)
+
+
+def get_file(path):
+    """Get file contents as a BytesIO object."""
+    if not os.path.exists(path):
+        flask.abort(404)
+    with open(path, "rb") as f:
+        # NOTE(kearnes): Workaround for unclosed file warnings; see https://github.com/pallets/werkzeug/issues/1785.
+        return io.BytesIO(f.read())
+
+
+@bp.route("/ketcher/molfile", methods=["POST"])
+def get_molfile():
+    smiles = flask.request.get_data()
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            raise ValueError(smiles)
+        return flask.jsonify(Chem.MolToMolBlock(mol))
+    except ValueError:
+        return f"could not parse SMILES: {smiles}", 400
