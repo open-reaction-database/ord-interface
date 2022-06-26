@@ -13,7 +13,6 @@
 # limitations under the License.
 """Entrypoint for the web interface."""
 import flask
-from rdkit import Chem
 
 # TODO(skearnes): Figure out how to use this.
 # import flask_talisman
