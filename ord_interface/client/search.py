@@ -263,6 +263,7 @@ def get_file(path):
 
 @bp.route("/ketcher/molfile", methods=["POST"])
 def get_molfile():
+    """Returns a molblock for the given SMILES."""
     smiles = flask.request.get_data()
     try:
         mol = Chem.MolFromSmiles(smiles)
