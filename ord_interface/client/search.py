@@ -230,6 +230,7 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
         command = None
     return command, limit
 
+
 @bp.route("/ketcher/molfile", methods=["POST"])
 def get_molfile():
     """Returns a molblock for the given SMILES."""
