@@ -47,7 +47,7 @@
             width: 160px;
         }
 
-        .remove {
+        .draw, .remove {
             font-size: medium;
             border: 1px solid black;
         }
@@ -195,7 +195,7 @@
 </footer>
 
 <div id="component_template" style="display: none">
-    <button type="button" style="grid-column: draw" onclick="drawSmiles($(this).next());">
+    <button type="button" style="grid-column: draw" class="draw" onclick="drawSmiles($(this).next());">
         <span class="far fa-edit" aria-hidden="true"></span>
     </button>
     <input style="grid-column: text" class="component" type="text">
@@ -209,7 +209,7 @@
         <option value="substructure">substructure</option>
         <option value="smarts">smarts</option>
     </select>
-    <button type="button" class="remove">
+    <button type="button" style="grid-column: remove" class="remove">
         <i class="far fa-trash-alt"></i>
     </button>
 </div>
@@ -240,6 +240,7 @@
         const component = $('#component_template').clone();
         // Hook up the "remove" button.
         $('.remove', component).click(function () {
+            $(this).prevAll('.draw').first().remove();
             $(this).prevAll('.component').first().remove();
             $(this).prevAll('.source').first().remove();
             $(this).prevAll('.mode').first().remove();
