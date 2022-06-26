@@ -57,14 +57,13 @@ RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contri
  && mv jquery-3.3.js externs
 RUN npm install google-closure-compiler
 
-# Install ord-schema.
-ARG ORD_SCHEMA_VERSION=0.3.20
-RUN python -m pip install ord-schema=="${ORD_SCHEMA_VERSION}"
-
-# Install interface dependencies.
+# Install dependencies.
 WORKDIR /usr/src/app/ord-interface
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+COPY setup.py README.md ./
+# https://stackoverflow.com/a/60511098.
+RUN python setup.py egg_info \
+ && pip install $(grep -v '^\[' *.egg-info/requires.txt) \
+ && rm -rf *.egg-info/
 RUN pip install gunicorn
 
 # Copy the local state.
@@ -79,8 +78,7 @@ COPY ord_interface/editor/ ord_interface/editor/
 COPY ord_interface/interface.py ord_interface/
 COPY ord_interface/client/ ord_interface/client/
 COPY ord_interface/visualization/ ord_interface/visualization/
-COPY setup.py .
-RUN python setup.py install
+RUN pip install .
 
 # Build and launch the interface.
 EXPOSE 5001

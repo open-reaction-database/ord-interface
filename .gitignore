@@ -21,3 +21,6 @@ __pycache__
 *.pb.gz
 # Vendored ketcher.
 ord_interface/editor/ketcher/
+# Node stuff.
+**/node_modules/
+**/package-lock.json
