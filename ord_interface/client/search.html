@@ -218,7 +218,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content" style="width: fit-content;">
             <div class="modal-body">
-                <iframe id="ketcher-iframe" src="{{ url_for('.ketcher_iframe') }}"></iframe>
+                <iframe id="ketcher-iframe" src="/ketcher"></iframe>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -423,10 +423,7 @@
 
     function drawSmiles(node) {
         const ketcher = document.getElementById('ketcher-iframe').contentWindow.ketcher;
-        if (!ketcher.hasOwnProperty('editor')) {
-            ketcher.initKetcher();
-        }
-        ketcher.editor.struct(null);  // Clear any existing molecule.
+        ketcher.editor.struct(null);  // Clear any previous molecule.
         const ketcherModal = $('#ketcher_modal');
         const smiles = $(node).val();
         if (smiles) {
@@ -452,10 +449,10 @@
             };
             xhr.send(smiles);
         }
-        ketcher.successCallback = function () {
-            if (ketcher.getSmiles()) {
-                console.log(ketcher.getSmiles());
-                $(node).val(ketcher.getSmiles());
+        ketcher.successCallback = async function () {
+            const smiles = await ketcher.getSmiles();
+            if (smiles) {
+                $(node).val(smiles);
             }
         };
         ketcherModal.modal('show');

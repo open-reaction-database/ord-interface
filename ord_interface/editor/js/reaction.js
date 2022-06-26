@@ -72,8 +72,6 @@ async function init(reaction) {
   $('[data-toggle="tooltip"]').tooltip();
   // Show "save" on modifications.
   utils.listen($('body'));
-  // Load Ketcher content into an element with attribute role="application".
-  document.getElementById('ketcher-iframe').contentWindow.ketcher.initKetcher();
   // Initialize the UI with the Reaction.
   loadReaction(reaction);
   let reactionId = reaction.getReactionId();

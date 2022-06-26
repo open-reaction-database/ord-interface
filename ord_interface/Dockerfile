@@ -34,15 +34,10 @@ RUN apt-get update \
 
 # Fetch and build editor dependencies.
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.
-WORKDIR /usr/src/app/ord-interface/ord_interface/editor
-# Bust the cache to get the latest commits; see https://stackoverflow.com/a/39278224.
-ADD "https://api.github.com/repos/Open-Reaction-Database/ketcher/git/refs/heads/main" ketcher-version.json
-RUN git clone https://github.com/Open-Reaction-Database/ketcher.git
-RUN cd ketcher \
- && rm package-lock.json \
- && npm install \
- && npm run build \
- && rm -rf node_modules
+WORKDIR /usr/src/app/ord-interface/ord_interface
+RUN wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip \
+ && unzip ketcher-standalone-2.5.1.zip
+WORKDIR editor
 RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
  && tar -xzf v20200517.tar.gz \
  && rm v20200517.tar.gz

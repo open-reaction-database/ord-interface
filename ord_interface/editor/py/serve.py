@@ -537,25 +537,6 @@ def img(image):
     return flask.send_file(get_file(path), attachment_filename=image)
 
 
-@bp.route("/ketcher/iframe")
-def ketcher_iframe():
-    """Accesses a website serving Ketcher."""
-    return flask.render_template("ketcher_iframe.html")
-
-
-@bp.route("/ketcher/info")
-def indigo():
-    """Dummy indigo endpoint to prevent 404 errors."""
-    return "", 204
-
-
-@bp.route("/ketcher/<path:file>")
-def ketcher(file):
-    """Accesses any built Ketcher file by name."""
-    path = security.safe_join(os.path.join(os.path.dirname(__file__), "../ketcher/dist"), file)
-    return flask.send_file(get_file(path), attachment_filename=file)
-
-
 @bp.route("/reaction/id/deps.js")
 @bp.route("/reaction/id/<value>/deps.js")
 @bp.route("/dataset/deps.js")

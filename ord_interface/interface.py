@@ -13,6 +13,7 @@
 # limitations under the License.
 """Entrypoint for the web interface."""
 import flask
+from rdkit import Chem
 
 # TODO(skearnes): Figure out how to use this.
 # import flask_talisman
@@ -21,7 +22,8 @@ from ord_interface.client import search
 from ord_interface.editor.py import serve
 from ord_interface.visualization import filters
 
-app = flask.Flask(__name__)
+# Set the ketcher distribution as the static folder.
+app = flask.Flask(__name__, static_folder="standalone")
 # https://flask.palletsprojects.com/en/2.1.x/security/#security-headers
 # TODO(skearnes): Figure out how to use this.
 # flask_talisman.Talisman(app)
@@ -44,3 +46,8 @@ def show_browse():
 @app.route("/search")
 def show_search():
     return flask.redirect(flask.url_for("client.show_search", **flask.request.args))
+
+
+@app.route("/ketcher")
+def show_ketcher():
+    return flask.redirect("/standalone/index.html")
