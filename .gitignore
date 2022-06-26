@@ -19,3 +19,5 @@ __pycache__
 .DS_Store
 # Test data.
 *.pb.gz
+# Vendored ketcher.
+ord_interface/editor/ketcher/
