@@ -16,9 +16,6 @@ name: Lint
 
 on: [ pull_request, push ]
 
-env:
-  ORD_SCHEMA_VERSION: 0.3.20
-
 jobs:
   check_licenses:
     runs-on: ubuntu-latest
@@ -39,19 +36,17 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.7
-      - name: Install ord-schema
-        run: python -m pip install ord-schema=="${ORD_SCHEMA_VERSION}"
+      - name: Install ord-interface
+        run: |
+          python -m pip install .[tests]
       - name: Run black
         run: |
-          python -m pip install -r requirements.txt
           black --check .
       - name: Run pylint
         run: |
-          python -m pip install flask pylint
           pylint ord_interface *.py
       - name: Run pytype
         run: |
-          python -m pip install pytype
           pytype --config=pytype.cfg
 
   check_javascript:
