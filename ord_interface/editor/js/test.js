@@ -42,7 +42,7 @@ const puppeteer = require('puppeteer');
 
   for (let i = 0; i < roundtripTests.length; i++) {
     const url = roundtripTests[i];
-    gi await page.goto(url);
+    await page.goto(url);
     await page.waitForSelector('body[ready=true]');
     const testResult = await page.evaluate(function(url) {
       const reaction = ord.reaction.unloadReaction();
