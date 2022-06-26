@@ -2,17 +2,19 @@
 
 Backend and frontend code for the [ORD search interface](https://client.open-reaction-database.org/).
 
-# Development setup
+## Installation
 
-```bash
-conda create -n ord-interface python==3.9
-conda activate ord-interface
-pip install -r requirements.txt
-pip install .
+```shell
+$ git clone git@github.com:open-reaction-database/ord-interface.git
+$ cd ord-interface
+$ pip install -e .
+```
 
-cd ord_interface
-./build_test_database.sh
-docker build --file Dockerfile -t openreactiondatabase/ord-interface .. && docker compose up
+To build and launch the interface (available at `http://localhost:5001`):
 
-
+```shell
+$ cd ord_interface
+$ ./build_test_database.sh
+$ docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
+$ docker compose up
 ```
