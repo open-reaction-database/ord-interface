@@ -63,7 +63,7 @@
             display: grid;
             grid-row-gap: 10px;
             grid-column-gap: 18px;
-            grid-template-columns: [text] 300px [source] 100px [mode] 150px [remove] 30px;
+            grid-template-columns: [draw] 30px [text] 250px [source] 100px [mode] 150px [remove] 30px;
             align-items: center;
         }
 
@@ -151,13 +151,13 @@
             <b style="grid-column: text">SMILES/SMARTS</b>
             <b>Source</b>
             <b>Match Mode</b>
-            <button type="button" id="add_component" onclick="addComponent();">
+            <button type="button" id="add_component" onclick="addComponent();" style="grid-column: text;">
                 <i class="fas fa-plus"></i> Add Component
             </button>
-            <label for="stereo" style="grid-column: text">Use Stereochemistry</label>
+            <label for="stereo" style="grid-column: text;">Use Stereochemistry</label>
             <input type="checkbox" id="stereo">
-            <label for="similarity" style="grid-column: text">Similarity Threshold</label>
-            <input id="similarity" type="text" value="0.5" style="width: 60px">
+            <label for="similarity" style="grid-column: text;">Similarity Threshold</label>
+            <input id="similarity" type="text" value="0.5" style="width: 60px;">
         </div>
     </div>
     <div class="collapse" id="searchByReaction">
@@ -195,12 +195,10 @@
 </footer>
 
 <div id="component_template" style="display: none">
-    <span style="grid-column: text;">
-        <button type="button" onclick="drawSmiles($(this).next());">
-            <span class="far fa-edit" aria-hidden="true"></span>
-        </button>
-        <input class="component" type="text" style="width: 250px;">
-    </span>
+    <button type="button" style="grid-column: draw" onclick="drawSmiles($(this).next());">
+        <span class="far fa-edit" aria-hidden="true"></span>
+    </button>
+    <input style="grid-column: text" class="component" type="text">
     <select class="source" style="grid-column: source">
         <option value="input">input</option>
         <option value="output">output</option>
