@@ -42,6 +42,7 @@ import os
 from typing import Dict, List, Optional, Tuple, Union
 
 import flask
+from rdkit import Chem
 
 from ord_interface.client import query
 from ord_interface.visualization import generate_text
@@ -228,3 +229,16 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     else:
         command = None
     return command, limit
+
+
+@bp.route("/ketcher/molfile", methods=["POST"])
+def get_molfile():
+    """Returns a molblock for the given SMILES."""
+    smiles = flask.request.get_data()
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            raise ValueError(smiles)
+        return flask.jsonify(Chem.MolToMolBlock(mol))
+    except ValueError:
+        return f"could not parse SMILES: {smiles}", 400

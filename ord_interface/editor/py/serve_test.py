@@ -382,21 +382,6 @@ def test_css(client, sheet, expected):
     assert response.status_code == expected
 
 
-def test_ketcher_iframe(client):
-    response = client.get("/ketcher/iframe", follow_redirects=True)
-    assert response.status_code == 200
-
-
-def test_indigo(client):
-    response = client.get("/ketcher/info", follow_redirects=True)
-    assert response.status_code == 204
-
-
-@pytest.mark.skip("Ketcher is not part of the repo, so we can't test this easily.")
-def test_ketcher(client):
-    pass
-
-
 @pytest.mark.parametrize("path", ("dataset/deps.js", "dataset/test/deps.js", "dataset/test/reaction/deps.js"))
 def test_deps(client, path):
     response = client.get(path, follow_redirects=True)

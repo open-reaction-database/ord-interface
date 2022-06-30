@@ -17,3 +17,11 @@ __pycache__
 /dist
 # Folder tracking files
 .DS_Store
+# Test data.
+*.pb.gz
+# Vendored ketcher.
+**/ketcher*
+**/standalone
+# Node stuff.
+**/node_modules/
+**/package-lock.json

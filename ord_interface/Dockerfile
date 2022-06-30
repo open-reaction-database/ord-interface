@@ -34,15 +34,10 @@ RUN apt-get update \
 
 # Fetch and build editor dependencies.
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.
-WORKDIR /usr/src/app/ord-interface/ord_interface/editor
-# Bust the cache to get the latest commits; see https://stackoverflow.com/a/39278224.
-ADD "https://api.github.com/repos/Open-Reaction-Database/ketcher/git/refs/heads/main" ketcher-version.json
-RUN git clone https://github.com/Open-Reaction-Database/ketcher.git
-RUN cd ketcher \
- && rm package-lock.json \
- && npm install \
- && npm run build \
- && rm -rf node_modules
+WORKDIR /usr/src/app/ord-interface/ord_interface
+RUN wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip \
+ && unzip ketcher-standalone-2.5.1.zip
+WORKDIR editor
 RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
  && tar -xzf v20200517.tar.gz \
  && rm v20200517.tar.gz
@@ -57,14 +52,13 @@ RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contri
  && mv jquery-3.3.js externs
 RUN npm install google-closure-compiler
 
-# Install ord-schema.
-ARG ORD_SCHEMA_VERSION=0.3.20
-RUN python -m pip install ord-schema=="${ORD_SCHEMA_VERSION}"
-
-# Install interface dependencies.
+# Install dependencies.
 WORKDIR /usr/src/app/ord-interface
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+COPY setup.py README.md ./
+# https://stackoverflow.com/a/60511098.
+RUN python setup.py egg_info \
+ && pip install $(grep -v '^\[' *.egg-info/requires.txt) \
+ && rm -rf *.egg-info/
 RUN pip install gunicorn
 
 # Copy the local state.
@@ -79,8 +73,7 @@ COPY ord_interface/editor/ ord_interface/editor/
 COPY ord_interface/interface.py ord_interface/
 COPY ord_interface/client/ ord_interface/client/
 COPY ord_interface/visualization/ ord_interface/visualization/
-COPY setup.py .
-RUN python setup.py install
+RUN pip install .
 
 # Build and launch the interface.
 EXPOSE 5001

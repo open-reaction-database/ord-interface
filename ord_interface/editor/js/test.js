@@ -43,7 +43,7 @@ const puppeteer = require('puppeteer');
   for (let i = 0; i < roundtripTests.length; i++) {
     const url = roundtripTests[i];
     await page.goto(url);
-    await page.waitFor('body[ready=true]');
+    await page.waitForSelector('body[ready=true]');
     const testResult = await page.evaluate(function(url) {
       const reaction = ord.reaction.unloadReaction();
       const session = ord.utils.session;
@@ -77,7 +77,7 @@ const puppeteer = require('puppeteer');
   for (let i = 0; i < validationTests.length; i++) {
     const url = validationTests[i];
     await page.goto(url);
-    await page.waitFor('body[ready=true]');
+    await page.waitForSelector('body[ready=true]');
     const testResult = await page.evaluate(function(url) {
       ord.reaction.validateReaction();
       const prevErrors =

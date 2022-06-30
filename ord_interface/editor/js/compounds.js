@@ -475,7 +475,7 @@ function drawIdentifier(node) {
   $('#ketcher_modal').modal('show');
   // Define a callback so that when a user is done drawing, the new SMILES
   // string gets saved.
-  ketcher.successCallback = function() {
+  ketcher.successCallback = async function() {
     // Check if an existing SMILES/MolBlock identifier exists. If yes, remove.
     $('.component_identifier', node).each(function(index, node) {
       node = $(node);
@@ -488,7 +488,8 @@ function drawIdentifier(node) {
       }
     });
     // Create new identifiers.
-    if (ketcher.getSmiles()) {
+    const smiles = await ketcher.getSmiles();
+    if (smiles) {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', session.root + 'canonicalize');
       xhr.responseType = 'json';
@@ -499,10 +500,11 @@ function drawIdentifier(node) {
         smilesIdentifier.setDetails('Drawn with Ketcher');
         loadIdentifier(node, smilesIdentifier);
       };
-      xhr.send(ketcher.getSmiles());
+      xhr.send(smiles);
       const molfileIdentifier = new CompoundIdentifier();
       molfileIdentifier.setType(IdentifierType.MOLBLOCK);
-      molfileIdentifier.setValue(ketcher.getMolfile());
+      const molblock = await ketcher.getMolfile();
+      molfileIdentifier.setValue(molblock);
       molfileIdentifier.setDetails('Drawn with Ketcher');
       loadIdentifier(node, molfileIdentifier);
     }
