@@ -102,6 +102,11 @@
             height: 432px;
             border-width: 0;
         }
+
+        .row_label {
+            font-family: monospace;
+            color: darkgray;
+        }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -493,7 +498,8 @@
                 .then(response => response.json())
                 .then(responseData => {
                     const content = $('td', row).eq(0);
-                    content.html(responseData);
+                    const rowLabel = '<p class="row_label">' + reactionId + '</p>';
+                    content.html(rowLabel + responseData);
                     content.css('cursor', 'pointer');
                     content.on('click', function () {
                         window.open(root + '/id/' + reactionId, '_blank');
