@@ -32,14 +32,10 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
     <!-- https://datatables.net/download/ -->
-    <link rel="stylesheet" type="text/css"
-          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css"/>
-    <link rel="stylesheet" type="text/css"
-          href="https://cdn.datatables.net/v/bs5/jq-3.6.0/jszip-2.5.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/b-html5-2.2.3/sc-2.0.7/sp-2.0.2/datatables.min.css"/>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdn.datatables.net/v/bs5/jq-3.6.0/jszip-2.5.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/b-html5-2.2.3/sc-2.0.7/sp-2.0.2/datatables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.1/b-2.2.3/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.1/b-2.2.3/datatables.min.js"></script>
     <style>
         #add_component {
             font-size: medium;
@@ -101,6 +97,11 @@
             width: 800px;
             height: 432px;
             border-width: 0;
+        }
+
+        .row_label {
+            font-family: monospace;
+            color: darkgray;
         }
     </style>
 </head>
@@ -483,26 +484,64 @@
     ];
 
     const dataTableOptions = {
-        "data": resultsData,
-        "columns": [
+        // https://datatables.net/reference/option/dom#Styling.
+        dom: ("<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'f><'col-sm-12 col-md-4 text-end'B>>"
+              + "<'row'<'col-sm-12'tr>>"
+              + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"),
+        data: resultsData,
+        buttons: {
+            buttons: [
+                {
+                    text: 'Download',
+                    action: function (e, dt, node, config) {
+                        downloadResults();
+                    }
+                }
+            ],
+        },
+        columns: [
             {data: "Summary"}
         ],
-        "createdRow": function (row, data) {
+        createdRow: function (row, data) {
             const reactionId = data["Reaction ID"];
             fetch(root + '/render/' + reactionId)
                 .then(response => response.json())
                 .then(responseData => {
                     const content = $('td', row).eq(0);
-                    content.html(responseData);
+                    const rowLabel = '<p class="row_label">' + reactionId + '</p>';
+                    content.html(rowLabel + responseData);
                     content.css('cursor', 'pointer');
                     content.on('click', function () {
                         window.open(root + '/id/' + reactionId, '_blank');
                     })
                 });
         },
-        "deferRender": true,
-        "searching": false,
+        deferRender: true,
+        ordering: false,
+        searching: false,
     };
+
+    function downloadResults() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', root + '/download_results');
+        xhr.responseType = "blob";
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                const url = URL.createObjectURL(xhr.response);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = "ord_search_results.pb.gz"
+                link.click();
+                // https://stackoverflow.com/a/56547307.
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    link.remove();
+                }, 100);
+            }
+        };
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify(resultsData));
+    }
 
     $(document).ready(function () {
             $('#results_table').DataTable(dataTableOptions);

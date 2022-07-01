@@ -38,11 +38,15 @@ be URL-encoded.
 # pylint: disable=too-many-locals
 
 import dataclasses
+import gzip
+import io
 import os
 from typing import Dict, List, Optional, Tuple, Union
 
 import flask
 from rdkit import Chem
+
+from ord_schema.proto import dataset_pb2
 
 from ord_interface.client import query
 from ord_interface.visualization import generate_text
@@ -55,6 +59,7 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "ord-postgres")
 POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE", "ord")
 
 BOND_LENGTH = 20
+MAX_RESULTS = 1000
 
 
 @bp.route("/")
@@ -203,8 +208,10 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     use_stereochemistry = flask.request.args.get("use_stereochemistry")
     similarity = flask.request.args.get("similarity")
     limit = flask.request.args.get("limit")
-    if limit is not None:
-        limit = int(limit)
+    if limit is None:
+        limit = MAX_RESULTS
+    else:
+        limit = min(int(limit), MAX_RESULTS)
     if dataset_ids is not None:
         command = query.DatasetIdQuery(dataset_ids.split(","))
     elif reaction_ids is not None:
@@ -242,3 +249,20 @@ def get_molfile():
         return flask.jsonify(Chem.MolToMolBlock(mol))
     except ValueError:
         return f"could not parse SMILES: {smiles}", 400
+
+
+@bp.route("/download_results", methods=["POST"])
+def download_results():
+    """Downloads search results as a Dataset proto."""
+    reaction_ids = [row["Reaction ID"] for row in flask.request.get_json()]
+    command = query.ReactionIdQuery(reaction_ids[:MAX_RESULTS])
+    try:
+        results = connect().run_query(command)
+    except query.QueryException as error:
+        return flask.abort(flask.make_response(str(error), 400))
+    dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
+    return flask.send_file(
+        io.BytesIO(gzip.compress(dataset.SerializeToString())),
+        as_attachment=True,
+        attachment_filename="ord_search_results.pb.gz",
+    )

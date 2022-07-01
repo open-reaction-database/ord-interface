@@ -18,3 +18,16 @@ $ ./build_test_database.sh
 $ docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
 $ docker compose up
 ```
+
+## Development
+
+To start a Flask server in development mode:
+
+```shell
+$ cd ord_interface
+$ ./build_test_database.sh
+# Start the database backend.
+$ docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test
+# Start the development server.
+$ POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python -m flask run
+```
