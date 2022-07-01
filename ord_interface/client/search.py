@@ -255,7 +255,7 @@ def get_molfile():
 def download_results():
     """Downloads search results as a Dataset proto."""
     reaction_ids = [row["Reaction ID"] for row in flask.request.get_json()]
-    command = query.ReactionIdQuery(reaction_ids)
+    command = query.ReactionIdQuery(reaction_ids[:MAX_RESULTS])
     try:
         results = connect().run_query(command)
     except query.QueryException as error:
