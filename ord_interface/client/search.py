@@ -38,11 +38,15 @@ be URL-encoded.
 # pylint: disable=too-many-locals
 
 import dataclasses
+import gzip
+import io
 import os
 from typing import Dict, List, Optional, Tuple, Union
 
 import flask
 from rdkit import Chem
+
+from ord_schema.proto import dataset_pb2
 
 from ord_interface.client import query
 from ord_interface.visualization import generate_text
@@ -242,3 +246,20 @@ def get_molfile():
         return flask.jsonify(Chem.MolToMolBlock(mol))
     except ValueError:
         return f"could not parse SMILES: {smiles}", 400
+
+
+@bp.route("/download_results", methods=["POST"])
+def download_results():
+    """Downloads search results as a Dataset proto."""
+    reaction_ids = [row["Reaction ID"] for row in flask.request.get_json()]
+    command = query.ReactionIdQuery(reaction_ids)
+    try:
+        results = connect().run_query(command)
+    except query.QueryException as error:
+        return flask.abort(flask.make_response(str(error), 400))
+    dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
+    return flask.send_file(
+        io.BytesIO(gzip.compress(dataset.SerializeToString())),
+        as_attachment=True,
+        attachment_filename="ord_search_results.pb.gz",
+    )
