@@ -59,6 +59,7 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "ord-postgres")
 POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE", "ord")
 
 BOND_LENGTH = 20
+MAX_RESULTS = 1000
 
 
 @bp.route("/")
@@ -207,8 +208,10 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     use_stereochemistry = flask.request.args.get("use_stereochemistry")
     similarity = flask.request.args.get("similarity")
     limit = flask.request.args.get("limit")
-    if limit is not None:
-        limit = int(limit)
+    if limit is None:
+        limit = MAX_RESULTS
+    else:
+        limit = min(int(limit), MAX_RESULTS)
     if dataset_ids is not None:
         command = query.DatasetIdQuery(dataset_ids.split(","))
     elif reaction_ids is not None:
