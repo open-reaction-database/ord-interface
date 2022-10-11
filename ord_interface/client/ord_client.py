@@ -14,9 +14,7 @@
 """Python API for the Open Reaction Database."""
 
 import binascii
-import gzip
 from typing import List, Optional
-import urllib.parse
 
 import requests
 
@@ -29,31 +27,6 @@ from ord_interface.client import query
 
 TARGET = "https://client.open-reaction-database.org"
 ORD_DATA_URL = "https://github.com/Open-Reaction-Database/ord-data/raw/main/"
-
-
-def fetch_dataset(dataset_id: str) -> dataset_pb2.Dataset:
-    """Fetches a single Dataset message.
-
-    Datasets are first class objects in GitHub, so this method skips the
-    client API and goes directly to the ord-data repository.
-
-    Args:
-        dataset_id: String dataset ID.
-
-    Returns:
-        Dataset message.
-
-    Raises:
-        RuntimeError: The dataset request failed.
-        ValueError: The dataset ID is invalid.
-    """
-    if not validations.is_valid_dataset_id(dataset_id):
-        raise ValueError(f"Invalid dataset ID: {dataset_id}")
-    url = urllib.parse.urljoin(ORD_DATA_URL, f"{message_helpers.id_filename(dataset_id)}.pb.gz")
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise RuntimeError(f"Request {url} failed with status {response.status_code}")
-    return dataset_pb2.Dataset.FromString(gzip.decompress(response.content))
 
 
 class OrdClient:
@@ -95,13 +68,14 @@ class OrdClient:
         Returns:
             Dataset message.
         """
-        return fetch_dataset(dataset_id)
+        return message_helpers.fetch_dataset(dataset_id)
 
-    def fetch_reactions(self, reaction_ids: List[str]) -> List[reaction_pb2.Reaction]:
+    def fetch_reactions(self, reaction_ids: List[str], timeout: float = 10.0) -> List[reaction_pb2.Reaction]:
         """Fetches one or more Reaction messages.
 
         Args:
             reaction_ids: List of reaction IDs.
+            timeout: Number of seconds to wait before timing out the request.
 
         Returns:
             List of Reaction messages.
@@ -113,7 +87,7 @@ class OrdClient:
             if not validations.is_valid_reaction_id(reaction_id):
                 raise ValueError(f"Invalid reaction ID: {reaction_id}")
         target = self._target + self._prefix + "/api/fetch_reactions"
-        response = requests.post(target, json=list(set(reaction_ids)))
+        response = requests.post(target, json=list(set(reaction_ids)), timeout=timeout)
         results = response.json()
         # NOTE(kearnes): Return reactions in the same order as requested.
         reactions = {}
@@ -145,6 +119,7 @@ class OrdClient:
         components: Optional[List["ComponentQuery"]] = None,
         use_stereochemistry: Optional[bool] = None,
         similarity: Optional[float] = None,
+        timeout: float = 10.0,
     ) -> List[query.Result]:
         """Executes a query against the Open Reaction Database.
 
@@ -159,6 +134,7 @@ class OrdClient:
             use_stereochemistry: Boolean whether to use stereochemistry when
                 matching.
             similarity: Float similarity threshold for SIMILAR queries.
+            timeout: Number of seconds to wait before timing out the request.
 
         Returns:
             List of Result instances.
@@ -188,7 +164,7 @@ class OrdClient:
             "similarity": similarity,
         }
         target = self._target + self._prefix + "/api/query"
-        response = requests.get(target, params=params)
+        response = requests.get(target, params=params, timeout=timeout)
         results = response.json()
         return [query.Result(**result) for result in results]
 
