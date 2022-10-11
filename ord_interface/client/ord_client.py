@@ -110,7 +110,7 @@ class OrdClient:
         assert len(reactions) == 1
         return reactions[0]
 
-    def query(  # pylint: disable=too-many-arguments
+    def query(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         dataset_ids: Optional[List[str]] = None,
         reaction_ids: Optional[List[str]] = None,
