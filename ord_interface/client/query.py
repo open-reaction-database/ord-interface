@@ -107,7 +107,7 @@ class ReactionQueryBase(abc.ABC):
         """
 
     @abc.abstractmethod
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[str] = None) -> List[Result]:
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
