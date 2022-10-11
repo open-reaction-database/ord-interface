@@ -50,7 +50,7 @@ ENV PATH="/usr/src/app/ord-interface/ord_interface/editor/bin:${PATH}"
 RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
  && mkdir -p externs \
  && mv jquery-3.3.js externs
-RUN npm install google-closure-compiler
+RUN npm install google-closure-compiler@20220803
 
 # Install dependencies.
 WORKDIR /usr/src/app/ord-interface
