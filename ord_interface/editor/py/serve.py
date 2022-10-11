@@ -140,9 +140,7 @@ def download_dataset(name, kind="pb"):
         data = io.BytesIO(text_format.MessageToBytes(dataset))
     else:
         flask.abort(flask.make_response(f"unsupported format: {kind}", 406))
-    return flask.send_file(
-        data, mimetype="application/protobuf", as_attachment=True, attachment_filename=f"{name}.{kind}"
-    )
+    return flask.send_file(data, mimetype="application/protobuf", as_attachment=True, download_name=f"{name}.{kind}")
 
 
 @bp.route("/dataset/<name>/upload", methods=["POST"])
@@ -265,9 +263,7 @@ def download_reaction():
     reaction = reaction_pb2.Reaction()
     reaction.ParseFromString(flask.request.get_data())
     data = io.BytesIO(text_format.MessageToBytes(reaction))
-    return flask.send_file(
-        data, mimetype="application/protobuf", as_attachment=True, attachment_filename="reaction.pbtxt"
-    )
+    return flask.send_file(data, mimetype="application/protobuf", as_attachment=True, download_name="reaction.pbtxt")
 
 
 @bp.route("/dataset/<name>/new/reaction")
@@ -395,7 +391,7 @@ def read_upload(token):
         The POST body from the request, after passing through a file.
     """
     data = io.BytesIO(flask.request.get_data())
-    return flask.send_file(data, mimetype="application/protobuf", as_attachment=True, attachment_filename=token)
+    return flask.send_file(data, mimetype="application/protobuf", as_attachment=True, download_name=token)
 
 
 def _adjust_error(error: str) -> str:
@@ -520,21 +516,21 @@ def compare(name):
 def js(script):
     """Accesses any built JS file by name from the Closure output directory."""
     path = security.safe_join(os.path.join(os.path.dirname(__file__), "../gen/js/ord"), script)
-    return flask.send_file(get_file(path), attachment_filename=script)
+    return flask.send_file(get_file(path), download_name=script)
 
 
 @bp.route("/css/<sheet>")
 def css(sheet):
     """Accesses any CSS file by name."""
     path = security.safe_join(os.path.join(os.path.dirname(__file__), "../css"), sheet)
-    return flask.send_file(get_file(path), attachment_filename=sheet)
+    return flask.send_file(get_file(path), download_name=sheet)
 
 
 @bp.route("/img/<image>")
 def img(image):
     """For static images, currently used only by the template editor."""
     path = security.safe_join(os.path.join(os.path.dirname(__file__), "../img"), image)
-    return flask.send_file(get_file(path), attachment_filename=image)
+    return flask.send_file(get_file(path), download_name=image)
 
 
 @bp.route("/reaction/id/deps.js")
