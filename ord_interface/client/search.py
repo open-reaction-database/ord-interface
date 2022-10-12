@@ -264,5 +264,5 @@ def download_results():
     return flask.send_file(
         io.BytesIO(gzip.compress(dataset.SerializeToString())),
         as_attachment=True,
-        attachment_filename="ord_search_results.pb.gz",
+        download_name="ord_search_results.pb.gz",
     )
