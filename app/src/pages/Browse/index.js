@@ -1,4 +1,4 @@
-export function Browse() {
+const Browse = () => {
   return (
     <div id="datasets" class="container mt-3">
       <table id="datasets_table" class="display table">
@@ -14,3 +14,5 @@ export function Browse() {
     </div>
   )
 }
+
+export default Browse

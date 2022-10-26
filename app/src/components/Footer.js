@@ -1,5 +1,5 @@
 
-export function Footer() {
+const Footer = () => {
   return (
     // https://radu.link/make-footer-stay-bottom-page-bootstrap/
     <footer class="bg-light text-center mt-auto">
@@ -9,3 +9,5 @@ export function Footer() {
     </footer>
   )
 }
+
+export default Footer

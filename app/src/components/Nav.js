@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 
-export function Nav() {
+const Nav = () => {
   return (
     <nav class="navbar navbar-expand-lg bg-light">
       <div class="container">
@@ -41,3 +41,5 @@ export function Nav() {
     </nav>
   )
 }
+
+export default Nav
