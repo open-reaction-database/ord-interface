@@ -1,22 +1,26 @@
 import './App.css';
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom"
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div>
+        <Routes>
+          <Route exact path="/">
+
+          </Route>
+          <Route exact path="/client/browse">
+
+          </Route>
+          <Route exact path="/search">
+
+          </Route>
+          <Route exact path="/editor/datasets">
+
+          </Route>
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
