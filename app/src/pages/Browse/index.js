@@ -1,7 +1,10 @@
+
 const Browse = () => {
+
+
   return (
-    <div id="datasets" class="container mt-3">
-      <table id="datasets_table" class="display table">
+    <div id="datasets" className="container mt-3">
+      <table id="datasets_table" className="display table">
           <thead>
           <tr>
               <th>Dataset ID</th>
