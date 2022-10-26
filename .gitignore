@@ -13,7 +13,7 @@ __pycache__
 # vim swap files
 *.sw[a-z]
 # build output
-/build
+**/build
 /dist
 # Folder tracking files
 .DS_Store
@@ -25,3 +25,21 @@ __pycache__
 # Node stuff.
 **/node_modules/
 **/package-lock.json
+
+# React dependencies
+**/.pnp
+**/.pnp.js
+
+# testing
+**/coverage
+
+# misc
+**/.DS_Store
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
