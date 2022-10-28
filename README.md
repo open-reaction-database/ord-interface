@@ -34,6 +34,9 @@ $ POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK
 
 ## React App
 
+```shell
+cd app
+```
 In the `./app` directory, you can run:
 
 ### `npm start`
