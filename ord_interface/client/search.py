@@ -150,7 +150,8 @@ def fetch_reactions():
         return flask.abort(flask.make_response(str(error), 400))
 
 
-def fetch_datasets() -> List[Dict[str, Union[str, int]]]:
+@bp.route("/api/fetch_datasets", methods=["GET"])
+def fetch_datasets():
     """Fetches info about the current datasets."""
     engine = connect()
     rows = {}
@@ -173,8 +174,7 @@ def fetch_datasets() -> List[Dict[str, Union[str, int]]]:
         )
         for dataset_id, count in cursor:
             rows[dataset_id]["Size"] = count
-        return list(rows.values())
-
+        return flask.jsonify(list(rows.values()))
 
 @bp.route("/api/query")
 def run_query():
