@@ -16,7 +16,7 @@
 # $ cd path/to/ord-interface/ord_interface
 # $ docker build --file=Dockerfile -t openreactiondatabase/ord-interface ..
 
-FROM python:latest
+FROM python:3.9
 
 # default-jre is required for running the closure compiler linter.
 # For this next line, see:
