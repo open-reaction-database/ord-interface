@@ -1,19 +1,3 @@
-<template lang="pug">
-#browse-main
-  #datasets-table.table-container
-    .col.header Dataset ID
-    .col.header Name
-    .col.header Description
-    .col.header Size
-    template(
-      v-for='row in tableData'
-    )
-      .col {{row["Dataset ID"]}}
-      .col {{row.Name}}
-      .col.ellipses {{row.Description.length > 75 ? row.Description.substr(0,75)+"..." : row.Description}}
-      .col {{row.Size}}
-</template>
-
 <script>
 export default {
   data() {
@@ -32,6 +16,22 @@ export default {
   }
 }
 </script>
+
+<template lang="pug">
+#browse-main
+  #datasets-table.table-container
+    .col.header Dataset ID
+    .col.header Name
+    .col.header Description
+    .col.header Size
+    template(
+      v-for='row in tableData'
+    )
+      .col {{row["Dataset ID"]}}
+      .col {{row.Name}}
+      .col.ellipses {{row.Description.length > 75 ? row.Description.substr(0,75)+"..." : row.Description}}
+      .col {{row.Size}}
+</template>
 
 <style lang="sass" scoped>
 @import '@/styles/table'

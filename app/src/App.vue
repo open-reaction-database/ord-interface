@@ -1,9 +1,3 @@
-<template lang="pug">
-#main-container
-  HeaderNav
-  router-view
-  MainFooter
-</template>
 
 <script>
 import HeaderNav from "./components/HeaderNav"
@@ -16,6 +10,13 @@ export default {
   }
 }
 </script>
+
+<template lang="pug">
+#main-container
+  HeaderNav
+  router-view
+  MainFooter
+</template>
 
 <style lang="sass">
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap')

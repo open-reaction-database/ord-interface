@@ -1,3 +1,10 @@
+
+
+<script>
+export default {
+}
+</script>
+
 <template lang="pug">
 nav.navbar.navbar-expand-lg.bg-light
   .container
@@ -28,11 +35,6 @@ nav.navbar.navbar-expand-lg.bg-light
         .nav-item
           a.nav-link(href="https://docs.open-reaction-database.org") Docs
 </template>
-
-<script>
-export default {
-}
-</script>
 
 <style lang="sass" scoped>
 @import @/styles/vars

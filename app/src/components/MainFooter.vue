@@ -1,13 +1,13 @@
-<template lang="pug">
-footer.bg-light.text-center.mt-auto
-  div.p-3.copy &copy; Copyright 2022 Open Reaction Database Project Authors
-</template>
-
 <script>
 export default {
   
 }
 </script>
+
+<template lang="pug">
+footer.bg-light.text-center.mt-auto
+  div.p-3.copy &copy; Copyright 2022 Open Reaction Database Project Authors
+</template>
 
 <style lang="sass" scoped>
 @import @/styles/vars
