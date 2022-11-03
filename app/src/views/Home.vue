@@ -1,16 +1,12 @@
 <template lang="pug">
 .home
-  img( alt="Ord logo" src="../assets/logo.png")
+  img( alt="Ord logo" src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg")
 </template>
 
 <script>
-// @ is an alias to /src
-// import HelloWorld from '@/components/HelloWorld.vue'
-
 export default {
   name: 'HomeView',
   components: {
-    // HelloWorld
   }
 }
 </script>
