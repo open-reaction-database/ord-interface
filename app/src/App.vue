@@ -1,30 +1,21 @@
-<template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+<template lang="pug">
+#main-container
+  HeaderNav
+  router-view
+  MainFooter
 </template>
 
-<style lang="scss">
-// #app {
-//   font-family: Avenir, Helvetica, Arial, sans-serif;
-//   -webkit-font-smoothing: antialiased;
-//   -moz-osx-font-smoothing: grayscale;
-//   text-align: center;
-//   color: #2c3e50;
-// }
+<script>
+import HeaderNav from "./components/HeaderNav"
+import MainFooter from "./components/MainFooter"
 
-// nav {
-//   padding: 30px;
+export default {
+  components: {
+    HeaderNav,
+    MainFooter,
+  }
+}
+</script>
 
-//   a {
-//     font-weight: bold;
-//     color: #2c3e50;
-
-//     &.router-link-exact-active {
-//       color: #42b983;
-//     }
-//   }
-// }
+<style lang="sass">
 </style>
