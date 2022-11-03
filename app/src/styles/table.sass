@@ -1,16 +1,25 @@
 @import '@/styles/vars'
 
-.table-container
-  background-color: white
-  width: 90%
-  margin: auto
-  border-radius: 0.5rem
-  display: grid
-  overflow: hidden
-  .col
-    border-top: 1px solid $medgrey
-    padding: 0.5rem
-    &.header
-      border-top: none
-      font-weight: 700
-      font-size: 1.25rem
+.content
+  .table-container
+    background-color: white
+    width: 90%
+    margin: auto
+    border-radius: 0.5rem
+    display: grid
+    overflow: hidden
+    display: grid
+    .column
+      border-top: 1px solid $medgrey
+      padding: 0.5rem
+      &.label
+        border-top: none
+        font-weight: 700
+        font-size: 1.25rem
+  // .content
+  //   .column-holder
+  //     display: grid
+  //     align-items: center
+  //     padding: .5rem 1rem
+  //     border-bottom: 2px solid $medgrey
+  //     box-shadow: none
