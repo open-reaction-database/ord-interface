@@ -18,4 +18,9 @@ export default {
 </script>
 
 <style lang="sass">
+#app, #main-container
+  min-height: 100vh
+#main-container
+  display: grid
+  grid-template-rows: auto 1fr auto
 </style>
