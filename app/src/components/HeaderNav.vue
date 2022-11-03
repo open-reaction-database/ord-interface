@@ -7,34 +7,59 @@ nav.navbar.navbar-expand-lg.bg-light
         alt="ORD Logo"
         height="30"
       )
-    button(
-      className="navbar-toggler" 
-      type="button" 
-      data-bs-toggle="collapse" 
-      data-bs-target="#navbarNav"
-      aria-controls="navbarNav" 
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    )
-      span.navbar-toggler-icon
+    //- button(
+    //-   className="navbar-toggler" 
+    //-   type="button" 
+    //-   data-bs-toggle="collapse" 
+    //-   data-bs-target="#navbarNav"
+    //-   aria-controls="navbarNav" 
+    //-   aria-expanded="false"
+    //-   aria-label="Toggle navigation"
+    //- )
+    //-   span.navbar-toggler-icon
     #navbarNav.collapse.navbar-collapse
-      ul.navbar-nav
-        li.nav-item
+      .navbar-nav
+        .nav-item
           router-link.nav-link.active(aria-current="page" to="/browse") Browse
         //- li.nav-item
         //-   <Link className="nav-link" to="/search">Search</Link>
         //- li.nav-item
         //-   <Link className="nav-link" to="/editor">Contribute</Link>
-        li.nav-item
+        .nav-item
           a.nav-link(href="https://docs.open-reaction-database.org") Docs
 </template>
 
 <script>
 export default {
-  
 }
 </script>
 
 <style lang="sass" scoped>
+@import @/styles/vars
+
+nav
+  background-color: $lightgrey
+  .container
+    display: flex
+    flex-wrap: inherit
+    align-items: center
+    // justify-content: space-between
+    width: 90%
+    margin: auto
+    padding: 0.5rem 0
+    .navbar-brand
+      padding: 0.5rem 0
+    #navbarNav
+      flex-direction: row
+      .navbar-nav
+        display: flex
+        .nav-item
+          .nav-link
+            padding: 0.5rem
+            text-decoration: none
+            transition: color .15s
+            color: $linkblue
+            &::hover
+              color: $hoverblue
 
 </style>
