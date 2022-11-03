@@ -38,7 +38,7 @@ export default {
 @import @/styles/vars
 
 nav
-  background-color: $lightgrey
+  background-color: white
   .container
     display: flex
     flex-wrap: inherit
@@ -53,13 +53,13 @@ nav
       flex-direction: row
       .navbar-nav
         display: flex
+        margin-left: 1rem
         .nav-item
           .nav-link
             padding: 0.5rem
             text-decoration: none
-            transition: color .15s
+            transition: .15s
             color: $linkblue
-            &::hover
+            &:hover
               color: $hoverblue
-
 </style>

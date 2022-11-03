@@ -1,17 +1,16 @@
 <template lang="pug">
-#datasets.container.mt-3
+#browse-main
   #datasets-table.table-container
-    .row.header
-      .col.header Dataset ID
-      .col.header Name
-      .col.header Description
-      .col.header Size
-    .row(
+    .col.header Dataset ID
+    .col.header Name
+    .col.header Description
+    .col.header Size
+    template(
       v-for='row in tableData'
     )
       .col {{row["Dataset ID"]}}
       .col {{row.Name}}
-      .col {{row.Description}}
+      .col.ellipses {{row.Description.length > 75 ? row.Description.substr(0,75)+"..." : row.Description}}
       .col {{row.Size}}
 </template>
 
@@ -19,6 +18,7 @@
 export default {
   data() {
     return {
+      loading: true,
       tableData: []
     }
   },
@@ -27,11 +27,16 @@ export default {
       .then(response => response.json())
       .then(data => {
         this.tableData = data
+        this.loading = false
       })
   }
 }
 </script>
 
 <style lang="sass" scoped>
-
+@import '@/styles/table'
+#browse-main
+  padding: 1rem 0
+  #datasets-table
+    grid-template-columns: 1fr 1fr 1fr auto
 </style>

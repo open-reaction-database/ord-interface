@@ -12,7 +12,7 @@ export default {
 <style lang="sass" scoped>
 @import @/styles/vars
 footer
-  background-color: $lightgrey
+  background-color: white
   width: 100%
   text-align: center
   .copy

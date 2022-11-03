@@ -19,7 +19,7 @@ export default {
 
 <style lang="sass">
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap')
-
+@import '@/styles/vars'
 body
   font-family: 'Roboto', sans-serif
   margin: 0
@@ -28,4 +28,5 @@ body
 #main-container
   display: grid
   grid-template-rows: auto 1fr auto
+  background-color: $lightgrey
 </style>
