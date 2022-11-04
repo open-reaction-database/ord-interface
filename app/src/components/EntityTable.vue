@@ -17,21 +17,33 @@ export default {
       currentPage: 1,
       loading: true,
       pagination: 10,
+      searchString: "",
     }
   },
   computed: {
-    filteredEntities() {if (!this.entities) return []
+    filteredEntities() {
+      if (!this.entities) return []
       let entities = this.entities
 
-      // if (this.search) {
-      //   entities = entities.filter(entity => isBeingSearched(this.search, (entity[this.searchOptions.field] || '')))
-      // }
-
-      if (this.pagination > 0) {
-        entities = entities.slice(this.pagiBottom, this.pagiTop)
+      if (this.searchString) {
+        entities = entities.filter(entity => {
+          // create a bool for each search param
+          let matching = Array.apply(null, Array(this.searchArray.length))
+          // check matching for each search param
+          this.searchArray.forEach((param, pIdx) => {
+            Object.keys(entity).forEach(key => {
+              if (entity[key].toString().toLowerCase().includes(param.toLowerCase())) matching[pIdx] = true
+            })
+          })
+          console.log('matching',matching.includes(undefined))
+          return !matching.includes(undefined)
+        })
       }
 
       return entities
+    },
+    paginatedEntities() {
+      return this.filteredEntities.slice(this.pagiBottom, this.pagiTop)
     },
     pagiBottom() {
       return (this.currentPage - 1) * this.pagination
@@ -40,8 +52,8 @@ export default {
       return this.currentPage * this.pagination || 1
     },
     lastPage() {
-      if (this.pagination && this.entities)
-        return Math.ceil((this.entities.length || 1) / this.pagination)
+      if (this.pagination && this.filteredEntities)
+        return Math.ceil((this.filteredEntities.length || 1) / this.pagination)
       else return 1
     },
     pagiPrev() {
@@ -50,6 +62,9 @@ export default {
     pagiNext() {
       return this.currentPage === this.lastPage ? 1 : this.currentPage + 1
     },
+    searchArray() {
+      return this.searchString.split(" ")
+    }
   },
   methods: {
   },
@@ -74,17 +89,18 @@ export default {
       .title-holder
         .title.dotdotdot {{ title }}
         .subtitle.dotodotdot {{ subtitle }}
-    .search-area(v-if='searchOptions && searchOptions.field')
-      .input-holder hello world
-        //- pro-input(
-        //-   v-model='search',
-        //-   :options='{ title: `Search by ${searchOptions.by}` }'
-        //- )
+    .search-area
+      label(for="search") Search: 
+      input(
+        type="text"
+        id="search"
+        v-model='searchString'
+      )
     .content
       .entities-holder
-        slot(:entities='filteredEntities')
+        slot(:entities='paginatedEntities')
       .pagination(
-        v-if='pagination && entities && entities.length > pagination'
+        v-if='pagination && entities'
       )
         .select Showing 
           select(
@@ -96,7 +112,7 @@ export default {
             option(value=25) 25
             option(value=50) 50
             option(value=100) 100
-          |  of {{entities.length}} entries.
+          |  of {{filteredEntities.length}} entries.
         .paginav.first(@click='currentPage = 1')
           img.chevron(src='/img/arrowL.png')
           img.chevron(src='/img/arrowL.png')
@@ -147,8 +163,11 @@ export default {
         .subtitle
           font-weight: bold
     .search-area
-      padding: 1rem 0
-
+      padding: 1rem
+      margin: 0 5%
+      input
+        width: 30%
+        min-width: 300px
     .content
       width: 100%
       height: fit-content
