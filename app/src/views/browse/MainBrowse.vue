@@ -40,7 +40,6 @@ export default {
     :tableData='tableData'
     title="",
     v-slot='{ entities }'
-    :pagination='10'
     v-if='tableData.length'
   ) 
     .table-container

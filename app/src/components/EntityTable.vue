@@ -2,7 +2,12 @@
 export default {
   props: {
     tableData: Array,
-    pagination: Number,
+  },
+  watch: {
+    pagination() {
+      // set current page to 1 when pagination value changes to currentPage > lastPage
+      this.currentPage = 1
+    }
   },
   data() {
     return {
@@ -11,6 +16,7 @@ export default {
       search: '',
       currentPage: 1,
       loading: true,
+      pagination: 10,
     }
   },
   computed: {
@@ -49,7 +55,14 @@ export default {
   },
   async mounted() {
     // this.entities = this.tableData
-    this.entities = Array.apply(null, Array(100)).map(idx => this.tableData[0])
+    this.entities = Array.apply(null, Array(500)).map((val,idx) => {
+      return {
+        "Dataset ID": `${this.tableData[0]["Dataset ID"]}${Math.floor(Math.random() * idx)}`,
+        Name: `${this.tableData[0].Name} ${Math.floor(Math.random() * idx)}`,
+        Description: this.tableData[0].Description,
+        Size: this.tableData[0].Size + Math.floor(Math.random() * idx),
+      }
+    })
   }
 }
 </script>
@@ -73,6 +86,17 @@ export default {
       .pagination(
         v-if='pagination && entities && entities.length > pagination'
       )
+        .select Showing 
+          select(
+            name="pagination"
+            id="pagination"
+            v-model='pagination'
+          )
+            option(value=10) 10
+            option(value=25) 25
+            option(value=50) 50
+            option(value=100) 100
+          |  of {{entities.length}} entries.
         .paginav.first(@click='currentPage = 1')
           img.chevron(src='/img/arrowL.png')
           img.chevron(src='/img/arrowL.png')
@@ -102,6 +126,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
+@import '@/styles/vars'
+
 .table-main
   width: 100%
   .table-container
@@ -127,12 +153,9 @@ export default {
       width: 100%
       height: fit-content
       .entities-holder
-        min-height: 14rem
+        // min-height: 14rem
         height: 100%
-        // overflow-y: auto
-        // overflow-x: hidden
         display: block
-        // box-shadow: 0 0 .25rem 0 $lightgrey inset
         width: 100%
         > *
           padding-left: 1rem
@@ -148,19 +171,25 @@ export default {
             background-color: transparent
       .pagination
         display: grid
-        grid-template-columns: 1fr repeat(6, auto)
-        justify-items: end
+        grid-template-columns: 1fr repeat(7, auto)
+        // justify-items: end
         height: 100%
         align-items: end
         column-gap: 2rem
         padding: 1rem
-        margin-right: 5%
+        margin: 0 5%
+        color: $linkblue
+        .select
+          color: black
         .paginav
           font-weight: 600
           display: inline-grid
           grid-column-gap: 0.33rem
           align-items: center
           cursor: pointer
+          transition: .25s
+          &:hover
+            color: $hoverblue
           &.prev, &.next
             grid-template-columns: auto 1fr
           &.first, &.last
