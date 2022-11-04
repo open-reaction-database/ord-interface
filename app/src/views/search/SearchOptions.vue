@@ -5,14 +5,21 @@ export default {
       showReagentOptions: true,
       showReactionOptions: true,
       showDatasetOptions: true,
+      reagentOptions: {
+        reagents: [{smileSmart: "", source: "input", matchMode: "exact"}],
+        useStereochemistry: false,
+        similarityThreshold: 0.5,
+      },
     }
+  },
+  mounted() {
   }
 }
 </script>
 
 <template lang="pug">
 .search-options
-  .collapser(
+  .options-title(
     @click='showReagentOptions = !showReagentOptions'
     type='button'
     aria-controls='searchByReagent'
@@ -20,23 +27,54 @@ export default {
   #searchByReagent.options-container(
     v-if='showReagentOptions'
   )
-    #reagents_content
-      b(style='grid-column: text') SMILES/SMARTS
-      b Source
-      b Match Mode
-      button#add_component(type='button' onclick='addComponent();' style='grid-column: text;')
-        i.fas.fa-plus
-        |  Add Component
-      label(for='stereo' style='grid-column: text;') Use Stereochemistry
-      input#stereo(type='checkbox')
-      label(for='similarity' style='grid-column: text;') Similarity Threshold
-      input#similarity(type='text' value='0.5' style='width: 60px;')
-  .collapser(
+    .reagent-options
+      .spacer
+      .label SMILES/SMARTS
+      .label Source
+      .label Match Mode
+      .spacer
+      template(v-for='(reagent, idx) in reagentOptions.reagents')
+        .draw
+        .field.long 
+          input(
+            type='text'
+            v-model='reagent.smileSmart'
+          )
+        .field
+          select(v-model='reagent.source')
+            option(value='input') input
+            option(value='output') output
+        .field
+          select(v-model='reagent.matchMode')
+            option(value='exact') exact
+            option(value='similar') similar
+            option(value='substructure') substructure
+            option(value='smarts') smarts
+        .delete
+    button#add_component(
+      type='button' 
+      @click='this.reagentOptions.reagents.push({smileSmart: "", source: "input", matchMode: "exact"})'
+    )
+      i.material-icons add
+      |  Add Component
+    .general-options
+      label(for='stereo') Use Stereochemistry
+      input#stereo(
+        type='checkbox'
+        v-model='reagentOptions.useStereochemistry'
+      )
+      label(for='similarity') Similarity Threshold
+      input#similarity(
+        type='number'
+        step=0.1
+        v-model='reagentOptions.similarityThreshold'
+        )
+  .options-title(
     @click='showReactionOptions = !showReactionOptions'
     type='button' 
     aria-controls='searchByReaction'
   ) Reactions
-  #searchByReaction.option-container(
+  #searchByReaction.options-container(
     v-if='showReactionOptions'
   )
     #reactions_content
@@ -44,7 +82,7 @@ export default {
       textarea#reaction_ids
       label(for='reaction_smarts') Reaction SMARTS
       textarea#reaction_smarts
-  .collapser(
+  .options-title(
     @click='showDatasetOptions = !showDatasetOptions'
     type='button' 
     aria-controls='searchByDataset'
@@ -57,15 +95,40 @@ export default {
       textarea#dataset_ids
       label(for='dois') DOIs
       textarea#dois
-  #go.mt-3
+  #searchParamaters.options-title Search Paramaters
+  .options-container
     label(for='limit') Result Limit
     input#limit(type='text' value='100' min='0' style='width: 60px')
 </template>
 
 <style lang="sass" scoped>
 .search-options
-  .collapser
+  .options-title
     font-size: 1.5rem
     font-weight: 700
     cursor: pointer
+    margin-bottom: 1rem
+  .options-container
+    background-color: white
+    width: 100%
+    border-radius: 0.25rem
+    padding: 1rem
+    margin-bottom: 1rem
+  #searchByReagent
+    .reagent-options
+      display: grid
+      grid-template-columns: repeat(4, auto) 1fr
+      column-gap: 1rem
+      row-gap: 0.5rem
+      margin-bottom: 0.5rem
+      .label
+        font-weight: 700
+    .general-options
+      display: grid
+      grid-template-columns: auto 1fr
+      column-gap: 1rem
+      row-gap: 0.5rem
+      input
+        max-width: 50px
+        text-align: center
 </style>
