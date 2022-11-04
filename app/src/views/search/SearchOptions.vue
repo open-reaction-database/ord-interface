@@ -11,9 +11,17 @@ export default {
       showReactionOptions: true,
       showDatasetOptions: true,
       reagentOptions: {
-        reagents: [{smileSmart: "", source: "input", matchMode: "exact"}],
+        reagents: [],
         useStereochemistry: false,
         similarityThreshold: 0.5,
+      },
+      reactionOptions: {
+        reactionIDs: [],
+        reactionSmarts: [],
+      },
+      datasetOptions: {
+        datasetIDs: [],
+        dois: []
       },
       showKetcherModal: false,
     }
@@ -39,35 +47,37 @@ export default {
   #searchByReagent.options-container(
     v-if='showReagentOptions'
   )
-    .subtitle Components
-    .reagent.options
-      .spacer
-      .label SMILES/SMARTS
-      .label Source
-      .label Match Mode
-      .spacer
-      template(v-for='(reagent, idx) in reagentOptions.reagents')
-        .draw
-          button(@click='openKetcherModal(idx)')
-            i.material-icons draw
-        .field.long 
-          input(
-            type='text'
-            v-model='reagent.smileSmart'
-          )
-        .field
-          select(v-model='reagent.source')
-            option(value='input') input
-            option(value='output') output
-        .field
-          select(v-model='reagent.matchMode')
-            option(value='exact') exact
-            option(value='similar') similar
-            option(value='substructure') substructure
-            option(value='smarts') smarts
-        .delete
-          button(@click='reagentOptions.reagents.splice(idx,1)')
-            i.material-icons delete
+    .section
+      .subtitle Components
+      .reagent.options
+        .spacer
+        .label SMILES/SMARTS
+        .label Source
+        .label Match Mode
+        .spacer
+        template(v-for='(reagent, idx) in reagentOptions.reagents')
+          .draw
+            button(@click='openKetcherModal(idx)')
+              i.material-icons draw
+          .field.long 
+            input(
+              type='text'
+              v-model='reagent.smileSmart'
+            )
+          .field
+            select(v-model='reagent.source')
+              option(value='input') input
+              option(value='output') output
+          .field
+            select(v-model='reagent.matchMode')
+              option(value='exact') exact
+              option(value='similar') similar
+              option(value='substructure') substructure
+              option(value='smarts') smarts
+          .delete
+            button(@click='reagentOptions.reagents.splice(idx,1)')
+              i.material-icons delete
+        .copy(v-if='!reagentOptions.reagents.length') No components
         #add-component
           button(
             type='button' 
@@ -75,19 +85,20 @@ export default {
           )
             i.material-icons add
             |  Add Component
-    .subtitle General Options
-    .general.options
-      label(for='stereo') Use Stereochemistry
-      input#stereo(
-        type='checkbox'
-        v-model='reagentOptions.useStereochemistry'
-      )
-      label(for='similarity') Similarity Threshold
-      input#similarity(
-        type='number'
-        step=0.1
-        v-model='reagentOptions.similarityThreshold'
+    .section
+      .subtitle General Options
+      .general.options
+        label(for='stereo') Use Stereochemistry
+        input#stereo(
+          type='checkbox'
+          v-model='reagentOptions.useStereochemistry'
         )
+        label(for='similarity') Similarity Threshold
+        input#similarity(
+          type='number'
+          step=0.1
+          v-model='reagentOptions.similarityThreshold'
+          )
   .options-title(
     @click='showReactionOptions = !showReactionOptions'
     :class='showReactionOptions ? "" : "closed"'
@@ -164,16 +175,17 @@ export default {
     input, select
       font-size: 1rem
   #searchByReagent
+    display: grid
+    grid-template-columns: 1fr 1fr
     .reagent.options
       display: grid
       grid-template-columns: repeat(4, auto) 1fr
       column-gap: 1rem
       row-gap: 0.5rem
-      margin-bottom: 1.5rem
       align-items: center
       .label
-        font-weight: 700
-      #add-component
+        font-size: 1.1rem
+      #add-component, .copy
         grid-column: 1 / 3
     .general.options
       display: grid
