@@ -15,33 +15,7 @@ export default {
   },
   computed: {
     filteredEntities() {if (!this.entities) return []
-
       let entities = this.entities
-
-      // ensure that there are filters and at least one is engaged
-      if (
-        this.localFilters &&
-        this.localFilters.length &&
-        this.localFilters.find((lf) => lf.engaged)
-      ) {
-        entities = this.localFilters.reduce(
-          (acc, filter) => (filter.engaged ? acc.filter(filter.func) : acc),
-          entities
-        )
-      }
-
-      // ensure that there are dropdowns and at least one has chosen values
-      // if (
-      //   this.localDropdowns &&
-      //   this.localDropdowns.length &&
-      //   this.localDropdowns.find((ld) => ld.chosen.length)
-      // ) {
-      //   entities = this.localDropdowns.reduce((acc, ld) => {
-      //     if (!ld.chosen.length) return acc
-
-      //     return acc.filter((entity) => ld.func(entity, ld.chosen))
-      //   }, entities)
-      // }
 
       // if (this.search) {
       //   entities = entities.filter(entity => isBeingSearched(this.search, (entity[this.searchOptions.field] || '')))
@@ -72,30 +46,10 @@ export default {
     },
   },
   methods: {
-    readyFilters() {
-      if (!(this.filters && this.filters.length)) return
-
-      this.localFilters = this.filters.map((filter, index) => ({
-        toggleExclusive: () => {
-          // If selecting this filter should deselect another filter
-          if (filter.exclusive.length)
-            filter.exclusive.forEach((partner) => {
-              this.localFilters[partner].engaged = false
-            })
-          this.localFilters[index].engaged = true
-        },
-        ...filter,
-      }))
-    },
-    handleFilterClick(filter) {
-      if (filter.exclusive.length) filter.toggleExclusive()
-      else filter.engaged = !filter.engaged
-    },
   },
   async mounted() {
-    this.entities = this.tableData
-    console.log('entities',this.entities)
-    // await this.readyFilters()
+    // this.entities = this.tableData
+    this.entities = Array.apply(null, Array(100)).map(idx => this.tableData[0])
   }
 }
 </script>
@@ -113,23 +67,37 @@ export default {
         //-   v-model='search',
         //-   :options='{ title: `Search by ${searchOptions.by}` }'
         //- )
-    .filters(v-if='localFilters && localFilters.length')
-      .filter(
-        v-for='filter in localFilters',
-        @click='handleFilterClick(filter)',
-        :class='[{ engaged: filter.engaged }, filter.class && filter.class()]'
-      ) {{ filter.copy(filter.engaged) }}
     .content
       .entities-holder
         slot(:entities='filteredEntities')
       .pagination(
         v-if='pagination && entities && entities.length > pagination'
       )
+        .paginav.first(@click='currentPage = 1')
+          img.chevron(src='/img/arrowL.png')
+          img.chevron(src='/img/arrowL.png')
+          span.word First
         .prev.paginav(@click='currentPage = pagiPrev') 
           img.chevron(src='/img/arrowL.png')
           span.word Previous
+        .paginav(
+          @click='currentPage = currentPage > 1 ? currentPage - 1 : currentPage'
+          :class='currentPage > 1 ? "" : "no-click"'
+        )
+          span.word {{ currentPage > 1 ? currentPage - 1 : "..."}}
+        .paginav.no-click
+          span.word {{ currentPage }}
+        .paginav(
+          @click='currentPage = currentPage < lastPage ? currentPage + 1 : currentPage'
+          :class='currentPage < lastPage ? "" : "no-click"'
+        )
+          span.word {{ currentPage < lastPage ? currentPage + 1 : "..."}}
         .next.paginav(@click='currentPage = pagiNext') 
           span.word Next
+          img.chevron(src='/img/arrowR.png')
+        .paginav.last(@click='currentPage = lastPage')
+          span.word Last
+          img.chevron(src='/img/arrowR.png')
           img.chevron(src='/img/arrowR.png')
 </template>
 
@@ -152,53 +120,8 @@ export default {
         grid-template-rows: auto auto
         .subtitle
           font-weight: bold
-    .filters
-      margin-bottom: 1rem
-      display: flex
-      user-select: none
-      flex-wrap: wrap
-      .filter
-        cursor: pointer
-        margin: 0 1rem .5rem 0
-        // border: thin solid $yellow
-        padding: .5rem 1rem
-        // border-radius: .25rem
-        width: fit-content
-        font-size: 12px
-        box-shadow: 0 0 .5rem 0 #a0a0a0
-        &.underline
-          box-shadow: none
-          &:active
-            box-shadow: none
-        &.engaged
-          background-color: grey
-          color: white
-          &.underline
-            background-color: transparent
-            color: black
-            border-bottom: 5px solid grey
-        &:active
-          box-shadow: 0 0 .5rem 0 rgba(0,0,0,.4) inset
     .search-area
       padding: 1rem 0
-    // .dropdowns
-    //   position: relative
-    //   display: grid
-    //   grid-template-columns: 1fr 1fr
-    //   column-gap: 1rem
-    //   margin-bottom: 1rem
-    //   .dropdown-holder
-    //     display: grid
-    //     align-items: center
-    //     column-gap: .25rem
-    //     .helper-buttons
-    //       .button
-    //         color: white
-    //         // background: $mild-blue
-    //         padding: .25rem .5rem
-    //         // border-radius: .25rem
-    //         cursor: pointer
-    //         font-size: 12px
 
     .content
       width: 100%
@@ -225,20 +148,25 @@ export default {
             background-color: transparent
       .pagination
         display: grid
-        grid-template-columns: 1fr auto
+        grid-template-columns: 1fr repeat(6, auto)
         justify-items: end
         height: 100%
         align-items: end
         column-gap: 2rem
         padding: 1rem
+        margin-right: 5%
         .paginav
           font-weight: 600
           display: inline-grid
-          grid-template-columns: auto 1fr
           grid-column-gap: 0.33rem
           align-items: center
-          &:hover
-            cursor: pointer
+          cursor: pointer
+          &.prev, &.next
+            grid-template-columns: auto 1fr
+          &.first, &.last
+            grid-template-columns: auto auto 1fr
+          &.no-click
+            cursor: auto
           .chevron
             height: 0.75rem
 </style>

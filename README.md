@@ -32,7 +32,7 @@ $ docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test
 $ POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python -m flask run
 ```
 
-## React App
+## Vue App
 
 ```shell
 cd app
@@ -50,8 +50,3 @@ You may also see any lint errors in the console.
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
