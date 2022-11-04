@@ -1,9 +1,11 @@
 <script>
 import KetcherModal from '@/components/KetcherModal'
+import SearchItemList from './SearchItemList'
 
 export default {
   components: {
-    KetcherModal
+    KetcherModal,
+    SearchItemList
   },
   data() {
     return {
@@ -113,6 +115,10 @@ export default {
       textarea#reaction_ids
       label(for='reaction_smarts') Reaction SMARTS
       textarea#reaction_smarts
+      SearchItemList(
+        title='Reaction IDs'
+        :itemList.sync='reactionOptions.reactionIDs'
+      )
   .options-title(
     @click='showDatasetOptions = !showDatasetOptions'
     :class='showDatasetOptions ? "" : "closed"'
