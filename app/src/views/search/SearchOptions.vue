@@ -9,9 +9,9 @@ export default {
   },
   data() {
     return {
-      showReagentOptions: true,
-      showReactionOptions: true,
-      showDatasetOptions: true,
+      showReagentOptions: false,
+      showReactionOptions: false,
+      showDatasetOptions: false,
       reagentOptions: {
         reagents: [],
         useStereochemistry: false,
@@ -24,6 +24,9 @@ export default {
       datasetOptions: {
         datasetIDs: [],
         dois: []
+      },
+      searchParams: {
+        limit: 100
       },
       showKetcherModal: false,
     }
@@ -45,7 +48,7 @@ export default {
     :class='showReagentOptions ? "" : "closed"'
   ) 
     span Reagents
-    i.material-icons expand_more
+    i.material-icons expand_less
   #searchByReagent.options-container(
     v-if='showReagentOptions'
   )
@@ -106,7 +109,7 @@ export default {
     :class='showReactionOptions ? "" : "closed"'
   ) 
     span Reactions
-    i.material-icons expand_more
+    i.material-icons expand_less
   #searchByReaction.options-container(
     v-if='showReactionOptions'
   )
@@ -123,7 +126,7 @@ export default {
     :class='showDatasetOptions ? "" : "closed"'
   ) 
     span Datasets
-    i.material-icons expand_more
+    i.material-icons expand_less
   #searchByDataset.options-container(
     v-if='showDatasetOptions'
   )
@@ -137,8 +140,13 @@ export default {
     )
   #searchParamaters.options-title Search Paramaters
   .options-container
-    label(for='limit') Result Limit
-    input#limit(type='text' value='100' min='0' style='width: 60px')
+    .section
+      label(for='limit') Result Limit 
+      input#limit(
+        type='number'
+        min='0' 
+        v-model='searchParams.limit'  
+      )
   KetcherModal(v-if='showKetcherModal')
 </template>
 
