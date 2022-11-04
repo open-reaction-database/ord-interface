@@ -32,13 +32,15 @@ export default {
 .search-options
   .options-title(
     @click='showReagentOptions = !showReagentOptions'
-    type='button'
-    aria-controls='searchByReagent'
-  ) Reagents
+    :class='showReagentOptions ? "" : "closed"'
+  ) 
+    span Reagents
+    i.material-icons expand_more
   #searchByReagent.options-container(
     v-if='showReagentOptions'
   )
-    .reagent-options
+    .subtitle Components
+    .reagent.options
       .spacer
       .label SMILES/SMARTS
       .label Source
@@ -47,7 +49,7 @@ export default {
       template(v-for='(reagent, idx) in reagentOptions.reagents')
         .draw
           button(@click='openKetcherModal(idx)')
-            i.material-icons edit
+            i.material-icons draw
         .field.long 
           input(
             type='text'
@@ -66,13 +68,15 @@ export default {
         .delete
           button(@click='reagentOptions.reagents.splice(idx,1)')
             i.material-icons delete
-    button#add_component(
-      type='button' 
-      @click='this.reagentOptions.reagents.push({smileSmart: "", source: "input", matchMode: "exact"})'
-    )
-      i.material-icons add
-      |  Add Component
-    .general-options
+        #add-component
+          button(
+            type='button' 
+            @click='this.reagentOptions.reagents.push({smileSmart: "", source: "input", matchMode: "exact"})'
+          )
+            i.material-icons add
+            |  Add Component
+    .subtitle General Options
+    .general.options
       label(for='stereo') Use Stereochemistry
       input#stereo(
         type='checkbox'
@@ -86,9 +90,10 @@ export default {
         )
   .options-title(
     @click='showReactionOptions = !showReactionOptions'
-    type='button' 
-    aria-controls='searchByReaction'
-  ) Reactions
+    :class='showReactionOptions ? "" : "closed"'
+  ) 
+    span Reactions
+    i.material-icons expand_more
   #searchByReaction.options-container(
     v-if='showReactionOptions'
   )
@@ -99,9 +104,10 @@ export default {
       textarea#reaction_smarts
   .options-title(
     @click='showDatasetOptions = !showDatasetOptions'
-    type='button' 
-    aria-controls='searchByDataset'
-  ) Datasets
+    :class='showDatasetOptions ? "" : "closed"'
+  ) 
+    span Datasets
+    i.material-icons expand_more
   #searchByDataset.options-container(
     v-if='showDatasetOptions'
   )
@@ -118,18 +124,38 @@ export default {
 </template>
 
 <style lang="sass" scoped>
+@import '@/styles/vars'
 .search-options
   .options-title
     font-size: 1.5rem
     font-weight: 700
     cursor: pointer
+    padding: 0.5rem 1rem
+    border-radius: 0.25rem
     margin-bottom: 1rem
+    color: white
+    background-color: $linkblue
+    width: fit-content
+    display: flex
+    align-content: center
+    i
+      font-size: 2rem
+      transition: 0.25s
+    &.closed
+      i
+        transform: rotate(180deg)
   .options-container
     background-color: white
     width: 100%
     border-radius: 0.25rem
     padding: 1rem
     margin-bottom: 1rem
+    .subtitle
+      font-size: 1.25rem
+      font-weight: 700
+      margin-bottom: 0.5rem
+    .options
+      margin-left: 1rem
     button
       display: flex
       align-items: center
@@ -138,21 +164,22 @@ export default {
     input, select
       font-size: 1rem
   #searchByReagent
-    .reagent-options
+    .reagent.options
       display: grid
       grid-template-columns: repeat(4, auto) 1fr
       column-gap: 1rem
       row-gap: 0.5rem
-      margin-bottom: 0.5rem
+      margin-bottom: 1.5rem
       align-items: center
       .label
         font-weight: 700
-    .general-options
+      #add-component
+        grid-column: 1 / 3
+    .general.options
       display: grid
       grid-template-columns: auto 1fr
       column-gap: 1rem
       row-gap: 0.5rem
-      margin-top: 1rem
       input
         max-width: 50px
         text-align: center
