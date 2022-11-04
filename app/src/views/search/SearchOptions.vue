@@ -1,5 +1,10 @@
 <script>
+import KetcherModal from '@/components/KetcherModal'
+
 export default {
+  components: {
+    KetcherModal
+  },
   data() {
     return {
       showReagentOptions: true,
@@ -10,6 +15,12 @@ export default {
         useStereochemistry: false,
         similarityThreshold: 0.5,
       },
+      showKetcherModal: false,
+    }
+  },
+  methods: {
+    openKetcherModal(idx) {
+      this.showKetcherModal = true
     }
   },
   mounted() {
@@ -35,7 +46,7 @@ export default {
       .spacer
       template(v-for='(reagent, idx) in reagentOptions.reagents')
         .draw
-          button(@click='console.log("draw")')
+          button(@click='openKetcherModal(idx)')
             i.material-icons edit
         .field.long 
           input(
@@ -103,6 +114,7 @@ export default {
   .options-container
     label(for='limit') Result Limit
     input#limit(type='text' value='100' min='0' style='width: 60px')
+  KetcherModal(v-if='showKetcherModal')
 </template>
 
 <style lang="sass" scoped>
