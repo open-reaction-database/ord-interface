@@ -2,6 +2,7 @@
 export default {
   props: {
     tableData: Array,
+    title: String,
   },
   watch: {
     pagination() {
@@ -69,15 +70,15 @@ export default {
   methods: {
   },
   async mounted() {
-    // this.entities = this.tableData
-    this.entities = Array.apply(null, Array(500)).map((val,idx) => {
-      return {
-        "Dataset ID": `${this.tableData[0]["Dataset ID"]}${Math.floor(Math.random() * idx)}`,
-        Name: `${this.tableData[0].Name} ${Math.floor(Math.random() * idx)}`,
-        Description: this.tableData[0].Description,
-        Size: this.tableData[0].Size + Math.floor(Math.random() * idx),
-      }
-    })
+    this.entities = this.tableData
+    // this.entities = Array.apply(null, Array(500)).map((val,idx) => {
+    //   return {
+    //     "Dataset ID": `${this.tableData[0]["Dataset ID"]}${Math.floor(Math.random() * idx)}`,
+    //     Name: `${this.tableData[0].Name} ${Math.floor(Math.random() * idx)}`,
+    //     Description: this.tableData[0].Description,
+    //     Size: this.tableData[0].Size + Math.floor(Math.random() * idx),
+    //   }
+    // })
   }
 }
 </script>
@@ -87,8 +88,7 @@ export default {
   .table-container
     .header
       .title-holder
-        .title.dotdotdot {{ title }}
-        .subtitle.dotodotdot {{ subtitle }}
+        .title {{ title }}
     .search-area
       label(for="search") Search: 
       input(

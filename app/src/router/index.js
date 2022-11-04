@@ -11,6 +11,11 @@ const routes = [
     path: '/browse',
     name: 'browse',
     component: () => import('../views/browse/MainBrowse.vue')
+  },
+  {
+    path: '/search',
+    name: 'search',
+    component: () => import('../views/search/MainSearch.vue')
   }
 ]
 

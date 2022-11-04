@@ -24,18 +24,6 @@ export default {
 
 <template lang="pug">
 #browse-main
-  //- #datasets-table.table-container
-  //-   .col.header Dataset ID
-  //-   .col.header Name
-  //-   .col.header Description
-  //-   .col.header Size
-  //-   template(
-  //-     v-for='row in tableData'
-  //-   )
-  //-     .col {{row["Dataset ID"]}}
-  //-     .col {{row.Name}}
-  //-     .col.ellipses {{row.Description.length > 75 ? row.Description.substr(0,75)+"..." : row.Description}}
-  //-     .col {{row.Size}}
   EntityTable(
     :tableData='tableData'
     title="",
@@ -50,7 +38,8 @@ export default {
       template(
         v-for='(row, idx) in entities'
       )
-        .column {{row["Dataset ID"]}}
+        .column 
+          router-link(:to='{ name: "search", query: {datasetId: row["Dataset ID"], limit: 100}}') {{row["Dataset ID"]}}
         .column {{row.Name}}
         .column {{row.Description.length > 75 ? row.Description.substr(0,75)+"..." : row.Description}}
         .column {{row.Size}}
