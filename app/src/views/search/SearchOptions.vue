@@ -1,10 +1,10 @@
 <script>
-import KetcherModal from '@/components/KetcherModal'
+import ModalKetcher from '@/components/ModalKetcher'
 import SearchItemList from './SearchItemList'
 
 export default {
   components: {
-    KetcherModal,
+    ModalKetcher,
     SearchItemList
   },
   data() {
@@ -147,7 +147,7 @@ export default {
         min='0' 
         v-model='searchParams.limit'  
       )
-  KetcherModal(v-if='showKetcherModal')
+  ModalKetcher(v-if='showKetcherModal')
 </template>
 
 <style lang="sass" scoped>
