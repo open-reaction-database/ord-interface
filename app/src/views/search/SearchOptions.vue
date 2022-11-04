@@ -35,6 +35,8 @@ export default {
       .spacer
       template(v-for='(reagent, idx) in reagentOptions.reagents')
         .draw
+          button(@click='console.log("draw")')
+            i.material-icons edit
         .field.long 
           input(
             type='text'
@@ -51,6 +53,8 @@ export default {
             option(value='substructure') substructure
             option(value='smarts') smarts
         .delete
+          button(@click='reagentOptions.reagents.splice(idx,1)')
+            i.material-icons delete
     button#add_component(
       type='button' 
       @click='this.reagentOptions.reagents.push({smileSmart: "", source: "input", matchMode: "exact"})'
@@ -114,6 +118,13 @@ export default {
     border-radius: 0.25rem
     padding: 1rem
     margin-bottom: 1rem
+    button
+      display: flex
+      align-items: center
+      i
+        font-size: 1.1rem
+    input, select
+      font-size: 1rem
   #searchByReagent
     .reagent-options
       display: grid
@@ -121,6 +132,7 @@ export default {
       column-gap: 1rem
       row-gap: 0.5rem
       margin-bottom: 0.5rem
+      align-items: center
       .label
         font-weight: 700
     .general-options
@@ -128,6 +140,7 @@ export default {
       grid-template-columns: auto 1fr
       column-gap: 1rem
       row-gap: 0.5rem
+      margin-top: 1rem
       input
         max-width: 50px
         text-align: center
