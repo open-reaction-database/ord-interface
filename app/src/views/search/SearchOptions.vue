@@ -110,15 +110,14 @@ export default {
   #searchByReaction.options-container(
     v-if='showReactionOptions'
   )
-    #reactions_content
-      label(for='reaction_ids') Reaction IDs
-      textarea#reaction_ids
-      label(for='reaction_smarts') Reaction SMARTS
-      textarea#reaction_smarts
-      SearchItemList(
-        title='Reaction IDs'
-        :itemList.sync='reactionOptions.reactionIDs'
-      )
+    SearchItemList(
+      title='Reaction IDs'
+      :itemList.sync='reactionOptions.reactionIDs'
+    )
+    SearchItemList(
+      title='Reaction SMARTS'
+      :itemList.sync='reactionOptions.reactionSmarts'
+    )
   .options-title(
     @click='showDatasetOptions = !showDatasetOptions'
     :class='showDatasetOptions ? "" : "closed"'
@@ -128,11 +127,14 @@ export default {
   #searchByDataset.options-container(
     v-if='showDatasetOptions'
   )
-    #datasets_content
-      label(for='dataset_ids') Dataset IDs
-      textarea#dataset_ids
-      label(for='dois') DOIs
-      textarea#dois
+    SearchItemList(
+      title='Dataset IDs'
+      :itemList.sync='reactionOptions.datasetIDs'
+    )
+    SearchItemList(
+      title='DOIs'
+      :itemList.sync='reactionOptions.DOIs'
+    )
   #searchParamaters.options-title Search Paramaters
   .options-container
     label(for='limit') Result Limit
@@ -167,6 +169,8 @@ export default {
     border-radius: 0.25rem
     padding: 1rem
     margin-bottom: 1rem
+    display: grid
+    grid-template-columns: 1fr 1fr
     .subtitle
       font-size: 1.25rem
       font-weight: 700
@@ -181,8 +185,6 @@ export default {
     input, select
       font-size: 1rem
   #searchByReagent
-    display: grid
-    grid-template-columns: 1fr 1fr
     .reagent.options
       display: grid
       grid-template-columns: repeat(4, auto) 1fr
