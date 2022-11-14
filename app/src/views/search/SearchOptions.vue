@@ -166,9 +166,10 @@ export default {
     margin-bottom: 1rem
     color: white
     background-color: $linkblue
-    width: fit-content
     display: flex
     align-content: center
+    justify-content: space-between
+    width: 13rem
     i
       font-size: 2rem
       transition: 0.25s
