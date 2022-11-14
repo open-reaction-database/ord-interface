@@ -28,7 +28,7 @@ export default {
       searchParams: {
         limit: 100
       },
-      showKetcherModal: false,
+      showKetcherModal: true,
     }
   },
   methods: {

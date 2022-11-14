@@ -45,17 +45,58 @@ export default {
 </script>
 
 <template lang="pug">
-#ketcher_modal.modal.fade(tabindex='-1' role='dialog' aria-hidden='true')
-  .modal-dialog.modal-lg.modal-dialog-centered(role='document')
-    .modal-content(style='width: fit-content;')
+.background
+  #ketcher_modal.modal
+    .modal-content
       .modal-body
-        iframe#ketcher-iframe(src='/ketcher')
+        iframe#ketcher-iframe( src='/ketcher' )
       .modal-footer
-        button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
-        button.btn.btn-primary(type='button' data-bs-dismiss='modal' onclick="document.getElementById('ketcher-iframe').contentWindow.ketcher.successCallback();")
-          | Save
+        button(
+          type='button'
+        ) Cancel
+        button(
+          type='button'
+          onclick="document.getElementById('ketcher-iframe').contentWindow.ketcher.successCallback();"
+        ) Save
 </template>
 
 <style lang="sass" scoped>
-
+.background
+  width: 100vw
+  height: 100vh
+  z-index: 1
+  background-color: #00000099
+  position: absolute
+  top: 0
+  left: 0
+  .modal
+    width: 75vw
+    height: 75vh
+    background-color: white
+    border-radius: 0.25rem
+    position: absolute
+    top: 50%
+    left: 50%
+    transform: translate(-50%, -50%)
+    overflow: hidden
+    max-width: 1000px
+    max-height: 800px
+    .modal-content
+      width: 100%
+      height: 100%
+      display: grid
+      grid-template-rows: 1fr auto
+      .modal-body
+        width: 100%
+        height: 100%
+        iframe
+          width: 100%
+          height: 100%
+          border: 0
+      .modal-footer
+        padding: 1rem
+        border-top: 2px solid #eff2f5 // matches ketcher bottom bar
+        display: flex
+        justify-content: end
+        column-gap: 1rem
 </style>
