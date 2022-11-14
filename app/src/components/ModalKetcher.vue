@@ -1,45 +1,59 @@
 <script>
 export default {
+  data() {
+    return {
+      contWin: null
+    }
+  },
   methods: {
-    drawSmiles() {
-      // const ketcher = document.getElementById('ketcher-iframe').contentWindow.ketcher;
-      // ketcher.editor.struct(null);  // Clear any previous molecule.
-      // const ketcherModal = $('#ketcher_modal');
-      // const smiles = $(node).val();
-      // if (smiles) {
-      //     const xhr = new XMLHttpRequest();
-      //     xhr.open('POST', '{{ url_for(".get_molfile") }}');
-      //     xhr.responseType = 'json';
-      //     xhr.onload = function () {
-      //         if (xhr.status === 200) {
-      //             const molblock = xhr.response;
-      //             if (ketcherModal.hasClass('show')) {
-      //                 // If the modal is already open, we can simply set the molecule.
-      //                 ketcher.setMolecule(molblock);
-      //             } else {
-      //                 // Otherwise, we need to set up a callback, so that the molecule is set
-      //                 // only when Ketcher is open (to prevent a graphical glitch).
-      //                 ketcherModal.on('shown.bs.modal', function () {
-      //                     // This callback should only be ever run once, so make sure to remove it.
-      //                     ketcherModal.off('shown.bs.modal');
-      //                     ketcher.setMolecule(molblock);
-      //                 });
-      //             }
-      //         }
-      //     };
-      //     xhr.send(smiles);
-      // }
-      // ketcher.successCallback = async function () {
-      //     const smiles = await ketcher.getSmiles();
-      //     if (smiles) {
-      //         $(node).val(smiles);
-      //     }
-      // };
-      // ketcherModal.modal('show');
+    getKetcher() {
+      const getKetcherInterval = setInterval(() => {
+        //attempt to get Ketcher from the iframe once it's loaded
+        if (!this.contWin) {
+          if (document.getElementById('ketcher-iframe').contentWindow.ketcher) {
+            this.contWin = document.getElementById('ketcher-iframe').contentWindow
+            clearInterval(getKetcherInterval)
+            this.drawSmiles()
+          }
+        }
+      }, 1000)
     },
+    drawSmiles() {
+      // this.ketcher.editor.struct(null);  // Clear any previous molecule.
+      // const ketcherModal = document.getElementById('ketcher_modal');
+      const smiles = ""
+      if (smiles) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '{{ url_for(".get_molfile") }}');
+        xhr.responseType = 'json';
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            const molblock = xhr.response;
+            this.contWin.ketcher.setMolecule(molblock);
+            // if (ketcherModal.hasClass('show')) {
+            //   // If the modal is already open, we can simply set the molecule.
+            //   this.ketcher.setMolecule(molblock);
+            // } else {
+            //   // Otherwise, we need to set up a callback, so that the molecule is set
+            //   // only when Ketcher is open (to prevent a graphical glitch).
+            //   ketcherModal.addEventListener('shown.bs.modal', function () {
+            //     // This callback should only be ever run once, so make sure to remove it.
+            //     ketcherModal.removeEventListener('shown.bs.modal');
+            //     this.ketcher.setMolecule(molblock);
+            //   });
+            // }
+          }
+        };
+        xhr.send(smiles);
+      }
+    },
+    async saveSmiles() {
+      const smiles = await this.contWin.ketcher.getSmiles();
+      console.log('smiles1',smiles)
+    }
   },
   mounted() {
-    console.log('show modal')
+    this.getKetcher()
   }
 }
 </script>
@@ -56,7 +70,7 @@ export default {
         ) Cancel
         button(
           type='button'
-          onclick="document.getElementById('ketcher-iframe').contentWindow.ketcher.successCallback();"
+          @click='saveSmiles()'
         ) Save
 </template>
 
