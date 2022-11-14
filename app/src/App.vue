@@ -7,15 +7,23 @@ export default {
   components: {
     HeaderNav,
     MainFooter,
+  },
+  computed: {
+    noHeaderFooter() {
+      const noHeaderRoutes = ['ketcher']
+      return noHeaderRoutes.includes(this.$route.name)
+    },
   }
 }
 </script>
 
 <template lang="pug">
-#main-container
-  HeaderNav
+#main-container(
+  :class='noHeaderFooter ? "full-height" : ""'
+)
+  HeaderNav(v-if='!noHeaderFooter')
   router-view
-  MainFooter
+  MainFooter(v-if='!noHeaderFooter')
 </template>
 
 <style lang="sass">
@@ -30,4 +38,6 @@ body
   display: grid
   grid-template-rows: auto 1fr auto
   background-color: $lightgrey
+  &.full-height
+    grid-template-rows: 1fr
 </style>
