@@ -16,6 +16,11 @@ const routes = [
     path: '/search',
     name: 'search',
     component: () => import('../views/search/MainSearch.vue')
+  },
+  {
+    path: '/ketcher',
+    name: 'ketcher',
+    component: () => import('../views/ketcher/index.html')
   }
 ]
 
