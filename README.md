@@ -43,7 +43,6 @@ In the `./app` directory, you can run:
 
 Install the necessary npm packages for the vue app.
 Download [https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip](Ketcher) and extract the files into `./app/src/ketcher/`
-Copy `./app/src/ketcher/templates/` to `./app/public/templates` to replace/update files there if needed
 
 ### `npm run serve`
 
