@@ -39,6 +39,11 @@ cd app
 ```
 In the `./app` directory, you can run:
 
+### Initialize app `npm i`
+
+Install the necessary npm packages for the vue app.
+Download [https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip](Ketcher) and extract the files into `./app/src/ketcher/`
+
 ### `npm run serve`
 
 Runs the app in the development mode.\
