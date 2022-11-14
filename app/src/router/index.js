@@ -20,7 +20,7 @@ const routes = [
   {
     path: '/ketcher',
     name: 'ketcher',
-    component: () => import('../views/ketcher/index.html')
+    component: () => import('../views/viewKetcher/MainKetcher.vue')
   }
 ]
 
