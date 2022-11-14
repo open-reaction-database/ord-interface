@@ -21,7 +21,7 @@ const routes = [
     path: '/ketcher',
     name: 'ketcher',
     component: () => import('../views/viewKetcher/MainKetcher.vue')
-  }
+  },
 ]
 
 const router = createRouter({
