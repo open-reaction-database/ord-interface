@@ -1,8 +1,12 @@
 <script>
 export default {
+  props: {
+    smiles: String,
+  },
   data() {
     return {
-      contWin: null
+      contWin: null, //content window of iframe
+      mutatedSmiles: "",
     }
   },
   methods: {
@@ -11,6 +15,8 @@ export default {
         //attempt to get Ketcher from the iframe once it's loaded
         if (!this.contWin) {
           if (document.getElementById('ketcher-iframe').contentWindow.ketcher) {
+            // assigning contentWindow.ketcher doesn't seem to persist as expected
+            // so we just assign the contentWindow and reference .ketcher
             this.contWin = document.getElementById('ketcher-iframe').contentWindow
             clearInterval(getKetcherInterval)
             this.drawSmiles()
@@ -21,8 +27,7 @@ export default {
     drawSmiles() {
       // this.ketcher.editor.struct(null);  // Clear any previous molecule.
       // const ketcherModal = document.getElementById('ketcher_modal');
-      const smiles = ""
-      if (smiles) {
+      if (this.mutatedSmiles) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '{{ url_for(".get_molfile") }}');
         xhr.responseType = 'json';
@@ -44,15 +49,18 @@ export default {
             // }
           }
         };
-        xhr.send(smiles);
+        xhr.send(this.mutatedSmiles);
       }
     },
     async saveSmiles() {
-      const smiles = await this.contWin.ketcher.getSmiles();
-      console.log('smiles1',smiles)
-    }
+      this.mutatedSmiles = await this.contWin.ketcher.getSmiles();
+      this.$emit('updateSmiles', this.mutatedSmiles)
+      this.$emit('closeModal')
+    },
   },
   mounted() {
+    this.mutatedSmiles = this.smiles
+    console.log('assigned',this.mutatedSmiles)
     this.getKetcher()
   }
 }
@@ -67,6 +75,7 @@ export default {
       .modal-footer
         button(
           type='button'
+          @click='this.$emit("closeModal")'
         ) Cancel
         button(
           type='button'

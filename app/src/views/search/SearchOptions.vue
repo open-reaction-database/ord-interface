@@ -28,11 +28,13 @@ export default {
       searchParams: {
         limit: 100
       },
-      showKetcherModal: true,
+      showKetcherModal: false,
+      ketcherModalSmile: 0,
     }
   },
   methods: {
     openKetcherModal(idx) {
+      this.ketcherModalSmile = idx
       this.showKetcherModal = true
     }
   },
@@ -150,7 +152,12 @@ export default {
         min='0' 
         v-model='searchParams.limit'  
       )
-  ModalKetcher(v-if='showKetcherModal')
+  ModalKetcher(
+    v-if='showKetcherModal'
+    :smiles='reagentOptions.reagents[ketcherModalSmile].smileSmart'
+    @updateSmiles='(newSmiles) => reagentOptions.reagents[ketcherModalSmile].smileSmart = newSmiles'
+    @closeModal='showKetcherModal = false'
+  )
 </template>
 
 <style lang="sass" scoped>
