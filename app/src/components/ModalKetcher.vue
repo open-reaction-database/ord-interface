@@ -1,5 +1,10 @@
 <script>
+import LoadingSpinner from '@/components/LoadingSpinner'
+
 export default {
+  components: {
+    'LoadingSpinner': LoadingSpinner,
+  },
   props: {
     smiles: String,
   },
@@ -7,6 +12,7 @@ export default {
     return {
       contWin: null, //content window of iframe
       mutatedSmiles: "",
+      loading: true,
     }
   },
   methods: {
@@ -20,14 +26,14 @@ export default {
             this.contWin = document.getElementById('ketcher-iframe').contentWindow
             clearInterval(getKetcherInterval)
             this.drawSmiles()
+            this.loading = false
           }
         }
       }, 1000)
     },
     drawSmiles() {
-      // this.ketcher.editor.struct(null);  // Clear any previous molecule.
-      // const ketcherModal = document.getElementById('ketcher_modal');
       if (this.mutatedSmiles) {
+        // get molblock if we already have SMILES
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/ketcher/molfile');
         xhr.responseType = 'json';
@@ -35,18 +41,6 @@ export default {
           if (xhr.status === 200) {
             const molblock = xhr.response;
             document.getElementById('ketcher-iframe').contentWindow.ketcher.setMolecule(molblock);
-            // if (ketcherModal.hasClass('show')) {
-            //   // If the modal is already open, we can simply set the molecule.
-            //   this.ketcher.setMolecule(molblock);
-            // } else {
-            //   // Otherwise, we need to set up a callback, so that the molecule is set
-            //   // only when Ketcher is open (to prevent a graphical glitch).
-            //   ketcherModal.addEventListener('shown.bs.modal', function () {
-            //     // This callback should only be ever run once, so make sure to remove it.
-            //     ketcherModal.removeEventListener('shown.bs.modal');
-            //     this.ketcher.setMolecule(molblock);
-            //   });
-            // }
           }
         };
         xhr.send(this.mutatedSmiles);
@@ -60,7 +54,6 @@ export default {
   },
   mounted() {
     this.mutatedSmiles = this.smiles
-    console.log('assigned',this.mutatedSmiles)
     this.getKetcher()
   }
 }
@@ -81,9 +74,15 @@ export default {
           type='button'
           @click='saveSmiles()'
         ) Save
+      transition(name="fade")
+        .modal-loading(
+          v-if='loading'
+        )
+          LoadingSpinner
 </template>
 
 <style lang="sass" scoped>
+@import '@/styles/transition.sass'
 .background
   width: 100vw
   height: 100vh
@@ -122,4 +121,9 @@ export default {
         display: flex
         justify-content: end
         column-gap: 1rem
+    .modal-loading
+      background-color: white
+      width: 100%
+      height: 100%
+      position: absolute
 </style>
