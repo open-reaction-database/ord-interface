@@ -238,7 +238,7 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     return command, limit
 
 
-@bp.route("/ketcher/molfile", methods=["POST"])
+@bp.route("api/ketcher/molfile", methods=["POST"])
 def get_molfile():
     """Returns a molblock for the given SMILES."""
     smiles = flask.request.get_data()

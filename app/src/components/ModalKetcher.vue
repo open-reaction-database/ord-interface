@@ -29,12 +29,12 @@ export default {
       // const ketcherModal = document.getElementById('ketcher_modal');
       if (this.mutatedSmiles) {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '{{ url_for(".get_molfile") }}');
+        xhr.open('POST', '/api/ketcher/molfile');
         xhr.responseType = 'json';
         xhr.onload = function () {
           if (xhr.status === 200) {
             const molblock = xhr.response;
-            this.contWin.ketcher.setMolecule(molblock);
+            document.getElementById('ketcher-iframe').contentWindow.ketcher.setMolecule(molblock);
             // if (ketcherModal.hasClass('show')) {
             //   // If the modal is already open, we can simply set the molecule.
             //   this.ketcher.setMolecule(molblock);
