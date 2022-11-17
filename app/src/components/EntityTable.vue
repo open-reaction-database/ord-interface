@@ -3,6 +3,7 @@ export default {
   props: {
     tableData: Array,
     title: String,
+    displaySearch: {type: Boolean, default: true}
   },
   watch: {
     pagination() {
@@ -89,7 +90,7 @@ export default {
     .header
       .title-holder
         .title {{ title }}
-    .search-area
+    .search-area(v-if='displaySearch')
       label(for="search") Search: 
       input(
         type="text"

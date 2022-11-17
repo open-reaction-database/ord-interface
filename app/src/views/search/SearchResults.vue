@@ -1,17 +1,29 @@
 <script>
+import EntityTable from '@/components/EntityTable'
+
 export default {
   props: {
     searchResults: Array,
+  },
+  components: {
+    EntityTable
   }
 }
 </script>
 
 <template lang="pug">
 .search-results-main
-  .item(
-    v-for='item in searchResults'
-  )
-    .id {{item.dataset_id}}
+  EntityTable(
+    :tableData='searchResults'
+    title="",
+    v-slot='{ entities }'
+    v-if='searchResults.length'
+    :displaySearch='false'
+  ) 
+    .item(
+      v-for='row in entities'
+    )
+      .id {{row.reaction_id}}
 
 </template>
 
