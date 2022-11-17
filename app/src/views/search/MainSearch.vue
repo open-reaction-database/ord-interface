@@ -1,14 +1,34 @@
 <script>
 import SearchOptions from './SearchOptions'
+import SearchResults from './SearchResults'
 
 export default {
   components: {
-    SearchOptions
+    SearchOptions,
+    SearchResults
   },
   data() {
     return {
+      searchResults: [],
+      queryParams: ""
     }
-  }
+  },
+  methods: {
+    updateSearchResults() {
+      fetch(`/api/query?${this.queryParams}`, {method: "GET"})
+        .then(response => response.json())
+        .then(data => {
+          console.log('data',data)
+          this.searchResults = data
+        })
+    },
+  },
+  mounted() {
+    // set default query paramaters
+    this.queryParams = `dataset_ids=${this.$route.query.datasetId}&limit=100`
+    // fetch initial query
+    this.updateSearchResults()
+  },
 }
 </script>
 
@@ -22,8 +42,9 @@ export default {
     //- |     {% else %}
     //- #spacer.mt-3.pb-3
     //- |     {% endif %}
-  #results.container.mt-3.mb-3
-    table#results_table.table
+  SearchResults(
+    :searchResults='searchResults'
+  )
 
 </template>
 

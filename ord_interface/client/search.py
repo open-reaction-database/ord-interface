@@ -184,6 +184,7 @@ def run_query():
         A serialized Dataset proto containing the matched reactions.
     """
     command, limit = build_query()
+    print("limit",limit)
     if command is None:
         return flask.abort(flask.make_response("no query defined", 400))
     try:
