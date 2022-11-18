@@ -150,19 +150,11 @@ export default {
   .table-container
     width: 100%
     .header
-      display: grid
-      grid-template-rows: auto auto
-      grid-template-columns: auto auto
-      row-gap: 1rem
-      .breadcrumbs
-        grid-column: 1/3
-        grid-row: 1/2
       .title-holder
-        display: grid
-        grid-template-columns: 100%
-        grid-template-rows: auto auto
-        .subtitle
-          font-weight: bold
+        .title
+          font-size: 1.5rem
+          font-weight: 700
+          margin-bottom: 1rem
     .search-area
       padding: 1rem
       margin: 0 5%
