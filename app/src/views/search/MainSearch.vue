@@ -16,6 +16,11 @@ export default {
       loading: true
     }
   },
+  computed: {
+    defaultDatasetId() {
+      return this.$route.query.datasetId
+    }
+  },
   methods: {
     updateSearchResults() {
       fetch(`/api/query?${this.queryParams}`, {method: "GET"})
@@ -25,10 +30,14 @@ export default {
           this.loading = false
         })
     },
+    updateSearchOptions(options) {
+      console.log('options',options)
+
+    },
   },
   mounted() {
     // set default query parameters
-    this.queryParams = `dataset_ids=${this.$route.query.datasetId}&limit=100`
+    this.queryParams = `dataset_ids=${this.defaultDatasetId}&limit=100`
     // fetch initial query
     this.updateSearchResults()
   },
@@ -37,14 +46,10 @@ export default {
 
 <template lang="pug">
 #search-main
-  SearchOptions
-  button#go_button
-    b Search
-    //- |     {% if error %}
-    //- #error.mt-3.pb-3 {{ error }}
-    //- |     {% else %}
-    //- #spacer.mt-3.pb-3
-    //- |     {% endif %}
+  SearchOptions(
+    @searchOptions='updateSearchOptions'
+    :defaultDatasetId='defaultDatasetId'
+  )
   SearchResults(
     :searchResults='searchResults'
     v-if='!loading'

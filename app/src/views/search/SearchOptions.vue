@@ -3,6 +3,9 @@ import ModalKetcher from '@/components/ModalKetcher'
 import SearchItemList from './SearchItemList'
 
 export default {
+  props: {
+    defaultDatasetId: String
+  },
   components: {
     ModalKetcher,
     SearchItemList
@@ -18,12 +21,12 @@ export default {
         similarityThreshold: 0.5,
       },
       reactionOptions: {
-        reactionIDs: [],
+        reactionIds: [],
         reactionSmarts: [],
       },
       datasetOptions: {
-        datasetIDs: [],
-        dois: []
+        datasetIds: [this.defaultDatasetId],
+        DOIs: []
       },
       searchParams: {
         limit: 100
@@ -36,9 +39,20 @@ export default {
     openKetcherModal(idx) {
       this.ketcherModalSmile = idx
       this.showKetcherModal = true
-    }
+    },
+    emitSearchOptions() {
+      const searchOptions = {
+        reagent: this.reagentOptions,
+        reaction: this.reactionOptions,
+        dataset: this.datasetOptions,
+        general: this.searchParams
+      }
+      this.$emit('searchOptions', searchOptions)
+    },
   },
   mounted() {
+    console.log('default',this.defaultDatasetId)
+    // this.datasetOptions.datasetIds.push(this.defaultDatasetId)
   }
 }
 </script>
@@ -119,7 +133,7 @@ export default {
     )
       SearchItemList(
         title='Reaction IDs'
-        :itemList.sync='reactionOptions.reactionIDs'
+        :itemList.sync='reactionOptions.reactionIds'
       )
       SearchItemList(
         title='Reaction SMARTS'
@@ -137,11 +151,11 @@ export default {
     )
       SearchItemList(
         title='Dataset IDs'
-        :itemList.sync='reactionOptions.datasetIDs'
+        :itemList.sync='datasetOptions.datasetIds'
       )
       SearchItemList(
         title='DOIs'
-        :itemList.sync='reactionOptions.DOIs'
+        :itemList.sync='datasetOptions.DOIs'
       )
   #searchParameters.options-title Search Parameters
   .options-container
@@ -152,6 +166,11 @@ export default {
         min='0' 
         v-model='searchParams.limit'  
       )
+    .search-button
+      button(
+        @click='emitSearchOptions'
+      )
+        b Search
   ModalKetcher(
     v-if='showKetcherModal'
     :smiles='reagentOptions.reagents[ketcherModalSmile].smileSmart'
@@ -204,6 +223,12 @@ export default {
         font-size: 1.1rem
     input, select
       font-size: 1rem
+    .search-button
+      grid-column: 1 / 2
+      margin-top: 1rem
+      button
+        font-size: 1.2rem
+        padding: 0.5rem 1rem
   #searchByReagent
     .reagent.options
       display: grid

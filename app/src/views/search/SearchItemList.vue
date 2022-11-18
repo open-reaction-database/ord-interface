@@ -22,7 +22,8 @@ export default {
     },
   },
   mounted() {
-    this.mutatedList = this.itemList
+    console.log('item',this.itemList)
+    this.mutatedList = this.itemList || []
   }
 }
 </script>
@@ -31,7 +32,7 @@ export default {
 .item-list
   .title {{title}}
   .list 
-    template(v-for='(item, idx) in itemList')
+    template(v-for='(item, idx) in mutatedList')
       .text {{item}}
       .delete
         button(@click='deleteItem(idx)')
