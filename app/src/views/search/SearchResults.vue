@@ -1,12 +1,14 @@
 <script>
 import EntityTable from '@/components/EntityTable'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default {
   props: {
     searchResults: Array,
   },
   components: {
-    EntityTable
+    EntityTable,
+    LoadingSpinner,
   },
   data() {
     return {
@@ -46,7 +48,9 @@ export default {
       .id {{row.reaction_id}}
       .reaction-table(
         v-html='row.reactionTable'
+        v-if='row.reactionTable'
       )
+      LoadingSpinner(v-else)
 
 </template>
 
