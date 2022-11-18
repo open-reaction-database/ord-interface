@@ -113,7 +113,7 @@ def show_id(reaction_id):
     )
 
 
-@bp.route("/render/<reaction_id>")
+@bp.route("/api/render/<reaction_id>")
 def render_reaction(reaction_id):
     """Renders a reaction as an HTML table with images and text."""
     command = query.ReactionIdQuery([reaction_id])
