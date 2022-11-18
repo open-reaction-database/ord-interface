@@ -51,5 +51,10 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-
+.search-results-main
+  .row
+    background-color: white
+    border-radius: 0.25rem
+    padding: 1rem
+    margin-bottom: 1rem
 </style>

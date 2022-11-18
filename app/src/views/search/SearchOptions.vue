@@ -143,7 +143,7 @@ export default {
         title='DOIs'
         :itemList.sync='reactionOptions.DOIs'
       )
-  #searchParamaters.options-title Search Paramaters
+  #searchParameters.options-title Search Parameters
   .options-container
     .section
       label(for='limit') Result Limit 

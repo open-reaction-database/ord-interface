@@ -1,16 +1,19 @@
 <script>
 import SearchOptions from './SearchOptions'
 import SearchResults from './SearchResults'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default {
   components: {
     SearchOptions,
-    SearchResults
+    SearchResults,
+    LoadingSpinner
   },
   data() {
     return {
       searchResults: [],
-      queryParams: ""
+      queryParams: "",
+      loading: true
     }
   },
   methods: {
@@ -18,13 +21,13 @@ export default {
       fetch(`/api/query?${this.queryParams}`, {method: "GET"})
         .then(response => response.json())
         .then(data => {
-          console.log('data',data)
           this.searchResults = data
+          this.loading = false
         })
     },
   },
   mounted() {
-    // set default query paramaters
+    // set default query parameters
     this.queryParams = `dataset_ids=${this.$route.query.datasetId}&limit=100`
     // fetch initial query
     this.updateSearchResults()
@@ -44,7 +47,10 @@ export default {
     //- |     {% endif %}
   SearchResults(
     :searchResults='searchResults'
+    v-if='!loading'
   )
+  .loading(v-else)
+    LoadingSpinner
 
 </template>
 
