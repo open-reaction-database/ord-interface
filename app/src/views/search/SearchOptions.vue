@@ -3,9 +3,6 @@ import ModalKetcher from '@/components/ModalKetcher'
 import SearchItemList from './SearchItemList'
 
 export default {
-  props: {
-    defaultDatasetId: String
-  },
   components: {
     ModalKetcher,
     SearchItemList
@@ -25,7 +22,7 @@ export default {
         reactionSmarts: [],
       },
       datasetOptions: {
-        datasetIds: [this.defaultDatasetId],
+        datasetIds: [],
         DOIs: []
       },
       searchParams: {
@@ -34,6 +31,11 @@ export default {
       showKetcherModal: false,
       ketcherModalSmile: 0,
     }
+  },
+  computed: {
+    defaultQuery() {
+      return this.$route.query
+    },
   },
   methods: {
     openKetcherModal(idx) {
@@ -49,10 +51,27 @@ export default {
       }
       this.$emit('searchOptions', searchOptions)
     },
+    setDefaultValues() {
+      const q = this.defaultQuery
+
+      // dataset options
+      this.datasetOptions.datasetIds = q.dataset_ids?.split(",") || []
+      this.datasetOptions.DOIs = q.dois?.split(",") || []
+      if (this.datasetOptions.datasetIds.length || this.datasetOptions.DOIs.length) 
+        this.showDatasetOptions = true
+
+      // reaction options
+      this.reactionOptions.reactionIds = q.reaction_ids?.split(",") || []
+      this.reactionOptions.reactionSmarts = q.reaction_smarts?.split(",") || []
+      if (this.reactionOptions.reactionIds.length || this.reactionOptions.reactionSmarts.length) 
+        this.showReactionOptions = true
+
+      // general search params
+      this.searchParams.limit = q.limit || 100
+    },
   },
   mounted() {
-    console.log('default',this.defaultDatasetId)
-    // this.datasetOptions.datasetIds.push(this.defaultDatasetId)
+    this.setDefaultValues()
   }
 }
 </script>
