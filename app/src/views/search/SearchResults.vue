@@ -24,7 +24,30 @@ export default {
             result.reactionTable = responseData
           })
       })
-    }
+    },
+    downloadResults() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'api/download_results');
+        xhr.responseType = "blob";
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                const url = URL.createObjectURL(xhr.response);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = "ord_search_results.pb.gz"
+                link.click();
+                // https://stackoverflow.com/a/56547307.
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    link.remove();
+                }, 100);
+            }
+        };
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        const requestJson = this.formattedResults.map(result => {return {"Reaction ID": result.reaction_id}})
+        xhr.send(JSON.stringify(requestJson));
+    },
   },
   async mounted() {
     this.formattedResults = this.searchResults
@@ -42,6 +65,9 @@ export default {
     v-if='formattedResults.length'
     :displaySearch='false'
   ) 
+    .button(
+      @click='downloadResults'
+    ) Download Results
     .row(
       v-for='row in entities'
     )

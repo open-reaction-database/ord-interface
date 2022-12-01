@@ -252,7 +252,7 @@ def get_molfile():
         return f"could not parse SMILES: {smiles}", 400
 
 
-@bp.route("/download_results", methods=["POST"])
+@bp.route("/api/download_results", methods=["POST"])
 def download_results():
     """Downloads search results as a Dataset proto."""
     reaction_ids = [row["Reaction ID"] for row in flask.request.get_json()]
