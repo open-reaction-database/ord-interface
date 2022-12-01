@@ -13,7 +13,7 @@ export default {
     return {
       searchResults: [],
       queryParams: "",
-      searchParams: "",
+      searchParams: {},
       loading: true
     }
   },
@@ -34,6 +34,23 @@ export default {
     },
     updateSearchOptions(options) {
       console.log('options',options)
+      // reagent options
+      if (options?.reagent?.reagents?.length) {
+        this.searchParams["component"] = []
+        options.reagent.reagents.forEach(reagent => {
+          this.searchParams["component"].push(`${encodeURIComponent(reagent.smileSmart)};${reagent.source};${reagent.matchMode}`)
+        })
+        this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
+        this.searchParams["similarity"] = options.reagent.similarityThreshold
+      }
+
+      // dataset options
+      if (options.datasetIds.length)
+        this.searchParmas["dataset_ids"] = encodeURIComponent(options.datasetIds.join(","))
+      if (options.DOIs.length)
+        this.searchParams["dois"] = options.DOIs.join(",")
+
+      // reaction options
 
     },
   },

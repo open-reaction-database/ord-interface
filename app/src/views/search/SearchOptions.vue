@@ -55,7 +55,7 @@ export default {
       const q = this.defaultQuery
 
       // reagent options
-      if (q.component.length) {
+      if (q.component?.length) {
         q.component.forEach(comp => {
           const compArray = comp.split(";")
           this.reagentOptions.reagents.push({smileSmart: compArray[0], source: compArray[1], matchMode: compArray[2]})
@@ -234,7 +234,6 @@ export default {
         transform: rotate(180deg)
   .options-container
     background-color: white
-    width: 100%
     border-radius: 0.25rem
     padding: 1rem
     margin-bottom: 1rem
