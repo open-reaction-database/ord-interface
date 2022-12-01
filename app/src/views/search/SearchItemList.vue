@@ -22,7 +22,6 @@ export default {
     },
   },
   mounted() {
-    console.log('item',this.itemList)
     this.mutatedList = this.itemList || []
   }
 }

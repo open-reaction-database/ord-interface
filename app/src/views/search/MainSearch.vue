@@ -13,17 +13,19 @@ export default {
     return {
       searchResults: [],
       queryParams: "",
+      searchParams: "",
       loading: true
     }
   },
   computed: {
-    defaultDatasetId() {
-      return this.$route.query.datasetId
+    urlQuery() {
+      // get raw url query string
+      return window.location.search
     }
   },
   methods: {
-    updateSearchResults() {
-      fetch(`/api/query?${this.queryParams}`, {method: "GET"})
+    getSearchResults() {
+      fetch(`/api/query${this.urlQuery}`, {method: "GET"})
         .then(response => response.json())
         .then(data => {
           this.searchResults = data
@@ -36,10 +38,8 @@ export default {
     },
   },
   mounted() {
-    // set default query parameters
-    this.queryParams = `dataset_ids=${this.defaultDatasetId}&limit=100`
     // fetch initial query
-    this.updateSearchResults()
+    this.getSearchResults()
   },
 }
 </script>
@@ -48,7 +48,6 @@ export default {
 #search-main
   SearchOptions(
     @searchOptions='updateSearchOptions'
-    :defaultDatasetId='defaultDatasetId'
   )
   SearchResults(
     :searchResults='searchResults'
