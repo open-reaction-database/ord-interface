@@ -54,6 +54,17 @@ export default {
     setDefaultValues() {
       const q = this.defaultQuery
 
+      // reagent options
+      if (q.component.length) {
+        q.component.forEach(comp => {
+          const compArray = comp.split(";")
+          this.reagentOptions.reagents.push({smileSmart: compArray[0], source: compArray[1], matchMode: compArray[2]})
+        })
+        this.reagentOptions.useStereochemistry = q.use_stereochemistry || false
+        this.reagentOptions.similarityThreshold = q.similarity || 0.5
+        this.showReagentOptions = true
+      }
+
       // dataset options
       this.datasetOptions.datasetIds = q.dataset_ids?.split(",") || []
       this.datasetOptions.DOIs = q.dois?.split(",") || []
