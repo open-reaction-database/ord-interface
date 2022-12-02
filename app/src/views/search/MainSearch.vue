@@ -31,7 +31,6 @@ export default {
       this.loading = true
       // get raw url query string
       this.urlQuery =  window.location.search
-      console.log("urlQuery",this.urlQuery)
 
       fetch(`/api/query${this.urlQuery}`, {method: "GET"})
         .then(response => response.json())

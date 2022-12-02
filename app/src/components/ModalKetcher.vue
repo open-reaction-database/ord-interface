@@ -119,7 +119,7 @@ export default {
         padding: 1rem
         border-top: 2px solid #eff2f5 // matches ketcher bottom bar
         display: flex
-        justify-content: end
+        justify-content: flex-end
         column-gap: 1rem
     .modal-loading
       background-color: white

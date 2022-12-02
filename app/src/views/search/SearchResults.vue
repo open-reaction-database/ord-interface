@@ -90,7 +90,7 @@ export default {
   .action-button-holder
     margin: -2.5rem 0 1rem // bring button row inline with title without having to pass too much into EntityTable
     display: flex
-    justify-content: end
+    justify-content: flex-end
     button
   .row
     background-color: white
