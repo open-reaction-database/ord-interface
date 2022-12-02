@@ -42,7 +42,7 @@ export default {
     updateSearchOptions(options) {
       console.log('options',options)
       // reagent options
-      if (options.reagent?.reagents?.length) {
+      if (options.reagent.reagents.length) {
         this.searchParams["component"] = []
         options.reagent.reagents.forEach(reagent => {
           this.searchParams["component"].push(`${encodeURIComponent(reagent.smileSmart)};${reagent.source};${reagent.matchMode}`)

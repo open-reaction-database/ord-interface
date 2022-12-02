@@ -18,6 +18,11 @@ const routes = [
     component: () => import('../views/search/MainSearch.vue')
   },
   {
+    path: '/id/:reactionId',
+    name: 'reaction-view',
+    component: () => import('../views/reaction-view/MainReactionView.vue')
+  },
+  {
     path: '/ketcher',
     name: 'ketcher',
     component: () => import('../views/viewKetcher/MainKetcher.vue')

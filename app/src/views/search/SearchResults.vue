@@ -72,15 +72,19 @@ export default {
         :disabled='!formattedResults.length'
         @click='downloadResults'
       ) Download Results
-    .row(
+    template(
       v-for='row in entities'
     )
-      .id {{row.reaction_id}}
-      .reaction-table(
-        v-html='row.reactionTable'
-        v-if='row.reactionTable'
+      router-link(
+        :to='{ name: "reaction-view", params: {reactionId: row.reaction_id}}'
       )
-      LoadingSpinner(v-else)
+        .row
+          .id {{row.reaction_id}}
+          .reaction-table(
+            v-html='row.reactionTable'
+            v-if='row.reactionTable'
+          )
+          LoadingSpinner(v-else)
 
 </template>
 
