@@ -9,22 +9,30 @@ export default {
     SearchResults,
     LoadingSpinner
   },
+  watch: {
+    '$route.query': {
+      handler() {
+        this.getSearchResults()
+      },
+      deep: true,
+    }
+  },
   data() {
     return {
       searchResults: [],
       queryParams: "",
       searchParams: {},
-      loading: true
-    }
-  },
-  computed: {
-    urlQuery() {
-      // get raw url query string
-      return window.location.search
+      loading: true,
+      urlQuery: "",
     }
   },
   methods: {
     getSearchResults() {
+      this.loading = true
+      // get raw url query string
+      this.urlQuery =  window.location.search
+      console.log("urlQuery",this.urlQuery)
+
       fetch(`/api/query${this.urlQuery}`, {method: "GET"})
         .then(response => response.json())
         .then(data => {
@@ -35,7 +43,7 @@ export default {
     updateSearchOptions(options) {
       console.log('options',options)
       // reagent options
-      if (options?.reagent?.reagents?.length) {
+      if (options.reagent?.reagents?.length) {
         this.searchParams["component"] = []
         options.reagent.reagents.forEach(reagent => {
           this.searchParams["component"].push(`${encodeURIComponent(reagent.smileSmart)};${reagent.source};${reagent.matchMode}`)
@@ -45,13 +53,22 @@ export default {
       }
 
       // dataset options
-      if (options.datasetIds.length)
-        this.searchParmas["dataset_ids"] = encodeURIComponent(options.datasetIds.join(","))
-      if (options.DOIs.length)
-        this.searchParams["dois"] = options.DOIs.join(",")
+      if (options.dataset.datasetIds.length)
+        this.searchParams["dataset_ids"] = encodeURIComponent(options.dataset.datasetIds.join(","))
+      if (options.dataset.DOIs.length)
+        this.searchParams["dois"] = encodeURIComponent(options.dataset.DOIs.join(","))
 
       // reaction options
+      if (options.reaction.reactionIds.length)
+        this.searchParams["reaction_ids"] = encodeURIComponent(options.reaction.reactionIds.join(","))
+      if (options.reaction.reactionSmarts.length)
+        this.searchParams["reaction_smarts"] = encodeURIComponent(options.reaction.reactionSmarts.join(","))
 
+      // general options
+      this.searchParams["limit"] = options.general.limit || 100
+
+      // navigate to search page with new params
+      this.$router.push({ name: 'search', query: this.searchParams})
     },
   },
   mounted() {
