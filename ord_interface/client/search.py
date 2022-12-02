@@ -112,6 +112,20 @@ def show_id(reaction_id):
         bond_length=BOND_LENGTH,
     )
 
+@bp.route("/api/id/<reaction_id>", methods=["GET"])
+def get_reaction(reaction_id):
+    """Returns reaction data as json."""
+    results = connect().run_query(query.ReactionIdQuery([reaction_id]))
+    if len(results) == 0:
+        return flask.abort(404)
+    reaction = results[0].reaction
+    print(reaction)
+    try:
+        # TODO get reaction in format to return over http request
+        return reaction
+    except (ValueError, KeyError):
+        return flask.jsonify("[Could not retrieve reaction data]")
+
 
 @bp.route("/api/render/<reaction_id>")
 def render_reaction(reaction_id):
