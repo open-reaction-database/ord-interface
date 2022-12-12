@@ -26,7 +26,6 @@ Options:
     --password=<str>    Password
     --port=<int>        Port
 """
-import dataclasses
 import glob
 import logging
 

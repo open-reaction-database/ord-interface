@@ -262,7 +262,7 @@ class ReactionIdQuery(ReactionQueryBase):
         del limit  # Unused.
         query = sql.SQL(
             """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto 
+            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE reaction.reaction_id = ANY (%s)
