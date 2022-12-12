@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Python API for the Open Reaction Database."""
+from __future__ import annotations
 
 import binascii
 from typing import List, Optional
@@ -28,6 +29,15 @@ from ord_interface.client import query
 TARGET = "https://client.open-reaction-database.org"
 
 
+def parse_response(response: requests.Response) -> list[query.Result]:
+    """Parses a JSON response into Result objects."""
+    results = []
+    for result in response.json():
+        result["proto"] = binascii.unhexlify(result["proto"])
+        results.append(query.Result(**result))
+    return results
+
+
 class OrdClient:
     """Client for the Open Reaction Database."""
 
@@ -35,8 +45,7 @@ class OrdClient:
         """Initializes the client.
 
         Args:
-            target: Endpoint URL for client queries. Defaults to the public
-                ORD client URL (defined in TARGET).
+            target: Endpoint URL for client queries. Defaults to the public ORD client URL (defined in TARGET).
             prefix: URL prefix.
         """
         if not target:
@@ -87,13 +96,9 @@ class OrdClient:
                 raise ValueError(f"Invalid reaction ID: {reaction_id}")
         target = self._target + self._prefix + "/api/fetch_reactions"
         response = requests.post(target, json=list(set(reaction_ids)), timeout=timeout)
-        results = response.json()
-        # NOTE(kearnes): Return reactions in the same order as requested.
-        reactions = {}
-        for result in results:
-            reactions[result["reaction_id"]] = reaction_pb2.Reaction.FromString(
-                binascii.unhexlify(result["serialized"])
-            )
+        results = parse_response(response)
+        reactions = {result.reaction_id: result.reaction for result in results}
+        # Return reactions in the same order as requested.
         return [reactions[reaction_id] for reaction_id in reaction_ids]
 
     def fetch_reaction(self, reaction_id: str) -> reaction_pb2.Reaction:
@@ -115,7 +120,7 @@ class OrdClient:
         reaction_ids: Optional[List[str]] = None,
         reaction_smarts: Optional[str] = None,
         dois: Optional[List[str]] = None,
-        components: Optional[List["ComponentQuery"]] = None,
+        components: Optional[List[ComponentQuery]] = None,
         use_stereochemistry: Optional[bool] = None,
         similarity: Optional[float] = None,
         timeout: float = 10.0,
@@ -164,33 +169,32 @@ class OrdClient:
         }
         target = self._target + self._prefix + "/api/query"
         response = requests.get(target, params=params, timeout=timeout)
-        results = response.json()
-        return [query.Result(**result) for result in results]
+        return parse_response(response)
 
 
 class ComponentQuery:
     """Client-side implementation of ReactionComponentPredicate."""
 
-    _ALLOWED_SOURCES: List[str] = list(query.ReactionComponentPredicate.SOURCE_TO_TABLE.keys())
-
-    def __init__(self, pattern: str, source: str, mode: str):
+    def __init__(self, pattern: str, target: str, mode: str):
         """Initializes the query.
 
         Args:
             pattern: String SMILES or SMARTS pattern.
-            source: String key into ReactionComponentPredicate.SOURCE_TO_TABLE.
+            target: String ReactionComponentPredicate.Target value.
             mode: String ReactionComponentPredicate.MatchMode value.
         """
         self._pattern = pattern
-        if source not in self._ALLOWED_SOURCES:
-            raise ValueError(f"source is not in {self._ALLOWED_SOURCES}")
-        self._source = source
+        try:
+            query.ReactionComponentPredicate.Target.from_name(target)
+        except KeyError as error:
+            raise ValueError(f"target is not in {query.ReactionComponentPredicate.Target}: {target}") from error
+        self._target = target
         try:
             query.ReactionComponentPredicate.MatchMode.from_name(mode)
         except KeyError as error:
-            raise ValueError(f"mode is not in {query.ReactionComponentPredicate.MatchMode}") from error
+            raise ValueError(f"mode is not in {query.ReactionComponentPredicate.MatchMode}: {mode}") from error
         self._mode = mode
 
     def get_params(self):
         """Returns URL parameters for GET requests."""
-        return ";".join([self._pattern, self._source, self._mode])
+        return ";".join([self._pattern, self._target, self._mode])

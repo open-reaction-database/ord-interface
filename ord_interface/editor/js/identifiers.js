@@ -24,7 +24,7 @@ const utils = goog.require('ord.utils');
 
 const ReactionIdentifier = goog.require('proto.ord.ReactionIdentifier');
 const IdentifierType =
-    goog.require('proto.ord.ReactionIdentifier.IdentifierType');
+    goog.require('proto.ord.ReactionIdentifier.ReactionIdentifierType');
 
 exports = {
   load,

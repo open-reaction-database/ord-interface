@@ -26,9 +26,9 @@ const PressureConditions = goog.require('proto.ord.PressureConditions');
 const Atmosphere = goog.require('proto.ord.PressureConditions.Atmosphere');
 const AtmosphereType =
     goog.require('proto.ord.PressureConditions.Atmosphere.AtmosphereType');
-const Measurement = goog.require('proto.ord.PressureConditions.Measurement');
+const Measurement = goog.require('proto.ord.PressureConditions.PressureMeasurement');
 const MeasurementType =
-    goog.require('proto.ord.PressureConditions.Measurement.MeasurementType');
+    goog.require('proto.ord.PressureConditions.PressureMeasurement.PressureMeasurementType');
 const PressureControl =
     goog.require('proto.ord.PressureConditions.PressureControl');
 const PressureControlType = goog.require(
@@ -69,7 +69,7 @@ function load(pressure) {
 
 /**
  * Adds and populates a pressure measurement section in the form.
- * @param {!PressureConditions.Measurement} measurement
+ * @param {!PressureConditions.PressureMeasurement} measurement
  * @param {!jQuery} node The target div.
  */
 function loadMeasurement(measurement, node) {
@@ -133,7 +133,7 @@ function unload() {
 /**
  * Fetches a pressure measurement from the form.
  * @param {!jQuery} node The div of the measurement to fetch.
- * @return {!PressureConditions.Measurement}
+ * @return {!PressureConditions.PressureMeasurement}
  */
 function unloadMeasurement(node) {
   const measurement = new Measurement();

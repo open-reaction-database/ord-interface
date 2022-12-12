@@ -49,10 +49,10 @@ const session = utils.session;
 const Compound = goog.require('proto.ord.Compound');
 const CompoundIdentifier = goog.require('proto.ord.CompoundIdentifier');
 const IdentifierType =
-    goog.require('proto.ord.CompoundIdentifier.IdentifierType');
+    goog.require('proto.ord.CompoundIdentifier.CompoundIdentifierType');
 const CompoundPreparation = goog.require('proto.ord.CompoundPreparation');
 const PreparationType =
-    goog.require('proto.ord.CompoundPreparation.PreparationType');
+    goog.require('proto.ord.CompoundPreparation.CompoundPreparationType');
 const Source = goog.require('proto.ord.Compound.Source');
 const Data = goog.require('proto.ord.Data');
 const ProductCompound = goog.require('proto.ord.ProductCompound');
@@ -165,7 +165,7 @@ function loadSource(compoundNode, source) {
   }
   const node = $('fieldset.source', compoundNode);
   $('.component_source_vendor', node).text(source.getVendor());
-  $('.component_source_id', node).text(source.getId());
+  $('.component_source_id', node).text(source.getCatalogId());
   $('.component_source_lot', node).text(source.getLot());
 }
 
@@ -318,7 +318,7 @@ function unloadSource(node) {
   const lot = $('.component_source_lot', node).text();
   source.setLot(asserts.assertString(lot));
   const id = $('.component_source_id', node).text();
-  source.setId(asserts.assertString(id));
+  source.setCatalogId(asserts.assertString(id));
   return source;
 }
 

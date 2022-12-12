@@ -478,8 +478,8 @@ def _compound_source_prep(compound: reaction_pb2.Compound) -> str:
     txt = []
     if compound.source.vendor:
         txt.append(f"purchased from {compound.source.vendor}")
-    if compound.source.id:
-        txt.append(f"catalog #{compound.source.id}")
+    if compound.source.catalog_id:
+        txt.append(f"catalog #{compound.source.catalog_id}")
     if compound.source.lot:
         txt.append(f"lot #{compound.source.lot}")
     for preparation in compound.preparations:

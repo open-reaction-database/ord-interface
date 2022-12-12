@@ -89,15 +89,16 @@ def test_query_dois(client):
 
 
 def test_query_single_component(client):
-    component = ord_client.ComponentQuery("[Br]C1=CC=C(C(C)=O)C=C1", source="input", mode="exact")
+    component = ord_client.ComponentQuery("[Br]C1=CC=C(C(C)=O)C=C1", target="input", mode="exact")
     results = client.query(components=[component])
     assert len(results) == 10
 
 
 def test_query_multiple_components(client):
-    component1 = ord_client.ComponentQuery("[Br]C1=CC=C(C(C)=O)C=C1", source="input", mode="exact")
-    component2 = ord_client.ComponentQuery("CC(C)(C)OC(=O)N1CCCCC1C(=O)O", source="input", mode="exact")
-    results = client.query(components=[component1, component2])
+    component1 = ord_client.ComponentQuery("[Br]C1=CC=C(C(C)=O)C=C1", target="input", mode="exact")
+    component2 = ord_client.ComponentQuery("CC(C)(C)OC(=O)N1CCCCC1C(=O)O", target="input", mode="exact")
+    component3 = ord_client.ComponentQuery("CC(=O)C1=CC=C(C2CCCCN2C(=O)OC(C)(C)C)C=C1", target="output", mode="exact")
+    results = client.query(components=[component1, component2, component3])
     assert len(results) == 1
 
 
@@ -107,6 +108,6 @@ def test_query_stereochemistry(client):
 
 
 def test_query_similarity(client):
-    component = ord_client.ComponentQuery("[Br]C1=CC=C(C(C)=O)C=C1", source="input", mode="similar")
+    component = ord_client.ComponentQuery("[Br]C1=CC=C(C(C)=O)C=C1", target="input", mode="similar")
     results = client.query(components=[component], similarity=0.6)
     assert len(results) == 10

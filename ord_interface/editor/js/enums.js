@@ -21,9 +21,9 @@ goog.module.declareLegacyNamespace();
 /** @suppress {extraRequire} */
 goog.require('proto.ord.ReactionRole.ReactionRoleType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.CompoundIdentifier.IdentifierType');
+goog.require('proto.ord.CompoundIdentifier.CompoundIdentifierType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.CompoundPreparation.PreparationType');
+goog.require('proto.ord.CompoundPreparation.CompoundPreparationType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryType');
 /** @suppress {extraRequire} */
@@ -33,12 +33,12 @@ goog.require('proto.ord.IlluminationConditions.IlluminationType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.PressureConditions.Atmosphere.AtmosphereType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.PressureConditions.Measurement.MeasurementType');
+goog.require('proto.ord.PressureConditions.PressureMeasurement.PressureMeasurementType');
 /** @suppress {extraRequire} */
 goog.require(
     'proto.ord.PressureConditions.PressureControl.PressureControlType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.ReactionIdentifier.IdentifierType');
+goog.require('proto.ord.ReactionIdentifier.ReactionIdentifierType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.ReactionInput.AdditionSpeed.AdditionSpeedType');
 /** @suppress {extraRequire} */
@@ -46,7 +46,7 @@ goog.require('proto.ord.StirringConditions.StirringMethodType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.StirringConditions.StirringRate.StirringRateType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.TemperatureConditions.Measurement.MeasurementType');
+goog.require('proto.ord.TemperatureConditions.TemperatureMeasurement.TemperatureMeasurementType');
 /** @suppress {extraRequire} */
 goog.require(
     'proto.ord.TemperatureConditions.TemperatureControl.TemperatureControlType');

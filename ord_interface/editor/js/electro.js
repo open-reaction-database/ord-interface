@@ -31,7 +31,7 @@ const ElectrochemistryCellType = goog.require(
 const ElectrochemistryType =
     goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryType');
 const Measurement =
-    goog.require('proto.ord.ElectrochemistryConditions.Measurement');
+    goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryMeasurement');
 const Length = goog.require('proto.ord.Length');
 const Time = goog.require('proto.ord.Time');
 const Voltage = goog.require('proto.ord.Voltage');
@@ -73,7 +73,7 @@ function load(electro) {
 /**
  * Adds and populates an electrochemistry measurement section in the form.
  * @param {!jQuery} node The target div.
- * @param {!ElectrochemistryConditions.Measurement} measurement
+ * @param {!ElectrochemistryConditions.ElectrochemistryMeasurement} measurement
  */
 function loadMeasurement(node, measurement) {
   const time = measurement.getTime();
@@ -148,7 +148,7 @@ function unload() {
 /**
  * Fetches an electrochemistry measurement from the form.
  * @param {!jQuery} node Root node of the measurement.
- * @return {!ElectrochemistryConditions.Measurement}
+ * @return {!ElectrochemistryConditions.ElectrochemistryMeasurement}
  */
 function unloadMeasurement(node) {
   const measurement = new Measurement();
