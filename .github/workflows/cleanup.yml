@@ -55,6 +55,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: clang-format
         run: |
-          sudo apt update && sudo apt install clang-format-10 --yes
+          sudo apt update && sudo apt install clang-format --yes
           # NOTE(kearnes): Run clang-format before installing anything with npm.
-          find . -name '*.js' -exec clang-format-10 -n -Werror {} +
+          find . -name '*.js' -exec clang-format -n -Werror {} +
