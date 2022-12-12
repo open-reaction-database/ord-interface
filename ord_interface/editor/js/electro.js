@@ -30,8 +30,8 @@ const ElectrochemistryCellType = goog.require(
     'proto.ord.ElectrochemistryConditions.ElectrochemistryCell.ElectrochemistryCellType');
 const ElectrochemistryType =
     goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryType');
-const Measurement =
-    goog.require('proto.ord.ElectrochemistryConditions.ElectrochemistryMeasurement');
+const Measurement = goog.require(
+    'proto.ord.ElectrochemistryConditions.ElectrochemistryMeasurement');
 const Length = goog.require('proto.ord.Length');
 const Time = goog.require('proto.ord.Time');
 const Voltage = goog.require('proto.ord.Voltage');

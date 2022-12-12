@@ -26,9 +26,10 @@ const PressureConditions = goog.require('proto.ord.PressureConditions');
 const Atmosphere = goog.require('proto.ord.PressureConditions.Atmosphere');
 const AtmosphereType =
     goog.require('proto.ord.PressureConditions.Atmosphere.AtmosphereType');
-const Measurement = goog.require('proto.ord.PressureConditions.PressureMeasurement');
-const MeasurementType =
-    goog.require('proto.ord.PressureConditions.PressureMeasurement.PressureMeasurementType');
+const Measurement =
+    goog.require('proto.ord.PressureConditions.PressureMeasurement');
+const MeasurementType = goog.require(
+    'proto.ord.PressureConditions.PressureMeasurement.PressureMeasurementType');
 const PressureControl =
     goog.require('proto.ord.PressureConditions.PressureControl');
 const PressureControlType = goog.require(

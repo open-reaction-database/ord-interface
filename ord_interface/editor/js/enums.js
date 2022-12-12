@@ -33,7 +33,8 @@ goog.require('proto.ord.IlluminationConditions.IlluminationType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.PressureConditions.Atmosphere.AtmosphereType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.PressureConditions.PressureMeasurement.PressureMeasurementType');
+goog.require(
+    'proto.ord.PressureConditions.PressureMeasurement.PressureMeasurementType');
 /** @suppress {extraRequire} */
 goog.require(
     'proto.ord.PressureConditions.PressureControl.PressureControlType');
@@ -46,7 +47,8 @@ goog.require('proto.ord.StirringConditions.StirringMethodType');
 /** @suppress {extraRequire} */
 goog.require('proto.ord.StirringConditions.StirringRate.StirringRateType');
 /** @suppress {extraRequire} */
-goog.require('proto.ord.TemperatureConditions.TemperatureMeasurement.TemperatureMeasurementType');
+goog.require(
+    'proto.ord.TemperatureConditions.TemperatureMeasurement.TemperatureMeasurementType');
 /** @suppress {extraRequire} */
 goog.require(
     'proto.ord.TemperatureConditions.TemperatureControl.TemperatureControlType');

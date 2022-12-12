@@ -29,9 +29,10 @@ const ReactionWorkup = goog.require('proto.ord.ReactionWorkup');
 const WorkupType = goog.require('proto.ord.ReactionWorkup.WorkupType');
 const Temperature = goog.require('proto.ord.Temperature');
 const TemperatureConditions = goog.require('proto.ord.TemperatureConditions');
-const Measurement = goog.require('proto.ord.TemperatureConditions.TemperatureMeasurement');
-const MeasurementType =
-    goog.require('proto.ord.TemperatureConditions.TemperatureMeasurement.TemperatureMeasurementType');
+const Measurement =
+    goog.require('proto.ord.TemperatureConditions.TemperatureMeasurement');
+const MeasurementType = goog.require(
+    'proto.ord.TemperatureConditions.TemperatureMeasurement.TemperatureMeasurementType');
 const Time = goog.require('proto.ord.Time');
 
 exports = {
