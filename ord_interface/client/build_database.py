@@ -55,8 +55,7 @@ def main(kwargs):
         port=kwargs["--port"] or ord_interface.client.POSTGRES_PORT,
     )
     engine = sqlalchemy.create_engine(connection_string, future=True)
-    assert isinstance(engine, sqlalchemy.engine.Engine)  # Hint for pytype.
-    with engine.begin() as connection:
+    with engine.begin() as connection:  # pytype: disable=attribute-error
         connection.execute(sqlalchemy.text("CREATE EXTENSION IF NOT EXISTS tsm_system_rows"))
     database.prepare_database(engine)
     with orm.Session(engine) as session:
