@@ -31,7 +31,7 @@ const TextureType =
     goog.require('proto.ord.ProductCompound.Texture.TextureType');
 const ProductMeasurement = goog.require('proto.ord.ProductMeasurement');
 const MeasurementType =
-    goog.require('proto.ord.ProductMeasurement.MeasurementType');
+    goog.require('proto.ord.ProductMeasurement.ProductMeasurementType');
 const MassSpecMeasurementDetails =
     goog.require('proto.ord.ProductMeasurement.MassSpecMeasurementDetails');
 const MassSpecMeasurementType = goog.require(

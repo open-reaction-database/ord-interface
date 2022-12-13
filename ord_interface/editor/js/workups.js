@@ -26,7 +26,7 @@ const temperature = goog.require('ord.temperature');
 const utils = goog.require('ord.utils');
 
 const ReactionWorkup = goog.require('proto.ord.ReactionWorkup');
-const WorkupType = goog.require('proto.ord.ReactionWorkup.WorkupType');
+const WorkupType = goog.require('proto.ord.ReactionWorkup.ReactionWorkupType');
 const Temperature = goog.require('proto.ord.Temperature');
 const TemperatureConditions = goog.require('proto.ord.TemperatureConditions');
 const Measurement =
