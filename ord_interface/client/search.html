@@ -378,7 +378,7 @@
             query.components.forEach(component => {
                 const node = addComponent();
                 node.val(component.pattern);
-                node.nextAll('.source').first().val(component.source);
+                node.nextAll('.source').first().val(component.target);
                 node.nextAll('.mode').first().val(component.mode);
             });
         } else {

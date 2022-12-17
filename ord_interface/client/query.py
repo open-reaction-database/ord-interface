@@ -595,7 +595,7 @@ class ReactionComponentPredicate:
 
     def to_dict(self) -> Dict[str, str]:
         """Returns a dict representation of the predicate."""
-        return {"pattern": self._pattern, "target": self._mode.name.lower(), "mode": self._mode.name.lower()}
+        return {"pattern": self._pattern, "target": self._target.name.lower(), "mode": self._mode.name.lower()}
 
     def get(self) -> Tuple[str, List[str]]:
         """Builds the SQL predicate.
