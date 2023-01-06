@@ -189,24 +189,11 @@ def fetch_datasets():
                 "Size": 0,
             }
         # Get dataset sizes.
-<<<<<<< HEAD
-        cursor.execute(
-            """
-            SELECT dataset_id, COUNT(reaction_id)
-            FROM reactions
-            GROUP BY dataset_id
-            """
-        )
-        for dataset_id, count in cursor:
-            rows[dataset_id]["Size"] = count
-        return flask.jsonify(list(rows.values()))
-=======
         cursor.execute("SELECT dataset_id, COUNT(reaction_id) FROM reaction GROUP BY dataset_id")
         for row_id, count in cursor:
             rows[row_id]["Size"] = count
         return list(rows.values())
 
->>>>>>> origin
 
 @bp.route("/api/query")
 def run_query():
