@@ -263,7 +263,7 @@ limitations under the License.
                   </legend>
                   <table class="message">
                     <tr><td>vendor</td><td><div class="component_source_vendor edittext"></div></td></tr>
-                    <tr><td>id</td><td><div class="component_source_id edittext"></div></td></tr>
+                    <tr><td>catalog ID</td><td><div class="component_source_id edittext"></div></td></tr>
                     <tr><td>lot number</td><td><div class="component_source_lot edittext"></div></td></tr>
                   </table>
                 </fieldset>
@@ -307,7 +307,7 @@ limitations under the License.
                 </tr>
                 <tr>
                   <td>type</td>
-                  <td><div class="component_identifier_type selector" data-proto="CompoundIdentifier_IdentifierType"></div></td>
+                  <td><div class="component_identifier_type selector" data-proto="CompoundIdentifier_CompoundIdentifierType"></div></td>
                 </tr>
                 <tr>
                   <td>details</td>
@@ -319,7 +319,7 @@ limitations under the License.
             </div>
 
             <div id="component_preparation_template" class="component_preparation" style="display: none;">
-              type <div class="component_compound_preparation_type selector" data-proto="CompoundPreparation_PreparationType"></div>
+              type <div class="component_compound_preparation_type selector" data-proto="CompoundPreparation_CompoundPreparationType"></div>
               details <div class="component_compound_preparation_details edittext"></div>
               <span class="component_compound_preparation_reaction_id">reaction ID</span>
               <div class="component_compound_preparation_reaction component_compound_preparation_reaction_id edittext"></div>
@@ -467,7 +467,7 @@ limitations under the License.
                   <button type="button" class="remove" onclick="ord.utils.removeSlowly(this, '.temperature_measurement');"><i class="far fa-trash-alt"></i></button>
                 </legend>
                 <table class="message">
-                  <tr><td>type</td><td><div class="temperature_measurement_type selector" data-proto="TemperatureConditions_Measurement_MeasurementType"></div></td></tr>
+                  <tr><td>type</td><td><div class="temperature_measurement_type selector" data-proto="TemperatureConditions_TemperatureMeasurement_TemperatureMeasurementType"></div></td></tr>
                   <tr><td>temperature</td><td><div class="temperature_measurement_temperature_value edittext shorttext floattext"></div>
                     ± <div class="temperature_measurement_temperature_precision edittext shorttext floattext"></div>
                                                             <div class="temperature_measurement_temperature_units selector" data-proto="Temperature_TemperatureUnit"></div>
@@ -525,7 +525,7 @@ limitations under the License.
                   <button type="button" class="remove" onclick="ord.utils.removeSlowly(this, '.pressure_measurement');"><i class="far fa-trash-alt"></i></button>
                 </legend>
                 <table class="message">
-                  <tr><td>type</td><td><div class="pressure_measurement_type selector" data-proto="PressureConditions_Measurement_MeasurementType"></div></td></tr>
+                  <tr><td>type</td><td><div class="pressure_measurement_type selector" data-proto="PressureConditions_PressureMeasurement_PressureMeasurementType"></div></td></tr>
                   <tr><td>pressure</td><td><div class="pressure_measurement_pressure_value edittext shorttext floattext"></div>
                     ± <div class="pressure_measurement_pressure_precision edittext shorttext floattext"></div>
                                                          <div class="pressure_measurement_pressure_units selector" data-proto="Pressure_PressureUnit"></div>
@@ -714,7 +714,7 @@ limitations under the License.
               <div class="validate"></div>
             </legend>
             <table class="message">
-              <tr><td>type</td><td><div class="workup_type selector" data-proto="ReactionWorkup_WorkupType"></div></td></tr>
+              <tr><td>type</td><td><div class="workup_type selector" data-proto="ReactionWorkup_ReactionWorkupType"></div></td></tr>
               <tr class="workup_keep_phase_row"><td>keep phase</td><td><div class="workup_keep_phase edittext"></div></td></tr>
               <tr class="workup_target_ph_row"><td>target ph</td><td><div class="workup_target_ph edittext veryshorttext floattext"></div></td></tr>
               <tr class="workup_duration_row"><td>duration</td><td><div class="workup_duration_value edittext shorttext floattext"></div>
@@ -874,7 +874,7 @@ limitations under the License.
                       </div>
                     </td>
                   </tr>
-                  <tr><td>type</td><td><div class="product_measurement_type selector" data-proto="ProductMeasurement_MeasurementType"></div></td></tr>
+                  <tr><td>type</td><td><div class="product_measurement_type selector" data-proto="ProductMeasurement_ProductMeasurementType"></div></td></tr>
                   <tr><td>details</td><td><div class="product_measurement_details edittext"></td></tr>
                   <tbody class="product_measurement_value_group amount">
                   <tr>
@@ -1156,7 +1156,7 @@ limitations under the License.
         </tr>
         <tr>
           <td>type</td>
-          <td><div class="reaction_identifier_type selector" data-proto="ReactionIdentifier_IdentifierType"></div></td>
+          <td><div class="reaction_identifier_type selector" data-proto="ReactionIdentifier_ReactionIdentifierType"></div></td>
         </tr>
         <tr>
           <td>details</td>

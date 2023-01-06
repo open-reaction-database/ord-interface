@@ -152,6 +152,16 @@ def connect():
     )
 
 
+def make_response(results: list[query.Result]) -> flask.Response:
+    """Builds a JSON response for matched reactions."""
+    response = []
+    for result in results:
+        result = dataclasses.asdict(result)
+        result["proto"] = result["proto"].hex()  # Convert to hex for JSON.
+        response.append(result)
+    return flask.jsonify(response)
+
+
 @bp.route("/api/fetch_reactions", methods=["POST"])
 def fetch_reactions():
     """Fetches a list of Reactions by ID."""
@@ -159,7 +169,7 @@ def fetch_reactions():
     command = query.ReactionIdQuery(reaction_ids)
     try:
         results = connect().run_query(command)
-        return flask.jsonify([dataclasses.asdict(result) for result in results])
+        return make_response(results)
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -170,15 +180,16 @@ def fetch_datasets():
     engine = connect()
     rows = {}
     with engine.connection, engine.cursor() as cursor:
-        cursor.execute("SELECT dataset_id, name, description FROM datasets")
-        for dataset_id, name, description in cursor:
-            rows[dataset_id] = {
+        cursor.execute("SELECT id, dataset_id, name, description FROM dataset")
+        for row_id, dataset_id, name, description in cursor:
+            rows[row_id] = {
                 "Dataset ID": dataset_id,
                 "Name": name,
                 "Description": description,
                 "Size": 0,
             }
         # Get dataset sizes.
+<<<<<<< HEAD
         cursor.execute(
             """
             SELECT dataset_id, COUNT(reaction_id)
@@ -189,6 +200,13 @@ def fetch_datasets():
         for dataset_id, count in cursor:
             rows[dataset_id]["Size"] = count
         return flask.jsonify(list(rows.values()))
+=======
+        cursor.execute("SELECT dataset_id, COUNT(reaction_id) FROM reaction GROUP BY dataset_id")
+        for row_id, count in cursor:
+            rows[row_id]["Size"] = count
+        return list(rows.values())
+
+>>>>>>> origin
 
 @bp.route("/api/query")
 def run_query():
@@ -203,7 +221,7 @@ def run_query():
         return flask.abort(flask.make_response("no query defined", 400))
     try:
         results = connect().run_query(command, limit=limit)
-        return flask.jsonify([dataclasses.asdict(result) for result in results])
+        return make_response(results)
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -238,10 +256,10 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     elif components:
         predicates = []
         for component in components:
-            pattern, source, mode_name = component.split(";")
-            table = query.ReactionComponentPredicate.SOURCE_TO_TABLE[source]
+            pattern, target_name, mode_name = component.split(";")
+            target = query.ReactionComponentPredicate.Target.from_name(target_name)
             mode = query.ReactionComponentPredicate.MatchMode.from_name(mode_name)
-            predicates.append(query.ReactionComponentPredicate(pattern, table, mode))
+            predicates.append(query.ReactionComponentPredicate(pattern, target, mode))
         kwargs = {}
         if use_stereochemistry is not None:
             kwargs["do_chiral_sss"] = use_stereochemistry

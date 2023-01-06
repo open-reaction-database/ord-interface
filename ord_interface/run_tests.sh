@@ -28,7 +28,7 @@ set +e
 status=0
 
 # Run tests.
-pytest || status=1
+pytest -vv || status=1
 node editor/js/test.js || status=1
 
 # Shut down the containers.

@@ -26,12 +26,13 @@ const temperature = goog.require('ord.temperature');
 const utils = goog.require('ord.utils');
 
 const ReactionWorkup = goog.require('proto.ord.ReactionWorkup');
-const WorkupType = goog.require('proto.ord.ReactionWorkup.WorkupType');
+const WorkupType = goog.require('proto.ord.ReactionWorkup.ReactionWorkupType');
 const Temperature = goog.require('proto.ord.Temperature');
 const TemperatureConditions = goog.require('proto.ord.TemperatureConditions');
-const Measurement = goog.require('proto.ord.TemperatureConditions.Measurement');
-const MeasurementType =
-    goog.require('proto.ord.TemperatureConditions.Measurement.MeasurementType');
+const Measurement =
+    goog.require('proto.ord.TemperatureConditions.TemperatureMeasurement');
+const MeasurementType = goog.require(
+    'proto.ord.TemperatureConditions.TemperatureMeasurement.TemperatureMeasurementType');
 const Time = goog.require('proto.ord.Time');
 
 exports = {
@@ -92,7 +93,7 @@ function loadWorkup(workup) {
  * Loads a measurement into the given node in a workup.
  * @param {!jQuery} workupNode The div corresponding to the workup whose fields
  *     should be updated.
- * @param {!TemperatureConditions.Measurement} measurement
+ * @param {!TemperatureConditions.TemperatureMeasurement} measurement
  */
 function loadMeasurement(workupNode, measurement) {
   const node = addMeasurement(workupNode);
@@ -182,7 +183,7 @@ function unloadWorkup(node) {
 /**
  * Fetches a single workup temperature measurement from the form.
  * @param {!jQuery} node The div corresponding to the measurement to fetch.
- * @return {!TemperatureConditions.Measurement}
+ * @return {!TemperatureConditions.TemperatureMeasurement}
  */
 function unloadMeasurement(node) {
   const measurement = new Measurement();

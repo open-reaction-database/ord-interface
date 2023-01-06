@@ -23,9 +23,10 @@ const utils = goog.require('ord.utils');
 
 const Temperature = goog.require('proto.ord.Temperature');
 const TemperatureConditions = goog.require('proto.ord.TemperatureConditions');
-const Measurement = goog.require('proto.ord.TemperatureConditions.Measurement');
-const MeasurementType =
-    goog.require('proto.ord.TemperatureConditions.Measurement.MeasurementType');
+const Measurement =
+    goog.require('proto.ord.TemperatureConditions.TemperatureMeasurement');
+const MeasurementType = goog.require(
+    'proto.ord.TemperatureConditions.TemperatureMeasurement.TemperatureMeasurementType');
 const TemperatureControl =
     goog.require('proto.ord.TemperatureConditions.TemperatureControl');
 const TemperatureControlType = goog.require(
@@ -61,7 +62,7 @@ function load(temperature, target) {
 
 /**
  * Adds and populates a temperature measurement section in the form.
- * @param {!TemperatureConditions.Measurement} measurement
+ * @param {!TemperatureConditions.TemperatureMeasurement} measurement
  * @param {!jQuery} node The target div.
  */
 function loadMeasurement(measurement, node) {
