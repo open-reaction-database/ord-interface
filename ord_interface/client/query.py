@@ -39,8 +39,9 @@ For example, a reaction query might have the following predicates:
 
 Note that a predicate is matched if it applies to _any_ input/output.
 """
+from __future__ import annotations
+
 import abc
-import binascii
 import dataclasses
 import enum
 import json
@@ -66,13 +67,13 @@ class Result:
 
     dataset_id: str
     reaction_id: str
-    serialized: Optional[str] = None
+    proto: Optional[bytes] = None
 
     @property
     def reaction(self) -> reaction_pb2.Reaction:
-        return reaction_pb2.Reaction.FromString(binascii.unhexlify(self.serialized))
+        return reaction_pb2.Reaction.FromString(self.proto)
 
-    def __eq__(self, other: "Result") -> bool:
+    def __eq__(self, other: Result) -> bool:
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
@@ -86,8 +87,8 @@ def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
         List of Result instances.
     """
     results = []
-    for dataset_id, reaction_id, serialized in cursor:
-        results.append(Result(reaction_id=reaction_id, dataset_id=dataset_id, serialized=serialized.tobytes().decode()))
+    for dataset_id, reaction_id, proto in cursor:
+        results.append(Result(reaction_id=reaction_id, dataset_id=dataset_id, proto=proto.tobytes()))
     return results
 
 
@@ -157,9 +158,10 @@ class RandomSampleQuery(ReactionQueryBase):
         del limit  # Unused.
         query = sql.SQL(
             """
-            SELECT DISTINCT dataset_id, reaction_id, serialized
-            FROM reactions
-            TABLESAMPLE SYSTEM_ROWS (%s)"""
+            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            FROM reaction TABLESAMPLE SYSTEM_ROWS (%s)
+            JOIN dataset ON dataset.id = reaction.dataset_id
+            """
         )
         args = [self._num_rows]
         logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
@@ -206,9 +208,10 @@ class DatasetIdQuery(ReactionQueryBase):
         components = [
             sql.SQL(
                 """
-            SELECT DISTINCT dataset_id, reaction_id, serialized
-            FROM reactions
-            WHERE dataset_id = ANY (%s)"""
+            SELECT DISTINCT reaction.dataset_id, reaction.reaction_id, reaction.proto
+            FROM reaction
+            JOIN dataset ON dataset.id = reaction.dataset_id
+            WHERE dataset.dataset_id = ANY (%s)"""
             )
         ]
         args = [self._dataset_ids]
@@ -259,9 +262,11 @@ class ReactionIdQuery(ReactionQueryBase):
         del limit  # Unused.
         query = sql.SQL(
             """
-            SELECT DISTINCT dataset_id, reaction_id, serialized
-            FROM reactions
-            WHERE reaction_id = ANY (%s)"""
+            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            FROM reaction
+            JOIN dataset ON dataset.id = reaction.dataset_id
+            WHERE reaction.reaction_id = ANY (%s)
+            """
         )
         args = [self._reaction_ids]
         logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
@@ -311,10 +316,12 @@ class ReactionSmartsQuery(ReactionQueryBase):
         components = [
             sql.SQL(
                 """
-            SELECT DISTINCT dataset_id, reaction_id, serialized
-            FROM reactions
-            INNER JOIN rdk.reactions USING (reaction_id)
-            WHERE rdk.reactions.r@>reaction_from_smarts(%s)"""
+                SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+                FROM reaction
+                INNER JOIN rdkit.reactions ON rdkit.reactions.reaction_id = reaction.id
+                JOIN dataset ON dataset.id = reaction.dataset_id
+                WHERE rdkit.reactions.reaction OPERATOR(rdkit.@>) rdkit.reaction_from_smarts(%s)
+                """
             )
         ]
         args = [self._reaction_smarts]
@@ -372,9 +379,12 @@ class DoiQuery(ReactionQueryBase):
         components = [
             sql.SQL(
                 """
-            SELECT DISTINCT dataset_id, reaction_id, serialized
-            FROM reactions
-            WHERE doi = ANY (%s)"""
+                SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+                FROM reaction
+                JOIN dataset ON dataset.id = reaction.dataset_id
+                JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
+                WHERE reaction_provenance.doi = ANY (%s)
+                """
             )
         ]
         args = [self._dois]
@@ -391,19 +401,15 @@ class ReactionComponentQuery(ReactionQueryBase):
     """Matches reactions by reaction component predicates."""
 
     def __init__(
-        self,
-        predicates: List["ReactionComponentPredicate"],
-        do_chiral_sss: bool = False,
-        tanimoto_threshold: float = 0.5,
+        self, predicates: List[ReactionComponentPredicate], do_chiral_sss: bool = False, tanimoto_threshold: float = 0.5
     ) -> None:
         """Initializes the query.
 
         Args:
             predicates: List of ReactionComponentPredicate objects.
-            do_chiral_sss: If True, consider stereochemistry in substructure
-                searches.
-            tanimoto_threshold: Float Tanimoto similarity threshold. Pairs
-                below this threshold will not be considered matches.
+            do_chiral_sss: If True, consider stereochemistry in substructure searches.
+            tanimoto_threshold: Float Tanimoto similarity threshold. Pairs below this threshold will not be
+                considered matches.
         """
         self._predicates = predicates
         self._do_chiral_sss = do_chiral_sss
@@ -419,7 +425,7 @@ class ReactionComponentQuery(ReactionQueryBase):
             }
         )
 
-    def _setup(self, predicates: List["ReactionComponentPredicate"], cursor: psycopg2.extensions.cursor) -> None:
+    def _setup(self, predicates: List[ReactionComponentPredicate], cursor: psycopg2.extensions.cursor) -> None:
         """Prepares the database for a query.
 
         Args:
@@ -438,32 +444,6 @@ class ReactionComponentQuery(ReactionQueryBase):
         args = [tanimoto_threshold]
         logger.info("Running SQL command: %s", cursor.mogrify(command, args).decode())
         cursor.execute(command, args)
-
-    def _get_tables(self) -> List[sql.SQL]:
-        """Identifies the minimum set of tables to join for the query."""
-        tables = []
-        requires_rdk_inputs = False
-        requires_rdk_outputs = False
-        for predicate in self._predicates:
-            if predicate.table == "inputs":
-                requires_rdk_inputs = True
-            elif predicate.table == "outputs":
-                requires_rdk_outputs = True
-        if requires_rdk_inputs:
-            tables.append(
-                sql.SQL(
-                    """
-            INNER JOIN rdk.inputs USING (reaction_id) """
-                )
-            )
-        if requires_rdk_outputs:
-            tables.append(
-                sql.SQL(
-                    """
-            INNER JOIN rdk.outputs USING (reaction_id) """
-                )
-            )
-        return tables
 
     def validate(self) -> None:
         """Checks the query for correctness.
@@ -511,7 +491,7 @@ class ReactionComponentQuery(ReactionQueryBase):
 
     def _run(
         self,
-        predicates: List["ReactionComponentPredicate"],
+        predicates: List[ReactionComponentPredicate],
         cursor: psycopg2.extensions.cursor,
         limit: Optional[int] = None,
     ) -> List[Result]:
@@ -519,33 +499,42 @@ class ReactionComponentQuery(ReactionQueryBase):
         if not predicates:
             return []
         self._setup(predicates, cursor)
-        predicate_components = []
+        components = []
         args = []
         for predicate in predicates:
-            components = [
-                sql.SQL(
-                    """
-                SELECT DISTINCT dataset_id, reaction_id, serialized
-                FROM reactions """
-                )
-            ]
-            components.extend(self._get_tables())
-            components.append(
-                sql.SQL(
-                    """
-                WHERE """
-                )
-            )
+            if predicate.target == ReactionComponentPredicate.Target.INPUT:
+                mols_sql = """
+                JOIN reaction_input ON reaction_input.reaction_id = reaction.id
+                JOIN compound ON compound.reaction_input_id = reaction_input.id
+                JOIN rdkit.mols ON rdkit.mols.compound_id = compound.id
+                """
+            else:
+                mols_sql = """
+                JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
+                JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+                JOIN rdkit.mols ON rdkit.mols.product_compound_id = product_compound.id
+                """
             predicate_sql, predicate_args = predicate.get()
-            components.append(predicate_sql)
+            components.append(
+                f"""
+                SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+                FROM reaction
+                {mols_sql}
+                JOIN dataset ON dataset.id = reaction.dataset_id
+                WHERE
+                {predicate_sql}
+                """
+            )
             args.extend(predicate_args)
-            predicate_components.append(sql.Composed(components))
-        components = [sql.Composed(predicate_components).join(" INTERSECT ")]
+        assert len(components) > 0
+        query = "\nINTERSECT\n".join(components)
         if limit:
-            components.append(sql.SQL(" LIMIT %s"))
+            query += "\nLIMIT %s\n"
             args.append(limit)
-        query = sql.Composed(components).join("")
-        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        try:
+            logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        except IndexError as error:
+            raise ValueError((query, args)) from error
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -553,38 +542,43 @@ class ReactionComponentQuery(ReactionQueryBase):
 class ReactionComponentPredicate:
     """Specifies a single reaction component predicate."""
 
-    _ALLOWED_TABLES: List[str] = ["inputs", "outputs"]
-    SOURCE_TO_TABLE: Dict[str, str] = {"input": "inputs", "output": "outputs"}
-    _TABLE_TO_SOURCE: Dict[str, str] = {"inputs": "input", "outputs": "output"}
+    class Target(enum.Enum):
+        """Search targets."""
+
+        INPUT = enum.auto()
+        OUTPUT = enum.auto()
+
+        @classmethod
+        def from_name(cls, name: str) -> ReactionComponentPredicate.Target:
+            """Takes a matching criterion from a URL param."""
+            return cls[name.upper()]
 
     class MatchMode(enum.Enum):
         """Interpretations for SMILES and SMARTS strings."""
 
-        EXACT = 1
-        SIMILAR = 2
-        SUBSTRUCTURE = 3
-        SMARTS = 4
+        EXACT = enum.auto()
+        SIMILAR = enum.auto()
+        SUBSTRUCTURE = enum.auto()
+        SMARTS = enum.auto()
 
         @classmethod
-        def from_name(cls, name: str) -> "ReactionComponentPredicate.MatchMode":
+        def from_name(cls, name: str) -> ReactionComponentPredicate.MatchMode:
             """Takes a matching criterion from a URL param."""
             return cls[name.upper()]
 
-    def __init__(self, pattern: str, table: str, mode: MatchMode) -> None:
+    def __init__(self, pattern: str, target: Target, mode: MatchMode) -> None:
         """Initializes the predicate.
 
         Args:
             pattern: SMILES or SMARTS pattern.
-            table: Table to search.
+            target: Search target.
             mode: ReactionComponentPredicate.MatchMode.
 
         Raises:
             ValueError: If `table` is not allowed.
         """
-        if table not in self._ALLOWED_TABLES:
-            raise ValueError(f"table must be in {self._ALLOWED_TABLES}")
         self._pattern = pattern
-        self._table = table
+        self._target = target
         self._mode = mode
 
     @property
@@ -592,8 +586,8 @@ class ReactionComponentPredicate:
         return self._pattern
 
     @property
-    def table(self) -> str:
-        return self._table
+    def target(self) -> Target:
+        return self._target
 
     @property
     def mode(self) -> MatchMode:
@@ -601,13 +595,9 @@ class ReactionComponentPredicate:
 
     def to_dict(self) -> Dict[str, str]:
         """Returns a dict representation of the predicate."""
-        return {
-            "pattern": self._pattern,
-            "source": self._TABLE_TO_SOURCE[self._table],
-            "mode": self._mode.name.lower(),
-        }
+        return {"pattern": self._pattern, "target": self._target.name.lower(), "mode": self._mode.name.lower()}
 
-    def get(self) -> Tuple[sql.Composed, List[str]]:
+    def get(self) -> Tuple[str, List[str]]:
         """Builds the SQL predicate.
 
         Returns:
@@ -615,14 +605,12 @@ class ReactionComponentPredicate:
             args: List of arguments for `predicate`.
         """
         if self._mode in [ReactionComponentPredicate.MatchMode.SIMILAR, ReactionComponentPredicate.MatchMode.EXACT]:
-            predicate = sql.SQL("{}%%morganbv_fp(%s)").format(sql.Identifier("rdk", self._table, "mfp2"))
+            predicate = "rdkit.mols.morgan_bfp OPERATOR(rdkit.%%) rdkit.morganbv_fp(%s)"  # Escape the % operator.
         elif self._mode == ReactionComponentPredicate.MatchMode.SUBSTRUCTURE:
-            predicate = sql.SQL("{}@>%s").format(sql.Identifier("rdk", self._table, "m"))
+            predicate = "rdkit.mols.mol OPERATOR(rdkit.@>) %s"
         elif self._mode == ReactionComponentPredicate.MatchMode.SMARTS:
-            predicate = sql.SQL("{}@>%s::qmol").format(sql.Identifier("rdk", self._table, "m"))
+            predicate = "rdkit.mols.mol OPERATOR(rdkit.@>) %s::rdkit.qmol"
         else:
-            # NOTE(kearnes): This should never happen, so I'm leaving it out of
-            # the docstring.
             raise ValueError(f"unsupported mode: {self._mode}")
         return predicate, [self._pattern]
 

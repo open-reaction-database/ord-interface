@@ -228,7 +228,7 @@
         <table>
             {% for identifier in reaction.identifiers %}
                 <tr>
-                    <td>{{ identifier.IdentifierType.Name(identifier.type) }}</td>
+                    <td>{{ identifier.ReactionIdentifierType.Name(identifier.type) }}</td>
                     <td>{{ identifier.value }}</td>
                     <td>{{ identifier.details }}</td>
                 </tr>

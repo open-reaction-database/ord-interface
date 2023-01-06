@@ -68,8 +68,13 @@ def test_doi_query(connection):
 
 def test_exact_query(connection):
     pattern = "[Br]C1=CC=C(C(C)=O)C=C1"
-    mode = query.ReactionComponentPredicate.MatchMode.EXACT
-    predicates = [query.ReactionComponentPredicate(pattern, table="inputs", mode=mode)]
+    predicates = [
+        query.ReactionComponentPredicate(
+            pattern,
+            target=query.ReactionComponentPredicate.Target.INPUT,
+            mode=query.ReactionComponentPredicate.MatchMode.EXACT,
+        )
+    ]
     command = query.ReactionComponentQuery(predicates)
     results = connection.run_query(command, limit=5, return_ids=True)
     assert len(results) == 5
@@ -80,8 +85,13 @@ def test_exact_query(connection):
 
 def test_substructure_query(connection):
     pattern = "C"
-    mode = query.ReactionComponentPredicate.MatchMode.SUBSTRUCTURE
-    predicates = [query.ReactionComponentPredicate(pattern, table="inputs", mode=mode)]
+    predicates = [
+        query.ReactionComponentPredicate(
+            pattern,
+            target=query.ReactionComponentPredicate.Target.INPUT,
+            mode=query.ReactionComponentPredicate.MatchMode.SUBSTRUCTURE,
+        )
+    ]
     command = query.ReactionComponentQuery(predicates)
     results = connection.run_query(command, limit=10, return_ids=True)
     assert len(results) == 10
@@ -92,8 +102,13 @@ def test_substructure_query(connection):
 
 def test_smarts_query(connection):
     pattern = "[#6]"
-    mode = query.ReactionComponentPredicate.MatchMode.SMARTS
-    predicates = [query.ReactionComponentPredicate(pattern, table="inputs", mode=mode)]
+    predicates = [
+        query.ReactionComponentPredicate(
+            pattern,
+            target=query.ReactionComponentPredicate.Target.INPUT,
+            mode=query.ReactionComponentPredicate.MatchMode.SMARTS,
+        )
+    ]
     command = query.ReactionComponentQuery(predicates)
     results = connection.run_query(command, limit=10, return_ids=True)
     assert len(results) == 10
@@ -104,8 +119,13 @@ def test_smarts_query(connection):
 
 def test_similarity_query(connection):
     pattern = "CC=O"
-    mode = query.ReactionComponentPredicate.MatchMode.SIMILAR
-    predicates = [query.ReactionComponentPredicate(pattern, table="inputs", mode=mode)]
+    predicates = [
+        query.ReactionComponentPredicate(
+            pattern,
+            query.ReactionComponentPredicate.MatchMode.SMARTS,
+            mode=query.ReactionComponentPredicate.MatchMode.SIMILAR,
+        )
+    ]
     command = query.ReactionComponentQuery(predicates, tanimoto_threshold=0.5)
     results = connection.run_query(command, limit=10, return_ids=True)
     assert not results
@@ -119,8 +139,13 @@ def test_similarity_query(connection):
 
 def test_bad_smiles(connection):
     pattern = "invalid_smiles"
-    mode = query.ReactionComponentPredicate.MatchMode.SUBSTRUCTURE
-    predicates = [query.ReactionComponentPredicate(pattern, table="inputs", mode=mode)]
+    predicates = [
+        query.ReactionComponentPredicate(
+            pattern,
+            query.ReactionComponentPredicate.MatchMode.SIMILAR,
+            mode=query.ReactionComponentPredicate.MatchMode.SUBSTRUCTURE,
+        )
+    ]
     command = query.ReactionComponentQuery(predicates)
     with pytest.raises(query.QueryException, match="cannot parse pattern: invalid_smiles"):
         connection.run_query(command)
