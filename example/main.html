@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Protobuf Example</title>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+            integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/ord-schema@0.3.41-rc2/dist/main.js"></script>
+</head>
+<body>
+<p>Protobuf Example</p>
+<div>
+    <button onclick="fetchReaction()">Fetch</button>
+    <div id="fetch"></div>
+</div>
+<div>
+    <button onclick="validateReaction()">Validate</button>
+    <div id="validate"></div>
+</div>
+<script>
+    function fetchReaction() {
+        return new Promise(resolve => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost:5001/fetchReaction');
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function () {
+                console.log(xhr.response);
+                if (xhr.response !== null) {
+                    const bytes = new Uint8Array(xhr.response);
+                    const reaction = proto.ord.Reaction.deserializeBinary(bytes);
+                    $('#fetch').text(JSON.stringify({
+                        value: reaction.getIdentifiersList()[0].getValue(),
+                        type: reaction.getIdentifiersList()[0].getType()
+                    }));
+                }
+                resolve();
+            };
+            xhr.send(null);
+        });
+    }
+
+    function validateReaction() {
+        const reaction = new proto.ord.Reaction();
+        const identifier = reaction.addIdentifiers();
+        identifier.setValue('C(C)Cl.Br>>C(C)Br.Cl');
+        identifier.setType(proto.ord.ReactionIdentifier.ReactionIdentifierType.REACTION_SMILES);
+        return new Promise(resolve => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost:5001/validateReaction');
+            const binary = reaction.serializeBinary();
+            xhr.responseType = 'json';
+            xhr.onload = function () {
+                console.log(xhr.response);
+                if (xhr.response !== null) {
+                    $('#validate').text(JSON.stringify(xhr.response));
+                }
+                resolve();
+            };
+            xhr.send(binary);
+        });
+    }
+</script>
+</body>
+</html>
