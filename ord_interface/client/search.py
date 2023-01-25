@@ -114,15 +114,16 @@ def show_id(reaction_id):
 
 @bp.route("/api/id/<reaction_id>", methods=["GET"])
 def get_reaction(reaction_id):
-    """Returns reaction data as json."""
+    """Returns reaction data as proto."""
     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
     if len(results) == 0:
         return flask.abort(404)
     reaction = results[0].reaction
-    print(reaction)
+    response = flask.make_response(reaction.SerializeToString())
+    response.headers.set("Content-Type", "application/protobuf")
     try:
         # TODO get reaction in format to return over http request
-        return reaction
+        return response
     except (ValueError, KeyError):
         return flask.jsonify("[Could not retrieve reaction data]")
 
