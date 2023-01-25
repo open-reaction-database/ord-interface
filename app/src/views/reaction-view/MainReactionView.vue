@@ -14,13 +14,13 @@ export default {
     },
   },
   methods: {
-    getReactionData (reactionId) {
+    getReactionData () {
       return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", `/api/id/${this.reactionId}`)
         xhr.responseType = "arraybuffer";
         xhr.onload = () => {
-          // if response is good, deserialize reaction and return protobuff
+          // if response is good, deserialize reaction and return object from protobuff
           let reaction = null
           if (xhr.response !== null) {
             const bytes = new Uint8Array(xhr.response);
@@ -33,13 +33,14 @@ export default {
     },
   },
   async mounted() {
-    this.reaction = await this.getReactionData(this.reactionId)
+    this.reaction = await this.getReactionData()
   }
 }
 </script>
 
 <template lang="pug">
-.main-reaction-view Hello World
+.main-reaction-view
+
 </template>
 
 <style lang="sass" scoped>
