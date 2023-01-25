@@ -112,7 +112,7 @@ def show_id(reaction_id):
         bond_length=BOND_LENGTH,
     )
 
-@bp.route("/api/id/<reaction_id>", methods=["GET"])
+@bp.route("/api/getReaction/<reaction_id>", methods=["GET"])
 def get_reaction(reaction_id):
     """Returns reaction data as proto."""
     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
@@ -120,7 +120,6 @@ def get_reaction(reaction_id):
         return flask.abort(404)
     reaction = results[0].reaction
     response = flask.make_response(reaction.SerializeToString())
-    response.headers.set("Content-Type", "application/protobuf")
     try:
         return response
     except (ValueError, KeyError):
@@ -132,11 +131,13 @@ def render_reaction(reaction_id):
     """Renders a reaction as an HTML table with images and text."""
     command = query.ReactionIdQuery([reaction_id])
     results = connect().run_query(command)
+    compact = flask.request.args.get('compact') != "false" #defaults to true
+    print('compact',compact)
     if len(results) == 0 or len(results) > 1:
         return flask.abort(404)
     result = results[0]
     try:
-        html = generate_text.generate_html(reaction=result.reaction, compact=True)
+        html = generate_text.generate_html(reaction=result.reaction, compact=compact)
         return flask.jsonify(html)
     except (ValueError, KeyError):
         return flask.jsonify("[Reaction cannot be displayed]")

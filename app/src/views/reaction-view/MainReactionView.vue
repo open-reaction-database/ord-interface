@@ -5,6 +5,7 @@ export default {
   data() {
     return {
       reaction: {},
+      reactionSummary: null,
       loading: true
     }
   },
@@ -17,7 +18,7 @@ export default {
     getReactionData () {
       return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", `/api/id/${this.reactionId}`)
+        xhr.open("GET", `/api/getReaction/${this.reactionId}`)
         xhr.responseType = "arraybuffer";
         xhr.onload = () => {
           // if response is good, deserialize reaction and return object from protobuff
@@ -31,16 +32,28 @@ export default {
         xhr.send()
       })
     },
+    getReactionSummary () {
+      fetch(`/api/render/${this.reactionId}?compact=false`)
+        .then(response => response.json())
+        .then(responseData => {
+          this.reactionSummary = responseData
+        })
+    },
   },
   async mounted() {
     this.reaction = await this.getReactionData()
+    this.getReactionSummary()
+    this.loading = false
   }
 }
 </script>
 
 <template lang="pug">
 .main-reaction-view
-
+  .summary(
+    v-if='reactionSummary'
+    v-html='reactionSummary'
+  )
 </template>
 
 <style lang="sass" scoped>
