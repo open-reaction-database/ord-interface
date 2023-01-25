@@ -50,12 +50,16 @@ export default {
 
 <template lang="pug">
 .main-reaction-view
-  .summary(
-    v-if='reactionSummary'
-    v-html='reactionSummary'
-  )
+  .summary(v-if='reactionSummary')
+    .display(v-html='reactionSummary')
 </template>
 
 <style lang="sass" scoped>
-
+.summary
+  width: calc(90vw)
+  overflow-x: scroll
+  background-color: white
+  border-radius: 0.25rem
+  margin: 1rem auto
+  padding: 1rem
 </style>
