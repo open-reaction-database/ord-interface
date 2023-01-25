@@ -122,7 +122,6 @@ def get_reaction(reaction_id):
     response = flask.make_response(reaction.SerializeToString())
     response.headers.set("Content-Type", "application/protobuf")
     try:
-        # TODO get reaction in format to return over http request
         return response
     except (ValueError, KeyError):
         return flask.jsonify("[Could not retrieve reaction data]")

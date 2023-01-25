@@ -1,4 +1,6 @@
 <script>
+import ordSchema from "ord-schema"
+
 export default {
   data() {
     return {
@@ -9,30 +11,25 @@ export default {
   computed: {
     reactionId() {
       return this.$route.params.reactionId
-    }
+    },
   },
   methods: {
     getReactionData (reactionId) {
-      fetch(`/api/id/${this.reactionId}`, {method: "GET"})
-        .then(response => response.json())
-        .then(data => {
-          this.reaction = data
-          this.loading = false
-          console.log('reaction',this.reaction)
-        })
-      // return new Promise(resolve => {
-      //   const xhr = new XMLHttpRequest();
-      //   xhr.open('GET', '/editor/reaction/id/' + reactionId + '/proto');
-      //   xhr.responseType = 'arraybuffer';
-      //   xhr.onload = function() {
-      //     console.log(xhr.response)
-      //     // asserts.assertInstanceof(xhr.response, ArrayBuffer); // Type hint.
-      //     // const bytes = new Uint8Array(xhr.response);
-      //     // const reaction = Reaction.deserializeBinary(bytes);
-      //     // resolve(reaction);
-      //   };
-      //   xhr.send();
-      // });
+      return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", `/api/id/${this.reactionId}`)
+        xhr.responseType = "arraybuffer";
+        xhr.onload = () => {
+          // if response is good, deserialize reaction and return protobuff
+          let reaction = null
+          if (xhr.response !== null) {
+            const bytes = new Uint8Array(xhr.response);
+            reaction = ordSchema.reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+          }
+          resolve(reaction);
+        }
+        xhr.send()
+      })
     },
   },
   async mounted() {
