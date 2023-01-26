@@ -79,13 +79,12 @@ export default {
       .tab(
         v-for='(input, idx) in reaction.inputsMap'
         @click='inputsIdx = idx'
+        :class='inputsIdx == idx ? "selected" : ""'
       ) {{input[0]}}
     .input
       .title Details
       .details
-        template(
-          v-for='key in Object.keys(displayInputs)'
-        )
+        template(v-for='key in Object.keys(displayInputs)')
           .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
           .value {{displayInputs[key]}}
       .title Components
@@ -105,6 +104,21 @@ export default {
     font-weight: 700
     font-size: 1.5rem
     margin-bottom: 0.5rem
+  .tabs
+    display: flex
+    column-gap: 0.5rem
+    margin-bottom: 0.5rem
+    .tab
+      padding: 0.5rem 1rem
+      border-radius: 0.25rem
+      border: 1px solid lightgrey
+      cursor: pointer
+      transition: 0.25s
+      &.selected
+        background-color: blue
+        color: white
+        border-color: blue
+        cursor: default
   .identifiers
     display: grid
     grid-template-columns: auto auto 1fr
@@ -115,7 +129,6 @@ export default {
       grid-template-columns: auto 1fr
       column-gap: 1rem
       .label
-        font-weight: 700
         &:first-letter
           text-transform: uppercase
 
