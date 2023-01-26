@@ -6,12 +6,19 @@ export default {
     return {
       reaction: {},
       reactionSummary: null,
-      loading: true
+      loading: true,
+      inputsIdx: 0,
     }
   },
   computed: {
     reactionId() {
       return this.$route.params.reactionId
+    },
+    displayInputs() {
+      if (!this.reaction) return {}
+      let returnArr = {...this.reaction.inputsMap[this.inputsIdx][1]}
+      // filter out null/undefined values and arrays
+      return Object.fromEntries(Object.entries(returnArr).filter(([_,v]) => v != null && !Array.isArray(v)))
     },
   },
   methods: {
@@ -26,6 +33,8 @@ export default {
           if (xhr.response !== null) {
             const bytes = new Uint8Array(xhr.response);
             reaction = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+            // sort inputs by addition order
+            reaction.inputsMap.sort((a,b) => a[1].additionOrder - b[1].additionOrder)
           }
           resolve(reaction);
         }
@@ -48,7 +57,7 @@ export default {
     this.reaction = await this.getReactionData()
     this.getReactionSummary()
     this.loading = false
-    console.log('schema',reaction_pb)
+    // console.log('schema',reaction_pb)
   }
 }
 </script>
@@ -64,7 +73,23 @@ export default {
         .value {{getReactionType(identifier.type)}}
         .value {{identifier.value}}
         .value {{identifier.details}}
-
+  .section(v-if='reaction?.inputsMap?.length')
+    .title Inputs
+    .tabs
+      .tab(
+        v-for='(input, idx) in reaction.inputsMap'
+        @click='inputsIdx = idx'
+      ) {{input[0]}}
+    .input
+      .title Details
+      .details
+        template(
+          v-for='key in Object.keys(displayInputs)'
+        )
+          .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
+          .value {{displayInputs[key]}}
+      .title Components
+      .details {{reaction.inputsMap[inputsIdx]}}
 </template>
 
 <style lang="sass" scoped>
@@ -76,4 +101,22 @@ export default {
   padding: 1rem
   &.summary
     overflow-x: scroll
+  .title
+    font-weight: 700
+    font-size: 1.5rem
+    margin-bottom: 0.5rem
+  .identifiers
+    display: grid
+    grid-template-columns: auto auto 1fr
+    column-gap: 1rem
+  .input
+    .details
+      display: grid
+      grid-template-columns: auto 1fr
+      column-gap: 1rem
+      .label
+        font-weight: 700
+        &:first-letter
+          text-transform: uppercase
+
 </style>
