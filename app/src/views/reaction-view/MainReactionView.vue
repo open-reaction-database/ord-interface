@@ -1,5 +1,5 @@
 <script>
-import ordSchema from "ord-schema"
+import { reaction_pb } from "ord-schema"
 
 export default {
   data() {
@@ -25,7 +25,7 @@ export default {
           let reaction = null
           if (xhr.response !== null) {
             const bytes = new Uint8Array(xhr.response);
-            reaction = ordSchema.reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+            reaction = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
           }
           resolve(reaction);
         }
@@ -39,27 +39,41 @@ export default {
           this.reactionSummary = responseData
         })
     },
+    getReactionType (id) {
+      const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
+      return Object.keys(identifiers).find(key => identifiers[key] == id)
+    }
   },
   async mounted() {
     this.reaction = await this.getReactionData()
     this.getReactionSummary()
     this.loading = false
+    console.log('schema',reaction_pb)
   }
 }
 </script>
 
 <template lang="pug">
 .main-reaction-view
-  .summary(v-if='reactionSummary')
+  .section.summary(v-if='reactionSummary')
     .display(v-html='reactionSummary')
+  .section(v-if='reaction?.identifiersList?.length')
+    .title Identifiers
+    .identifiers
+      template(v-for='identifier in reaction.identifiersList')
+        .value {{getReactionType(identifier.type)}}
+        .value {{identifier.value}}
+        .value {{identifier.details}}
+
 </template>
 
 <style lang="sass" scoped>
-.summary
+.section
   width: calc(90vw)
-  overflow-x: scroll
   background-color: white
   border-radius: 0.25rem
-  margin: 1rem auto
+  margin: 1rem auto 0
   padding: 1rem
+  &.summary
+    overflow-x: scroll
 </style>
