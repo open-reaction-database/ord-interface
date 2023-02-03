@@ -51,13 +51,26 @@ export default {
     getReactionType (id) {
       const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
       return Object.keys(identifiers).find(key => identifiers[key] == id)
+    },
+    getCompoundSVG (component) {
+      // console.log('compound',component)
+      const compound = component[1]
+                        .componentsList[0]
+                        // .identifiersList
+                        // .find((identifier) => identifier.type == 2)
+                        // .value
+      fetch(`/api/render/compound/${JSON.stringify(compound)}`)
+        .then(response => response.json())
+        .then(json => {
+          console.log('json',json)
+        })
     }
   },
   async mounted() {
     this.reaction = await this.getReactionData()
     this.getReactionSummary()
     this.loading = false
-    // console.log('schema',reaction_pb)
+    console.log('schema',reaction_pb)
   }
 }
 </script>
@@ -88,7 +101,7 @@ export default {
           .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
           .value {{displayInputs[key]}}
       .title Components
-      .details {{reaction.inputsMap[inputsIdx]}}
+      .details {{getCompoundSVG(reaction.inputsMap[inputsIdx])}}
 </template>
 
 <style lang="sass" scoped>
