@@ -6,9 +6,13 @@ export default {
     component: Object,
   },
   watch: {
-    compound: function (newVal) {
-      this.getCompoundSVG(newVal)
-    }
+    component: {
+      handler(val) {
+        this.getCompoundSVG(val)
+      },
+      deep: true,
+      immediate: true,
+    },
   },
   data() {
     return {
@@ -16,7 +20,7 @@ export default {
     }
   },
   computed: {
-    amountUnit () {
+    amountObj () {
       const amount = this.component.amount
       let units = {}
       let unitType = ""
@@ -40,7 +44,7 @@ export default {
       return {unitAmount: amountVal, unitType: Object.keys(units).find(key => units[key] == unitVal)}
     },
     compoundAmount () {
-      return `${this.amountUnit?.unitAmount} ${this.amountUnit?.unitType.toLowerCase()}`
+      return `${this.amountObj?.unitAmount} ${this.amountObj?.unitType.toLowerCase()}`
     },
     compoundRole () {
       const role = this.component.reactionRole
@@ -75,8 +79,8 @@ export default {
     },
   },
   async mounted() {
-    console.log("schema",reaction_pb)
-    this.getCompoundSVG(this.component)
+    // console.log("schema",reaction_pb)
+    // this.getCompoundSVG(this.component)
   }
 }
 </script>
