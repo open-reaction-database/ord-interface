@@ -3,7 +3,7 @@ import { reaction_pb } from "ord-schema"
 
 export default {
   props: {
-    compound: String,
+    compound: Array,
   },
   watch: {
     compound: function (newVal, oldVal) {
@@ -40,11 +40,9 @@ export default {
       }).then(val => {
         this.compoundSVG = val
       })
-      // return compound
     }
   },
   async mounted() {
-    console.log('compound',this.compound)
     this.getCompoundSVG(this.compound)
   }
 }

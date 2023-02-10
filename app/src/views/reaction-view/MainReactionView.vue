@@ -46,12 +46,14 @@ export default {
         xhr.send()
       })
     },
-    getReactionSummary () {
-      fetch(`/api/render/${this.reactionId}?compact=false`)
-        .then(response => response.json())
-        .then(responseData => {
-          this.reactionSummary = responseData
-        })
+    async getReactionSummary () {
+      const res = await fetch(`/api/render/${this.reactionId}?compact=false`)
+      const data = await res.json()
+      return data
+        // .then(response => response.json())
+        // .then(responseData => {
+        //   this.reactionSummary = responseData
+        // })
     },
     getReactionType (id) {
       const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
@@ -60,7 +62,7 @@ export default {
   },
   async mounted() {
     this.reaction = await this.getReactionData()
-    this.getReactionSummary()
+    this.reactionSummary = await this.getReactionSummary()
     this.loading = false
     console.log('schema',reaction_pb)
   }
