@@ -1,10 +1,10 @@
 <script>
 import { reaction_pb } from "ord-schema"
-import Component from "./Component"
+import CompoundView from "./CompoundView"
 
 export default {
   components: {
-    Component
+    CompoundView
   },
   data() {
     return {
@@ -50,10 +50,6 @@ export default {
       const res = await fetch(`/api/render/${this.reactionId}?compact=false`)
       const data = await res.json()
       return data
-        // .then(response => response.json())
-        // .then(responseData => {
-        //   this.reactionSummary = responseData
-        // })
     },
     getReactionType (id) {
       const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
@@ -96,8 +92,8 @@ export default {
           .value {{displayInputs[key]}}
       .title Components
       .details 
-        Component(
-          :compound='reaction.inputsMap[inputsIdx]'
+        CompoundView(
+          :component='reaction.inputsMap[inputsIdx]'
         )
 </template>
 

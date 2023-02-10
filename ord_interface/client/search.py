@@ -143,17 +143,33 @@ def render_reaction(reaction_id):
     except (ValueError, KeyError):
         return flask.jsonify("[Reaction cannot be displayed]")
 
-@bp.route("/api/render/compound", methods=["POST"])
+@bp.route("/api/render/compound/svg", methods=["POST"])
 def render_compound():
     """Returns svg of compound"""
-    compound = reaction_pb2.Compound()
     data = flask.request.get_data()
+    # get compound svg
+    compound = reaction_pb2.Compound()
     compound.ParseFromString(data)
     svg = filters._compound_svg(compound)
     try:
         return flask.jsonify(svg)
     except (ValueError, KeyError):
         return flask.jsonify("[Compound cannot be displayed]")
+
+@bp.route("/api/render/compound/amount", methods=["POST"])
+def render_amount():
+    """Returns amount string"""
+    data = flask.request.get_data()
+    print(data,'data')
+    # get amount string 
+    amount = reaction_pb2.Amount()
+    amount.ParseFromString(data)
+    amount = filters._amount(amount)
+    print('amount',amount)
+    try:
+        return flask.jsonify(amount)
+    except (ValueError, KeyError):
+        return flask.jsonify("[Amount cannot be displayed]")
 
 
 def connect():
