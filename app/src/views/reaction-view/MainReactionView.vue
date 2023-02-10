@@ -93,7 +93,7 @@ export default {
       .title Components
       .details 
         CompoundView(
-          :component='reaction.inputsMap[inputsIdx]'
+          :component='reaction.inputsMap[inputsIdx][1].componentsList[0]'
         )
 </template>
 

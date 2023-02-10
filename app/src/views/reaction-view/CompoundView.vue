@@ -3,18 +3,28 @@ import { reaction_pb } from "ord-schema"
 
 export default {
   props: {
-    component: Array,
+    component: Object,
   },
   watch: {
-    compound: function (newVal, oldVal) {
+    compound: function (newVal) {
       this.getCompoundSVG(newVal)
     }
   },
   data() {
     return {
       compoundSVG: null,
-      compoundAmount: null,
     }
+  },
+  computed: {
+    compoundAmount () {
+      const amount = this.component.amount
+      const molesUnits = reaction_pb.Moles.MolesUnit
+      const unit = Object.keys(molesUnits).find(key => molesUnits[key] == amount.moles.value)
+      return `${amount.moles.units} ${unit.toLowerCase()}`
+    },
+    compoundRole () {
+      return this.component.reactionRole
+    },
   },
   methods: {
     getCompoundSVG (component) {
@@ -41,29 +51,33 @@ export default {
         this.compoundSVG = val
       })
     },
-    getCompoundAmount (component) {
-      console.log('amount',component.amount)
-      const amount = new reaction_pb.Amount()
-      console.log('amountconst',amount)
-      const moles = amount
-      return new Promise(resolve => {
-        const xhr = new XMLHttpRequest()
-        xhr.open("POST", "/api/render/compound/amount")
-        const binary = amount.serializeBinary()
-        xhr.responseType = "json"
-        xhr.onload = function () {
-          resolve(xhr.response)
-        }
-        xhr.send(binary)
-      }).then(val => {
-        this.compoundAmount = val
-      })
-    }
+    // getCompoundAmount (component) {
+    //   console.log('amount',component.amount)
+    //   const amount = new reaction_pb.Amount()
+    //   return new Promise(resolve => {
+    //     const xhr = new XMLHttpRequest()
+    //     xhr.open("POST", "/api/render/compound/amount")
+    //     const binary = amount.serializeBinary()
+    //     xhr.responseType = "json"
+    //     xhr.onload = function () {
+    //       resolve(xhr.response)
+    //     }
+    //     xhr.send(binary)
+    //   }).then(val => {
+    //     this.compoundAmount = val
+    //   })
+    // },
+    // getCompoundRole (component) {
+    //   console.log('component',component)
+    //   const compound = new reaction_pb.Compound()
+    //   const role = compound.addRoles()
+    // }
   },
   async mounted() {
-    // console.log('component',this.component)
-    this.getCompoundSVG(this.component[1].componentsList[0])  // TODO Can there be more than one component in here?
-    this.getCompoundAmount(this.component[1].componentsList[0])
+    console.log('schema',reaction_pb)
+    this.getCompoundSVG(this.component)  // TODO Can there be more than one component in here?
+    // this.getCompoundAmount(this.component[1].componentsList[0])
+    // this.getCompoundRole(this.component[1].componentsList[0])
   }
 }
 </script>
@@ -74,6 +88,7 @@ export default {
     v-html='compoundSVG'
   )
   .amount {{compoundAmount}}
+  .role {{compoundRole}}
 </template>
 
 <style lang="sass" scoped>
