@@ -156,36 +156,6 @@ def render_compound():
     except (ValueError, KeyError):
         return flask.jsonify("[Compound cannot be displayed]")
 
-# @bp.route("/api/render/compound/amount", methods=["POST"])
-# def render_amount():
-#     """Returns amount string"""
-#     data = flask.request.get_data()
-#     print(data,'data')
-#     # get amount string 
-#     amount = reaction_pb2.Amount()
-#     amount.ParseFromString(data)
-#     amountStr = filters._amount(amount)
-#     print('amount',amountStr)
-#     try:
-#         return flask.jsonify(amountStr)
-#     except (ValueError, KeyError):
-#         return flask.jsonify("[Amount cannot be displayed]")
-
-# @bp.route("/api/render/compound/role", methods=["POST"])
-# def render_role():
-#     """Returns role string"""
-#     data = flask.request.get_data()
-#     # get role string 
-#     compound = reaction_pb2.Compound()
-#     compound.ParseFromString(data)
-#     role = filters._compound_role(compound)
-#     print('role',role)
-#     try:
-#         return flask.jsonify(role)
-#     except (ValueError, KeyError):
-#         return flask.jsonify("[Role cannot be displayed]")
-
-
 def connect():
     return query.OrdPostgres(
         dbname=POSTGRES_DATABASE,
