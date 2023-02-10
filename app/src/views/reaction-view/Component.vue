@@ -5,12 +5,15 @@ export default {
   props: {
     compound: String,
   },
+  watch: {
+    compound: function (newVal, oldVal) {
+      this.getCompoundSVG(newVal)
+    }
+  },
   data() {
     return {
       compoundSVG: "test"
     }
-  },
-  computed: {
   },
   methods: {
     getCompoundSVG (component) {
