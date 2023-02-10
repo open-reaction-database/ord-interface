@@ -18,11 +18,29 @@ export default {
   computed: {
     amountUnit () {
       const amount = this.component.amount
-      const molesUnits = reaction_pb.Moles.MolesUnit
-      return Object.keys(molesUnits).find(key => molesUnits[key] == amount.moles.value)
+      let units = {}
+      let unitType = ""
+      // determine unit type
+      if (amount.moles) {
+        units = reaction_pb.Moles.MolesUnit
+        unitType="moles"
+      } else if (amount.volume) {
+        units = reaction_pb.Volume.VolumeUnit
+        unitType = "volume"
+      } else if (amount.mass) {
+        units = reaction_pb.Mass.MassUnit
+        unitType = "mass"
+      } else if (amount.unmeasured) {
+        console.log('unmeasured unit type')
+        return {unitAmount: "", unitType: "unmeasured"}
+      }
+      const unitVal = amount[unitType].units
+      const amountVal = amount[unitType].value
+      const precision = amount[unitType].precision
+      return {unitAmount: amountVal, unitType: Object.keys(units).find(key => units[key] == unitVal)}
     },
     compoundAmount () {
-      return `${this.component.amount.moles.units} ${this.amountUnit.toLowerCase()}`
+      return `${this.amountUnit?.unitAmount} ${this.amountUnit?.unitType.toLowerCase()}`
     },
     compoundRole () {
       const role = this.component.reactionRole
@@ -57,7 +75,7 @@ export default {
     },
   },
   async mounted() {
-    console.log('schema',reaction_pb)
+    console.log("schema",reaction_pb)
     this.getCompoundSVG(this.component)
   }
 }
