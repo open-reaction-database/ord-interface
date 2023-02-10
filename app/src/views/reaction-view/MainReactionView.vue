@@ -6,6 +6,7 @@ export default {
     return {
       reaction: {},
       reactionSummary: null,
+      reactionBytes: null,
       loading: true,
       inputsIdx: 0,
     }
@@ -31,8 +32,8 @@ export default {
           // if response is good, deserialize reaction and return object from protobuff
           let reaction = null
           if (xhr.response !== null) {
-            const bytes = new Uint8Array(xhr.response);
-            reaction = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+            this.reactionBytes = new Uint8Array(xhr.response);
+            reaction = reaction_pb.Reaction.deserializeBinary(this.reactionBytes).toObject();
             // sort inputs by addition order
             reaction.inputsMap.sort((a,b) => a[1].additionOrder - b[1].additionOrder)
           }
@@ -53,17 +54,32 @@ export default {
       return Object.keys(identifiers).find(key => identifiers[key] == id)
     },
     getCompoundSVG (component) {
-      // console.log('compound',component)
-      const compound = component[1]
+      // prepare compound for http request
+      const compoundStr = component[1]
                         .componentsList[0]
-                        // .identifiersList
-                        // .find((identifier) => identifier.type == 2)
-                        // .value
-      fetch(`/api/render/compound/${JSON.stringify(compound)}`)
-        .then(response => response.json())
-        .then(json => {
-          console.log('json',json)
-        })
+                        .identifiersList
+                        .find((identifier) => identifier.type == 2)
+                        .value
+      const compound = new reaction_pb.Compound()
+      const identifier = compound.addIdentifiers()
+      identifier.setValue(compoundStr)
+      identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES)
+      // send http request
+      return new Promise(resolve => {
+        const xhr = new XMLHttpRequest()
+        xhr.open("POST", "/api/render/compound")
+        const binary = compound.serializeBinary()
+        xhr.responseType = "json"
+        xhr.onload = function () {
+          console.log(xhr.response)
+          if (xhr.response !== null) {
+            console.log("success!")
+          }
+          resolve(xhr.response)
+        }
+        xhr.send(binary)
+      })
+      // return compound
     }
   },
   async mounted() {
@@ -101,7 +117,10 @@ export default {
           .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
           .value {{displayInputs[key]}}
       .title Components
-      .details {{getCompoundSVG(reaction.inputsMap[inputsIdx])}}
+      .details 
+        .svg(
+          v-html='getCompoundSVG(reaction.inputsMap[inputsIdx])'
+        )
 </template>
 
 <style lang="sass" scoped>

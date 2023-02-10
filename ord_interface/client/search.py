@@ -47,7 +47,7 @@ import json
 import flask
 from rdkit import Chem
 
-from ord_schema.proto import dataset_pb2
+from ord_schema.proto import dataset_pb2, reaction_pb2
 
 from ord_interface.client import query
 from ord_interface.visualization import generate_text, filters
@@ -143,12 +143,14 @@ def render_reaction(reaction_id):
     except (ValueError, KeyError):
         return flask.jsonify("[Reaction cannot be displayed]")
 
-@bp.route("/api/render/compound/<compound>")
-def render_compound(compound):
+@bp.route("/api/render/compound", methods=["POST"])
+def render_compound():
     """Returns svg of compound"""
-    print(compound)
-    compoundObj = json.loads(compound)
-    svg = filters._compound_svg(compoundObj)
+    compound = reaction_pb2.Compound()
+    data = flask.request.get_data()
+    compound.ParseFromString(data)
+    # print(compound)
+    svg = filters._compound_svg(compound)
     print(svg)
     try:
         return flask.jsonify(svg)
