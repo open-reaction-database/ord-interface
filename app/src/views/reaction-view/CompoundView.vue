@@ -41,10 +41,14 @@ export default {
       const unitVal = amount[unitType].units
       const amountVal = amount[unitType].value
       const precision = amount[unitType].precision
-      return {unitAmount: amountVal, unitType: Object.keys(units).find(key => units[key] == unitVal)}
+      console.log('recision',precision)
+      return {
+        unitAmount: amountVal, 
+        unitType: Object.keys(units).find(key => units[key] == unitVal)
+      }
     },
     compoundAmount () {
-      return `${this.amountObj?.unitAmount} ${this.amountObj?.unitType.toLowerCase()}`
+      return `${Math.round(this.amountObj?.unitAmount * 1000) / 1000} ${this.amountObj?.unitType.toLowerCase()}`
     },
     compoundRole () {
       const role = this.component.reactionRole
