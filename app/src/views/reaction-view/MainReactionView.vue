@@ -91,10 +91,11 @@ export default {
           .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
           .value {{displayInputs[key]}}
       .title Components
-      .details 
-        CompoundView(
-          :component='reaction.inputsMap[inputsIdx][1].componentsList[0]'
-        )
+      .details
+        template(v-for='component in reaction.inputsMap[inputsIdx][1].componentsList')
+          CompoundView(
+            :component='component'
+          )
 </template>
 
 <style lang="sass" scoped>
