@@ -55,6 +55,9 @@ export default {
       const types = reaction_pb.ReactionRole.ReactionRoleType
       return Object.keys(types).find(key => types[key] == role).toLowerCase()
     },
+    rawData () {
+      return {}
+    }
   },
   methods: {
     getCompoundSVG (component) {
@@ -90,14 +93,19 @@ export default {
 </script>
 
 <template lang="pug">
-.details
+.compound-view
   .svg(
     v-html='compoundSVG'
   )
   .amount {{compoundAmount}}
   .role {{compoundRole}}
+  .raw {{rawData}}
 </template>
 
 <style lang="sass" scoped>
-
+.compound-view
+  display: grid
+  grid-template-columns: 1fr auto auto auto
+  column-gap: 1rem
+  align-items: center
 </style>
