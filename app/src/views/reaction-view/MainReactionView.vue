@@ -1,7 +1,11 @@
 <script>
 import { reaction_pb } from "ord-schema"
+import Component from "./Component"
 
 export default {
+  components: {
+    Component
+  },
   data() {
     return {
       reaction: {},
@@ -53,34 +57,6 @@ export default {
       const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
       return Object.keys(identifiers).find(key => identifiers[key] == id)
     },
-    getCompoundSVG (component) {
-      // prepare compound for http request
-      const compoundStr = component[1]
-                        .componentsList[0]
-                        .identifiersList
-                        .find((identifier) => identifier.type == 2)
-                        .value
-      const compound = new reaction_pb.Compound()
-      const identifier = compound.addIdentifiers()
-      identifier.setValue(compoundStr)
-      identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES)
-      // send http request
-      return new Promise(resolve => {
-        const xhr = new XMLHttpRequest()
-        xhr.open("POST", "/api/render/compound")
-        const binary = compound.serializeBinary()
-        xhr.responseType = "json"
-        xhr.onload = function () {
-          console.log(xhr.response)
-          if (xhr.response !== null) {
-            console.log("success!")
-          }
-          resolve(xhr.response)
-        }
-        xhr.send(binary)
-      })
-      // return compound
-    }
   },
   async mounted() {
     this.reaction = await this.getReactionData()
@@ -118,8 +94,8 @@ export default {
           .value {{displayInputs[key]}}
       .title Components
       .details 
-        .svg(
-          v-html='getCompoundSVG(reaction.inputsMap[inputsIdx])'
+        Component(
+          :compound='reaction.inputsMap[inputsIdx]'
         )
 </template>
 

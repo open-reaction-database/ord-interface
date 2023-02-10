@@ -149,13 +149,11 @@ def render_compound():
     compound = reaction_pb2.Compound()
     data = flask.request.get_data()
     compound.ParseFromString(data)
-    # print(compound)
     svg = filters._compound_svg(compound)
-    print(svg)
     try:
         return flask.jsonify(svg)
     except (ValueError, KeyError):
-        return flask.jsonify("[Compount cannot be displayed]")
+        return flask.jsonify("[Compound cannot be displayed]")
 
 
 def connect():
