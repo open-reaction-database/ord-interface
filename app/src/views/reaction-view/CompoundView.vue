@@ -1,9 +1,13 @@
 <script>
 import { reaction_pb } from "ord-schema"
+import FloatingModal from "../../components/FloatingModal"
 
 export default {
   props: {
     component: Object,
+  },
+  components: {
+    "floating-modal": FloatingModal
   },
   watch: {
     component: {
@@ -18,6 +22,7 @@ export default {
   data() {
     return {
       compoundSVG: null,
+      showRawData: false,
     }
   },
   computed: {
@@ -75,7 +80,7 @@ export default {
         }
       }
       // set preparations
-      if (this.component?.preparationsList) {
+      if (this.component?.preparationsList?.length) {
         const prepTypes = reaction_pb.CompoundPreparation.CompoundPreparationType
         returnObj["preparations"] = this.component.preparationsList.map(prep => {
           return {
@@ -85,7 +90,6 @@ export default {
         })
       }
       returnObj["reaction_role"] = this.compoundRole
-      console.log('returnObj',returnObj)
       return returnObj
     }
   },
@@ -116,7 +120,7 @@ export default {
     },
   },
   mounted() {
-    console.log("schema",reaction_pb)
+    // console.log("schema",reaction_pb)
   }
 }
 </script>
@@ -128,7 +132,14 @@ export default {
   )
   .amount {{compoundAmount}}
   .role {{compoundRole.toLowerCase()}}
-  .raw {{rawData}}
+  .raw 
+    .button(@click='showRawData=true') &lt;> 
+  floating-modal(
+    v-if='showRawData'
+    title="Raw Data"
+    @closeModal='showRawData=false'
+  )
+    .data {{rawData}}
 </template>
 
 <style lang="sass" scoped>
@@ -137,4 +148,11 @@ export default {
   grid-template-columns: 1fr auto auto auto
   column-gap: 1rem
   align-items: center
+  .raw
+    .button
+      padding: 0.5rem
+      background-color: #a0a0a0
+      color: white
+      border-radius: 0.25rem
+      cursor: pointer
 </style>
