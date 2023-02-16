@@ -9,6 +9,7 @@ export default {
     component: {
       handler(val) {
         this.getCompoundSVG(val)
+        console.log('val',val)
       },
       deep: true,
       immediate: true,
@@ -23,28 +24,29 @@ export default {
     amountObj () {
       const amount = this.component.amount
       let units = {}
-      let unitType = ""
+      let unitCategory = ""
       // determine unit type
       if (amount.moles) {
         units = reaction_pb.Moles.MolesUnit
-        unitType="moles"
+        unitCategory="moles"
       } else if (amount.volume) {
         units = reaction_pb.Volume.VolumeUnit
-        unitType = "volume"
+        unitCategory = "volume"
       } else if (amount.mass) {
         units = reaction_pb.Mass.MassUnit
-        unitType = "mass"
+        unitCategory = "mass"
       } else if (amount.unmeasured) {
         console.log('unmeasured unit type')
-        return {unitAmount: "", unitType: "unmeasured"}
+        return {unitAmount: "", unitCategory: "unmeasured"}
       }
-      const unitVal = amount[unitType].units
-      const amountVal = amount[unitType].value
-      const precision = amount[unitType].precision
+      const unitVal = amount[unitCategory].units
+      const amountVal = amount[unitCategory].value
+      const precision = amount[unitCategory].precision
       console.log('recision',precision)
       return {
         unitAmount: amountVal, 
-        unitType: Object.keys(units).find(key => units[key] == unitVal)
+        unitType: Object.keys(units).find(key => units[key] == unitVal),
+        unitCategory: unitCategory,
       }
     },
     compoundAmount () {
@@ -53,10 +55,38 @@ export default {
     compoundRole () {
       const role = this.component.reactionRole
       const types = reaction_pb.ReactionRole.ReactionRoleType
-      return Object.keys(types).find(key => types[key] == role).toLowerCase()
+      return Object.keys(types).find(key => types[key] == role)
     },
     rawData () {
-      return {}
+      const returnObj = {}
+      // set identifiers
+      const idTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType
+      returnObj["identifiers"] = this.component?.identifiersList?.map((identifier) => {
+        return {
+          type: Object.keys(idTypes).find(key => idTypes[key] == identifier.type),
+          value: identifier.value
+        }
+      })
+      // set amount
+      returnObj["amount"] = {
+        [this.amountObj.unitCategory]: {
+          value: this.amountObj.unitAmount,
+          units: this.amountObj.unitType,
+        }
+      }
+      // set preparations
+      if (this.component?.preparationsList) {
+        const prepTypes = reaction_pb.CompoundPreparation.CompoundPreparationType
+        returnObj["preparations"] = this.component.preparationsList.map(prep => {
+          return {
+            type: Object.keys(prepTypes).find(key => prepTypes[key] == prep.type),
+            details: prep.details,
+          }
+        })
+      }
+      returnObj["reaction_role"] = this.compoundRole
+      console.log('returnObj',returnObj)
+      return returnObj
     }
   },
   methods: {
@@ -85,9 +115,8 @@ export default {
       })
     },
   },
-  async mounted() {
-    // console.log("schema",reaction_pb)
-    // this.getCompoundSVG(this.component)
+  mounted() {
+    console.log("schema",reaction_pb)
   }
 }
 </script>
@@ -98,7 +127,7 @@ export default {
     v-html='compoundSVG'
   )
   .amount {{compoundAmount}}
-  .role {{compoundRole}}
+  .role {{compoundRole.toLowerCase()}}
   .raw {{rawData}}
 </template>
 
