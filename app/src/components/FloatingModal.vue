@@ -50,15 +50,14 @@ export default {
       position: absolute
       max-width: 80vw
       min-width: 50vw
-      max-height: 80vh
-      min-height: 50vh
+      height: 60vh
       background-color: white
       border-radius: 0.25rem
       margin: auto
       padding: 1rem 0
-      top: 50%
-      -ms-transform: translateY(-50%)
-      transform: translateY(-50%)
+      top: 40%
+      -ms-transform: translateY(-40%)
+      transform: translateY(-40%)
       left: 50%
       -ms-transform: translateX(-50%)
       transform: translateX(-50%)
@@ -74,4 +73,6 @@ export default {
           cursor: pointer
       .body
         padding: 1rem 1rem 0
+        overflow-y: auto
+        height: calc(100% - 3.5rem)
 </style>

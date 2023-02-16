@@ -22,7 +22,7 @@ export default {
   data() {
     return {
       compoundSVG: null,
-      showRawData: true,
+      showRawData: false,
     }
   },
   computed: {
@@ -161,5 +161,5 @@ export default {
       cursor: pointer
   .data
     width: 100%
-    overflow-x: scroll
+    overflow-x: auto
 </style>
