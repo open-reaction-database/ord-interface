@@ -22,7 +22,7 @@ export default {
   data() {
     return {
       compoundSVG: null,
-      showRawData: false,
+      showRawData: true,
     }
   },
   computed: {
@@ -139,7 +139,11 @@ export default {
     title="Raw Data"
     @closeModal='showRawData=false'
   )
-    .data {{rawData}}
+    .data
+      pre(v-for='identifier in rawData.identifiers') identifiers: {{identifier}}
+      pre amount: {{rawData.amount}}
+      pre reaction_role: {{rawData.reaction_role}}
+      pre(v-for='prep in rawData.preparations') preparations: {{prep}}
 </template>
 
 <style lang="sass" scoped>
@@ -155,4 +159,7 @@ export default {
       color: white
       border-radius: 0.25rem
       cursor: pointer
+  .data
+    width: 100%
+    overflow-x: scroll
 </style>
