@@ -4,6 +4,7 @@ import CompoundView from "./CompoundView"
 import SetupView from "./SetupView"
 import ConditionsView from "./ConditionsView"
 import NotesView from "./NotesView"
+import ObservationsView from "./ObservationsView"
 
 export default {
   components: {
@@ -11,6 +12,7 @@ export default {
     SetupView,
     ConditionsView,
     NotesView,
+    ObservationsView,
   },
   data() {
     return {
@@ -159,12 +161,18 @@ export default {
         :conditions='reaction.conditions'
         :display='conditionTab'
       )
-  
   .section(v-if='reaction.notes')
     .title Notes
     .details
       NotesView(
         :notes='reaction.notes'
+      )
+  // TODO flesh out observations section
+  .section(v-if='reaction.observationsList?.length')
+    .title Observations
+    .details
+      ObservationsView(
+        :observations='reaction.observationsList'
       )
 
 </template>
