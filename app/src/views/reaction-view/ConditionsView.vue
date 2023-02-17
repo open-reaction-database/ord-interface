@@ -38,6 +38,12 @@ export default {
     stirType () {
       const stirTypes = reaction_pb.StirringConditions.StirringMethodType
       return Object.keys(stirTypes).find(key => stirTypes[key] == this.conditions.stirring.type)
+    },
+    illumType () {
+      const illum = this.conditions.illumination
+      const illumTypes = reaction_pb.IlluminationConditions.IlluminationType
+      const illumType = Object.keys(illumTypes).find(key => illumTypes[key] == illum.type)
+      return `${illumType}${illum.details ? `: ${illum.details}` : ""}`
     }
   },
 }
@@ -57,6 +63,7 @@ export default {
     template(v-if='conditions.temperature.measurementsList?.length')
       .label Measurements
       .value {{conditions.temperature.measurementsList}}
+    
   .pressure.details(v-if='display==="pressure"')
     .label Control Type
     .value {{pressureType}}
@@ -71,6 +78,7 @@ export default {
     template(v-if='conditions.pressure.measurementsList?.length')
       .label Measurements
       .value {{conditions.pressure.measurementsList}}
+
   .stirring.details(v-if='display==="stirring"')
     .label Type
     .value {{stirType}}
@@ -84,7 +92,43 @@ export default {
       .label RPM
       .value {{conditions.stirring.rate.rpm}}
 
+  .illumination.details(v-if='display==="illumination"')
+    .label Type
+    .value {{illumType}}
+    // TODO flesh out wave length
+    .label Peak Wavelength
+    .value {{conditions.illumination.peakWaveLength || "None"}}
+    template(v-if='conditions.illumination.color')
+      .label Color
+      .value {{conditions.illumination.color}}
+    // TODO flesh out distance
+    .label Distance to Vessel
+    .value {{conditions.illumination.distanceToVessel || "None"}}
 
+  // TODO flesh out electrochemistry
+  .electro.details(v-if='display === "electrochemistry"')
+    .label Type
+    .value {{conditions.electrochemistry}}
+  
+  // TODO flesh out flow
+  .electro.details(v-if='display === "flow"')
+    .label Type
+    .value {{conditions.flow}}
+
+  // TODO flesh out other
+  .other.details(v-if='display === "other"')
+    template(v-if='conditions.reflux')
+      .label Reflux
+      .value {{conditions.reflux}}
+    template(v-if='conditions.ph')
+      .label pH
+      .value {{conditions.ph}}
+    template(v-if='conditions.conditions_are_dynamic')
+      .label Conditions are dynamic
+      .value {{conditions.conditions_are_dynamic}}
+    template(v-if='conditions.details')
+      .label Details
+      .value {{conditions.details}}
 </template>
 
 <style lang="sass" scoped>

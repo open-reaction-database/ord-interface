@@ -45,6 +45,15 @@ export default {
       // filter out null/undefined values and arrays
       return Object.fromEntries(Object.entries(returnArr).filter(([_,v]) => v != null && !Array.isArray(v)))
     },
+    displayConditionsOther() {
+      const otherFields = [
+        "reflux",
+        "ph",
+        "conditions_are_dynamic",
+        "details",
+      ]
+      return otherFields.find(key => this.reaction.conditions[key])
+    }
   },
   methods: {
     getReactionData () {
@@ -141,7 +150,7 @@ export default {
         .tab.capitalize(
           @click='conditionTab = tab'
           :class='conditionTab === tab ? "selected" : ""'
-          v-if='reaction.conditions[tab] || tab === "other"'
+          v-if='reaction.conditions[tab] || (tab === "other" && displayConditionsOther)'
         ) {{tab}}
     .details
       ConditionsView(
