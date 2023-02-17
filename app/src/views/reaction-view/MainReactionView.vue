@@ -3,12 +3,14 @@ import { reaction_pb } from "ord-schema"
 import CompoundView from "./CompoundView"
 import SetupView from "./SetupView"
 import ConditionsView from "./ConditionsView"
+import NotesView from "./NotesView"
 
 export default {
   components: {
     CompoundView,
     SetupView,
     ConditionsView,
+    NotesView,
   },
   data() {
     return {
@@ -157,6 +159,14 @@ export default {
         :conditions='reaction.conditions'
         :display='conditionTab'
       )
+  
+  .section(v-if='reaction.notes')
+    .title Notes
+    .details
+      NotesView(
+        :notes='reaction.notes'
+      )
+
 </template>
 
 <style lang="sass" scoped>
