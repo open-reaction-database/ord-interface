@@ -42,14 +42,19 @@ export default {
   .vessel.details(v-if='display=="vessel"')
     .label Type
     .value {{vesselType}}
+    template(v-if='vessel.details')
+      .label Details
+      .value {{vessel.details}}
     .label Material
     .value {{vessel.material || "UNSPECIFIED"}}
     .label Volume
     .value {{vesselVolume}}
-    .label Attachments
-    .value {{vesselAttachments}}
-    .label Preparations
-    .value {{vesselPrep}}
+    template(v-if='vessel.attachmentsList?.length')
+      .label Attachments
+      .value {{vesselAttachments}}
+    template(v-if='vessel.preparationsList?.length')
+      .label Preparations
+      .value {{vesselPrep}}
   .environment.details(v-if='display=="environment"')
     .label Type
     .value {{setup.environment?.type || "UNSPECIFIED"}}
