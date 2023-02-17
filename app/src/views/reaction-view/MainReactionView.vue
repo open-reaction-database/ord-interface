@@ -1,10 +1,12 @@
 <script>
 import { reaction_pb } from "ord-schema"
 import CompoundView from "./CompoundView"
+import SetupView from "./SetupView"
 
 export default {
   components: {
-    CompoundView
+    CompoundView,
+    SetupView
   },
   data() {
     return {
@@ -13,6 +15,7 @@ export default {
       reactionBytes: null,
       loading: true,
       inputsIdx: 0,
+      setupTab: "vessel"
     }
   },
   computed: {
@@ -96,6 +99,27 @@ export default {
           CompoundView(
             :component='component'
           )
+  .section(v-if='reaction?.setup')
+    .title Setup
+    .tabs
+      .tab(
+        @click='setupTab = "vessel"'
+        :class='setupTab == "vessel" ? "selected" : ""'
+      ) Vessel
+      .tab(
+        @click='setupTab = "environment"'
+        :class='setupTab == "environment" ? "selected" : ""'
+      ) Environment
+      .tab(
+        v-if='reaction.setup.is_automated'
+        @click='setupTab = "automation"'
+        :class='setupTab == "automation" ? "selected" : ""'
+      ) Automation
+    .details
+      SetupView(
+        :setup='reaction.setup'
+        :display='setupTab'
+      )
 </template>
 
 <style lang="sass" scoped>
