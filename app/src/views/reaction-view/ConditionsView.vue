@@ -34,6 +34,10 @@ export default {
       const atmoTypes = reaction_pb.PressureConditions.Atmosphere.AtmosphereType
       const atmoType = Object.keys(atmoTypes).find(key => atmoTypes[key] == atmo.type)
       return `${atmoType}${atmo.details ? `, ${atmo.details}` : ""}`
+    },
+    stirType () {
+      const stirTypes = reaction_pb.StirringConditions.StirringMethodType
+      return Object.keys(stirTypes).find(key => stirTypes[key] == this.conditions.stirring.type)
     }
   },
 }
@@ -67,7 +71,18 @@ export default {
     template(v-if='conditions.pressure.measurementsList?.length')
       .label Measurements
       .value {{conditions.pressure.measurementsList}}
-  //- .stirring.details(v-if='display==="stirring"')
+  .stirring.details(v-if='display==="stirring"')
+    .label Type
+    .value {{stirType}}
+    template(v-if='conditions.stirring.details')
+      .label Details
+      .value {{conditions.stirring.details}}
+      // TODO Flesh out stirring rate
+    .label Rate
+    .value {{conditions.stirring.rate || "UNSPECIFIED"}}
+    template(v-if='conditions.stirring.rate?.rpm')
+      .label RPM
+      .value {{conditions.stirring.rate.rpm}}
 
 
 </template>
