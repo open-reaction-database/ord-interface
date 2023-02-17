@@ -6,12 +6,6 @@ export default {
     setup: Object,
     display: String,
   },
-  watch: {
-  },
-  data() {
-    return {
-    }
-  },
   computed: {
     vessel () {
       return this.setup.vessel
@@ -40,17 +34,11 @@ export default {
       }).join(", ")
     },
   },
-  methods: {
-  },
-  mounted() {
-    // console.log("schema",reaction_pb)
-    console.log('setup',this.setup)
-  }
 }
 </script>
 
 <template lang="pug">
-.setup-view {{reaction_pb}}
+.setup-view
   .vessel.details(v-if='display=="vessel"')
     .label Type
     .value {{vesselType}}
