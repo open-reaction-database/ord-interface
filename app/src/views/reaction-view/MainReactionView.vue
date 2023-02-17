@@ -2,11 +2,13 @@
 import { reaction_pb } from "ord-schema"
 import CompoundView from "./CompoundView"
 import SetupView from "./SetupView"
+import ConditionsView from "./ConditionsView"
 
 export default {
   components: {
     CompoundView,
-    SetupView
+    SetupView,
+    ConditionsView,
   },
   data() {
     return {
@@ -15,7 +17,22 @@ export default {
       reactionBytes: null,
       loading: true,
       inputsIdx: 0,
-      setupTab: "vessel"
+      setupTabs: [
+        "vessel",
+        "environment",
+        "automation",
+      ],
+      setupTab: "vessel",
+      conditionTabs: [
+        "temperature",
+        "pressure",
+        "stirring",
+        "illumination",
+        "electrochemistry",
+        "flow",
+        "other",
+      ],
+      conditionTab: "temperature",
     }
   },
   computed: {
@@ -102,27 +119,40 @@ export default {
   .section(v-if='reaction?.setup')
     .title Setup
     .tabs
-      .tab(
-        @click='setupTab = "vessel"'
-        :class='setupTab == "vessel" ? "selected" : ""'
-      ) Vessel
-      .tab(
-        @click='setupTab = "environment"'
-        :class='setupTab == "environment" ? "selected" : ""'
-      ) Environment
-      .tab(
-        v-if='reaction.setup.is_automated'
-        @click='setupTab = "automation"'
-        :class='setupTab == "automation" ? "selected" : ""'
-      ) Automation
+      template(
+        v-for='tab in setupTabs'
+      )
+        .tab.capitalize(
+          @click='setupTab = tab'
+          :class='setupTab === tab ? "selected" : ""'
+          v-if='tab !== "automation" || reaction.setup.is_automated'
+        ) {{tab}}
     .details
       SetupView(
         :setup='reaction.setup'
         :display='setupTab'
       )
+  .section(v-if='reaction?.conditions')
+    .title Conditions
+    .tabs
+      template(
+        v-for='tab in conditionTabs'
+      )
+        .tab.capitalize(
+          @click='conditionTab = tab'
+          :class='conditionTab === tab ? "selected" : ""'
+          v-if='reaction.conditions[tab] || tab === "other"'
+        ) {{tab}}
+    .details
+      ConditionsView(
+        :conditions='reaction.conditions'
+        :display='conditionTab'
+      )
 </template>
 
 <style lang="sass" scoped>
+.main-reaction-view
+  margin-bottom: 2rem
 .section
   width: calc(90vw)
   background-color: white
@@ -150,6 +180,8 @@ export default {
         color: white
         border-color: blue
         cursor: default
+      &.capitalize
+        text-transform: capitalize
   .identifiers
     display: grid
     grid-template-columns: auto auto 1fr

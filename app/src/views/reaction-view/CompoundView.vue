@@ -13,7 +13,6 @@ export default {
     component: {
       handler(val) {
         this.getCompoundSVG(val)
-        console.log('val',val)
       },
       deep: true,
       immediate: true,
