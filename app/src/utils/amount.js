@@ -15,7 +15,6 @@ export const amountObj = (amount) => {
     units = reaction_pb.Mass.MassUnit
     unitCategory = "mass"
   } else if (amount.unmeasured) {
-    console.log('unmeasured unit type')
     return {unitAmount: "", unitCategory: "unmeasured"}
   }
   const unitVal = amount[unitCategory].units
@@ -29,5 +28,8 @@ export const amountObj = (amount) => {
 }
 
 export const amountStr = (amountObj) => {
+  console.log('amountObj',amountObj)
+  // takes an amountObj from above amountObj function
+  if (!amountObj.unitAmount || !amountObj.unitType) return ""
   return `${Math.round(amountObj.unitAmount * 1000) / 1000} ${amountObj.unitType.toLowerCase()}`
 }
