@@ -27,6 +27,7 @@ export default {
   computed: {
     amountObj () {
       const amount = this.component.amount
+      if (!amount) return {}
       let units = {}
       let unitCategory = ""
       // determine unit type
@@ -46,7 +47,6 @@ export default {
       const unitVal = amount[unitCategory].units
       const amountVal = amount[unitCategory].value
       const precision = amount[unitCategory].precision
-      console.log('recision',precision)
       return {
         unitAmount: amountVal, 
         unitType: Object.keys(units).find(key => units[key] == unitVal),
@@ -54,7 +54,7 @@ export default {
       }
     },
     compoundAmount () {
-      return `${Math.round(this.amountObj?.unitAmount * 1000) / 1000} ${this.amountObj?.unitType.toLowerCase()}`
+      return `${Math.round(this.amountObj?.unitAmount * 1000) / 1000} ${this.amountObj?.unitType?.toLowerCase()}`
     },
     compoundRole () {
       const role = this.component.reactionRole
@@ -72,10 +72,12 @@ export default {
         }
       })
       // set amount
-      returnObj["amount"] = {
-        [this.amountObj.unitCategory]: {
-          value: this.amountObj.unitAmount,
-          units: this.amountObj.unitType,
+      if (this.component?.amount) {
+        returnObj["amount"] = {
+          [this.amountObj.unitCategory]: {
+            value: this.amountObj.unitAmount,
+            units: this.amountObj.unitType,
+          }
         }
       }
       // set preparations
@@ -88,8 +90,25 @@ export default {
           }
         })
       }
+      if (this.component?.isDesiredProduct) {
+        returnObj["is_desired_product"] = this.component.isDesiredProduct
+      }
+      if (this.component?.isolatedColor) {
+        returnObj["isolated_color"] = this.component.isolatedColor
+      }
+      if (this.component?.texture) {
+        const textureTypes = reaction_pb.ProductCompound.Texture.TextureType
+        const textureType = Object.keys(textureTypes).find(key => textureTypes[key] == this.component.texture.type)
+        const textureObj = {type: textureType}
+        if (this.component.texture.details)
+          textureObj.details = this.component.texture.details
+        returnObj["texture"] = textureObj
+      }
       returnObj["reaction_role"] = this.compoundRole
       return returnObj
+    },
+    gridColumns () {
+      return `1fr repeat(${this.component?.amount ? 3 : 2}, auto)`
     }
   },
   methods: {
@@ -125,11 +144,17 @@ export default {
 </script>
 
 <template lang="pug">
-.compound-view
+.compound-view(
+  :style='{gridTemplateColumns: gridColumns}'
+)
+  .label Compound
+  .label(v-if='component.amount') Amount
+  .label Role
+  .label Raw
   .svg(
     v-html='compoundSVG'
   )
-  .amount {{compoundAmount}}
+  .amount(v-if='component.amount') {{compoundAmount}}
   .role {{compoundRole.toLowerCase()}}
   .raw 
     .button(@click='showRawData=true') &lt;> 
@@ -140,17 +165,24 @@ export default {
   )
     .data
       pre(v-for='identifier in rawData.identifiers') identifiers: {{identifier}}
-      pre amount: {{rawData.amount}}
+      pre(v-if='rawData.amount') amount: {{rawData.amount}}
       pre reaction_role: {{rawData.reaction_role}}
+      pre(v-if='rawData.is_desired_product') is_desired_product: {{rawData.is_desired_product}}
+      pre(v-if='rawData.isolated_color') isolated_color: {{rawData.isolated_color}}
+      pre(v-if='rawData.texture') texture: {{rawData.texture}}
       pre(v-for='prep in rawData.preparations') preparations: {{prep}}
 </template>
 
 <style lang="sass" scoped>
 .compound-view
   display: grid
-  grid-template-columns: 1fr auto auto auto
-  column-gap: 1rem
+  padding: 1rem
   align-items: center
+  *
+    padding: 0.5rem
+  .label
+    font-weight: 700
+    border-bottom: 1px solid #000
   .raw
     .button
       padding: 0.5rem

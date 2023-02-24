@@ -1,9 +1,13 @@
 <script>
 import { reaction_pb } from "ord-schema"
+import CompoundView from "./CompoundView"
 
 export default {
   props: {
     outcome: Object,
+  },
+  components: {
+    CompoundView
   },
   data () {
     return {
@@ -39,6 +43,14 @@ export default {
         @click='productsIdx = idx'
         :class='productsIdx === idx ? "selected" : ""'
       ) Product {{idx + 1}}
+    .compound
+      .label Compound
+      .label Role
+      .label Raw
+      CompoundView(
+        :component='outcome.productsList[productsIdx]'
+      )
+      pre.value {{outcome.productsList[productsIdx]}}
 
 </template>
 
