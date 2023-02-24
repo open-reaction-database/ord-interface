@@ -112,140 +112,135 @@ export default {
 .main-reaction-view
   .section.summary(v-if='reactionSummary')
     .display(v-html='reactionSummary')
-  .section(v-if='reaction?.identifiersList?.length')
+  template(v-if='reaction?.identifiersList?.length')
     .title Identifiers
-    .identifiers
-      template(v-for='identifier in reaction.identifiersList')
-        .value {{getReactionType(identifier.type)}}
-        .value {{identifier.value}}
-        .value {{identifier.details}}
-  .section(v-if='reaction?.inputsMap?.length')
+    .section
+      .identifiers
+        template(v-for='identifier in reaction.identifiersList')
+          .value {{getReactionType(identifier.type)}}
+          .value {{identifier.value}}
+          .value {{identifier.details}}
+  template(v-if='reaction?.inputsMap?.length')
     .title Inputs
-    .tabs
-      .tab(
-        v-for='(input, idx) in reaction.inputsMap'
-        @click='inputsIdx = idx'
-        :class='inputsIdx == idx ? "selected" : ""'
-      ) {{input[0]}}
-    .input
-      .title Details
-      .details
-        template(v-for='key in Object.keys(displayInputs)')
-          .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
-          .value {{displayInputs[key]}}
-      .title Components
-      .details
-        template(v-for='component in reaction.inputsMap[inputsIdx][1].componentsList')
-          CompoundView(
-            :component='component'
-          )
-  .section(v-if='reaction?.setup')
+    .section
+      .tabs
+        .tab(
+          v-for='(input, idx) in reaction.inputsMap'
+          @click='inputsIdx = idx'
+          :class='inputsIdx == idx ? "selected" : ""'
+        ) {{input[0]}}
+      .input
+        .title Details
+        .details
+          template(v-for='key in Object.keys(displayInputs)')
+            .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
+            .value {{displayInputs[key]}}
+        .title Components
+        .details
+          template(v-for='component in reaction.inputsMap[inputsIdx][1].componentsList')
+            CompoundView(
+              :component='component'
+            )
+  template(v-if='reaction?.setup')
     .title Setup
-    .tabs
-      template(
-        v-for='tab in setupTabs'
-      )
-        .tab.capitalize(
-          @click='setupTab = tab'
-          :class='setupTab === tab ? "selected" : ""'
-          v-if='tab !== "automation" || reaction.setup.is_automated'
-        ) {{tab}}
-    .details
-      SetupView(
-        :setup='reaction.setup'
-        :display='setupTab'
-      )
-  .section(v-if='reaction?.conditions')
+    .section
+      .tabs
+        template(
+          v-for='tab in setupTabs'
+        )
+          .tab.capitalize(
+            @click='setupTab = tab'
+            :class='setupTab === tab ? "selected" : ""'
+            v-if='tab !== "automation" || reaction.setup.is_automated'
+          ) {{tab}}
+      .details
+        SetupView(
+          :setup='reaction.setup'
+          :display='setupTab'
+        )
+  template(v-if='reaction?.conditions')
     .title Conditions
-    .tabs
-      template(
-        v-for='tab in conditionTabs'
-      )
-        .tab.capitalize(
-          @click='conditionTab = tab'
-          :class='conditionTab === tab ? "selected" : ""'
-          v-if='reaction.conditions[tab] || (tab === "other" && displayConditionsOther)'
-        ) {{tab}}
-    .details
-      ConditionsView(
-        :conditions='reaction.conditions'
-        :display='conditionTab'
-      )
-  .section(v-if='reaction.notes')
+    .section
+      .tabs
+        template(
+          v-for='tab in conditionTabs'
+        )
+          .tab.capitalize(
+            @click='conditionTab = tab'
+            :class='conditionTab === tab ? "selected" : ""'
+            v-if='reaction.conditions[tab] || (tab === "other" && displayConditionsOther)'
+          ) {{tab}}
+      .details
+        ConditionsView(
+          :conditions='reaction.conditions'
+          :display='conditionTab'
+        )
+  template(v-if='reaction.notes')
     .title Notes
-    .details
-      NotesView(
-        :notes='reaction.notes'
-      )
+    .section
+      .details
+        NotesView(
+          :notes='reaction.notes'
+        )
   // TODO flesh out observations section
-  .section(v-if='reaction.observationsList?.length')
+  template(v-if='reaction.observationsList?.length')
     .title Observations
-    .details
-      ObservationsView(
-        :observations='reaction.observationsList'
-      )
+    .section
+      .details
+        ObservationsView(
+          :observations='reaction.observationsList'
+        )
   // TODO flesh out workups section
-  .section(v-if='reaction.workupsList?.length')
+  template(v-if='reaction.workupsList?.length')
     .title Workups
-    .tabs
-      .tab.capitalize(
-        v-for='(workup, idx) in reaction.workupsList'
-        @click='workupsTab = idx'
-        :class='workupsTab === idx ? "selected" : ""'
-      ) {{getWorkupLabel(workup.type)}}
-    .details
-      WorkupsView(
-        :workup='reaction.workupsList[workupsTab]'
-      )
-  .section(v-if='reaction.outcomesList?.length')
+    .section
+      .tabs
+        .tab.capitalize(
+          v-for='(workup, idx) in reaction.workupsList'
+          @click='workupsTab = idx'
+          :class='workupsTab === idx ? "selected" : ""'
+        ) {{getWorkupLabel(workup.type)}}
+      .details
+        WorkupsView(
+          :workup='reaction.workupsList[workupsTab]'
+        )
+  template(v-if='reaction.outcomesList?.length')
     .title Outcomes
-    .tabs
-      .tab.capitalize(
-        v-for='(outcome, idx) in reaction.outcomesList'
-        @click='outcomesTab = idx'
-        :class='outcomesTab === idx ? "selected" : ""'
-      ) Outcome {{idx + 1}}
-    .details
-      OutcomesView(
-        :outcome='reaction.outcomesList[outcomesTab]'
-      )
+    .section
+      .tabs
+        .tab.capitalize(
+          v-for='(outcome, idx) in reaction.outcomesList'
+          @click='outcomesTab = idx'
+          :class='outcomesTab === idx ? "selected" : ""'
+        ) Outcome {{idx + 1}}
+      .details
+        OutcomesView(
+          :outcome='reaction.outcomesList[outcomesTab]'
+        )
 
 </template>
 
 <style lang="sass" scoped>
+@import "../../styles/tabs"
 .main-reaction-view
-  margin-bottom: 2rem
+  margin: 2rem 0
+.title
+  font-weight: 700
+  font-size: 2rem
+  margin-bottom: 0.5rem
+.section, .title
+  width: calc(95vw)
+  margin: 0 auto
 .section
-  width: calc(90vw)
   background-color: white
   border-radius: 0.25rem
-  margin: 1rem auto 0
+  margin-bottom: 1rem
   padding: 1rem
+  box-sizing: border-box
+  .title
+    font-size: 1.5rem
   &.summary
     overflow-x: scroll
-  .title
-    font-weight: 700
-    font-size: 1.5rem
-    margin-bottom: 0.5rem
-  .tabs
-    display: flex
-    column-gap: 0.5rem
-    row-gap: 0.5rem
-    margin-bottom: 0.5rem
-    flex-wrap: wrap
-    .tab
-      padding: 0.5rem 1rem
-      border-radius: 0.25rem
-      border: 1px solid lightgrey
-      cursor: pointer
-      transition: 0.25s
-      &.selected
-        background-color: blue
-        color: white
-        border-color: blue
-        cursor: default
-      &.capitalize
-        text-transform: capitalize
   .identifiers
     display: grid
     grid-template-columns: auto auto 1fr
