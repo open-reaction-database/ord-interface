@@ -181,6 +181,7 @@ export default {
       ObservationsView(
         :observations='reaction.observationsList'
       )
+  // TODO flesh out workups section
   .section(v-if='reaction.workupsList?.length')
     .title Workups
     .tabs
@@ -191,7 +192,7 @@ export default {
       ) {{getWorkupLabel(workup.type)}}
     .details
       WorkupsView(
-        :workups='reaction.workupsList[workupsTab]'
+        :workup='reaction.workupsList[workupsTab]'
       )
 
 </template>
