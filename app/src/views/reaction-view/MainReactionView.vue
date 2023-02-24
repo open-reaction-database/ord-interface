@@ -5,6 +5,7 @@ import SetupView from "./SetupView"
 import ConditionsView from "./ConditionsView"
 import NotesView from "./NotesView"
 import ObservationsView from "./ObservationsView"
+import WorkupsView from "./WorkupsView"
 
 export default {
   components: {
@@ -13,6 +14,7 @@ export default {
     ConditionsView,
     NotesView,
     ObservationsView,
+    WorkupsView,
   },
   data() {
     return {
@@ -173,6 +175,12 @@ export default {
     .details
       ObservationsView(
         :observations='reaction.observationsList'
+      )
+  .section(v-if='reaction.workupsList?.length')
+    .title Workups
+    .details
+      WorkupsView(
+        :workups='reaction.workupsList'
       )
 
 </template>
