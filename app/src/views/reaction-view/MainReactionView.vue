@@ -39,6 +39,7 @@ export default {
         "other",
       ],
       conditionTab: "temperature",
+      workupsTab: 0,
     }
   },
   computed: {
@@ -89,6 +90,10 @@ export default {
     getReactionType (id) {
       const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
       return Object.keys(identifiers).find(key => identifiers[key] == id)
+    },
+    getWorkupLabel (type) {
+      const workupTypes = reaction_pb.ReactionWorkup.ReactionWorkupType
+      return Object.keys(workupTypes).find(key => workupTypes[key] == type).toLowerCase().replaceAll("_"," ")
     },
   },
   async mounted() {
@@ -178,9 +183,15 @@ export default {
       )
   .section(v-if='reaction.workupsList?.length')
     .title Workups
+    .tabs
+      .tab.capitalize(
+        v-for='(workup, idx) in reaction.workupsList'
+        @click='workupsTab = idx'
+        :class='workupsTab === idx ? "selected" : ""'
+      ) {{getWorkupLabel(workup.type)}}
     .details
       WorkupsView(
-        :workups='reaction.workupsList'
+        :workups='reaction.workupsList[workupsTab]'
       )
 
 </template>
@@ -203,7 +214,9 @@ export default {
   .tabs
     display: flex
     column-gap: 0.5rem
+    row-gap: 0.5rem
     margin-bottom: 0.5rem
+    flex-wrap: wrap
     .tab
       padding: 0.5rem 1rem
       border-radius: 0.25rem

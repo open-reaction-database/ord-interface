@@ -3,14 +3,14 @@ import { reaction_pb } from "ord-schema"
 
 export default {
   props: {
-    workups: Array,
+    workup: Array,
   },
 }
 </script>
 
 <template lang="pug">
 .workups-view
-  .details {{workups}}
+  .details {{workup}}
 </template>
 
 <style lang="sass" scoped>
