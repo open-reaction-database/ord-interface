@@ -1,6 +1,7 @@
 <script>
 import { reaction_pb } from "ord-schema"
 import FloatingModal from "../../components/FloatingModal"
+import { amountObj, amountStr } from "../../utils/amount"
 
 export default {
   props: {
@@ -25,36 +26,11 @@ export default {
     }
   },
   computed: {
-    amountObj () {
-      const amount = this.component.amount
-      if (!amount) return {}
-      let units = {}
-      let unitCategory = ""
-      // determine unit type
-      if (amount.moles) {
-        units = reaction_pb.Moles.MolesUnit
-        unitCategory="moles"
-      } else if (amount.volume) {
-        units = reaction_pb.Volume.VolumeUnit
-        unitCategory = "volume"
-      } else if (amount.mass) {
-        units = reaction_pb.Mass.MassUnit
-        unitCategory = "mass"
-      } else if (amount.unmeasured) {
-        console.log('unmeasured unit type')
-        return {unitAmount: "", unitCategory: "unmeasured"}
-      }
-      const unitVal = amount[unitCategory].units
-      const amountVal = amount[unitCategory].value
-      const precision = amount[unitCategory].precision
-      return {
-        unitAmount: amountVal, 
-        unitType: Object.keys(units).find(key => units[key] == unitVal),
-        unitCategory: unitCategory,
-      }
+    compoundAmountObj () {
+      return amountObj(this.component.amount)
     },
     compoundAmount () {
-      return `${Math.round(this.amountObj?.unitAmount * 1000) / 1000} ${this.amountObj?.unitType?.toLowerCase()}`
+      return amountStr(this.compoundAmountObj)
     },
     compoundRole () {
       const role = this.component.reactionRole
@@ -74,9 +50,9 @@ export default {
       // set amount
       if (this.component?.amount) {
         returnObj["amount"] = {
-          [this.amountObj.unitCategory]: {
-            value: this.amountObj.unitAmount,
-            units: this.amountObj.unitType,
+          [this.compoundAmountObj.unitCategory]: {
+            value: this.compoundAmountObj.unitAmount,
+            units: this.compoundAmountObj.unitType,
           }
         }
       }
@@ -176,7 +152,7 @@ export default {
 <style lang="sass" scoped>
 .compound-view
   display: grid
-  padding: 1rem
+  // padding: 1rem
   align-items: center
   *
     padding: 0.5rem

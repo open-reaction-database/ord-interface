@@ -1,13 +1,16 @@
 <script>
 import { reaction_pb } from "ord-schema"
 import CompoundView from "./CompoundView"
+import FloatingModal from "../../components/FloatingModal"
+import { amountObj, amountStr } from "../../utils/amount"
 
 export default {
   props: {
     outcome: Object,
   },
   components: {
-    CompoundView
+    CompoundView,
+    FloatingModal,
   },
   data () {
     return {
@@ -19,6 +22,20 @@ export default {
       const timeUnits = reaction_pb.Time.TimeUnit
       const type = Object.keys(timeUnits).find(key => timeUnits[key] == this.outcome.reactionTime.units)
       return `${this.outcome.reactionTime.value} ${type.toLowerCase()}${this.outcome.reactionTime.units !== 0 ? "(s)" : ""}`
+    }
+  },
+  methods: {
+    getMeasurementType (type) {
+      const measurementTypes = reaction_pb.ProductMeasurement.ProductMeasurementType
+      return Object.keys(measurementTypes).find(key => measurementTypes[key] == type)
+    },
+    getMeasurementValue (measurement) {
+      if (measurement.percentage) 
+        return `${measurement.percentage.value}%`
+      if (measurement.amount) {
+        return amountStr(amountObj(measurement.amount))
+      }
+      return ""
     }
   }
 }
@@ -44,13 +61,20 @@ export default {
         :class='productsIdx === idx ? "selected" : ""'
       ) Product {{idx + 1}}
     .compound
-      .label Compound
-      .label Role
-      .label Raw
       CompoundView(
         :component='outcome.productsList[productsIdx]'
       )
-      pre.value {{outcome.productsList[productsIdx]}}
+    .sub-title Measurements
+    .measurements
+      .label Type
+      .label Value
+      .label Analysis
+      .label Raw
+      template(v-for='measurement in outcome.productsList[productsIdx].measurementsList')
+        .value {{getMeasurementType(measurement.type)}}
+        .value {{getMeasurementValue(measurement)}}
+        .value {{measurement.analysisKey}}
+        pre.value {{measurement}}
 
 </template>
 
@@ -72,4 +96,17 @@ export default {
     border: 1px solid $medgrey
     border-radius: 0.25rem
     padding: 1rem
+    .compound
+      width: fit-content
+    .sub-title
+      font-size: 1.25rem
+      font-weight: 700
+    .measurements
+      display: grid
+      grid-template-columns: repeat(3, auto) 1fr
+      column-gap: 0.5rem
+      row-gap: 1rem
+      padding: 0.5rem
+      .label
+        font-weight: 700
 </style>

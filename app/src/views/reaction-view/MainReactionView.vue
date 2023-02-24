@@ -136,7 +136,7 @@ export default {
             .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
             .value {{displayInputs[key]}}
         .title Components
-        .details
+        .compound
           template(v-for='component in reaction.inputsMap[inputsIdx][1].componentsList')
             CompoundView(
               :component='component'
@@ -250,8 +250,11 @@ export default {
       display: grid
       grid-template-columns: auto 1fr
       column-gap: 1rem
+      margin-bottom: 1rem
       .label
         &:first-letter
           text-transform: uppercase
+    .compound
+      width: fit-content
 
 </style>
