@@ -6,6 +6,7 @@ import ConditionsView from "./ConditionsView"
 import NotesView from "./NotesView"
 import ObservationsView from "./ObservationsView"
 import WorkupsView from "./WorkupsView"
+import OutcomesView from "./OutcomesView"
 
 export default {
   components: {
@@ -15,6 +16,7 @@ export default {
     NotesView,
     ObservationsView,
     WorkupsView,
+    OutcomesView,
   },
   data() {
     return {
@@ -40,6 +42,7 @@ export default {
       ],
       conditionTab: "temperature",
       workupsTab: 0,
+      outcomesTab: 0,
     }
   },
   computed: {
@@ -193,6 +196,18 @@ export default {
     .details
       WorkupsView(
         :workup='reaction.workupsList[workupsTab]'
+      )
+  .section(v-if='reaction.outcomesList?.length')
+    .title Outcomes
+    .tabs
+      .tab.capitalize(
+        v-for='(outcome, idx) in reaction.outcomesList'
+        @click='outcomesTab = idx'
+        :class='outcomesTab === idx ? "selected" : ""'
+      ) Outcome {{idx + 1}}
+    .details
+      OutcomesView(
+        :outcome='reaction.outcomesList[outcomesTab]'
       )
 
 </template>
