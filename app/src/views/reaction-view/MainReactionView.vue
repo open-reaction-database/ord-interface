@@ -336,7 +336,7 @@ export default {
       padding: 0.5rem 1rem
       text-transform: capitalize
       cursor: pointer
-      transition: 0.5s
+      transition: 0.25s
       color: black
       &.active
         color: white
