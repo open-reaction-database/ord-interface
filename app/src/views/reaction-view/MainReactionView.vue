@@ -73,6 +73,7 @@ export default {
       if (!this.reaction?.provenance?.recordCreated) return eventArray
       // add events to array
       eventArray.push(this.reaction.provenance.recordCreated)
+      eventArray[0].details = "(record created)"
       eventArray.push(...this.reaction.provenance.recordModifiedList)
       // sort by date to be safe
       eventArray.sort((a,b) => {
