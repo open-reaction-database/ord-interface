@@ -7,6 +7,7 @@ import NotesView from "./NotesView"
 import ObservationsView from "./ObservationsView"
 import WorkupsView from "./WorkupsView"
 import OutcomesView from "./OutcomesView"
+import ProvenanceView from "./ProvenanceView"
 
 export default {
   components: {
@@ -17,6 +18,7 @@ export default {
     ObservationsView,
     WorkupsView,
     OutcomesView,
+    ProvenanceView,
   },
   data() {
     return {
@@ -217,6 +219,9 @@ export default {
         OutcomesView(
           :outcome='reaction.outcomesList[outcomesTab]'
         )
+  .title Provenance
+  .section
+    ProvenanceView(:provenance='reaction.provenance')
 
 </template>
 
