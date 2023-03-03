@@ -28,7 +28,6 @@ export const amountObj = (amount) => {
 }
 
 export const amountStr = (amountObj) => {
-  console.log('amountObj',amountObj)
   // takes an amountObj from above amountObj function
   if (!amountObj.unitAmount || !amountObj.unitType) return ""
   return `${Math.round(amountObj.unitAmount * 1000) / 1000} ${amountObj.unitType.toLowerCase()}`

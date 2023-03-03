@@ -50,6 +50,7 @@ export default {
       workupsTab: 0,
       outcomesTab: 0,
       showRawReaction: false,
+      navItems: [],
       activeNav: "summary"
     }
   },
@@ -87,15 +88,21 @@ export default {
       })
       return eventArray
     },
-    navItems() {
-      let items = ["summary", "identifiers", "inputs"]
-      const optionals = ["setup", "conditions", "notes", "observations", "workups"]
-      optionals.forEach(item => {
-        if (this.reaction[item] || this.reaction[`${item}List`]) items.push(item)
+    positions() {
+      // get positions of each div
+      if (!this.navItems.length) return null
+      return this.navItems
+        .filter(id => {
+          return document.getElementById(id)
+        }).map(id => {
+          const element = document.getElementById(id)
+          const rect = element.getBoundingClientRect()
+          return {
+            id,
+            top: rect.top + window.pageYOffset,
+            bottom: rect.bottom + window.pageYOffset
+          }
       })
-      const lastItems = ["outcomes", "provenance", "full-record"]
-      items.push(...lastItems)
-      return items
     }
   },
   methods: {
@@ -131,12 +138,37 @@ export default {
       const workupTypes = reaction_pb.ReactionWorkup.ReactionWorkupType
       return Object.keys(workupTypes).find(key => workupTypes[key] == type).toLowerCase().replaceAll("_"," ")
     },
+    setNavItems () {
+      let items = ["summary", "identifiers", "inputs"]
+      const optionals = ["setup", "conditions", "notes", "observations", "workups"]
+      optionals.forEach(item => {
+        if (this.reaction[item] || this.reaction[`${item}List`]?.length) items.push(item)
+      })
+      const lastItems = ["outcomes", "provenance", "full-record"]
+      items.push(...lastItems)
+      return items
+    },
+    scrollTo (id) {
+      document.getElementById(id).scrollIntoView({behavior: 'smooth'})
+    },
+    onScroll () {
+      console.log('scrolling')
+      const active = this.positions.find((pos) => {
+        return pos.top <= window.pageYOffset && pos.bottom > window.pageYOffset;
+      });
+      if (active) this.activeNav = active.id
+    }
   },
   async mounted() {
     this.reaction = await this.getReactionData()
     this.reactionSummary = await this.getReactionSummary()
+    this.navItems = this.setNavItems()
     this.loading = false
-    console.log('schema',reaction_pb)
+    window.addEventListener('scroll',this.onScroll)
+    // console.log('schema',reaction_pb)
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.onScroll)
   }
 }
 </script>
@@ -148,12 +180,14 @@ export default {
       .nav-item(
         v-for='item in navItems'
         :class='activeNav == item ? "active" : ""'
+        @click='scrollTo(item)'
       ) {{item.replaceAll("-"," ")}}
   .content
-    .section.summary(v-if='reactionSummary')
-      .display(v-html='reactionSummary')
+    #summary
+      .section.summary(v-if='reactionSummary')
+        .display(v-html='reactionSummary')
     template(v-if='reaction?.identifiersList?.length')
-      .title Identifiers
+      #identifiers.title Identifiers
       .section
         .identifiers
           template(v-for='identifier in reaction.identifiersList')
@@ -161,7 +195,7 @@ export default {
             .value {{identifier.value}}
             .value {{identifier.details}}
     template(v-if='reaction?.inputsMap?.length')
-      .title Inputs
+      #inputs.title Inputs
       .section
         .tabs
           .tab(
@@ -182,7 +216,7 @@ export default {
                 :component='component'
               )
     template(v-if='reaction?.setup')
-      .title Setup
+      #setup.title Setup
       .section
         .tabs
           template(
@@ -199,7 +233,7 @@ export default {
             :display='setupTab'
           )
     template(v-if='reaction?.conditions')
-      .title Conditions
+      #conditions.title Conditions
       .section
         .tabs
           template(
@@ -216,7 +250,7 @@ export default {
             :display='conditionTab'
           )
     template(v-if='reaction.notes')
-      .title Notes
+      #notes.title Notes
       .section
         .details
           NotesView(
@@ -224,7 +258,7 @@ export default {
           )
     // TODO flesh out observations section
     template(v-if='reaction.observationsList?.length')
-      .title Observations
+      #observations.title Observations
       .section
         .details
           ObservationsView(
@@ -232,7 +266,7 @@ export default {
           )
     // TODO flesh out workups section
     template(v-if='reaction.workupsList?.length')
-      .title Workups
+      #workups.title Workups
       .section
         .tabs
           .tab.capitalize(
@@ -245,7 +279,7 @@ export default {
             :workup='reaction.workupsList[workupsTab]'
           )
     template(v-if='reaction.outcomesList?.length')
-      .title Outcomes
+      #outcomes.title Outcomes
       .section
         .tabs
           .tab.capitalize(
@@ -258,7 +292,7 @@ export default {
             :outcome='reaction.outcomesList[outcomesTab]'
           )
     template(v-if='reaction.provenance')
-      .title Provenance
+      #provenance.title Provenance
       .section
         ProvenanceView(:provenance='reaction.provenance')
     template(v-if='events?.length')
@@ -266,7 +300,7 @@ export default {
       .section
         EventsView(:events='events')
     template(v-if='reaction')
-      .title Full Record
+      #full-record.title Full Record
       .section
         .full-record.button(@click='showRawReaction=true') View Full Record
       FloatingModal(
@@ -284,6 +318,8 @@ export default {
   margin: 2rem 0
   display: grid
   grid-template-columns: auto 1fr
+  .nav-holder
+    height: 100%
   .nav
     background-color: white
     border-radius: 0.25rem
@@ -294,11 +330,14 @@ export default {
     max-height: 70vh
     overflow-x: hidden
     overflow-y: auto
+    position: sticky
+    top: 1rem
     .nav-item
       padding: 0.5rem 1rem
       text-transform: capitalize
       cursor: pointer
       transition: 0.5s
+      color: black
       &.active
         color: white
         background-color: blue
