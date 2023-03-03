@@ -18,6 +18,8 @@ export default {
       showRawMeasurement: false,
       rawMeasurement: {},
       analysesIdx: 0,
+      showRawAnalysis: false,
+      rawAnalysis: {}
     }
   },
   computed: {
@@ -36,7 +38,6 @@ export default {
       if (measurement.percentage) 
         return `${measurement.percentage.value}%`
       if (measurement.amount) {
-        console.log('amount',measurement.amount)
         return amountStr(amountObj(measurement.amount))
       }
       return ""
@@ -55,8 +56,15 @@ export default {
       this.rawMeasurement = raw
       this.showRawMeasurement = true
     },
-    setAnalysis (analysis) {
-      console.log('analysis',analysis)
+    getAnalysisType (type) {
+      const analysisTypes = reaction_pb.Analysis.AnalysisType
+      return Object.keys(analysisTypes).find(key => analysisTypes[key] == type)
+    },
+    setRawAnalysis (analysis) {
+      const raw = JSON.parse(JSON.stringify(analysis))
+      raw.type = this.getAnalysisType(raw.type)
+      this.rawAnalysis = raw
+      this.showRawAnalysis = true
     }
   }
 }
@@ -116,13 +124,20 @@ export default {
         ) {{analysis[0]}}
       .details
         .label Type
-        .value {{outcome.analysesMap[analysesIdx][1].type}}
+        .value {{getAnalysisType(outcome.analysesMap[analysesIdx][1].type)}}
         .label Details
         .value {{outcome.analysesMap[analysesIdx][1].details}}
         .label Raw
         .value
           .raw
-            .button(@click='setAnalysis(outcome.analysesMap[analysesIdx][1])') &lt;>
+            .button(@click='setRawAnalysis(outcome.analysesMap[analysesIdx][1])') &lt;>
+    floating-modal(
+      v-if='showRawAnalysis'
+      title="Raw Data"
+      @closeModal='showRawAnalysis=false'
+    )
+      .data
+        pre {{rawAnalysis}}
 
 
 </template>
