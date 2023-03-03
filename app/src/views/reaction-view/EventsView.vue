@@ -10,8 +10,6 @@ export default {
       eventIdx: 0
     }
   },
-  methods: {
-  }
 }
 </script>
 

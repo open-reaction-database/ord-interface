@@ -9,6 +9,7 @@ import WorkupsView from "./WorkupsView"
 import OutcomesView from "./OutcomesView"
 import ProvenanceView from "./ProvenanceView"
 import EventsView from "./EventsView"
+import FloatingModal from "../../components/FloatingModal"
 
 export default {
   components: {
@@ -20,7 +21,8 @@ export default {
     WorkupsView,
     OutcomesView,
     ProvenanceView,
-    EventsView
+    EventsView,
+    FloatingModal,
   },
   data() {
     return {
@@ -47,6 +49,7 @@ export default {
       conditionTab: "temperature",
       workupsTab: 0,
       outcomesTab: 0,
+      showRawReaction: false,
     }
   },
   computed: {
@@ -244,7 +247,17 @@ export default {
     .title Record Events
     .section
       EventsView(:events='events')
-
+  template(v-if='reaction')
+    .title Full Record
+    .section
+      .full-record.button(@click='showRawReaction=true') View Full Record
+    FloatingModal(
+      v-if='showRawReaction'
+      title="Raw Data"
+      @closeModal='showRawReaction=false'
+    )
+      .data
+        pre {{reaction}}
 </template>
 
 <style lang="sass" scoped>
@@ -283,5 +296,12 @@ export default {
           text-transform: uppercase
     .compound
       width: fit-content
+  .full-record.button
+    padding: 0.5rem 1rem
+    background-color: blue
+    border-radius: 0.25rem
+    width: fit-content
+    color: white
+    cursor: pointer
 
 </style>
