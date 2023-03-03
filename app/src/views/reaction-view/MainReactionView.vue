@@ -8,6 +8,7 @@ import ObservationsView from "./ObservationsView"
 import WorkupsView from "./WorkupsView"
 import OutcomesView from "./OutcomesView"
 import ProvenanceView from "./ProvenanceView"
+import EventsView from "./EventsView"
 
 export default {
   components: {
@@ -19,6 +20,7 @@ export default {
     WorkupsView,
     OutcomesView,
     ProvenanceView,
+    EventsView
   },
   data() {
     return {
@@ -65,7 +67,21 @@ export default {
         "details",
       ]
       return otherFields.find(key => this.reaction.conditions[key])
-    }
+    },
+    events() {
+      const eventArray = []
+      if (!this.reaction?.provenance?.recordCreated) return eventArray
+      // add events to array
+      eventArray.push(this.reaction.provenance.recordCreated)
+      eventArray.push(...this.reaction.provenance.recordModifiedList)
+      // sort by date to be safe
+      eventArray.sort((a,b) => {
+        const dateA = new Date(a.time.value)
+        const dateB = new Date(b.time.value)
+        return dateA - dateB
+      })
+      return eventArray
+    },
   },
   methods: {
     getReactionData () {
@@ -219,9 +235,14 @@ export default {
         OutcomesView(
           :outcome='reaction.outcomesList[outcomesTab]'
         )
-  .title Provenance
-  .section
-    ProvenanceView(:provenance='reaction.provenance')
+  template(v-if='reaction.provenance')
+    .title Provenance
+    .section
+      ProvenanceView(:provenance='reaction.provenance')
+  template(v-if='events?.length')
+    .title Record Events
+    .section
+      EventsView(:events='events')
 
 </template>
 
