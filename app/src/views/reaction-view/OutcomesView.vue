@@ -17,6 +17,7 @@ export default {
       productsIdx: 0,
       showRawMeasurement: false,
       rawMeasurement: {},
+      analysesIdx: 0,
     }
   },
   computed: {
@@ -53,6 +54,9 @@ export default {
       }
       this.rawMeasurement = raw
       this.showRawMeasurement = true
+    },
+    setAnalysis (analysis) {
+      console.log('analysis',analysis)
     }
   }
 }
@@ -89,11 +93,11 @@ export default {
       .label Raw
       template(v-for='measurement in outcome.productsList[productsIdx].measurementsList')
         .value {{getMeasurementType(measurement.type)}}
-        .value#this-disappears {{getMeasurementValue(measurement)}}
+        .value {{getMeasurementValue(measurement)}}
         .value {{measurement.analysisKey}}
         .value 
           .raw 
-            .button#this-button(@click='setRawMeasurement(measurement)') &lt;>
+            .button(@click='setRawMeasurement(measurement)') &lt;>
     floating-modal(
       v-if='showRawMeasurement'
       title="Raw Data"
@@ -101,6 +105,25 @@ export default {
     )
       .data
         pre {{rawMeasurement}}
+  template(v-if='outcome.analysesMap?.length')
+    .title Analyses
+    .sub-section
+      .tabs
+        .tab(
+          v-for='(analysis, idx) in outcome.analysesMap'
+          @click='analysesIdx = idx'
+          :class='analysesIdx === idx ? "selected" : ""'
+        ) {{analysis[0]}}
+      .details
+        .label Type
+        .value {{outcome.analysesMap[analysesIdx][1].type}}
+        .label Details
+        .value {{outcome.analysesMap[analysesIdx][1].details}}
+        .label Raw
+        .value
+          .raw
+            .button(@click='setAnalysis(outcome.analysesMap[analysesIdx][1])') &lt;>
+
 
 </template>
 
@@ -118,6 +141,9 @@ export default {
     grid-template-columns: auto 1fr
     column-gap: 1rem
     row-gap: 0.5rem
+    *
+      display: flex
+      align-items: center
   .sub-section
     border: 1px solid $medgrey
     border-radius: 0.25rem
@@ -137,11 +163,12 @@ export default {
       align-items: center
       .label
         font-weight: 700
-      .raw
-        .button
-          padding: 0.5rem
-          background-color: #a0a0a0
-          color: white
-          border-radius: 0.25rem
-          cursor: pointer
+    .raw
+      .button
+        padding: 0.5rem
+        background-color: #a0a0a0
+        color: white
+        border-radius: 0.25rem
+        cursor: pointer
+        width: fit-content
 </style>
