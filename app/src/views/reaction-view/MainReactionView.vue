@@ -183,8 +183,8 @@ export default {
         @click='scrollTo(item)'
       ) {{item.replaceAll("-"," ")}}
   .content
-    #summary
-      .section.summary(v-if='reactionSummary')
+    #summary.section
+      .summary(v-if='reactionSummary')
         .display(v-html='reactionSummary')
     template(v-if='reaction?.identifiersList?.length')
       #identifiers.title Identifiers
@@ -356,7 +356,7 @@ export default {
   box-sizing: border-box
   .title
     font-size: 1.5rem
-  &.summary
+  &#summary
     overflow-x: scroll
   .identifiers
     display: grid
