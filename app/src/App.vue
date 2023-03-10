@@ -38,6 +38,7 @@ body
   display: grid
   grid-template-rows: auto 1fr auto
   background-color: $lightgrey
+  min-width: 800px
   &.full-height
     grid-template-rows: 1fr
 </style>

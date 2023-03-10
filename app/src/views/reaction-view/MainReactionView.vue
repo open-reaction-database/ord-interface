@@ -318,6 +318,7 @@ export default {
   margin: 2rem 0
   display: grid
   grid-template-columns: auto 1fr
+  column-gap: 1rem
   .nav-holder
     height: 100%
   .nav
@@ -325,7 +326,8 @@ export default {
     border-radius: 0.25rem
     box-sizing: border-box
     margin-left: 1rem
-    width: 20vw
+    min-width: 8rem
+    width: 15vw
     height: auto
     max-height: 70vh
     overflow-x: hidden
@@ -346,8 +348,9 @@ export default {
   font-size: 2rem
   margin-bottom: 0.5rem
 .section, .title
-  width: 75vw
-  margin: 0 auto
+  width: calc(85vw - 3rem)
+  min-width: calc(800px - 11rem) // (min main width) - (nav width plus gutters)
+  margin: 0
 .section
   background-color: white
   border-radius: 0.25rem
