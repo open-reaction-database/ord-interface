@@ -210,4 +210,9 @@ export default {
             cursor: auto
           .chevron
             height: 0.75rem
+        @media (min-width: 1000px)
+          grid-template-columns: repeat(7, auto)
+          row-gap: 1rem
+          .select
+            grid-column: 1 / span 7
 </style>

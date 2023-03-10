@@ -99,7 +99,7 @@ export default {
     display: grid
     grid-template-columns: auto 1fr
     column-gap: 1rem
-    min-width: 700px
+    min-width: 800px
     .search-options
       position: sticky
       top: 1rem
