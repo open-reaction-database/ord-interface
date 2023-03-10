@@ -24,6 +24,7 @@ export default {
       searchParams: {},
       loading: true,
       urlQuery: "",
+      showOptions: true,
     }
   },
   methods: {
@@ -78,10 +79,15 @@ export default {
 
 <template lang="pug">
 #search-main
-  .search-options
-    SearchOptions(
-      @searchOptions='updateSearchOptions'
-    )
+  .search-options-container(:class='showOptions ? "slide-out" : "hidden"')
+    .options-holder
+      SearchOptions(
+        @searchOptions='updateSearchOptions'
+      )
+    .slide-out-tab(@click='showOptions=!showOptions')
+      .line
+      .line
+      .line
   .search-results
     SearchResults(
       :searchResults='searchResults'
@@ -104,4 +110,39 @@ export default {
       position: sticky
       top: 1rem
     .search-results
+    @media (max-width: 1000px)
+      grid-template-columns: 1fr
+      .search-options-container
+        position: fixed
+        height: 100vh
+        width: 90%
+        transition: 0.5s
+        top: 0
+        &.hidden
+          left: -81%
+        &.slide-out
+          left: 0
+        .options-holder
+          padding: 1rem
+          background-color: white
+          width: 90%
+          height: 100%
+          overflow-y: auto
+          box-shadow: 0 0 5px #a0a0a0
+          box-sizing: border-box
+        .slide-out-tab
+          background-color: white
+          position: absolute
+          left: 89.5%
+          width: 7.5%
+          top: 0
+          box-shadow: 6px 3px 5px #ccc
+          padding: 0.5rem 0
+          border-bottom-right-radius: 0.25rem
+          .line
+            background-color: black
+            height: 2px
+            width: 60%
+            margin: 0.5rem auto
+
 </style>
