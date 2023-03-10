@@ -201,12 +201,12 @@ export default {
         @click='emitSearchOptions'
       )
         b Search
-  ModalKetcher(
-    v-if='showKetcherModal'
-    :smiles='reagentOptions.reagents[ketcherModalSmile].smileSmart'
-    @updateSmiles='(newSmiles) => reagentOptions.reagents[ketcherModalSmile].smileSmart = newSmiles'
-    @closeModal='showKetcherModal = false'
-  )
+ModalKetcher(
+  v-if='showKetcherModal'
+  :smiles='reagentOptions.reagents[ketcherModalSmile].smileSmart'
+  @updateSmiles='(newSmiles) => reagentOptions.reagents[ketcherModalSmile].smileSmart = newSmiles'
+  @closeModal='showKetcherModal = false'
+)
 </template>
 
 <style lang="sass" scoped>
