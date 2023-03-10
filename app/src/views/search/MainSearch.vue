@@ -109,7 +109,7 @@ export default {
     min-width: 800px
     .search-options-container
       .title
-        font-size: 1.5rem
+        font-size: 2rem
         font-weight: 700
         margin-bottom: 0.85rem
       .options-holder

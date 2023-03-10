@@ -313,6 +313,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
+@import "../../styles/vars"
 @import "../../styles/tabs"
 .main-reaction-view
   margin: 2rem 0
@@ -342,7 +343,7 @@ export default {
       color: black
       &.active
         color: white
-        background-color: blue
+        background-color: $linkblue
 .title
   font-weight: 700
   font-size: 2rem
@@ -378,7 +379,7 @@ export default {
       width: fit-content
   .full-record.button
     padding: 0.5rem 1rem
-    background-color: blue
+    background-color: $linkblue
     border-radius: 0.25rem
     width: fit-content
     color: white

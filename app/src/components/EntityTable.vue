@@ -152,7 +152,7 @@ export default {
     .header
       .title-holder
         .title
-          font-size: 1.5rem
+          font-size: 2rem
           font-weight: 700
           margin-bottom: 1rem
     .search-area
