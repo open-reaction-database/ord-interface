@@ -8,7 +8,7 @@ export default {
 <template lang="pug">
 nav.navbar.navbar-expand-lg.bg-light
   .container
-    a.navbar-brand(href="https://open-reaction-database.org")
+    a.navbar-brand(href="/")
       img(
         src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg" 
         alt="ORD Logo"
