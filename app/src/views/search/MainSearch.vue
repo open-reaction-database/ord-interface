@@ -24,7 +24,7 @@ export default {
       searchParams: {},
       loading: true,
       urlQuery: "",
-      showOptions: true,
+      showOptions: false,
     }
   },
   methods: {
@@ -106,9 +106,14 @@ export default {
     grid-template-columns: auto 1fr
     column-gap: 1rem
     min-width: 800px
-    .search-options
-      position: sticky
-      top: 1rem
+    .search-options-container
+      .options-holder
+        position: -webkit-sticky
+        position: sticky
+        top: 1rem
+        background-color: white
+        padding: 1rem
+        box-sizing: border-box
     .search-results
     @media (max-width: 1000px)
       grid-template-columns: 1fr
@@ -123,13 +128,10 @@ export default {
         &.slide-out
           left: 0
         .options-holder
-          padding: 1rem
-          background-color: white
           width: 90%
           height: 100%
           overflow-y: auto
           box-shadow: 0 0 5px #a0a0a0
-          box-sizing: border-box
         .slide-out-tab
           background-color: white
           position: absolute

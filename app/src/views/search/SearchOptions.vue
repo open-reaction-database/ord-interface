@@ -239,6 +239,7 @@ export default {
     margin-bottom: 1rem
     display: grid
     row-gap: 1rem
+    border: 1px solid $medgrey
     .subtitle
       font-size: 1.25rem
       font-weight: 700

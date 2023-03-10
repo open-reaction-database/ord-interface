@@ -152,7 +152,6 @@ export default {
       document.getElementById(id).scrollIntoView({behavior: 'smooth'})
     },
     onScroll () {
-      console.log('scrolling')
       const active = this.positions.find((pos) => {
         return pos.top <= window.pageYOffset && pos.bottom > window.pageYOffset;
       });

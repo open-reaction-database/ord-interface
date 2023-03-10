@@ -90,7 +90,6 @@ export default {
 
 <style lang="sass" scoped>
 .search-results-main
-  margin-top: 2rem
   .action-button-holder
     margin: -2.5rem 0 1rem // bring button row inline with title without having to pass too much into EntityTable
     display: flex
@@ -110,4 +109,6 @@ export default {
       .reaction-table
         color: black
         overflow-x: wrap
+  @media (max-width: 1000px)
+    margin-top: 2.5rem
 </style>
