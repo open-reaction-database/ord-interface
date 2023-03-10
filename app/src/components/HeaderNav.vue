@@ -27,9 +27,8 @@ nav.navbar.navbar-expand-lg.bg-light
     #navbarNav.collapse.navbar-collapse
       .navbar-nav
         .nav-item
-          router-link.nav-link.active(aria-current="page" to="/browse") Browse
-        //- li.nav-item
-        //-   <Link className="nav-link" to="/search">Search</Link>
+          router-link.nav-link(to="/browse") Browse
+          router-link.nav-link(to="/search") Search
         //- li.nav-item
         //-   <Link className="nav-link" to="/editor">Contribute</Link>
         .nav-item

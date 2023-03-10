@@ -28,17 +28,19 @@ export default {
     }
   },
   methods: {
-    getSearchResults() {
+    async getSearchResults() {
       this.loading = true
       // get raw url query string
       this.urlQuery =  window.location.search
-
-      fetch(`/api/query${this.urlQuery}`, {method: "GET"})
-        .then(response => response.json())
-        .then(data => {
-          this.searchResults = data
-          this.loading = false
-        })
+      try {
+        const res = await fetch(`/api/query${this.urlQuery}`, {method: "GET"})
+        this.searchResults = await res.json()
+        this.loading = false
+      } catch (e) {
+        console.log(e)
+        this.searchResults = []
+        this.loading = false
+      }
     },
     updateSearchOptions(options) {
       // reagent options
@@ -47,6 +49,7 @@ export default {
         options.reagent.reagents.forEach(reagent => {
           this.searchParams["component"].push(`${encodeURIComponent(reagent.smileSmart)};${reagent.source};${reagent.matchMode}`)
         })
+
         this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
         this.searchParams["similarity"] = options.reagent.similarityThreshold
       }
@@ -92,8 +95,10 @@ export default {
   .search-results
     SearchResults(
       :searchResults='searchResults'
-      v-if='!loading'
+      v-if='!loading && searchResults?.length'
     )
+    .no-results(v-else-if='!loading && !searchResults?.length')
+      .title No results. Adjust the filters and options and search again.
     .loading(v-else)
       LoadingSpinner
 
@@ -120,7 +125,9 @@ export default {
         padding: 1rem
         box-sizing: border-box
         border-radius: 0.25rem
-    .search-results
+    .no-results
+      margin-top: 1rem
+      text-align: center
     @media (max-width: 1000px)
       grid-template-columns: 1fr
       .title
