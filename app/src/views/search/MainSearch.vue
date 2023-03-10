@@ -80,6 +80,7 @@ export default {
 <template lang="pug">
 #search-main
   .search-options-container(:class='showOptions ? "slide-out" : "hidden"')
+    .title Filters & Options
     .options-holder
       SearchOptions(
         @searchOptions='updateSearchOptions'
@@ -107,6 +108,10 @@ export default {
     column-gap: 1rem
     min-width: 800px
     .search-options-container
+      .title
+        font-size: 1.5rem
+        font-weight: 700
+        margin-bottom: 0.85rem
       .options-holder
         position: -webkit-sticky
         position: sticky
@@ -114,9 +119,12 @@ export default {
         background-color: white
         padding: 1rem
         box-sizing: border-box
+        border-radius: 0.25rem
     .search-results
     @media (max-width: 1000px)
       grid-template-columns: 1fr
+      .title
+        display: none
       .search-options-container
         position: fixed
         height: 100vh
