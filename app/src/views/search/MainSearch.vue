@@ -52,19 +52,29 @@ export default {
 
         this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
         this.searchParams["similarity"] = options.reagent.similarityThreshold
+      } else {
+        this.searchParams["component"] = []
       }
 
       // dataset options
       if (options.dataset.datasetIds.length)
         this.searchParams["dataset_ids"] = encodeURIComponent(options.dataset.datasetIds.join(","))
+      else
+        delete this.searchParams["dataset_ids"]
       if (options.dataset.DOIs.length)
         this.searchParams["dois"] = encodeURIComponent(options.dataset.DOIs.join(","))
+      else
+        delete this.searchParams["dois"]
 
       // reaction options
       if (options.reaction.reactionIds.length)
         this.searchParams["reaction_ids"] = encodeURIComponent(options.reaction.reactionIds.join(","))
+      else
+        delete this.searchParams["reaction_ids"]
       if (options.reaction.reactionSmarts.length)
         this.searchParams["reaction_smarts"] = encodeURIComponent(options.reaction.reactionSmarts.join(","))
+      else
+        delete this.searchParams["reaction_smarts"]
 
       // general options
       this.searchParams["limit"] = options.general.limit || 100
