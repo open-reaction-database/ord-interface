@@ -40,7 +40,6 @@ export default {
         })
     },
     updateSearchOptions(options) {
-      console.log('options',options)
       // reagent options
       if (options.reagent.reagents.length) {
         this.searchParams["component"] = []
@@ -79,20 +78,30 @@ export default {
 
 <template lang="pug">
 #search-main
-  SearchOptions(
-    @searchOptions='updateSearchOptions'
-  )
-  SearchResults(
-    :searchResults='searchResults'
-    v-if='!loading'
-  )
-  .loading(v-else)
-    LoadingSpinner
+  .search-options
+    SearchOptions(
+      @searchOptions='updateSearchOptions'
+    )
+  .search-results
+    SearchResults(
+      :searchResults='searchResults'
+      v-if='!loading'
+    )
+    .loading(v-else)
+      LoadingSpinner
 
 </template>
 
 <style lang="sass" scoped>
   #search-main
-    width: 90%
-    margin: 1rem auto
+    width: 95%
+    margin: 1rem 2.5%
+    display: grid
+    grid-template-columns: auto 1fr
+    column-gap: 1rem
+    min-width: 700px
+    .search-options
+      position: sticky
+      top: 1rem
+    .search-results
 </style>

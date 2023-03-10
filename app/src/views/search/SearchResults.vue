@@ -75,7 +75,7 @@ export default {
     template(
       v-for='row in entities'
     )
-      router-link(
+      router-link.reaction-link(
         :to='{ name: "reaction-view", params: {reactionId: row.reaction_id}}'
       )
         .row
@@ -96,13 +96,18 @@ export default {
     display: flex
     justify-content: flex-end
     button
-  .row
-    background-color: white
-    border-radius: 0.25rem
-    padding: 1rem
-    margin-bottom: 1rem
-    transition: 0.25s
-    &:hover
-      box-shadow: 0 0 5px #a0a0a0
-      cursor: pointer
+  .reaction-link
+    text-decoration: none
+    .row
+      background-color: white
+      border-radius: 0.25rem
+      padding: 1rem
+      margin-bottom: 1rem
+      transition: 0.25s
+      &:hover
+        box-shadow: 0 0 5px #a0a0a0
+        cursor: pointer
+      .reaction-table
+        color: black
+        overflow-x: wrap
 </style>

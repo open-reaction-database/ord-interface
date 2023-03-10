@@ -238,7 +238,7 @@ export default {
     padding: 1rem
     margin-bottom: 1rem
     display: grid
-    grid-template-columns: 1fr 1fr
+    row-gap: 1rem
     .subtitle
       font-size: 1.25rem
       font-weight: 700
