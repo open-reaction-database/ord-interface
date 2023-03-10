@@ -183,19 +183,20 @@ export default {
         @click='scrollTo(item)'
       ) {{item.replaceAll("-"," ")}}
   .content
+    .title Summary
     #summary.section
       .summary(v-if='reactionSummary')
         .display(v-html='reactionSummary')
-    template(v-if='reaction?.identifiersList?.length')
-      #identifiers.title Identifiers
+    #identifiers(v-if='reaction?.identifiersList?.length')
+      .title Identifiers
       .section
         .identifiers
           template(v-for='identifier in reaction.identifiersList')
             .value {{getReactionType(identifier.type)}}
             .value {{identifier.value}}
             .value {{identifier.details}}
-    template(v-if='reaction?.inputsMap?.length')
-      #inputs.title Inputs
+    #inputs(v-if='reaction?.inputsMap?.length')
+      .title Inputs
       .section
         .tabs
           .tab(
@@ -215,8 +216,8 @@ export default {
               CompoundView(
                 :component='component'
               )
-    template(v-if='reaction?.setup')
-      #setup.title Setup
+    #setup(v-if='reaction?.setup')
+      .title Setup
       .section
         .tabs
           template(
@@ -232,8 +233,8 @@ export default {
             :setup='reaction.setup'
             :display='setupTab'
           )
-    template(v-if='reaction?.conditions')
-      #conditions.title Conditions
+    #conditions(v-if='reaction?.conditions')
+      .title Conditions
       .section
         .tabs
           template(
@@ -249,24 +250,24 @@ export default {
             :conditions='reaction.conditions'
             :display='conditionTab'
           )
-    template(v-if='reaction.notes')
-      #notes.title Notes
+    #notes(v-if='reaction.notes')
+      .title Notes
       .section
         .details
           NotesView(
             :notes='reaction.notes'
           )
     // TODO flesh out observations section
-    template(v-if='reaction.observationsList?.length')
-      #observations.title Observations
+    #observations(v-if='reaction.observationsList?.length')
+      .title Observations
       .section
         .details
           ObservationsView(
             :observations='reaction.observationsList'
           )
     // TODO flesh out workups section
-    template(v-if='reaction.workupsList?.length')
-      #workups.title Workups
+    #workups(v-if='reaction.workupsList?.length')
+      .title Workups
       .section
         .tabs
           .tab.capitalize(
@@ -278,8 +279,8 @@ export default {
           WorkupsView(
             :workup='reaction.workupsList[workupsTab]'
           )
-    template(v-if='reaction.outcomesList?.length')
-      #outcomes.title Outcomes
+    #outcomes(v-if='reaction.outcomesList?.length')
+      .title Outcomes
       .section
         .tabs
           .tab.capitalize(
@@ -291,16 +292,16 @@ export default {
           OutcomesView(
             :outcome='reaction.outcomesList[outcomesTab]'
           )
-    template(v-if='reaction.provenance')
-      #provenance.title Provenance
+    #provenance(v-if='reaction.provenance')
+      .title Provenance
       .section
         ProvenanceView(:provenance='reaction.provenance')
-    template(v-if='events?.length')
+    #events(v-if='events?.length')
       .title Record Events
       .section
         EventsView(:events='events')
-    template(v-if='reaction')
-      #full-record.title Full Record
+    #full-record(v-if='reaction')
+      .title Full Record
       .section
         .full-record.button(@click='showRawReaction=true') View Full Record
       FloatingModal(
@@ -338,7 +339,7 @@ export default {
       padding: 0.5rem 1rem
       text-transform: capitalize
       cursor: pointer
-      transition: 0.25s
+      transition: 0.16s
       color: black
       &.active
         color: white
