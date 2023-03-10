@@ -135,7 +135,7 @@ export default {
           position: absolute
           left: 89.5%
           width: 7.5%
-          top: 0
+          top: 4rem
           box-shadow: 6px 3px 5px #ccc
           padding: 0.5rem 0
           border-bottom-right-radius: 0.25rem

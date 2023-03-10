@@ -33,12 +33,12 @@ export default {
   position: fixed
   top: 0
   left: 0
-  width: 100vw
-  height: 100vh
+  width: 100%
+  height: 100%
   .modal-background
     position: absolute
-    width: 100vw
-    height: 100vh
+    width: 100%
+    height: 100%
     top: 0
     left: 0
     background-color: #00000088
@@ -48,8 +48,8 @@ export default {
     pointer-events: none
     .modal-container
       position: absolute
-      max-width: 80vw
-      min-width: 50vw
+      max-width: 80%
+      min-width: 50%
       height: 60vh
       background-color: white
       border-radius: 0.25rem
