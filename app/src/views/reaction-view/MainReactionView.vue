@@ -10,6 +10,7 @@ import OutcomesView from "./OutcomesView"
 import ProvenanceView from "./ProvenanceView"
 import EventsView from "./EventsView"
 import FloatingModal from "../../components/FloatingModal"
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default {
   components: {
@@ -23,6 +24,7 @@ export default {
     ProvenanceView,
     EventsView,
     FloatingModal,
+    LoadingSpinner,
   },
   data() {
     return {
@@ -174,152 +176,160 @@ export default {
 
 <template lang="pug">
 .main-reaction-view
-  .nav-holder
-    .nav
-      .nav-item(
-        v-for='item in navItems'
-        :class='activeNav == item ? "active" : ""'
-        @click='scrollTo(item)'
-      ) {{item.replaceAll("-"," ")}}
-  .content
-    .title Summary
-    #summary.section
-      .summary(v-if='reactionSummary')
-        .display(v-html='reactionSummary')
-    #identifiers(v-if='reaction?.identifiersList?.length')
-      .title Identifiers
-      .section
-        .identifiers
-          template(v-for='identifier in reaction.identifiersList')
-            .value {{getReactionType(identifier.type)}}
-            .value {{identifier.value}}
-            .value {{identifier.details}}
-    #inputs(v-if='reaction?.inputsMap?.length')
-      .title Inputs
-      .section
-        .tabs
-          .tab(
-            v-for='(input, idx) in reaction.inputsMap'
-            @click='inputsIdx = idx'
-            :class='inputsIdx == idx ? "selected" : ""'
-          ) {{input[0]}}
-        .input
-          .title Details
-          .details
-            template(v-for='key in Object.keys(displayInputs)')
-              .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
-              .value {{displayInputs[key]}}
-          .title Components
-          .compound
-            template(v-for='component in reaction.inputsMap[inputsIdx][1].componentsList')
-              CompoundView(
-                :component='component'
+  transition(name="fade")
+    .loading(v-if='loading')
+      LoadingSpinner
+  transition(name="fade")
+    .reaction-transition(v-if='!loading')
+      .nav-holder
+        .nav
+          .nav-item(
+            v-for='item in navItems'
+            :class='activeNav == item ? "active" : ""'
+            @click='scrollTo(item)'
+          ) {{item.replaceAll("-"," ")}}
+      .content
+        .title Summary
+        #summary.section
+          .summary(v-if='reactionSummary')
+            .display(v-html='reactionSummary')
+        #identifiers(v-if='reaction?.identifiersList?.length')
+          .title Identifiers
+          .section
+            .identifiers
+              template(v-for='identifier in reaction.identifiersList')
+                .value {{getReactionType(identifier.type)}}
+                .value {{identifier.value}}
+                .value {{identifier.details}}
+        #inputs(v-if='reaction?.inputsMap?.length')
+          .title Inputs
+          .section
+            .tabs
+              .tab(
+                v-for='(input, idx) in reaction.inputsMap'
+                @click='inputsIdx = idx'
+                :class='inputsIdx == idx ? "selected" : ""'
+              ) {{input[0]}}
+            .input
+              .title Details
+              .details
+                template(v-for='key in Object.keys(displayInputs)')
+                  .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
+                  .value {{displayInputs[key]}}
+              .title Components
+              .compound
+                template(v-for='component in reaction.inputsMap[inputsIdx][1].componentsList')
+                  CompoundView(
+                    :component='component'
+                  )
+        #setup(v-if='reaction?.setup')
+          .title Setup
+          .section
+            .tabs
+              template(
+                v-for='tab in setupTabs'
               )
-    #setup(v-if='reaction?.setup')
-      .title Setup
-      .section
-        .tabs
-          template(
-            v-for='tab in setupTabs'
+                .tab.capitalize(
+                  @click='setupTab = tab'
+                  :class='setupTab === tab ? "selected" : ""'
+                  v-if='tab !== "automation" || reaction.setup.is_automated'
+                ) {{tab}}
+            .details
+              SetupView(
+                :setup='reaction.setup'
+                :display='setupTab'
+              )
+        #conditions(v-if='reaction?.conditions')
+          .title Conditions
+          .section
+            .tabs
+              template(
+                v-for='tab in conditionTabs'
+              )
+                .tab.capitalize(
+                  @click='conditionTab = tab'
+                  :class='conditionTab === tab ? "selected" : ""'
+                  v-if='reaction.conditions[tab] || (tab === "other" && displayConditionsOther)'
+                ) {{tab}}
+            .details
+              ConditionsView(
+                :conditions='reaction.conditions'
+                :display='conditionTab'
+              )
+        #notes(v-if='reaction.notes')
+          .title Notes
+          .section
+            .details
+              NotesView(
+                :notes='reaction.notes'
+              )
+        // TODO flesh out observations section
+        #observations(v-if='reaction.observationsList?.length')
+          .title Observations
+          .section
+            .details
+              ObservationsView(
+                :observations='reaction.observationsList'
+              )
+        // TODO flesh out workups section
+        #workups(v-if='reaction.workupsList?.length')
+          .title Workups
+          .section
+            .tabs
+              .tab.capitalize(
+                v-for='(workup, idx) in reaction.workupsList'
+                @click='workupsTab = idx'
+                :class='workupsTab === idx ? "selected" : ""'
+              ) {{getWorkupLabel(workup.type)}}
+            .details
+              WorkupsView(
+                :workup='reaction.workupsList[workupsTab]'
+              )
+        #outcomes(v-if='reaction.outcomesList?.length')
+          .title Outcomes
+          .section
+            .tabs
+              .tab.capitalize(
+                v-for='(outcome, idx) in reaction.outcomesList'
+                @click='outcomesTab = idx'
+                :class='outcomesTab === idx ? "selected" : ""'
+              ) Outcome {{idx + 1}}
+            .details
+              OutcomesView(
+                :outcome='reaction.outcomesList[outcomesTab]'
+              )
+        #provenance(v-if='reaction.provenance')
+          .title Provenance
+          .section
+            ProvenanceView(:provenance='reaction.provenance')
+        #events(v-if='events?.length')
+          .title Record Events
+          .section
+            EventsView(:events='events')
+        #full-record(v-if='reaction')
+          .title Full Record
+          .section
+            .full-record.button(@click='showRawReaction=true') View Full Record
+          FloatingModal(
+            v-if='showRawReaction'
+            title="Raw Data"
+            @closeModal='showRawReaction=false'
           )
-            .tab.capitalize(
-              @click='setupTab = tab'
-              :class='setupTab === tab ? "selected" : ""'
-              v-if='tab !== "automation" || reaction.setup.is_automated'
-            ) {{tab}}
-        .details
-          SetupView(
-            :setup='reaction.setup'
-            :display='setupTab'
-          )
-    #conditions(v-if='reaction?.conditions')
-      .title Conditions
-      .section
-        .tabs
-          template(
-            v-for='tab in conditionTabs'
-          )
-            .tab.capitalize(
-              @click='conditionTab = tab'
-              :class='conditionTab === tab ? "selected" : ""'
-              v-if='reaction.conditions[tab] || (tab === "other" && displayConditionsOther)'
-            ) {{tab}}
-        .details
-          ConditionsView(
-            :conditions='reaction.conditions'
-            :display='conditionTab'
-          )
-    #notes(v-if='reaction.notes')
-      .title Notes
-      .section
-        .details
-          NotesView(
-            :notes='reaction.notes'
-          )
-    // TODO flesh out observations section
-    #observations(v-if='reaction.observationsList?.length')
-      .title Observations
-      .section
-        .details
-          ObservationsView(
-            :observations='reaction.observationsList'
-          )
-    // TODO flesh out workups section
-    #workups(v-if='reaction.workupsList?.length')
-      .title Workups
-      .section
-        .tabs
-          .tab.capitalize(
-            v-for='(workup, idx) in reaction.workupsList'
-            @click='workupsTab = idx'
-            :class='workupsTab === idx ? "selected" : ""'
-          ) {{getWorkupLabel(workup.type)}}
-        .details
-          WorkupsView(
-            :workup='reaction.workupsList[workupsTab]'
-          )
-    #outcomes(v-if='reaction.outcomesList?.length')
-      .title Outcomes
-      .section
-        .tabs
-          .tab.capitalize(
-            v-for='(outcome, idx) in reaction.outcomesList'
-            @click='outcomesTab = idx'
-            :class='outcomesTab === idx ? "selected" : ""'
-          ) Outcome {{idx + 1}}
-        .details
-          OutcomesView(
-            :outcome='reaction.outcomesList[outcomesTab]'
-          )
-    #provenance(v-if='reaction.provenance')
-      .title Provenance
-      .section
-        ProvenanceView(:provenance='reaction.provenance')
-    #events(v-if='events?.length')
-      .title Record Events
-      .section
-        EventsView(:events='events')
-    #full-record(v-if='reaction')
-      .title Full Record
-      .section
-        .full-record.button(@click='showRawReaction=true') View Full Record
-      FloatingModal(
-        v-if='showRawReaction'
-        title="Raw Data"
-        @closeModal='showRawReaction=false'
-      )
-        .data
-          pre {{reaction}}
+            .data
+              pre {{reaction}}
 </template>
 
 <style lang="sass" scoped>
-@import "../../styles/vars"
-@import "../../styles/tabs"
+@import "@/styles/vars"
+@import "@/styles/tabs"
+@import '@/styles/transition.sass'
 .main-reaction-view
-  margin: 2rem 0
-  display: grid
-  grid-template-columns: auto 1fr
-  column-gap: 1rem
+  min-height: 90vh
+  .reaction-transition
+    margin: 2rem 0
+    display: grid
+    grid-template-columns: auto 1fr
+    column-gap: 1rem
   .nav-holder
     height: 100%
   .nav
@@ -344,6 +354,11 @@ export default {
       &.active
         color: white
         background-color: $linkblue
+.loading
+  position: absolute
+  width: 100%
+  padding-top: 15vh
+  // height: 100vh
 .title
   font-weight: 700
   font-size: 2rem
