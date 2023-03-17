@@ -186,7 +186,7 @@ export default {
         grid-template-columns: 1fr repeat(7, auto)
         // justify-items: end
         height: 100%
-        align-items: end
+        align-items: center
         column-gap: 2rem
         padding: 1rem
         margin: 0 5%
