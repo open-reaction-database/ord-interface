@@ -46,12 +46,13 @@ Download [https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-stand
 
 ### `npm run serve`
 
-Runs the app in the development mode.\
+Runs the app in the development mode.
 Open [http://localhost:8080](http://localhost:8080) to view it in your browser.
+The vue app depends on the flask app api running on port 5000 (see the Development instructions for the flask app above)
 
-The page will reload when you make changes.\
+The page will reload when you make changes.
 You may also see any lint errors in the console.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
+Builds the app for production to the `dist` folder.\
