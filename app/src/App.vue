@@ -41,4 +41,12 @@ body
   min-width: 800px
   &.full-height
     grid-template-rows: 1fr
+
+button
+  background-color: $linkblue
+  border: none
+  color: white
+  border-radius: 0.25rem
+  cursor: pointer
+  padding: 0.25rem 0.5rem
 </style>

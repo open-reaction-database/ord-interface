@@ -218,23 +218,32 @@ ModalKetcher(
     font-weight: 700
     cursor: pointer
     padding: 0.5rem 1rem
-    border-radius: 0.25rem
-    margin-bottom: 1rem
+    border-top-left-radius: 0.25rem
+    border-top-right-radius: 0.25rem
+    margin-top: 1rem
     color: white
     background-color: $linkblue
     display: flex
     align-content: center
     justify-content: space-between
-    width: 13rem
+    width: 100%
+    box-sizing: border-box
+    transition: 0.25s
     i
       font-size: 2rem
       transition: 0.25s
     &.closed
+      border-radius: 0.25rem
       i
         transform: rotate(180deg)
+    &:first-child
+      margin-top: 0
+    &#searchParameters
+      cursor: default
   .options-container
     background-color: white
-    border-radius: 0.25rem
+    border-bottom-left-radius: 0.25rem
+    border-bottom-right-radius: 0.25rem
     padding: 1rem
     margin-bottom: 1rem
     display: grid
