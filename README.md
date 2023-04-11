@@ -25,33 +25,36 @@ Web interface and api for the Open Reaction Database
 ...COMING SOON
 
 ## Setup
-1. Download the repo
-```shell
+### 1. Download the repo
+```bash
 git clone git@github.com:open-reaction-database/ord-interface.git
 cd ord-interface
 ```
-2. Set up the test database
-```shell
+### 2. Set up the test database
+```bash
 cd ./ord_interface
 # activate the virtual env of your choice
 pip install -e .
 ./build_test_database.sh
-docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test #creates docker image of test db
+# create docker image of test db
+docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test 
 ```
-3. Set up and run the Flask API (Don't forget to use the virtual environment)
-```shell
+### 3. Set up and run the Flask API (Don't forget to use the virtual environment)
+```bash
 # from ./ord_interface
 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python -m flask run
 ```
   - Leave the Flask app running in a terminal window.
-4. Set up and run the Vue SPA
-  - Download [https://github.com/epam/ketcher/releases/tag/v2.5.1](Ketcher) (Here's a direct link to the [https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip](.zip file)) and extract the files into `./app/src/ketcher`
+### 4. Set up and run the Vue SPA
+  - Download [Ketcher](https://github.com/epam/ketcher/releases/tag/v2.5.1) (Here's a direct link to the [.zip file](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip)) and extract the files into `./app/src/ketcher`
   - In a new terminal window:
-```shell
+```bash
 cd ./app
-npm i #install node packages
-npm run serve #runs vue spa locally
+# install node packages
+npm i 
+# run vue spa locally
+npm run serve 
 ```
-  - Open [http://localhost:8080](http://localhost:8080) to view the Vue ORD interface in your browser.
+  - Open [localhost:8080](http://localhost:8080) to view the Vue ORD interface in your browser.
   - The page will reload when you make changes.
   - You may also see any lint errors in the console.
