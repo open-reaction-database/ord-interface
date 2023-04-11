@@ -1,58 +1,57 @@
 # ord-interface
+Web interface and api for the Open Reaction Database
+## Structure
+- **/app** - Contains the Vue single page application
+  - **/public** - Static SPA assets such as index.html
+  - **/src** - Vue source code that gets compiled
+    - **/assets** - Images and other static assets
+    - **/components** - Reusable Vue components that can be included elsewhere
+    - **/router** - Routing files
+    - **/styles** - Static .sass files that can be reused throughout the project
+    - **/utils** - Static helper .js files
+    - **/views** - Routed Vue components, aka "pages"
+      - **/browse** - Main browse page of the different reaction sets
+      - **/reaction-view** - Display of a single reaction from search results
+      - **/search** - Search interface and results
+- **/ord_interface** - Contains the Flask app API and legacy interface
+  - **/client** - endpoints for the browse and search functionality
+  - **/editor** - endpoints for the reaction submission functionality
+  - **/visualization** - helper functions for reaction and molecule visuals
 
-Backend and frontend code for the [ORD search interface](https://client.open-reaction-database.org/).
+## Key Caveats / Constraints
+- The Vue front end is dependant on the Flask API. Both must be running for the frontend to work.
 
-## Installation
+## How to Deploy
+...COMING SOON
 
+## Setup
+1. Download the repo
 ```shell
-$ git clone git@github.com:open-reaction-database/ord-interface.git
-$ cd ord-interface
-$ pip install -e .
+git clone git@github.com:open-reaction-database/ord-interface.git
+cd ord-interface
 ```
-
-To build and launch the interface (available at `http://localhost:5001`):
-
+2. Set up the test database
 ```shell
-$ cd ord_interface
-$ ./build_test_database.sh
-$ docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
-$ docker compose up
+cd ./ord_interface
+# activate the virtual env of your choice
+pip install -e .
+./build_test_database.sh
+docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test #creates docker image of test db
 ```
-
-## Development
-
-To start a Flask server in development mode:
-
+3. Set up and run the Flask API (Don't forget to use the virtual environment)
 ```shell
-$ cd ord_interface
-$ ./build_test_database.sh
-# Start the database backend.
-$ docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test
-# Start the development server.
-$ POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python -m flask run
+# from ./ord_interface
+POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python -m flask run
 ```
-
-## Vue App
-
+  - Leave the Flask app running in a terminal window.
+4. Set up and run the Vue SPA
+  - Download [https://github.com/epam/ketcher/releases/tag/v2.5.1](Ketcher) (Here's a direct link to the [https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip](.zip file)) and extract the files into `./app/src/ketcher`
+  - In a new terminal window:
 ```shell
-cd app
+cd ./app
+npm i #install node packages
+npm run serve #runs vue spa locally
 ```
-In the `./app` directory, you can run:
-
-### Initialize app `npm i`
-
-Install the necessary npm packages for the vue app.
-Download [https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip](Ketcher) and extract the files into `./app/src/ketcher/`
-
-### `npm run serve`
-
-Runs the app in the development mode.
-Open [http://localhost:8080](http://localhost:8080) to view it in your browser.
-The vue app depends on the flask app api running on port 5000 (see the Development instructions for the flask app above)
-
-The page will reload when you make changes.
-You may also see any lint errors in the console.
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.\
+  - Open [http://localhost:8080](http://localhost:8080) to view the Vue ORD interface in your browser.
+  - The page will reload when you make changes.
+  - You may also see any lint errors in the console.
