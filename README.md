@@ -20,6 +20,8 @@ Web interface and api for the Open Reaction Database
 
 ## Key Caveats / Constraints
 - The Vue front end is dependant on the Flask API. Both must be running for the frontend to work.
+- The docker image of the test database must be running on port 5432
+- You will need to download the Ketcher interface and extract into appropriate folder (see instructions below) for parts of the interface to work
 
 ## How to Deploy
 ...COMING SOON
