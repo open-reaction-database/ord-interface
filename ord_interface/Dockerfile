@@ -16,7 +16,7 @@
 # $ cd path/to/ord-interface/ord_interface
 # $ docker build --file=Dockerfile -t openreactiondatabase/ord-interface ..
 
-FROM python:3.9
+FROM python:3.10
 
 # default-jre is required for running the closure compiler linter.
 # For this next line, see:
@@ -55,11 +55,12 @@ RUN npm install google-closure-compiler@20220803
 # Install dependencies.
 WORKDIR /usr/src/app/ord-interface
 COPY setup.py README.md ./
+RUN pip install --upgrade pip \
+ && pip install gunicorn wheel
 # https://stackoverflow.com/a/60511098.
 RUN python setup.py egg_info \
  && pip install $(grep -v '^\[' *.egg-info/requires.txt) \
  && rm -rf *.egg-info/
-RUN pip install gunicorn
 
 # Copy the local state.
 COPY ord_interface/editor/js/ ord_interface/editor/js/
