@@ -50,6 +50,11 @@ ENV PATH="/usr/src/app/ord-interface/ord_interface/editor/bin:${PATH}"
 RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
  && mkdir -p externs \
  && mv jquery-3.3.js externs
+ARG ORD_SCHEMA=0.3.49
+RUN wget https://github.com/open-reaction-database/ord-schema/archive/refs/tags/v${ORD_SCHEMA}.tar.gz \
+ && tar -xzf v${ORD_SCHEMA}.tar.gz \
+ && mv ord-schema-${ORD_SCHEMA} ord-schema \
+ && rm v${ORD_SCHEMA}.tar.gz
 RUN npm install google-closure-compiler@20220803
 
 # Install ord-interface.

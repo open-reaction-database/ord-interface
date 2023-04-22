@@ -25,13 +25,11 @@ CLOSURE=closure-library-20200517
 JQUERY_EXTERNS=externs/jquery-3.3.js
 # https://github.com/protocolbuffers/protobuf/releases
 PROTOBUF=protobuf-3.14.0
-ORD_SCHEMA='../../../ord-schema'
 echo "protoc: $(which protoc) $(protoc --version)"
-for source in "${ORD_SCHEMA}"/ord_schema/proto/*.proto; do
+for source in ord-schema/proto/*.proto; do
   protoc \
     --experimental_allow_proto3_optional \
     --js_out=binary:gen/js/proto/ord \
-    --proto_path="${ORD_SCHEMA}" \
     "${source}"
 done
 # Build dataset.js
