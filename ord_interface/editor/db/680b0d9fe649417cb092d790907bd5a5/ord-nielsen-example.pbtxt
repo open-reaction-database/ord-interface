@@ -2,7 +2,7 @@ name: "Deoxyfluorination screen"
 description: "Reactions from Figure 1 of DOI: 10.1021/jacs.8b01523"
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -251,7 +251,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -499,7 +499,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -747,7 +747,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -995,7 +995,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -1247,7 +1247,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -1499,7 +1499,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -1751,7 +1751,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2003,7 +2003,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2251,7 +2251,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2499,7 +2499,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2747,7 +2747,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2995,7 +2995,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3243,7 +3243,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3491,7 +3491,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3739,7 +3739,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3987,7 +3987,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4238,7 +4238,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4489,7 +4489,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4740,7 +4740,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4991,7 +4991,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5239,7 +5239,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5487,7 +5487,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5735,7 +5735,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5983,7 +5983,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6235,7 +6235,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6487,7 +6487,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6739,7 +6739,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6991,7 +6991,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7239,7 +7239,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7487,7 +7487,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7735,7 +7735,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7983,7 +7983,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8231,7 +8231,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8479,7 +8479,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8727,7 +8727,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8975,7 +8975,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9226,7 +9226,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9477,7 +9477,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9728,7 +9728,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9979,7 +9979,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10227,7 +10227,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10475,7 +10475,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10723,7 +10723,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10971,7 +10971,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11223,7 +11223,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11475,7 +11475,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11727,7 +11727,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11979,7 +11979,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12227,7 +12227,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12475,7 +12475,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12723,7 +12723,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12971,7 +12971,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13219,7 +13219,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13467,7 +13467,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13715,7 +13715,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13963,7 +13963,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14214,7 +14214,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14465,7 +14465,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14716,7 +14716,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14967,7 +14967,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15215,7 +15215,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15463,7 +15463,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15711,7 +15711,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15959,7 +15959,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16211,7 +16211,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16463,7 +16463,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16715,7 +16715,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16967,7 +16967,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17215,7 +17215,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17463,7 +17463,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17711,7 +17711,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17959,7 +17959,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18207,7 +18207,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18455,7 +18455,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18703,7 +18703,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18951,7 +18951,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -19202,7 +19202,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -19453,7 +19453,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -19704,7 +19704,7 @@ reactions {
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
