@@ -1,5 +1,5 @@
 identifiers {
-  type: NAME
+  type: REACTION_TYPE
   value: "deoxyfluorination"
 }
 inputs {

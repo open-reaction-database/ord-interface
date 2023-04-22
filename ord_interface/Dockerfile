@@ -59,10 +59,14 @@ RUN npm install google-closure-compiler@20220803
 
 # Install ord-interface.
 WORKDIR /usr/src/app/ord-interface
-COPY . .
+# Run install before copying the local state so the dependencies can be cached.
+COPY setup.py README.md ./
 RUN pip install --upgrade pip \
  && pip install gunicorn wheel \
  && pip install . \
+ && pip cache purge
+COPY . .
+RUN pip install . \
  && pip cache purge
 RUN cd ord_interface/editor \
  && ./build.sh \
