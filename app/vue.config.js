@@ -10,7 +10,7 @@ module.exports = defineConfig({
         changeOrigin: true
       },
       "^/editor-api": {
-        target: "http://localhost:5001/editor",
+        target: "http://localhost:5001/editor/",
         changeOrigin: true
       }
     }

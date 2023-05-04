@@ -47,7 +47,7 @@ from ord_interface.visualization import drawing
 from ord_interface.visualization import generate_text
 
 # pylint: disable=invalid-name,no-member,inconsistent-return-statements,assigning-non-slot
-bp = flask.Blueprint("editor", __name__, url_prefix="/editor", template_folder="../html")
+bp = flask.Blueprint("editor", __name__, url_prefix="/editor/editor-api", template_folder="../html")
 
 # For dataset merges operations like byte-value uploads and enumeration.
 TEMP = "/tmp/ord-editor"
