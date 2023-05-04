@@ -27,10 +27,9 @@ nav.navbar.navbar-expand-lg.bg-light
     #navbarNav.collapse.navbar-collapse
       .navbar-nav
         .nav-item
-          router-link.nav-link(to="/browse") Browse
-          router-link.nav-link(to="/search") Search
-        //- li.nav-item
-        //-   <Link className="nav-link" to="/editor">Contribute</Link>
+          router-link.nav-link(:to='{name: "browse"}') Browse
+          router-link.nav-link(:to='{name: "search"}') Search
+          router-link.nav-link(:to='{name: "contribute"}') Contribute
         .nav-item
           a.nav-link(href="https://docs.open-reaction-database.org") Docs
 </template>

@@ -27,6 +27,11 @@ const routes = [
     name: 'ketcher',
     component: () => import('../views/viewKetcher/MainKetcher.vue')
   },
+  {
+    path: '/editor/datasets',
+    name: 'contribute',
+    component: () => import('../views/contribute/MainContribute.vue')
+  },
 ]
 
 const router = createRouter({
