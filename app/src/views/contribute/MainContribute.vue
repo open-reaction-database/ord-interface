@@ -15,11 +15,36 @@ export default {
         "Enumerate"
       ],
       activeTab: "Create",
+      enumerateFiles: {
+        template: {
+          loading: false,
+          value: null,
+        },
+        spreadsheet: {
+          loading: false,
+          value: null,
+        }
+      }
     }
   },
   computed: {
   },
   methods: {
+    async setFile(e, fileType) {
+      // converts uploaded file into useable string
+      const files = e.target.files || e.dataTransfer.files
+      if (!files.length) return console.error('No file')
+      this.enumerateFiles[fileType].loading = true
+      const fileReader = new FileReader()
+      fileReader.onload = readerEvent => {
+        this.enumerateFiles[fileType].value = readerEvent.target.result
+        this.enumerateFiles[fileType].loading = false
+      }
+      fileReader.readAsText(files[0])
+    },
+    submitEnumerate() {
+
+    }
   },
   async mounted() {
     // if this is user's first time, default page is get started
@@ -92,7 +117,42 @@ export default {
         transition(name="fade")
           .get-started(v-if='activeTab == "Upload"')
         transition(name="fade")
-          .get-started(v-if='activeTab == "Enumerate"')
+          .enumerate(v-if='activeTab == "Enumerate"')
+            .copy You can use a Reaction template to enumerate a Dataset based on a spreadsheet of values. For more information, see the
+              a(
+                href='https://docs.open-reaction-database.org/en/latest/guides/templates.html'
+                target="_blank"
+              ) documentation
+              | .
+            .file-picker
+              .input
+                label(for='template') Template filename:
+                input#template(
+                  type='file'
+                  accept='.pbtxt'
+                  v-on:change='(e) => setFile(e,"template")'
+                )
+              .input
+                label(for='spreadsheet') Spreadsheet filename:
+                input#spreadsheet(
+                  type='file'
+                  accept='.csv,.xls,.xlsx'
+                  v-on:change='(e) => setFile(e,"spreadsheet")'
+                )
+            .submit
+              button#enumerate_submit(@click='submitEnumerate') Enumerate
+            #enumerate_error.error(style='display: none')
+            div(style='margin-top: 10px;')
+              b NOTE:
+              |  Large dataset enumerations (thousands of reactions) may result in a
+              |                 browser timeout. If this happens, please send an email to 
+              a(href='mailto:help@open-reaction-database.org') help@open-reaction-database.org
+              |                 and attach your template and spreadsheet files. Alternatively, you may use the
+              a(href='https://github.com/Open-Reaction-Database/ord-schema/blob/main/ord_schema/scripts/enumerate_dataset.py')
+                | programmatic
+                | interface
+              |  to enumerate the dataset locally.
+
 </template>
 
 <style lang="sass" scoped>
@@ -112,11 +172,17 @@ export default {
     padding: 1rem
   .get-started
     .copy
-      margin: 2rem 0 1rem
+      margin: 3rem 0 2rem
     .tutorial-videos
       display: flex
       flex-wrap: wrap
       column-gap: 1rem
       .title
         font-size: 1.5rem
+  .enumerate
+    .file-picker
+      padding: 1rem 0
+      display: flex
+      flex-wrap: wrap
+      row-gap: 1rem
 </style>
