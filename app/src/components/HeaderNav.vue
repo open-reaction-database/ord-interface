@@ -14,16 +14,6 @@ nav.navbar.navbar-expand-lg.bg-light
         alt="ORD Logo"
         height="30"
       )
-    //- button(
-    //-   className="navbar-toggler" 
-    //-   type="button" 
-    //-   data-bs-toggle="collapse" 
-    //-   data-bs-target="#navbarNav"
-    //-   aria-controls="navbarNav" 
-    //-   aria-expanded="false"
-    //-   aria-label="Toggle navigation"
-    //- )
-    //-   span.navbar-toggler-icon
     #navbarNav.collapse.navbar-collapse
       .navbar-nav
         .nav-item
@@ -43,7 +33,6 @@ nav
     display: flex
     flex-wrap: inherit
     align-items: center
-    // justify-content: space-between
     width: 90%
     margin: auto
     padding: 0.5rem 0

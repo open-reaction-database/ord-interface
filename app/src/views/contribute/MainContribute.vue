@@ -1,7 +1,9 @@
 <script>
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default {
   components: {
+    LoadingSpinner,
   },
   data() {
     return {
@@ -12,7 +14,7 @@ export default {
         "Upload",
         "Enumerate"
       ],
-      activeTab: "Get Started",
+      activeTab: "Create",
     }
   },
   computed: {
@@ -20,40 +22,101 @@ export default {
   methods: {
   },
   async mounted() {
+    // if this is user's first time, default page is get started
+    const notFirstTime = localStorage.getItem('notFirstTime')
+    if (!notFirstTime) {
+      localStorage.setItem("notFirstTime", "false")
+      this.activeTab = "Get Started"
+    }
     this.loading = false
   },
 }
 </script>
 
 <template lang="pug">
-.main-contribute-view
+.main-contribute
   transition(name="fade")
     .loading(v-if='loading')
       LoadingSpinner
   transition(name="fade")
-    .contribute-transition(v-if='!loading')
-      .tabs
-        .tab(
-          v-for='tab in tabs'
-          @click='activeTab = tab'
-          :class='activeTab == tab ? "selected" : ""'
-        ) {{tab}}
-      transition(name="fade")
-        .get-started(v-if='activeTab == "Get Started"')
-          h3 Get Started
-      transition(name="fade")
-        .get-started(v-if='activeTab == "Create"')
-          h3 Create
-      transition(name="fade")
-        .get-started(v-if='activeTab == "Upload"')
-          h3 Upload
-      transition(name="fade")
-        .get-started(v-if='activeTab == "Enumerate"')
-          h3 Enumerate
+    .contribute-menu(v-if='!loading')
+      .title {{activeTab}}
+      .contribute-container
+        .tabs
+          .tab(
+            v-for='tab in tabs'
+            @click='activeTab = tab'
+            :class='activeTab == tab ? "selected" : ""'
+          ) {{tab}}
+        transition(name="fade")
+          .get-started(v-if='activeTab == "Get Started"')
+            .copy Check out these 
+              a(href="https://www.youtube.com/playlist?list=PLyoEVAlMb276aRRa4xLNRAzbMPRlNb7VI") tutorial videos 
+              | for a guide on how to use the ORD Editor.
+            .tutorial-videos
+              .video
+                .title Using the interactive web editor (updated 1/2021)
+                iframe(
+                  width='560'
+                  height='315'
+                  src='https://www.youtube.com/embed/5J-2j8aBXMo'
+                  title='YouTube video player'
+                  frameborder='0'
+                  allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+                  allowfullscreen
+                )
+              .video
+                .title Submitting your first Dataset
+                iframe(
+                  width='560'
+                  height='315'
+                  src='https://www.youtube.com/embed/sAdSKKdO9Gs'
+                  title='YouTube video player'
+                  frameborder='0'
+                  allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+                  allowfullscreen
+                )
+            .copy Please send any questions, comments, or issues to 
+              a(
+                href='https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=help@open-reaction-database.org'
+                target="_blank"
+              ) help@open-reaction-database.org 
+              | or create a new issue on the 
+              a(
+                href='https://github.com/Open-Reaction-Database/ord-interface/issues'
+                target="_blank"
+              ) ord-interface GitHub repository
+              | .
+        transition(name="fade")
+          .get-started(v-if='activeTab == "Create"')
+        transition(name="fade")
+          .get-started(v-if='activeTab == "Upload"')
+        transition(name="fade")
+          .get-started(v-if='activeTab == "Enumerate"')
 </template>
 
 <style lang="sass" scoped>
 @import "@/styles/vars"
 @import "@/styles/tabs"
 @import '@/styles/transition.sass'
+.main-contribute
+  margin: 0 5%
+  padding: 1rem
+  .title
+    font-size: 2rem
+    font-weight: 700
+    margin-bottom: 1rem
+  .contribute-container
+    background-color: white
+    border-radius: 0.25rem
+    padding: 1rem
+  .get-started
+    .copy
+      margin: 2rem 0 1rem
+    .tutorial-videos
+      display: flex
+      flex-wrap: wrap
+      column-gap: 1rem
+      .title
+        font-size: 1.5rem
 </style>
