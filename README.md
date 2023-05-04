@@ -38,16 +38,16 @@ cd ./ord_interface
 # activate the virtual env of your choice, ex. venv, conda, etc.
 # install requirements and run setup script
 pip install -e .
-./build_test_database.sh
-# create docker image of test db
-docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test 
+./build_test_database.sh 
 ```
-### 3. Set up and run the Flask API (Don't forget to use the virtual environment)
+### 3. Set up and run the API via Docker
+Note: currently this also runs the old flask ui at port :5001
 ```bash
 # from ./ord_interface
-POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python -m flask run
+docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
+docker compose up
 ```
-  - Leave the Flask app running in a terminal window.
+  - Leave Docker running in a terminal window.
 ### 4. Set up and run the Vue SPA
   - Download [Ketcher](https://github.com/epam/ketcher/releases/tag/v2.5.1) (Here's a direct link to the [.zip file](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip)) and extract the files into `./app/src/ketcher`
   - In a new terminal window:
