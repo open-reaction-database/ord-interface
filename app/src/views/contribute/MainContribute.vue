@@ -1,9 +1,11 @@
 <script>
 import LoadingSpinner from '@/components/LoadingSpinner'
+import Enumerate from "./EnumerateView"
 
 export default {
   components: {
     LoadingSpinner,
+    Enumerate
   },
   data() {
     return {
@@ -15,61 +17,11 @@ export default {
         "Enumerate"
       ],
       activeTab: "Create",
-      enumerateFiles: {
-        template: {
-          name: null,
-          loading: false,
-          value: null,
-        },
-        spreadsheet: {
-          name: null,
-          loading: false,
-          value: null,
-        }
-      }
     }
   },
   computed: {
   },
   methods: {
-    async setFile(e, fileType) {
-      // converts uploaded file into useable string
-      const files = e.target.files || e.dataTransfer.files
-      if (!files.length) return console.error('No file')
-      this.enumerateFiles[fileType].loading = true
-      this.enumerateFiles[fileType].name = files[0].name
-      const fileReader = new FileReader()
-      fileReader.onload = readerEvent => {
-        this.enumerateFiles[fileType].value = readerEvent.target.result
-        this.enumerateFiles[fileType].loading = false
-      }
-      if (fileType == "template")
-        fileReader.readAsText(files[0])
-      else if (fileType == "spreadsheet")
-        fileReader.readAsDataURL(files[0])
-    },
-    submitEnumerate() {
-      if (this.enumerateFiles.template.loading || this.enumerateFiles.spreadsheet.loading)
-        return alert("Files are still processing. Please try again in a moment.")
-      else if (!this.enumerateFiles.template.value || !this.enumerateFiles.spreadsheet.value)
-        return alert("You must upload a file for the template and spreadsheet before submitting.")
-      // send enumerated files to api for upload
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/editor-api/dataset/enumerate');
-      xhr.onload = function () {
-        if (xhr.status === 200) {
-          location.reload();
-        } else {
-          alert(`Error: ${xhr.response}`)
-          console.error(xhr.response)
-        }
-      }
-      xhr.send(JSON.stringify({
-        'template_string': this.enumerateFiles.template.value,
-        'spreadsheet_data': this.enumerateFiles.spreadsheet.value,
-        'spreadsheet_name': this.enumerateFiles.spreadsheet.name
-      }));
-    }
   },
   async mounted() {
     // if this is user's first time, default page is get started
@@ -142,38 +94,7 @@ export default {
         transition(name="fade")
           .get-started(v-if='activeTab == "Upload"')
         transition(name="fade")
-          .enumerate(v-if='activeTab == "Enumerate"')
-            .subtitle Upload files for enumeration:
-            .file-picker
-              .input
-                label(for='template') Template filename:
-                input#template(
-                  type='file'
-                  accept='.pbtxt'
-                  v-on:change='(e) => setFile(e,"template")'
-                )
-              .input
-                label(for='spreadsheet') Spreadsheet filename:
-                input#spreadsheet(
-                  type='file'
-                  accept='.csv,.xls,.xlsx'
-                  v-on:change='(e) => setFile(e,"spreadsheet")'
-                )
-            .submit
-              button#enumerate_submit(@click='submitEnumerate') Submit Enumeration Upload
-            .copy You can use a Reaction template to enumerate a Dataset based on a spreadsheet of values. For more information, see the 
-              a(
-                href='https://docs.open-reaction-database.org/en/latest/guides/templates.html'
-                target="_blank"
-              ) documentation
-              | .
-            .copy
-              b NOTE:
-              |  Large dataset enumerations (thousands of reactions) may result in a browser timeout. If this happens, please send an email to 
-              a(href='mailto:help@open-reaction-database.org') help@open-reaction-database.org
-              |  and attach your template and spreadsheet files. Alternatively, you may use the 
-              a(href='https://github.com/Open-Reaction-Database/ord-schema/blob/main/ord_schema/scripts/enumerate_dataset.py') programmatic interface
-              |  to enumerate the dataset locally.
+          Enumerate(v-if='activeTab == "Enumerate"')
 
 </template>
 
@@ -202,18 +123,4 @@ export default {
       flex-wrap: wrap
       column-gap: 1rem
       row-gap: 1rem
-  .enumerate
-    padding-top: 1rem
-    .file-picker
-      padding: 1rem 0
-      display: flex
-      flex-wrap: wrap
-      row-gap: 1rem
-      .input
-        label
-          margin-right: 0.5rem
-    .submit
-      margin-bottom: 2rem
-    .copy
-      margin-top: 1rem
 </style>
