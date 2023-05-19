@@ -1,11 +1,13 @@
 <script>
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Enumerate from "./EnumerateView"
+import Upload from "./UploadView"
 
 export default {
   components: {
     LoadingSpinner,
-    Enumerate
+    Enumerate,
+    Upload
   },
   data() {
     return {
@@ -92,7 +94,7 @@ export default {
         transition(name="fade")
           .get-started(v-if='activeTab == "Create"')
         transition(name="fade")
-          .get-started(v-if='activeTab == "Upload"')
+          Upload(v-if='activeTab == "Upload"')
         transition(name="fade")
           Enumerate(v-if='activeTab == "Enumerate"')
 
