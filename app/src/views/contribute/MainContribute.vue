@@ -2,12 +2,14 @@
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Enumerate from "./EnumerateView"
 import Upload from "./UploadView"
+import CreateDataset from "./CreateView"
 
 export default {
   components: {
     LoadingSpinner,
     Enumerate,
-    Upload
+    Upload,
+    CreateDataset
   },
   data() {
     return {
@@ -92,7 +94,7 @@ export default {
               ) ord-interface GitHub repository
               | .
         transition(name="fade")
-          .get-started(v-if='activeTab == "Create"')
+          CreateDataset(v-if='activeTab == "Create"')
         transition(name="fade")
           Upload(v-if='activeTab == "Upload"')
         transition(name="fade")
