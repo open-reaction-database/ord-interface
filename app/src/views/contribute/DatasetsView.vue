@@ -3,10 +3,15 @@
 export default {
   data() {
     return {
+      loading: true, 
       newDatasetName: null,
     }
   },
   methods: {
+    async getDatasets() {
+      const res = await fetch('/editor-api/getDatasetsByUser/ef4a7184f6bf4d2da99d8e08b36882c0')
+      console.log('res.json',res)
+    },
     createDataset() {
       if (!this.newDatasetName)
         return alert("Enter a name for the new dataset.")
@@ -24,6 +29,9 @@ export default {
       xhr.send();
     }
   },
+  mounted() {
+    this.getDatasets()
+  }
 }
 </script>
 

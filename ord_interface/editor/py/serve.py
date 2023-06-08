@@ -90,6 +90,7 @@ def show_datasets():
     with flask.g.db.cursor() as cursor:
         query = psycopg2.sql.SQL("SELECT name FROM datasets WHERE user_id=%s")
         cursor.execute(query, [flask.g.user_id])
+        print('flask user id',flask.g.user_id)
         for row in cursor:
             names.append(row[0])
     if len(flask.g.user_name) == 32:
@@ -101,6 +102,25 @@ def show_datasets():
         names=sorted(names),
         user_avatar=flask.g.user_avatar,
         user_name=flask.g.user_name,
+        client_id=client_id,
+    )
+
+@bp.route("/getDatasetsByUser/<user_id>", methods=["GET"])
+def get_datasets_by_id(user_id):
+    """Returns datasets for a provided user id"""
+    print('flask user id',user_id)
+    names = []
+    with flask.g.db.cursor() as cursor:
+        query = psycopg2.sql.SQL("SELECT name FROM datasets WHERE user_id=%s")
+        cursor.execute(query, [user_id])
+        for row in cursor:
+            names.append(row[0])
+    if len(flask.g.user_name) == 32:
+        client_id = GH_CLIENT_ID
+    else:
+        client_id = None
+    return flask.jsonify(
+        names=sorted(names),
         client_id=client_id,
     )
 
