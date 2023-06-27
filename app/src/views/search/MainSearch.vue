@@ -35,6 +35,8 @@ export default {
       try {
         const res = await fetch(`/api/query${this.urlQuery}`, {method: "GET"})
         this.searchResults = await res.json()
+        // unpack protobuff for each reaction in results
+        
         this.loading = false
       } catch (e) {
         console.log(e)

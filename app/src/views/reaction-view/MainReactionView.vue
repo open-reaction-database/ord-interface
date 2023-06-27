@@ -1,5 +1,6 @@
 <script>
-import { reaction_pb } from "ord-schema"
+import reaction_pb from "ord-schema"
+import ordSchema from "ord-schema"
 import CompoundView from "./CompoundView"
 import SetupView from "./SetupView"
 import ConditionsView from "./ConditionsView"
@@ -166,7 +167,6 @@ export default {
     this.navItems = this.setNavItems()
     this.loading = false
     window.addEventListener('scroll',this.onScroll)
-    // console.log('schema',reaction_pb)
   },
   beforeUnmount() {
     window.removeEventListener('scroll', this.onScroll)

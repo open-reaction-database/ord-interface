@@ -1,5 +1,5 @@
 <script>
-import { reaction_pb } from "ord-schema"
+import reaction_pb from "ord-schema"
 
 export default {
   props: {

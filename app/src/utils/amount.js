@@ -1,4 +1,4 @@
-import { reaction_pb } from "ord-schema"
+import reaction_pb from "ord-schema"
 
 export const amountObj = (amount) => {
   if (!amount) return {}

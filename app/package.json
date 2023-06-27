@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
-    "ord-schema": "^0.3.40",
+    "ord-schema": "^0.3.54",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3"
   },
