@@ -6,11 +6,11 @@ module.exports = defineConfig({
   devServer: {
     proxy: {
       "^/api": {
-        target: "http://localhost:5000/client/",
+        target: "http://0.0.0.0:5000/client/",
         changeOrigin: true
       },
       "^/editor-api": {
-        target: "http://localhost:5001/editor/",
+        target: "http://0.0.0.0:5001/editor/",
         changeOrigin: true
       }
     }
