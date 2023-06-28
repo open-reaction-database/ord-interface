@@ -50,6 +50,15 @@ export default {
       const requestJson = this.formattedResults.map(result => {return {"Reaction ID": result.reaction_id}})
       xhr.send(JSON.stringify(requestJson));
     },
+    getYield(measurements) {
+      console.log('measurements',measurements)
+      const yieldObj = measurements.find(m => m.type == 3) // ord-schema type 3 == "YIELD"
+      if (yieldObj.percentage) {
+        return `Yield: ${yieldObj.percentage.value}%`
+      } else {
+        return ""
+      }
+    }
   },
   async mounted() {
     this.formattedResults = this.searchResults
@@ -75,16 +84,29 @@ export default {
     template(
       v-for='row in entities'
     )
-      router-link.reaction-link(
-        :to='{ name: "reaction-view", params: {reactionId: row.reaction_id}}'
-      )
+      .reaction-link
         .row
-          .id {{row.reaction_id}}
           .reaction-table(
             v-html='row.reactionTable'
             v-if='row.reactionTable'
           )
           LoadingSpinner(v-else)
+          .info
+            .col.full
+              router-link(
+                :to='{ name: "reaction-view", params: {reactionId: row.reaction_id}}'
+              ) 
+                button View Full Details
+            .col
+              .yield {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
+            .col
+              .creator Created by: {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
+              .date Creation date: {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}
+              .publication 
+                a(
+                  :href='row.data.provenance.publicationUrl'
+                  target="_blank"
+                ) Publication URL
 
 </template>
 
@@ -109,6 +131,14 @@ export default {
       .reaction-table
         color: black
         overflow-x: wrap
+      .info
+        display: grid
+        grid-template-columns: repeat(2, 1fr)
+        row-gap: 1rem
+        column-gap: 1rem
+        margin-top: 1rem
+        .col.full
+          grid-column: 1/3
   @media (max-width: 1000px)
     margin-top: 2.5rem
 </style>
