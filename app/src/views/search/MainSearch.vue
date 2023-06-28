@@ -2,6 +2,7 @@
 import SearchOptions from './SearchOptions'
 import SearchResults from './SearchResults'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import reaction_pb from "ord-schema"
 
 export default {
   components: {
@@ -36,7 +37,10 @@ export default {
         const res = await fetch(`/api/query${this.urlQuery}`, {method: "GET"})
         this.searchResults = await res.json()
         // unpack protobuff for each reaction in results
-        
+        // this.searchResults.forEach((reaction) => {
+        //   const binary = new Uint8Array(reaction.proto)
+        //   reaction.data = reaction_pb.Reaction.deserializeBinary(binary).toObject();
+        // })
         this.loading = false
       } catch (e) {
         console.log(e)
@@ -86,8 +90,10 @@ export default {
     },
   },
   mounted() {
+    console.log('schema',reaction_pb)
     // fetch initial query
     this.getSearchResults()
+
   },
 }
 </script>
