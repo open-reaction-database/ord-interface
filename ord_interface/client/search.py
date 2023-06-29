@@ -240,7 +240,9 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     elif reaction_ids is not None:
         command = query.ReactionIdQuery(reaction_ids.split(","))
     elif reaction_smarts is not None:
-        command = query.ReactionSmartsQuery(reaction_smarts)
+        print('smarts',reaction_smarts)
+        cleaned_smarts = unquote(reaction_smarts)
+        command = query.ReactionSmartsQuery(cleaned_smarts)
     elif dois is not None:
         command = query.DoiQuery(dois.split(","))
     elif components:

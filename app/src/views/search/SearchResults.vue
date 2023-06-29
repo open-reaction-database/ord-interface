@@ -135,6 +135,7 @@ export default {
             .col
               .creator Uploaded by {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
               .date Uploaded on {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}
+              .doi DOI: {{row.data.provenance.doi}}
               .publication 
                 a(
                   :href='row.data.provenance.publicationUrl'

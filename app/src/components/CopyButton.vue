@@ -52,7 +52,7 @@ export default {
 @import '@/styles/transition.sass'
 .copy-button-main
   button
-    padding: 0.25rem 0.5rem
+    padding: 0.25rem 0.5rem 0.167rem
     i
       font-size: 1rem
   #copy-notification
