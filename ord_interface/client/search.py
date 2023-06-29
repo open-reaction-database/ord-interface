@@ -240,16 +240,13 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
     elif reaction_ids is not None:
         command = query.ReactionIdQuery(reaction_ids.split(","))
     elif reaction_smarts is not None:
-        print('smarts',reaction_smarts)
-        cleaned_smarts = unquote(reaction_smarts)
-        command = query.ReactionSmartsQuery(cleaned_smarts)
+        command = query.ReactionSmartsQuery(reaction_smarts)
     elif dois is not None:
         command = query.DoiQuery(dois.split(","))
     elif components:
         predicates = []
         for component in components:
             pattern, target_name, mode_name = component.split(";")
-            pattern = unquote(pattern)
             target = query.ReactionComponentPredicate.Target.from_name(target_name)
             mode = query.ReactionComponentPredicate.MatchMode.from_name(mode_name)
             predicates.append(query.ReactionComponentPredicate(pattern, target, mode))

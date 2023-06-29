@@ -54,7 +54,7 @@ export default {
       if (options.reagent.reagents.length) {
         this.searchParams["component"] = []
         options.reagent.reagents.forEach(reagent => {
-          this.searchParams["component"].push(`${encodeURIComponent(reagent.smileSmart)};${reagent.source};${reagent.matchMode}`)
+          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode}`)
         })
 
         this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
@@ -65,21 +65,21 @@ export default {
 
       // dataset options
       if (options.dataset.datasetIds.length)
-        this.searchParams["dataset_ids"] = encodeURIComponent(options.dataset.datasetIds.join(","))
+        this.searchParams["dataset_ids"] = options.dataset.datasetIds.join(",")
       else
         delete this.searchParams["dataset_ids"]
       if (options.dataset.DOIs.length)
-        this.searchParams["dois"] = encodeURIComponent(options.dataset.DOIs.join(","))
+        this.searchParams["dois"] = options.dataset.DOIs.join(",")
       else
         delete this.searchParams["dois"]
 
       // reaction options
       if (options.reaction.reactionIds.length)
-        this.searchParams["reaction_ids"] = encodeURIComponent(options.reaction.reactionIds.join(","))
+        this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
       else
         delete this.searchParams["reaction_ids"]
       if (options.reaction.reactionSmarts.length)
-        this.searchParams["reaction_smarts"] = encodeURIComponent(options.reaction.reactionSmarts.join(","))
+        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
       else
         delete this.searchParams["reaction_smarts"]
 

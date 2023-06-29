@@ -34,13 +34,7 @@ export default {
   },
   computed: {
     defaultQuery() {
-      const queryString = window.location.search
-      const params = new URLSearchParams(queryString)
-      const queryParams = {}
-      for (const [key, value] of params.entries()) {
-        queryParams[key] = value
-      }
-      return queryParams
+      return this.$route.query
     },
     simThresholdDisplay() {
       let trailingZeros = ""
