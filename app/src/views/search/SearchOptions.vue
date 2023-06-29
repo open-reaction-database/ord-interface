@@ -62,13 +62,13 @@ export default {
     },
     setDefaultValues() {
       const q = this.defaultQuery
-
+      console.log('q',q)
       // reagent options
       if (q.component?.length) {
-        q.component.forEach(comp => {
-          const compArray = comp.split(";")
-          this.reagentOptions.reagents.push({smileSmart: compArray[0], source: compArray[1], matchMode: compArray[2]})
-        })
+        if (Array.isArray(q.component))
+          q.component.forEach(comp => { this.addCompToOptions(comp) })
+        else
+          this.addCompToOptions(q.component)
         this.reagentOptions.useStereochemistry = q.use_stereochemistry || false
         this.reagentOptions.similarityThreshold = q.similarity || 0.5
         this.showReagentOptions = true
@@ -89,6 +89,10 @@ export default {
       // general search params
       this.searchParams.limit = q.limit || 100
     },
+    addCompToOptions (comp) {
+      const compArray = comp.split(";")
+      this.reagentOptions.reagents.push({smileSmart: compArray[0].replaceAll("%3D","="), source: compArray[1], matchMode: compArray[2]})
+    }
   },
   mounted() {
     this.setDefaultValues()
