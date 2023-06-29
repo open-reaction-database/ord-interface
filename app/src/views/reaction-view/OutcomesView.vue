@@ -2,7 +2,8 @@
 import reaction_pb from "ord-schema"
 import CompoundView from "./CompoundView"
 import FloatingModal from "../../components/FloatingModal"
-import { amountObj, amountStr } from "../../utils/amount"
+import { amountObj, amountStr } from "@/utils/amount"
+import outcomesUtil from "@/utils/outcomes"
 
 export default {
   props: {
@@ -10,7 +11,7 @@ export default {
   },
   components: {
     CompoundView,
-    FloatingModal,
+    FloatingModal
   },
   data () {
     return {
@@ -24,9 +25,7 @@ export default {
   },
   computed: {
     reactionTime () {
-      const timeUnits = reaction_pb.Time.TimeUnit
-      const type = Object.keys(timeUnits).find(key => timeUnits[key] == this.outcome.reactionTime.units)
-      return `${this.outcome.reactionTime.value} ${type.toLowerCase()}${this.outcome.reactionTime.units !== 0 ? "(s)" : ""}`
+      return outcomesUtil.formattedTime(this.outcome.reactionTime)
     }
   },
   methods: {

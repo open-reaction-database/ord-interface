@@ -1,6 +1,7 @@
 <script>
 import EntityTable from '@/components/EntityTable'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import conditionUtil from '@/utils/conditions'
 
 export default {
   props: {
@@ -51,7 +52,6 @@ export default {
       xhr.send(JSON.stringify(requestJson));
     },
     getYield(measurements) {
-      console.log('measurements',measurements)
       const yieldObj = measurements.find(m => m.type == 3) // ord-schema type 3 == "YIELD"
       if (yieldObj.percentage) {
         return `Yield: ${yieldObj.percentage.value}%`
@@ -60,10 +60,18 @@ export default {
       }
     },
     conditionsAndDuration(reaction) {
-      let temp = ""
-      let pressure = ""
-      let duration = ""
       const details = []
+      // get temp
+      const tempSetPoint = conditionUtil.tempSetPoint(reaction.conditions.temperature.setpoint)
+      if (tempSetPoint !== "None")
+        details.push(`at ${tempSetPoint}`)
+
+      // get Pressure
+      const pressureSetPoint = conditionUtil.pressureSetPoint(reaction.conditions.pressure.setpoint)
+      if (pressureSetPoint !== "None")
+        details.push(`under ${pressureSetPoint}`)
+
+      let duration = ""
       return details
     }
   },
