@@ -36,6 +36,15 @@ export default {
     defaultQuery() {
       return this.$route.query
     },
+    simThresholdDisplay() {
+      let trailingZeros = ""
+      const simThresh = this.reagentOptions.similarityThreshold.toString()
+      if (simThresh.length < 3)
+        trailingZeros = ".00"
+      else if (simThresh.length < 4)
+        trailingZeros = "0"
+      return simThresh+trailingZeros
+    }
   },
   methods: {
     openKetcherModal(idx) {
@@ -146,11 +155,15 @@ export default {
             v-model='reagentOptions.useStereochemistry'
           )
           label(for='similarity') Similarity Threshold
-          input#similarity(
-            type='number'
-            step=0.1
-            v-model='reagentOptions.similarityThreshold'
-          )
+          .slider-input
+            .value {{simThresholdDisplay}}
+            input#similarity(
+              type='range'
+              min="0.1"
+              max="1.0"
+              step="0.01"
+              v-model='reagentOptions.similarityThreshold'
+            )
   .options-title(
     @click='showReactionOptions = !showReactionOptions'
     :class='showReactionOptions ? "" : "closed"'
@@ -285,6 +298,12 @@ ModalKetcher(
       column-gap: 1rem
       row-gap: 0.5rem
       input
-        max-width: 50px
+        max-width: 15px
         text-align: center
+      .slider-input
+        display: flex
+        column-gap: 0.5rem
+        #similarity
+          // width: 8rem
+          max-width: 8rem
 </style>
