@@ -113,18 +113,18 @@ def show_id(reaction_id):
         bond_length=BOND_LENGTH,
     )
 
-@bp.route("/api/getReaction/<reaction_id>", methods=["GET"])
-def get_reaction(reaction_id):
-    """Returns reaction data as proto."""
-    results = connect().run_query(query.ReactionIdQuery([reaction_id]))
-    if len(results) == 0:
-        return flask.abort(404)
-    reaction = results[0].reaction
-    response = flask.make_response(reaction.SerializeToString())
-    try:
-        return response
-    except (ValueError, KeyError):
-        return flask.jsonify("[Could not retrieve reaction data]")
+# @bp.route("/api/getReaction/<reaction_id>", methods=["GET"])
+# def get_reaction(reaction_id):
+#     """Returns reaction data as proto."""
+#     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
+#     if len(results) == 0:
+#         return flask.abort(404)
+#     reaction = results[0].reaction
+#     response = flask.make_response(reaction.SerializeToString())
+#     try:
+#         return response
+#     except (ValueError, KeyError):
+#         return flask.jsonify("[Could not retrieve reaction data]")
 
 
 @bp.route("/api/render/<reaction_id>")
@@ -179,6 +179,7 @@ def make_response(results: list[query.Result]) -> flask.Response:
 @bp.route("/api/fetch_reactions", methods=["POST"])
 def fetch_reactions():
     """Fetches a list of Reactions by ID."""
+    print('request',flask.request.get_json())
     reaction_ids = flask.request.get_json()
     command = query.ReactionIdQuery(reaction_ids)
     try:

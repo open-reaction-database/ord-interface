@@ -1,5 +1,6 @@
 <script>
 import reaction_pb from "ord-schema"
+import conditionUtil from "@/utils/conditions"
 
 export default {
   props: {
@@ -8,42 +9,25 @@ export default {
   },
   computed: {
     tempType () {
-      const controlTypes = reaction_pb.TemperatureConditions.TemperatureControl.TemperatureControlType
-      return Object.keys(controlTypes).find(key => controlTypes[key] == this.conditions.temperature.control.type)
+      return conditionUtil.tempType(this.conditions.temperature.control.type)
     },
     tempSetPoint () {
-      const setpoint = this.conditions.temperature.setpoint
-      if (!setpoint) return "None"
-      const tempUnits = reaction_pb.Temperature.TemperatureUnit
-      const tempUnit = Object.keys(tempUnits).find(key => tempUnits[key] == setpoint.units)
-      return `${setpoint.value} (± ${setpoint.precision}) ${tempUnit.toLowerCase()}`
+      return conditionUtil.tempSetPoint(this.conditions.temperature.setpoint)
     },
     pressureType () {
-      const controlTypes = reaction_pb.PressureConditions.PressureControl.PressureControlType
-      return Object.keys(controlTypes).find(key => controlTypes[key] == this.conditions.pressure.control.type)
+      return conditionUtil.pressureType(this.conditions.pressure.control.type)
     },
     pressureSetPoint () {
-      const setpoint = this.conditions.pressure.setpoint
-      if (!setpoint) return "None"
-      const pressureUnits = reaction_pb.Pressure.PressureUnit
-      const pressureUnit = Object.keys(pressureUnits).find(key => pressureUnits[key] == setpoint.units)
-      return `${setpoint.value} (± ${setpoint.precision}) ${pressureUnit.toLowerCase()}`
+      return conditionUtil.pressureSetPoint(this.conditions.pressure.setpoint)
     },
     pressureAtmo () {
-      const atmo = this.conditions.pressure.atmosphere
-      const atmoTypes = reaction_pb.PressureConditions.Atmosphere.AtmosphereType
-      const atmoType = Object.keys(atmoTypes).find(key => atmoTypes[key] == atmo.type)
-      return `${atmoType}${atmo.details ? `, ${atmo.details}` : ""}`
+      return conditionUtil.pressureAtmo(this.conditions.pressure.atmosphere)
     },
     stirType () {
-      const stirTypes = reaction_pb.StirringConditions.StirringMethodType
-      return Object.keys(stirTypes).find(key => stirTypes[key] == this.conditions.stirring.type)
+      return conditionUtil.stirType(this.conditions.stirring.type)
     },
     illumType () {
-      const illum = this.conditions.illumination
-      const illumTypes = reaction_pb.IlluminationConditions.IlluminationType
-      const illumType = Object.keys(illumTypes).find(key => illumTypes[key] == illum.type)
-      return `${illumType}${illum.details ? `: ${illum.details}` : ""}`
+      return conditionUtil.illumType(this.conditions.illumination)
     }
   },
 }

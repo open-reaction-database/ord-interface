@@ -39,7 +39,7 @@ export default {
     simThresholdDisplay() {
       let trailingZeros = ""
       const simThresh = this.reagentOptions.similarityThreshold.toString()
-      if (simThresh.length < 3)
+      if (simThresh.length < 2)
         trailingZeros = ".00"
       else if (simThresh.length < 4)
         trailingZeros = "0"

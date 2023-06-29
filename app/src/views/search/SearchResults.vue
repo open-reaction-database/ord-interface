@@ -58,6 +58,13 @@ export default {
       } else {
         return ""
       }
+    },
+    conditionsAndDuration(reaction) {
+      let temp = ""
+      let pressure = ""
+      let duration = ""
+      const details = []
+      return details
     }
   },
   async mounted() {
@@ -99,6 +106,7 @@ export default {
                 button View Full Details
             .col
               .yield {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
+              .conditions {{conditionsAndDuration(row.data).join("; ")}}
             .col
               .creator Created by: {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
               .date Creation date: {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}

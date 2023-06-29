@@ -61,3 +61,13 @@ npm run serve
   - Open [localhost:8080](http://localhost:8080) to view the Vue ORD interface in your browser.
   - The page will reload when you make changes.
   - You may also see any lint errors in the console.
+
+### Run flask server in development mode
+  - This can be helpful for debugging the browse/search side of the application. Note that the flask dev mode will not work for the editor side of the application. For that to connect to the database, you need to run the full docker container documented above
+```bash
+cd ord_interface
+# Start the database backend.
+docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test
+# Start the development server.
+POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python3 -m flask run
+```
