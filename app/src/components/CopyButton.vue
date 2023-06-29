@@ -36,7 +36,8 @@ export default {
 
 <template lang="pug">
 .copy-button-main
-  button(@click='copy') Copy
+  button(@click='copy')
+    i.material-icons content_copy
   transition(
     name='fade'
   )
@@ -50,6 +51,10 @@ export default {
 @import '@/styles/vars.sass'
 @import '@/styles/transition.sass'
 .copy-button-main
+  button
+    padding: 0.25rem 0.5rem
+    i
+      font-size: 1rem
   #copy-notification
     position: fixed
     background-color: $darkgrey
