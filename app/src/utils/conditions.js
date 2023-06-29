@@ -6,14 +6,9 @@ export default {
     return Object.keys(controlTypes).find(key => controlTypes[key] == tempControlType)
   },
   tempSetPoint (setpoint) {
-    // const setpoint = this.conditions.temperature.setpoint
     if (!setpoint) return "None"
     const tempUnits = reaction_pb.Temperature.TemperatureUnit
     const tempUnit = Object.keys(tempUnits).find(key => tempUnits[key] == setpoint.units)
-    const tempSymbols = {
-      CELSIUS: "C",
-
-    }
     return `${setpoint.value} (± ${setpoint.precision}) °${tempUnit.charAt(0)}`
   },
   pressureType (pressControlType) {

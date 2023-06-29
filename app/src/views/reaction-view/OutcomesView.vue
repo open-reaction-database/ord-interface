@@ -180,7 +180,7 @@ export default {
     .raw
       .button
         padding: 0.5rem
-        background-color: #a0a0a0
+        background-color: $darkgrey
         color: white
         border-radius: 0.25rem
         cursor: pointer

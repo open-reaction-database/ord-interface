@@ -124,61 +124,62 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-  #search-main
-    width: 95%
-    margin: 1rem 2.5%
-    display: grid
-    grid-template-columns: auto 1fr
-    column-gap: 1rem
-    min-width: 800px
+@import '@/styles/vars.sass'
+#search-main
+  width: 95%
+  margin: 1rem 2.5%
+  display: grid
+  grid-template-columns: auto 1fr
+  column-gap: 1rem
+  min-width: 800px
+  .search-options-container
+    .title
+      font-size: 2rem
+      font-weight: 700
+      margin-bottom: 0.85rem
+    .options-holder
+      position: -webkit-sticky
+      position: sticky
+      top: 1rem
+      background-color: white
+      padding: 1rem
+      box-sizing: border-box
+      border-radius: 0.25rem
+  .no-results
+    margin-top: 1rem
+    text-align: center
+  @media (max-width: 1000px)
+    grid-template-columns: 1fr
+    .title
+      display: none
     .search-options-container
-      .title
-        font-size: 2rem
-        font-weight: 700
-        margin-bottom: 0.85rem
+      position: fixed
+      height: 100vh
+      width: 90%
+      transition: 0.5s
+      top: 0
+      &.hidden
+        left: -81%
+      &.slide-out
+        left: 0
       .options-holder
-        position: -webkit-sticky
-        position: sticky
-        top: 1rem
-        background-color: white
-        padding: 1rem
-        box-sizing: border-box
-        border-radius: 0.25rem
-    .no-results
-      margin-top: 1rem
-      text-align: center
-    @media (max-width: 1000px)
-      grid-template-columns: 1fr
-      .title
-        display: none
-      .search-options-container
-        position: fixed
-        height: 100vh
         width: 90%
-        transition: 0.5s
-        top: 0
-        &.hidden
-          left: -81%
-        &.slide-out
-          left: 0
-        .options-holder
-          width: 90%
-          height: 100%
-          overflow-y: auto
-          box-shadow: 0 0 5px #a0a0a0
-        .slide-out-tab
-          background-color: white
-          position: absolute
-          left: 89.5%
-          width: 7.5%
-          top: 4rem
-          box-shadow: 6px 3px 5px #ccc
-          padding: 0.5rem 0
-          border-bottom-right-radius: 0.25rem
-          .line
-            background-color: black
-            height: 2px
-            width: 60%
-            margin: 0.5rem auto
+        height: 100%
+        overflow-y: auto
+        box-shadow: 0 0 5px $darkgrey
+      .slide-out-tab
+        background-color: white
+        position: absolute
+        left: 89.5%
+        width: 7.5%
+        top: 4rem
+        box-shadow: 6px 3px 5px #ccc
+        padding: 0.5rem 0
+        border-bottom-right-radius: 0.25rem
+        .line
+          background-color: black
+          height: 2px
+          width: 60%
+          margin: 0.5rem auto
 
 </style>
