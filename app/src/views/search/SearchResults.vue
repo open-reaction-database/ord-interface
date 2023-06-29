@@ -4,6 +4,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import conditionUtil from '@/utils/conditions'
 import outcomesUtil from '@/utils/outcomes'
 import reaction_pb from 'ord-schema'
+import CopyButton from '@/components/CopyButton'
 
 export default {
   props: {
@@ -12,6 +13,7 @@ export default {
   components: {
     EntityTable,
     LoadingSpinner,
+    CopyButton
   },
   data() {
     return {
@@ -127,7 +129,9 @@ export default {
               .conditions {{conditionsAndDuration(row.data).join("; ")}}
               .smile(v-if='row.data.outcomesList[0].productsList[0].identifiersList.length')
                 .value {{productIdentifier(row.data.outcomesList[0].productsList[0].identifiersList[0])}}
-                .copy 
+                CopyButton(
+                  :textToCopy='row.data.outcomesList[0].productsList[0].identifiersList[0].value'
+                )
             .col
               .creator Uploaded by {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
               .date Uploaded on {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}

@@ -6,16 +6,28 @@ export default {
   },
   data () {
     return {
-      displayNotification: false
+      displayNotification: false,
+      notificationStyle: {
+        top: 0,
+        left: 0
+      }
     }
   },
   methods: {
-    copy () {
+    copy (event) {
+      // move notification block to mouse cursor
+      const { clientX, clientY } = event
+      this.notificationStyle = {
+        top: `${clientY}px`,
+        left: `${clientX}px`
+      }
+
       navigator.clipboard.writeText(this.textToCopy).then(() => {
         this.displayNotification = true
+
         setTimeout(() => {
           this.displayNotification = false
-        }, 2000)
+        }, 1500)
       })
     }
   }
@@ -28,7 +40,10 @@ export default {
   transition(
     name='fade'
   )
-    #copy-notification Copied to clipboard!
+    #copy-notification(
+      v-if='displayNotification'
+      :style='notificationStyle'
+    ) Copied to clipboard!
 </template>
 
 <style lang="sass" scoped>
@@ -39,4 +54,6 @@ export default {
     position: fixed
     background-color: $darkgrey
     color: white
+    padding: 0.5rem 1rem
+    border-radius: 0.25rem
 </style>
