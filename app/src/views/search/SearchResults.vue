@@ -166,7 +166,7 @@ export default {
         overflow-x: wrap
       .info
         display: grid
-        grid-template-columns: repeat(2, 1fr)
+        grid-template-columns: repeat(2, 50%)
         row-gap: 0.5rem
         column-gap: 1rem
         margin-top: 1rem
@@ -182,6 +182,11 @@ export default {
           column-gap: 0.5rem
           align-items: center
           margin-top: 0.25rem
+          .value
+            width: 100%
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
   @media (max-width: 1000px)
     margin-top: 2.5rem
 </style>
