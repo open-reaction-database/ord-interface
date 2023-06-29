@@ -45,6 +45,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import json
 
 import flask
+from urllib.parse import unquote
 from rdkit import Chem
 
 from ord_schema.proto import dataset_pb2, reaction_pb2
@@ -112,20 +113,6 @@ def show_id(reaction_id):
         reaction_summary=reaction_summary,
         bond_length=BOND_LENGTH,
     )
-
-# @bp.route("/api/getReaction/<reaction_id>", methods=["GET"])
-# def get_reaction(reaction_id):
-#     """Returns reaction data as proto."""
-#     results = connect().run_query(query.ReactionIdQuery([reaction_id]))
-#     if len(results) == 0:
-#         return flask.abort(404)
-#     reaction = results[0].reaction
-#     response = flask.make_response(reaction.SerializeToString())
-#     try:
-#         return response
-#     except (ValueError, KeyError):
-#         return flask.jsonify("[Could not retrieve reaction data]")
-
 
 @bp.route("/api/render/<reaction_id>")
 def render_reaction(reaction_id):
@@ -260,6 +247,7 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
         predicates = []
         for component in components:
             pattern, target_name, mode_name = component.split(";")
+            pattern = unquote(pattern)
             target = query.ReactionComponentPredicate.Target.from_name(target_name)
             mode = query.ReactionComponentPredicate.MatchMode.from_name(mode_name)
             predicates.append(query.ReactionComponentPredicate(pattern, target, mode))

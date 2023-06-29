@@ -161,7 +161,6 @@ export default {
       transition: 0.25s
       &:hover
         box-shadow: 0 0 5px $darkgrey
-        // cursor: pointer
       .reaction-table
         color: black
         overflow-x: wrap
