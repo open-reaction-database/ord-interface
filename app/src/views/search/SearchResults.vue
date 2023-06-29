@@ -128,10 +128,10 @@ export default {
               .yield {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
               .conditions {{conditionsAndDuration(row.data).join("; ")}}
               .smile(v-if='row.data.outcomesList[0].productsList[0].identifiersList.length')
-                .value {{productIdentifier(row.data.outcomesList[0].productsList[0].identifiersList[0])}}
                 CopyButton(
                   :textToCopy='row.data.outcomesList[0].productsList[0].identifiersList[0].value'
                 )
+                .value {{productIdentifier(row.data.outcomesList[0].productsList[0].identifiersList[0])}}
             .col
               .creator Uploaded by {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
               .date Uploaded on {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}
@@ -161,20 +161,28 @@ export default {
       transition: 0.25s
       &:hover
         box-shadow: 0 0 5px $darkgrey
-        cursor: pointer
+        // cursor: pointer
       .reaction-table
         color: black
         overflow-x: wrap
       .info
         display: grid
         grid-template-columns: repeat(2, 1fr)
-        row-gap: 1rem
+        row-gap: 0.5rem
         column-gap: 1rem
         margin-top: 1rem
         .col.full
           grid-column: 1/3
           button
             font-size: 1.2rem
+        .col
+          *
+            margin-top: 0.5rem
+        .smile
+          display: flex
+          column-gap: 0.5rem
+          align-items: center
+          margin-top: 0.25rem
   @media (max-width: 1000px)
     margin-top: 2.5rem
 </style>
