@@ -2,6 +2,7 @@
 import EntityTable from '@/components/EntityTable'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import conditionUtil from '@/utils/conditions'
+import outcomesUtil from '@/utils/outcomes'
 
 export default {
   props: {
@@ -71,7 +72,10 @@ export default {
       if (pressureSetPoint !== "None")
         details.push(`under ${pressureSetPoint}`)
 
-      let duration = ""
+      // get duration
+      const formattedTime = outcomesUtil.formattedTime(reaction.outcomesList[0].reactionTime)
+      details.push(`for ${formattedTime}`)
+      
       return details
     }
   },
