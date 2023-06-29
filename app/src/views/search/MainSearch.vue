@@ -91,7 +91,6 @@ export default {
     },
   },
   mounted() {
-    console.log('schema',reaction_pb)
     // fetch initial query
     this.getSearchResults()
 

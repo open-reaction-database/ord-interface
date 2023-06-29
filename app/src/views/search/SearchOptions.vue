@@ -62,7 +62,7 @@ export default {
     },
     setDefaultValues() {
       const q = this.defaultQuery
-      console.log('q',q)
+      
       // reagent options
       if (q.component?.length) {
         if (Array.isArray(q.component))

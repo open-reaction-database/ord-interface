@@ -113,9 +113,6 @@ export default {
       })
     },
   },
-  mounted() {
-    // console.log("schema",reaction_pb)
-  }
 }
 </script>
 
