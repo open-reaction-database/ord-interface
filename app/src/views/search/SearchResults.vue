@@ -1,6 +1,7 @@
 <script>
 import EntityTable from '@/components/EntityTable'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ReactionCard from '@/components/ReactionCard'
 import conditionUtil from '@/utils/conditions'
 import outcomesUtil from '@/utils/outcomes'
 import reaction_pb from 'ord-schema'
@@ -13,7 +14,8 @@ export default {
   components: {
     EntityTable,
     LoadingSpinner,
-    CopyButton
+    CopyButton,
+    ReactionCard,
   },
   data() {
     return {
@@ -22,15 +24,6 @@ export default {
     }
   },
   methods: {
-    getReactionTables() {
-      this.formattedResults.forEach(result => {
-        fetch(`/api/render/${result.reaction_id}`)
-          .then(response => response.json())
-          .then(responseData => {
-            result.reactionTable = responseData
-          })
-      })
-    },
     downloadResults() {
       // create .pb download of search results
       const xhr = new XMLHttpRequest();
@@ -56,38 +49,8 @@ export default {
       const requestJson = this.formattedResults.map(result => {return {"Reaction ID": result.reaction_id}})
       xhr.send(JSON.stringify(requestJson));
     },
-    getYield(measurements) {
-      const yieldObj = measurements.find(m => m.type == 3) // ord-schema type 3 == "YIELD"
-      if (yieldObj.percentage) {
-        return `${yieldObj.percentage.value}%`
-      } else {
-        return ""
-      }
-    },
-    conditionsAndDuration(reaction) {
-      const details = []
-      // get temp
-      const tempSetPoint = conditionUtil.tempSetPoint(reaction.conditions.temperature.setpoint)
-      if (tempSetPoint !== "None")
-        details.push(`at ${tempSetPoint}`)
-
-      // get Pressure
-      const pressureSetPoint = conditionUtil.pressureSetPoint(reaction.conditions.pressure.setpoint)
-      if (pressureSetPoint !== "None")
-        details.push(`under ${pressureSetPoint}`)
-
-      // get duration
-      const formattedTime = outcomesUtil.formattedTime(reaction.outcomesList[0].reactionTime)
-      details.push(`for ${formattedTime}`)
-
-      return details
-    },
-    productIdentifier(identifier) {
-      const identifierTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType
-      const identifierType = Object.keys(identifierTypes).find(key => identifierTypes[key] == identifier.type)
-      return `${identifierType}: ${identifier.value}`
-    },
     updateSelectedReactions(event) {
+      console.log('event',event)
       if (event.target.checked) {
         this.selectedReactions.push(event.target.value)
       } else {
@@ -103,7 +66,7 @@ export default {
   },
   async mounted() {
     this.formattedResults = this.searchResults
-    this.getReactionTables()
+    // this.getReactionTables()
   },
 }
 </script>
@@ -122,47 +85,13 @@ export default {
         :disabled='!formattedResults.length'
         @click='downloadResults'
       ) Download Results
-    .reaction-container(
+    ReactionCard(
       v-for='row in entities'
+      :reaction='row'
+      :isSelectable='true'
+      :isSelected='selectedReactions.includes(row.reaction_id)'
+      @clickedSelect='updateSelectedReactions'
     )
-      .row(:class='selectedReactions.includes(row.reaction_id) ? "selected" : ""')
-        .select
-          input(
-            type="checkbox"
-            :id='"select_"+row.reaction_id'
-            :value='row.reaction_id'
-            :checked='selectedReactions.includes(row.reaction_id)'
-            @change='updateSelectedReactions($event)'
-          )
-          label(:for='"select_"+row.reaction_id') Select reaction
-        .reaction-table(
-          v-html='row.reactionTable'
-          v-if='row.reactionTable'
-        )
-        LoadingSpinner(v-else)
-        .info
-          .col.full
-            router-link(
-              :to='{ name: "reaction-view", params: {reactionId: row.reaction_id}}'
-            ) 
-              button View Full Details
-          .col
-            .yield Yield: {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
-            .conditions Conditions: {{conditionsAndDuration(row.data).join("; ")}}
-            .smile(v-if='row.data.outcomesList[0].productsList[0].identifiersList.length')
-              CopyButton(
-                :textToCopy='row.data.outcomesList[0].productsList[0].identifiersList[0].value'
-              )
-              .value {{productIdentifier(row.data.outcomesList[0].productsList[0].identifiersList[0])}}
-          .col
-            .creator Uploaded by {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
-            .date Uploaded on {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}
-            .doi DOI: {{row.data.provenance.doi}}
-            .publication 
-              a(
-                :href='row.data.provenance.publicationUrl'
-                target="_blank"
-              ) Publication URL
   transition(
     name='fade'
   )

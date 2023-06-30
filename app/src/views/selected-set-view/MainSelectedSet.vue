@@ -2,10 +2,12 @@
 import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
 import hexToUint from "@/utils/hexToUint"
+import ReactionCard from '@/components/ReactionCard'
 
 export default {
   components: {
-    LoadingSpinner
+    LoadingSpinner,
+    ReactionCard
   },
   data() {
     return {
@@ -55,7 +57,12 @@ export default {
 <template lang="pug">
 #selected-set-main
   .selected-set(v-if='!loading && reactions.length')
-    .view(v-for='reaction in reactions') {{reaction}}
+    ReactionCard(
+      v-for='reaction in reactions'
+      :reaction='reaction'
+      :isSelectable='false'
+      :isSelected='false'
+    )
   .no-results(v-else-if='!loading && !reactions?.length')
     .title There was an issue fetching your selected reactions.
   .loading(v-else)
