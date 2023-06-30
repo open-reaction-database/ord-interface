@@ -9,7 +9,6 @@ export default {
   },
   data() {
     return {
-      reactionIds: [],
       reactions: [],
       loading: true,
     }
@@ -30,11 +29,15 @@ export default {
           // if response is good, deserialize reaction and return object from protobuff
           let fetchedReactions = null
           if (xhr.response !== null) {
-            // const hexString = JSON.parse(xhr.response)[0].proto
-            // const bytes = hexToUint(hexString)
-            // fetchedReactions = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+            fetchedReactions = JSON.parse(xhr.response)
+            fetchedReactions.forEach(reaction => {
+              const hexString = reaction.proto
+              const bytes = hexToUint(hexString)
+              reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+            })
           }
           this.reactions = fetchedReactions
+          this.loading = false
         }
         xhr.send(JSON.stringify(this.reactionIds))
       } catch (e) {
@@ -51,9 +54,9 @@ export default {
 
 <template lang="pug">
 #selected-set-main
-  .selected-set
-    .view(v-for)
-  .no-results(v-else-if='!loading && !searchResults?.length')
+  .selected-set(v-if='!loading && reactions.length')
+    .view(v-for='reaction in reactions') {{reaction}}
+  .no-results(v-else-if='!loading && !reactions?.length')
     .title There was an issue fetching your selected reactions.
   .loading(v-else)
     LoadingSpinner

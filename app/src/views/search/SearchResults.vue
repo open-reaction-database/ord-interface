@@ -98,7 +98,7 @@ export default {
       }
     },
     goToViewSelected() {
-      
+      this.$router.push({ name: 'selected-set', query: {reaction_ids: this.selectedReactions}})
     }
   },
   async mounted() {

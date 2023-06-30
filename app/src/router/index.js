@@ -28,6 +28,11 @@ const routes = [
     component: () => import('../views/viewKetcher/MainKetcher.vue')
   },
   {
+    path: '/browse/set',
+    name: 'selected-set',
+    component: () => import('../views/selected-set-view/MainSelectedSet.vue')
+  },
+  {
     path: '/editor/datasets',
     name: 'contribute',
     component: () => import('../views/contribute/MainContribute.vue')
