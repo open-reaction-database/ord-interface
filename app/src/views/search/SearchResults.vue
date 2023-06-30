@@ -119,47 +119,46 @@ export default {
         :disabled='!formattedResults.length'
         @click='downloadResults'
       ) Download Results
-    template(
+    .reaction-container(
       v-for='row in entities'
     )
-      .reaction-container
-        .row(:class='selectedReactions.includes(row.reaction_id) ? "selected" : ""')
-          .select
-            input(
-              type="checkbox"
-              :id='"select_"+row.reaction_id'
-              :value='row.reaction_id'
-              @change='updateSelectedReactions($event)'
-            )
-            label(:for='"select_"+row.reaction_id') Select reaction
-          .reaction-table(
-            v-html='row.reactionTable'
-            v-if='row.reactionTable'
+      .row(:class='selectedReactions.includes(row.reaction_id) ? "selected" : ""')
+        .select
+          input(
+            type="checkbox"
+            :id='"select_"+row.reaction_id'
+            :value='row.reaction_id'
+            @change='updateSelectedReactions($event)'
           )
-          LoadingSpinner(v-else)
-          .info
-            .col.full
-              router-link(
-                :to='{ name: "reaction-view", params: {reactionId: row.reaction_id}}'
-              ) 
-                button View Full Details
-            .col
-              .yield Yield: {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
-              .conditions Conditions: {{conditionsAndDuration(row.data).join("; ")}}
-              .smile(v-if='row.data.outcomesList[0].productsList[0].identifiersList.length')
-                CopyButton(
-                  :textToCopy='row.data.outcomesList[0].productsList[0].identifiersList[0].value'
-                )
-                .value {{productIdentifier(row.data.outcomesList[0].productsList[0].identifiersList[0])}}
-            .col
-              .creator Uploaded by {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
-              .date Uploaded on {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}
-              .doi DOI: {{row.data.provenance.doi}}
-              .publication 
-                a(
-                  :href='row.data.provenance.publicationUrl'
-                  target="_blank"
-                ) Publication URL
+          label(:for='"select_"+row.reaction_id') Select reaction
+        .reaction-table(
+          v-html='row.reactionTable'
+          v-if='row.reactionTable'
+        )
+        LoadingSpinner(v-else)
+        .info
+          .col.full
+            router-link(
+              :to='{ name: "reaction-view", params: {reactionId: row.reaction_id}}'
+            ) 
+              button View Full Details
+          .col
+            .yield Yield: {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
+            .conditions Conditions: {{conditionsAndDuration(row.data).join("; ")}}
+            .smile(v-if='row.data.outcomesList[0].productsList[0].identifiersList.length')
+              CopyButton(
+                :textToCopy='row.data.outcomesList[0].productsList[0].identifiersList[0].value'
+              )
+              .value {{productIdentifier(row.data.outcomesList[0].productsList[0].identifiersList[0])}}
+          .col
+            .creator Uploaded by {{row.data.provenance.recordCreated.person.name}}, {{row.data.provenance.recordCreated.person.organization}}
+            .date Uploaded on {{new Date(row.data.provenance.recordCreated.time.value).toLocaleDateString()}}
+            .doi DOI: {{row.data.provenance.doi}}
+            .publication 
+              a(
+                :href='row.data.provenance.publicationUrl'
+                target="_blank"
+              ) Publication URL
 
 </template>
 
