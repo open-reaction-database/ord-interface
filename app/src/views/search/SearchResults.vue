@@ -128,6 +128,7 @@ export default {
             type="checkbox"
             :id='"select_"+row.reaction_id'
             :value='row.reaction_id'
+            :checked='selectedReactions.includes(row.reaction_id)'
             @change='updateSelectedReactions($event)'
           )
           label(:for='"select_"+row.reaction_id') Select reaction
@@ -159,11 +160,16 @@ export default {
                 :href='row.data.provenance.publicationUrl'
                 target="_blank"
               ) Publication URL
-
+  transition(
+    name='fade'
+  )
+    .view-selected-container(v-if='selectedReactions.length')
+      .view-selected-button(@click='goToViewSelected') View {{selectedReactions.length}} selected reactions
 </template>
 
 <style lang="sass" scoped>
 @import '@/styles/vars.sass'
+@import '@/styles/transition.sass'
 .search-results-main
   .action-button-holder
     margin: -2.5rem 0 1rem // bring button row inline with title without having to pass too much into EntityTable
@@ -212,6 +218,18 @@ export default {
             text-overflow: ellipsis
       &.selected
         border-color: $linkblue
+  .view-selected-container
+    position: fixed
+    bottom: 2rem
+    right: 7rem
+    .view-selected-button
+      padding: 0.5rem 1rem
+      color: white
+      background-color: $linkblue
+      border-radius: 0.25rem
+      cursor: pointer
+
   @media (max-width: 1000px)
     margin-top: 2.5rem
+
 </style>
