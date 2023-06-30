@@ -67,10 +67,10 @@ export default {
     .title There was an issue fetching your selected reactions.
   .loading(v-else)
     LoadingSpinner
-
 </template>
 
 <style lang="sass" scoped>
 @import '@/styles/vars.sass'
-
+#selected-set-main
+  padding: 2rem
 </style>

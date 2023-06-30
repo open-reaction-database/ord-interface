@@ -2,9 +2,6 @@
 import EntityTable from '@/components/EntityTable'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ReactionCard from '@/components/ReactionCard'
-import conditionUtil from '@/utils/conditions'
-import outcomesUtil from '@/utils/outcomes'
-import reaction_pb from 'ord-schema'
 import CopyButton from '@/components/CopyButton'
 
 export default {
@@ -50,7 +47,6 @@ export default {
       xhr.send(JSON.stringify(requestJson));
     },
     updateSelectedReactions(event) {
-      console.log('event',event)
       if (event.target.checked) {
         this.selectedReactions.push(event.target.value)
       } else {
@@ -61,12 +57,17 @@ export default {
       }
     },
     goToViewSelected() {
+      // store storedSet in vuex so we can retrieve it if user comes back from selected-set
+      this.$store.commit('setStoredSet', { query: window.location.search, reactions: this.selectedReactions})
       this.$router.push({ name: 'selected-set', query: {reaction_ids: this.selectedReactions}})
     }
   },
   async mounted() {
     this.formattedResults = this.searchResults
-    // this.getReactionTables()
+    // if query matches storedSet, set selectedReactions
+    if (window.location.search == this.$store.state.storedSet?.query) {
+      this.selectedReactions = this.$store.state.storedSet.reactions
+    }
   },
 }
 </script>
