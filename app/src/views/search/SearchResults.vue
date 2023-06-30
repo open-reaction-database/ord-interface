@@ -17,7 +17,8 @@ export default {
   },
   data() {
     return {
-      formattedResults: []
+      formattedResults: [],
+      selectedReactions: [],
     }
   },
   methods: {
@@ -58,7 +59,7 @@ export default {
     getYield(measurements) {
       const yieldObj = measurements.find(m => m.type == 3) // ord-schema type 3 == "YIELD"
       if (yieldObj.percentage) {
-        return `Yield: ${yieldObj.percentage.value}%`
+        return `${yieldObj.percentage.value}%`
       } else {
         return ""
       }
@@ -85,6 +86,16 @@ export default {
       const identifierTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType
       const identifierType = Object.keys(identifierTypes).find(key => identifierTypes[key] == identifier.type)
       return `${identifierType}: ${identifier.value}`
+    },
+    updateSelectedReactions(event) {
+      if (event.target.checked) {
+        this.selectedReactions.push(event.target.value)
+      } else {
+        let idx = this.selectedReactions.indexOf(event.target.value)
+        if (idx !== -1) {
+          this.selectedReactions.splice(idx, 1)
+        }
+      }
     }
   },
   async mounted() {
@@ -111,8 +122,16 @@ export default {
     template(
       v-for='row in entities'
     )
-      .reaction-link
-        .row
+      .reaction-container
+        .row(:class='selectedReactions.includes(row.reaction_id) ? "selected" : ""')
+          .select
+            input(
+              type="checkbox"
+              :id='"select_"+row.reaction_id'
+              :value='row.reaction_id'
+              @change='updateSelectedReactions($event)'
+            )
+            label(:for='"select_"+row.reaction_id') Select reaction
           .reaction-table(
             v-html='row.reactionTable'
             v-if='row.reactionTable'
@@ -125,8 +144,8 @@ export default {
               ) 
                 button View Full Details
             .col
-              .yield {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
-              .conditions {{conditionsAndDuration(row.data).join("; ")}}
+              .yield Yield: {{getYield(row.data.outcomesList[0].productsList[0].measurementsList)}}
+              .conditions Conditions: {{conditionsAndDuration(row.data).join("; ")}}
               .smile(v-if='row.data.outcomesList[0].productsList[0].identifiersList.length')
                 CopyButton(
                   :textToCopy='row.data.outcomesList[0].productsList[0].identifiersList[0].value'
@@ -152,16 +171,20 @@ export default {
     display: flex
     justify-content: flex-end
     button
-  .reaction-link
+  .reaction-container
     text-decoration: none
     .row
       background-color: white
       border-radius: 0.25rem
-      padding: 1rem
+      padding: 0.75rem
       margin-bottom: 1rem
       transition: 0.25s
+      border: 4px solid white
       &:hover
         box-shadow: 0 0 5px $darkgrey
+      .select
+        input, label
+          cursor: pointer
       .reaction-table
         color: black
         overflow-x: wrap
@@ -188,6 +211,8 @@ export default {
             white-space: nowrap
             overflow: hidden
             text-overflow: ellipsis
+      &.selected
+        border-color: $linkblue
   @media (max-width: 1000px)
     margin-top: 2.5rem
 </style>
