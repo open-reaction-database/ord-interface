@@ -96,6 +96,9 @@ export default {
           this.selectedReactions.splice(idx, 1)
         }
       }
+    },
+    goToViewSelected() {
+      
     }
   },
   async mounted() {
@@ -221,14 +224,13 @@ export default {
   .view-selected-container
     position: fixed
     bottom: 2rem
-    right: 7rem
+    right: 6.5rem
     .view-selected-button
       padding: 0.5rem 1rem
       color: white
       background-color: $linkblue
       border-radius: 0.25rem
       cursor: pointer
-
   @media (max-width: 1000px)
     margin-top: 2.5rem
 
