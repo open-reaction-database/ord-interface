@@ -4,12 +4,14 @@ import reaction_pb from "ord-schema"
 import hexToUint from "@/utils/hexToUint"
 import ReactionCard from '@/components/ReactionCard'
 import DownloadResults from '@/components/DownloadResults'
+import CopyButton from '@/components/CopyButton'
 
 export default {
   components: {
     LoadingSpinner,
     ReactionCard,
     DownloadResults,
+    CopyButton
   },
   data() {
     return {
@@ -21,6 +23,9 @@ export default {
   computed: {
     reactionIds() {
       return this.$route.query.reaction_ids || []
+    },
+    fullUrl() {
+      return window.location.href
     }
   },
   methods: {
@@ -62,6 +67,11 @@ export default {
   .header
     .title Reaction Set
     .action-button-holder
+      CopyButton(
+        :textToCopy='fullUrl'
+        icon='share'
+        buttonText='Shareable Link'
+      )
       button(
         :disabled='!reactionIds.length'
         @click='showDownloadResults=true'
@@ -98,4 +108,5 @@ export default {
     .action-button-holder
       display: flex
       align-items: end
+      column-gap: 0.5rem
 </style>
