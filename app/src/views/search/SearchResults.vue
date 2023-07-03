@@ -161,6 +161,13 @@ export default {
       background-color: $linkblue
       border-radius: 0.25rem
       cursor: pointer
+      box-shadow: 0 0 5px $darkgrey
+      animation: bounce 5s infinite ease-in-out
+      @keyframes bounce
+        0%, 20%
+          transform: translateY(0)
+        10%
+          transform: translateY(-10px)
   @media (max-width: 1000px)
     margin-top: 2.5rem
 
