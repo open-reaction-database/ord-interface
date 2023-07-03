@@ -25,7 +25,7 @@ export default {
     downloadResults () {
       // create .pb download of search results
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'api/download_results');
+      xhr.open('POST', '/api/download_results');
       xhr.responseType = "blob";
       xhr.onload = () => {
         if (xhr.status === 200) {

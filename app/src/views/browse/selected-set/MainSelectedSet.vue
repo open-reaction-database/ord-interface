@@ -3,16 +3,19 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
 import hexToUint from "@/utils/hexToUint"
 import ReactionCard from '@/components/ReactionCard'
+import DownloadResults from '@/components/DownloadResults'
 
 export default {
   components: {
     LoadingSpinner,
-    ReactionCard
+    ReactionCard,
+    DownloadResults,
   },
   data() {
     return {
       reactions: [],
       loading: true,
+      showDownloadResults: false,
     }
   },
   computed: {
@@ -56,6 +59,13 @@ export default {
 
 <template lang="pug">
 #selected-set-main
+  .header
+    .title Reaction Set
+    .action-button-holder
+      button(
+        :disabled='!reactionIds.length'
+        @click='showDownloadResults=true'
+      ) Download Reaction Set
   .selected-set(v-if='!loading && reactions.length')
     ReactionCard(
       v-for='reaction in reactions'
@@ -67,6 +77,11 @@ export default {
     .title There was an issue fetching your selected reactions.
   .loading(v-else)
     LoadingSpinner
+  DownloadResults(
+    :reactionIds='reactionIds'
+    :showDownloadResults='showDownloadResults'
+    @hideDownloadResults='showDownloadResults=false'
+  )
 </template>
 
 <style lang="sass" scoped>
