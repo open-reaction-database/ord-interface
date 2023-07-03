@@ -67,8 +67,8 @@ export default {
           label(for='file-type-select') File type:
           select#file-type-select(v-model='fileType')
             option(value="pb.gz") pb.gz
-            option(value="csv") csv (coming soon)
-            option(value="pbtxt") pbtxt (coming soon)
+            option(value="csv" disabled) csv (coming soon)
+            option(value="pbtxt" disabled) pbtxt (coming soon)
         .download
           button(@click='downloadResults') Download {{fileType}} file
 </template>

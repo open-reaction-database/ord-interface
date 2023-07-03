@@ -3,6 +3,14 @@ export default {
   name: 'CopyButton',
   props: {
     textToCopy: String,
+    icon: {
+      type: String,
+      default: "content_copy"
+    },
+    buttonText: {
+      type: String,
+      default: ""
+    }
   },
   data () {
     return {
@@ -37,7 +45,8 @@ export default {
 <template lang="pug">
 .copy-button-main
   button(@click='copy')
-    i.material-icons content_copy
+    i.material-icons {{icon}}
+    .copy {{buttonText}}
   transition(
     name='fade'
   )
