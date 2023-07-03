@@ -144,6 +144,7 @@ export default {
       padding: 1rem
       box-sizing: border-box
       border-radius: 0.25rem
+      overflow-y: auto
   .no-results
     margin-top: 1rem
     text-align: center

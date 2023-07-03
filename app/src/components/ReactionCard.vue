@@ -108,7 +108,7 @@ export default {
           CopyButton(
             :textToCopy='reaction.data.outcomesList[0].productsList[0].identifiersList[0].value'
           )
-          .value {{productIdentifier(reaction.data.outcomesList[0].productsList[0].identifiersList[0])}}
+          .value Product {{productIdentifier(reaction.data.outcomesList[0].productsList[0].identifiersList[0])}}
       .col
         .creator Uploaded by {{reaction.data.provenance.recordCreated.person.name}}, {{reaction.data.provenance.recordCreated.person.organization}}
         .date Uploaded on {{new Date(reaction.data.provenance.recordCreated.time.value).toLocaleDateString()}}
@@ -118,6 +118,7 @@ export default {
             :href='reaction.data.provenance.publicationUrl'
             target="_blank"
           ) Publication URL
+        .dataset Dataset: {{reaction.dataset_id}}
 </template>
 
 <style lang="sass" scoped>

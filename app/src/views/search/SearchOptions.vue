@@ -230,6 +230,7 @@ ModalKetcher(
 @import '@/styles/vars'
 @import '@/styles/transition'
 .search-options
+  max-height: 90vh
   .options-title
     font-size: 1.5rem
     font-weight: 700
