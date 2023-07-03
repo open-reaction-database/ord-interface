@@ -3,6 +3,7 @@ import EntityTable from '@/components/EntityTable'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ReactionCard from '@/components/ReactionCard'
 import CopyButton from '@/components/CopyButton'
+import DownloadResults from '@/components/DownloadResults'
 
 export default {
   props: {
@@ -13,39 +14,16 @@ export default {
     LoadingSpinner,
     CopyButton,
     ReactionCard,
+    DownloadResults,
   },
   data() {
     return {
       formattedResults: [],
       selectedReactions: [],
+      showDownloadResults: false,
     }
   },
   methods: {
-    downloadResults() {
-      // create .pb download of search results
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'api/download_results');
-      xhr.responseType = "blob";
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const url = URL.createObjectURL(xhr.response);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = "ord_search_results.pb.gz"
-          link.click();
-          // https://stackoverflow.com/a/56547307.
-          setTimeout(() => {
-            URL.revokeObjectURL(url);
-            link.remove();
-          }, 100);
-        }
-      };
-      xhr.setRequestHeader('Content-Type', 'application/json');
-
-      // format request json to expected key/value in api
-      const requestJson = this.formattedResults.map(result => {return {"Reaction ID": result.reaction_id}})
-      xhr.send(JSON.stringify(requestJson));
-    },
     updateSelectedReactions(event) {
       if (event.target.checked) {
         this.selectedReactions.push(event.target.value)
@@ -84,8 +62,8 @@ export default {
     .action-button-holder
       button(
         :disabled='!formattedResults.length'
-        @click='downloadResults'
-      ) Download Results
+        @click='showDownloadResults=true'
+      ) Download All Search Results
     ReactionCard(
       v-for='row in entities'
       :reaction='row'
@@ -98,6 +76,11 @@ export default {
   )
     .view-selected-container(v-if='selectedReactions.length')
       .view-selected-button(@click='goToViewSelected') View {{selectedReactions.length}} selected reactions
+  DownloadResults(
+    :reactionIds='formattedResults.map(result => result.reaction_id)'
+    :showDownloadResults='showDownloadResults'
+    @hideDownloadResults='showDownloadResults=false'
+  )
 </template>
 
 <style lang="sass" scoped>

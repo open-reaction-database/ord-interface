@@ -10,9 +10,15 @@ export default {
   components: {
     "floating-modal": FloatingModal
   },
+  watch: {
+    fileType(val) {
+      // store selected file type in vue session
+      this.$store.commit('setDownloadFileType', val)
+    }
+  },
   data () {
     return {
-
+      fileType: "pb.gz"
     }
   },
   methods: {
@@ -41,6 +47,9 @@ export default {
       const requestJson = this.reactionIds.map(reactionId => {return {"Reaction ID": reactionId}})
       xhr.send(JSON.stringify(requestJson));
     }
+  },
+  mounted() {
+    this.fileType = this.$store.state.downloadFileType || "pb.gz"
   }
 }
 </script>
@@ -50,13 +59,37 @@ export default {
   floating-modal(
       v-if='showDownloadResults'
       title="DownloadResults"
-      @closeModal='showDownloadResults=false'
+      @closeModal='$emit("hideDownloadResults")'
     )
-      .options Hello World
+      .download-body
+        .title Select your desired file type and then click download.
+        .options 
+          label(for='file-type-select') File type:
+          select#file-type-select(v-model='fileType')
+            option(value="pb.gz") pb.gz
+            option(value="csv") csv (coming soon)
+            option(value="pbtxt") pbtxt (coming soon)
+        .download
+          button(@click='downloadResults') Download {{fileType}} file
 </template>
 
 <style lang="sass" scoped>
 @import '@/styles/vars.sass'
 @import '@/styles/transition.sass'
-.download-results-main
+.download-body
+  height: 100%
+  display: grid
+  grid-template-rows: 50% auto 1fr
+  *
+    margin: auto
+    width: fit-content
+  .title
+    font-size: 1.5rem
+  .options
+    label
+      margin-right: 0.5rem
+    select
+      min-width: 7rem
+  .download
+    margin-top: 2rem
 </style>

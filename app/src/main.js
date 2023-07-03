@@ -6,21 +6,19 @@ import { createStore } from 'vuex'
 const store = createStore({
   state() {
     return {
-      storedSet: null
+      storedSet: null,
+      downloadFileType: null,
     }
   },
   mutations: {
     setStoredSet(state, data) {
       state.storedSet = data
+    },
+    setDownloadFileType(state, data) {
+      state.downloadFileType = data
     }
   },
   actions: {
-    storeSet({ commit }, data) {
-      commit('setStoredSet', data)
-    }, 
-    retrieveSet({ state }) {
-      return state.storedSet
-    }
   }
 })
 
