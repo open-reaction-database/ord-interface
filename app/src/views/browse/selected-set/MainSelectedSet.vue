@@ -88,4 +88,14 @@ export default {
 @import '@/styles/vars.sass'
 #selected-set-main
   padding: 2rem
+  .header
+    display: grid
+    grid-template-columns: 1fr auto
+    margin-bottom: 1rem
+    .title
+      font-size: 2rem
+      font-weight: 700
+    .action-button-holder
+      display: flex
+      align-items: end
 </style>
