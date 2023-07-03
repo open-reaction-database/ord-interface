@@ -46,7 +46,7 @@ export default {
 .copy-button-main
   button(@click='copy')
     i.material-icons {{icon}}
-    .copy {{buttonText}}
+    .copy(v-if='buttonText') {{buttonText}}
   transition(
     name='fade'
   )
@@ -61,7 +61,9 @@ export default {
 @import '@/styles/transition.sass'
 .copy-button-main
   button
-    padding: 0.25rem 0.5rem 0.167rem
+    padding: 0.25rem 0.5rem 
+    display: flex
+    column-gap: 0.25rem
     i
       font-size: 1rem
   #copy-notification

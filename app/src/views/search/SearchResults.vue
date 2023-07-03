@@ -23,6 +23,11 @@ export default {
       showDownloadResults: false,
     }
   },
+  computed: {
+    fullUrl() {
+      return window.location.href
+    }
+  },
   methods: {
     updateSelectedReactions(event) {
       if (event.target.checked) {
@@ -60,6 +65,11 @@ export default {
     :displaySearch='false'
   ) 
     .action-button-holder
+      CopyButton(
+        :textToCopy='fullUrl'
+        icon='share'
+        buttonText='Shareable Link'
+      )
       button(
         :disabled='!formattedResults.length'
         @click='showDownloadResults=true'
@@ -91,6 +101,7 @@ export default {
     margin: -2.5rem 0 1rem // bring button row inline with title without having to pass too much into EntityTable
     display: flex
     justify-content: flex-end
+    column-gap: 0.5rem
     button
   .reaction-container
     text-decoration: none
