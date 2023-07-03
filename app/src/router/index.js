@@ -13,6 +13,11 @@ const routes = [
     component: () => import('../views/browse/MainBrowse.vue')
   },
   {
+    path: '/browse/set',
+    name: 'selected-set',
+    component: () => import('../views/browse/selected-set/MainSelectedSet.vue')
+  },
+  {
     path: '/search',
     name: 'search',
     component: () => import('../views/search/MainSearch.vue')
@@ -26,11 +31,6 @@ const routes = [
     path: '/ketcher',
     name: 'ketcher',
     component: () => import('../views/viewKetcher/MainKetcher.vue')
-  },
-  {
-    path: '/browse/set',
-    name: 'selected-set',
-    component: () => import('../views/selected-set-view/MainSelectedSet.vue')
   },
   {
     path: '/editor/datasets',
