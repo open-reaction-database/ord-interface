@@ -29,8 +29,8 @@ import uuid
 
 import flask
 import github
-import google.protobuf.message
-from google.protobuf import text_format
+import google.protobuf.message  # pytype: disable=import-error
+from google.protobuf import text_format  # pytype: disable=import-error
 import psycopg2
 import psycopg2.sql
 import requests
