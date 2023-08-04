@@ -34,7 +34,12 @@ app.register_blueprint(serve.bp)
 
 @app.route("/")
 def show_root():
-    return flask.redirect(flask.url_for("client.show_browse"))
+    return flask.redirect("/about")
+
+
+@app.route("/about")
+def show_about():
+    return flask.render_template("about.html")
 
 
 @app.route("/browse")
