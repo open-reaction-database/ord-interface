@@ -22,7 +22,7 @@ from ord_interface.editor.py import serve
 from ord_interface.visualization import filters
 
 # Set the ketcher distribution as the static folder.
-app = flask.Flask(__name__, static_folder="standalone")
+app = flask.Flask(__name__, static_folder="standalone", template_folder=".")
 # https://flask.palletsprojects.com/en/2.1.x/security/#security-headers
 # TODO(skearnes): Figure out how to use this.
 # flask_talisman.Talisman(app)
@@ -34,7 +34,12 @@ app.register_blueprint(serve.bp)
 
 @app.route("/")
 def show_root():
-    return flask.redirect(flask.url_for("client.show_browse"))
+    return flask.redirect("/about")
+
+
+@app.route("/about")
+def show_about():
+    return flask.render_template("about.html")
 
 
 @app.route("/browse")
