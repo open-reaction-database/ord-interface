@@ -34,10 +34,10 @@ cd ord-interface
 ```
 ### 2. Set up the test database
 ```bash
-cd ./ord_interface
 # activate the virtual env of your choice, ex. venv, conda, etc.
 # install requirements and run setup script
 pip install -e .
+cd ./ord_interface
 ./build_test_database.sh 
 ```
 ### 3. Set up and run the API via Docker
