@@ -34,6 +34,7 @@ export default {
       showKetcherModal: false,
       ketcherModalSmile: 0,
       ketcherModalSet: "reactants",
+      matchModes: ["exact", "similar", "substructure"]
     }
   },
   computed: {
@@ -118,12 +119,12 @@ export default {
       v-if='showReagentOptions'
     )
       .section
-        .match-mode.options
-          .field
-            select(v-model='reagentOptions.matchMode')
-              option(value='exact') exact
-              option(value='similar') similar
-              option(value='substructure') substructure
+        .tabs
+          .tab.capitalize(
+            v-for='mode in matchModes'
+            @click='reagentOptions.matchMode = mode'
+            :class='reagentOptions.matchMode === mode ? "selected" : ""'
+          ) {{mode}}
       .section
         .subtitle General Options
         .general.options
@@ -250,6 +251,7 @@ ModalKetcher(
 <style lang="sass" scoped>
 @import '@/styles/vars'
 @import '@/styles/transition'
+@import '@/styles/tabs'
 .search-options
   max-height: 90vh
   .options-title
