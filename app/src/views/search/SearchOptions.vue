@@ -7,13 +7,16 @@ export default {
     ModalKetcher,
     SearchItemList
   },
+  emits: ["searchOptions"],
   data() {
     return {
       showReagentOptions: false,
       showReactionOptions: false,
       showDatasetOptions: false,
       reagentOptions: {
-        reagents: [],
+        reactants: [],
+        products: [],
+        matchMode: "exact",
         useStereochemistry: false,
         similarityThreshold: 0.5,
       },
@@ -30,6 +33,7 @@ export default {
       },
       showKetcherModal: false,
       ketcherModalSmile: 0,
+      ketcherModalSet: "reactants",
     }
   },
   computed: {
@@ -47,8 +51,9 @@ export default {
     }
   },
   methods: {
-    openKetcherModal(idx) {
+    openKetcherModal(componentSet, idx) {
       this.ketcherModalSmile = idx
+      this.ketcherModalSet = componentSet
       this.showKetcherModal = true
     },
     emitSearchOptions() {
@@ -91,7 +96,7 @@ export default {
     },
     addCompToOptions (comp) {
       const compArray = comp.split(";")
-      this.reagentOptions.reagents.push({smileSmart: compArray[0].replaceAll("%3D","="), source: compArray[1], matchMode: compArray[2]})
+      this.reagentOptions.reactants.push({smileSmart: compArray[0].replaceAll("%3D","="), source: compArray[1], matchMode: compArray[2]})
     }
   },
   mounted() {
@@ -106,68 +111,84 @@ export default {
     @click='showReagentOptions = !showReagentOptions'
     :class='showReagentOptions ? "" : "closed"'
   ) 
-    span Reagents
+    span Components
     i.material-icons expand_less
   transition(name="expand")
     #searchByReagent.options-container(
       v-if='showReagentOptions'
     )
       .section
-        .subtitle Components
-        .reagent.options
-          .spacer
-          .label SMILES/SMARTS
-          .label Source
-          .label Match Mode
-          .spacer
-          template(v-for='(reagent, idx) in reagentOptions.reagents')
-            .draw
-              button(@click='openKetcherModal(idx)')
-                i.material-icons draw
-            .field.long 
-              input(
-                type='text'
-                v-model='reagent.smileSmart'
-              )
-            .field
-              select(v-model='reagent.source')
-                option(value='input') input
-                option(value='output') output
-            .field
-              select(v-model='reagent.matchMode')
-                option(value='exact') exact
-                option(value='similar') similar
-                option(value='substructure') substructure
-                option(value='smarts') smarts
-            .delete
-              button(@click='reagentOptions.reagents.splice(idx,1)')
-                i.material-icons delete
-          .copy(v-if='!reagentOptions.reagents.length') No components
-          #add-component
-            button(
-              type='button' 
-              @click='this.reagentOptions.reagents.push({smileSmart: "", source: "input", matchMode: "exact"})'
-            )
-              i.material-icons add
-              |  Add Component
+        .match-mode.options
+          .field
+            select(v-model='reagentOptions.matchMode')
+              option(value='exact') exact
+              option(value='similar') similar
+              option(value='substructure') substructure
       .section
         .subtitle General Options
         .general.options
           label(for='stereo') Use Stereochemistry
-          input#stereo(s
+          input#stereo(
             type='checkbox'
             v-model='reagentOptions.useStereochemistry'
           )
-          label(for='similarity') Similarity Threshold
-          .slider-input
-            .value {{simThresholdDisplay}}
-            input#similarity(
-              type='range'
-              min="0.1"
-              max="1.0"
-              step="0.01"
-              v-model='reagentOptions.similarityThreshold'
+          template(v-if='reagentOptions.matchMode === "similar"')
+            label(for='similarity') Similarity Threshold
+            .slider-input
+              .value {{simThresholdDisplay}}
+              input#similarity(
+                type='range'
+                min="0.1"
+                max="1.0"
+                step="0.01"
+                v-model='reagentOptions.similarityThreshold'
+              )
+      .section
+        .subtitle Reactants & Reagents
+        .reagent.options
+          template(v-for='(reactant, idx) in reagentOptions.reactants')
+            .draw
+              button(@click='openKetcherModal("reactants", idx)')
+                i.material-icons draw
+            .field.long 
+              input(
+                type='text'
+                v-model='reactant.smileSmart'
+              )
+            .delete
+              button(@click='reagentOptions.reactants.splice(idx,1)')
+                i.material-icons delete
+          .copy(v-if='!reagentOptions.reactants.length') No components
+          #add-component
+            button(
+              type='button' 
+              @click='this.reagentOptions.reactants.push({smileSmart: "", source: "input"})'
             )
+              i.material-icons add
+              |  Add Component
+      .section
+        .subtitle Products
+        .reagent.options
+          template(v-for='(product, idx) in reagentOptions.products')
+            .draw
+              button(@click='openKetcherModal("products", idx)')
+                i.material-icons draw
+            .field.long 
+              input(
+                type='text'
+                v-model='product.smileSmart'
+              )
+            .delete
+              button(@click='reagentOptions.products.splice(idx,1)')
+                i.material-icons delete
+          .copy(v-if='!reagentOptions.products.length') No components
+          #add-component
+            button(
+              type='button' 
+              @click='this.reagentOptions.products.push({smileSmart: "", source: "input"})'
+            )
+              i.material-icons add
+              |  Add Component
   .options-title(
     @click='showReactionOptions = !showReactionOptions'
     :class='showReactionOptions ? "" : "closed"'
@@ -220,8 +241,8 @@ export default {
         b Search
 ModalKetcher(
   v-if='showKetcherModal'
-  :smiles='reagentOptions.reagents[ketcherModalSmile].smileSmart'
-  @updateSmiles='(newSmiles) => reagentOptions.reagents[ketcherModalSmile].smileSmart = newSmiles'
+  :smiles='reagentOptions[ketcherModalSet][ketcherModalSmile].smileSmart'
+  @updateSmiles='(newSmiles) => reagentOptions[ketcherModalSet][ketcherModalSmile].smileSmart = newSmiles'
   @closeModal='showKetcherModal = false'
 )
 </template>
@@ -289,7 +310,7 @@ ModalKetcher(
   #searchByReagent
     .reagent.options
       display: grid
-      grid-template-columns: repeat(4, auto) 1fr
+      grid-template-columns: auto 1fr auto
       column-gap: 1rem
       row-gap: 0.5rem
       align-items: center
@@ -297,6 +318,10 @@ ModalKetcher(
         font-size: 1.1rem
       #add-component, .copy
         grid-column: 1 / 3
+      .field.long
+        min-width: 250px
+        input
+          width: 95%
     .general.options
       display: grid
       grid-template-columns: auto 1fr
