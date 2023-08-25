@@ -58,8 +58,15 @@ export default {
       this.showKetcherModal = true
     },
     emitSearchOptions() {
+      const allComponents = [...this.reagentOptions.reactants, ...this.reagentOptions.products]
+                              .map(component => ({...component, matchMode: this.reagentOptions.matchMode}))
+
       const searchOptions = {
-        reagent: this.reagentOptions,
+        reagent: {
+          reagents: allComponents,
+          useStereochemistry: this.reagentOptions.useStereochemistry,
+          similarityThreshold: this.reagentOptions.similarityThreshold
+        },
         reaction: this.reactionOptions,
         dataset: this.datasetOptions,
         general: this.searchParams
@@ -97,7 +104,9 @@ export default {
     },
     addCompToOptions (comp) {
       const compArray = comp.split(";")
-      this.reagentOptions.reactants.push({smileSmart: compArray[0].replaceAll("%3D","="), source: compArray[1], matchMode: compArray[2]})
+      const compType = compArray[1] == "input" ? "reactants" : "products"
+      this.reagentOptions.matchMode = compArray[2]
+      this.reagentOptions[compType].push({smileSmart: compArray[0].replaceAll("%3D","="), source: compArray[1], matchMode: compArray[2]})
     }
   },
   mounted() {
@@ -119,6 +128,7 @@ export default {
       v-if='showReagentOptions'
     )
       .section
+      .subtitle 
         .tabs
           .tab.capitalize(
             v-for='mode in matchModes'
@@ -186,7 +196,7 @@ export default {
           #add-component
             button(
               type='button' 
-              @click='this.reagentOptions.products.push({smileSmart: "", source: "input"})'
+              @click='this.reagentOptions.products.push({smileSmart: "", source: "output"})'
             )
               i.material-icons add
               |  Add Component
