@@ -23,6 +23,8 @@ export default {
       reactionOptions: {
         reactionIds: [],
         reactionSmarts: [],
+        min_yield: 0,
+        min_conversion: 0,
       },
       datasetOptions: {
         datasetIds: [],
@@ -218,6 +220,26 @@ export default {
         title='Reaction SMARTS'
         :itemList.sync='reactionOptions.reactionSmarts'
       )
+      .slider-input
+        label(for='min-yield') Minimum Yield
+        .value {{reactionOptions.min_yield}}%
+        input#min-yield(
+          type='range'
+          min="0"
+          max="100"
+          step="1"
+          v-model='reactionOptions.min_yield'
+        )
+      .slider-input
+        label(for='min-conversion') Minimum Conversion
+        .value {{reactionOptions.min_conversion}}%
+        input#min-conversion(
+          type='range'
+          min="0"
+          max="100"
+          step="1"
+          v-model='reactionOptions.min_conversion'
+        )
   .options-title(
     @click='showDatasetOptions = !showDatasetOptions'
     :class='showDatasetOptions ? "" : "closed"'
@@ -348,4 +370,12 @@ ModalKetcher(
         #similarity
           // width: 8rem
           max-width: 8rem
+  #searchByReaction
+    .slider-input
+      display: grid
+      grid-template-columns: 10rem 2.5rem 1fr
+      column-gap: 0.5rem
+      .value
+        text-align: right
+
 </style>
