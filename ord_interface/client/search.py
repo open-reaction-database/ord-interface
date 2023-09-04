@@ -40,6 +40,7 @@ be URL-encoded.
 import dataclasses
 import gzip
 import io
+import json
 import os
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -73,6 +74,30 @@ def show_browse():
     return flask.render_template("browse.html", datasets=fetch_datasets())
 
 
+def _run_query(commands: list[query.ReactionQueryBase], limit: int | None) -> list[query.Result]:
+    """Runs a query and returns the matched reactions."""
+    if len(commands) == 0:
+        results = []
+    elif len(commands) == 1:
+        results = connect().run_query(commands[0], limit=limit)
+    else:
+        # Perform each query without limits and take the intersection of matched reactions.
+        connection = connect()
+        reactions = {}
+        intersection = None
+        for command in commands:
+            this_results = {result.reaction_id: result for result in connection.run_query(command)}
+            reactions |= this_results
+            if intersection is None:
+                intersection = set(this_results.keys())
+            else:
+                intersection &= this_results.keys()
+        results = [reactions[reaction_id] for reaction_id in intersection]
+        if limit:
+            results = results[:limit]
+    return results
+
+
 @bp.route("/search")
 def show_search():
     """Shows the search interface.
@@ -80,12 +105,14 @@ def show_search():
     Creates a query to show a set of randomly selected reactions so the
     page won't be empty.
     """
-    command, limit = build_query()
-    if command is None:
-        command = query.RandomSampleQuery(100)
-    query_json = command.json()
+    commands, limit = build_query()
+    if len(commands) == 0:
+        commands = [query.RandomSampleQuery(100)]
+    query_args = {}
+    for command in commands:
+        query_args |= json.loads(command.json())
     try:
-        results = connect().run_query(command, limit=limit, return_ids=True)
+        results = _run_query(commands, limit)
         error = None
     except query.QueryException as exception:
         results = None
@@ -93,7 +120,7 @@ def show_search():
     if results is not None and not results:
         results = None
         error = "query did not match any reactions"
-    return flask.render_template("search.html", results=results, error=error, query=query_json)
+    return flask.render_template("search.html", results=results, error=error, query=json.dumps(query_args))
 
 
 @bp.route("/id/<reaction_id>")
@@ -138,8 +165,8 @@ def connect():
     )
 
 
-def get_results(results: list[query.Result]) -> list[dict]:
-    """Reads results from a query."""
+def prep_results_for_json(results: list[query.Result]) -> list[dict]:
+    """Reads results from a query and preps for JSON encoding."""
     response = []
     for result in results:
         result = dataclasses.asdict(result)
@@ -155,7 +182,7 @@ def fetch_reactions():
     command = query.ReactionIdQuery(reaction_ids)
     try:
         results = connect().run_query(command)
-        return flask.jsonify(get_results(results))
+        return flask.jsonify(prep_results_for_json(results))
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -191,25 +218,7 @@ def run_query():
     if len(commands) == 0:
         return flask.abort(flask.make_response("no query defined", 400))
     try:
-        if len(commands) == 1:
-            results = connect().run_query(commands[0], limit=limit)
-            results = get_results(results)
-        else:
-            # Perform each query without limits and take the intersection of matched reactions.
-            connection = connect()
-            reactions = {}
-            intersection = None
-            for command in commands:
-                this_results = {result["reaction_id"]: result for result in get_results(connection.run_query(command))}
-                reactions |= this_results
-                if intersection is None:
-                    intersection = set(this_results.keys())
-                else:
-                    intersection &= this_results.keys()
-            results = [reactions[reaction_id] for reaction_id in intersection]
-            if limit:
-                results = results[:limit]
-        return flask.jsonify(results)
+        return flask.jsonify(prep_results_for_json(_run_query(commands, limit)))
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
