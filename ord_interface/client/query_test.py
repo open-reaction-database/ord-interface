@@ -57,6 +57,18 @@ def test_reaction_smarts_query(connection):
     assert len(results) == 10
 
 
+def test_reaction_conversion_query(connection):
+    command = query.ReactionConversionQuery(min_conversion=50, max_conversion=90)
+    results = connection.run_query(command, limit=10, return_ids=True)
+    assert len(results) == 10
+
+
+def test_reaction_yield_query(connection):
+    command = query.ReactionYieldQuery(min_yield=50, max_yield=90)
+    results = connection.run_query(command, limit=10, return_ids=True)
+    assert len(results) == 10
+
+
 def test_doi_query(connection):
     dois = ["10.1126/science.1255525"]
     command = query.DoiQuery(dois)

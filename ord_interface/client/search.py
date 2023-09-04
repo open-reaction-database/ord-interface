@@ -138,14 +138,14 @@ def connect():
     )
 
 
-def make_response(results: list[query.Result]) -> flask.Response:
-    """Builds a JSON response for matched reactions."""
+def get_results(results: list[query.Result]) -> list[dict]:
+    """Reads results from a query."""
     response = []
     for result in results:
         result = dataclasses.asdict(result)
         result["proto"] = result["proto"].hex()  # Convert to hex for JSON.
         response.append(result)
-    return flask.jsonify(response)
+    return response
 
 
 @bp.route("/api/fetch_reactions", methods=["POST"])
@@ -155,7 +155,7 @@ def fetch_reactions():
     command = query.ReactionIdQuery(reaction_ids)
     try:
         results = connect().run_query(command)
-        return make_response(results)
+        return flask.jsonify(get_results(results))
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
@@ -187,26 +187,47 @@ def run_query():
     Returns:
         A serialized Dataset proto containing the matched reactions.
     """
-    command, limit = build_query()
-    if command is None:
+    commands, limit = build_query()
+    if len(commands) == 0:
         return flask.abort(flask.make_response("no query defined", 400))
     try:
-        results = connect().run_query(command, limit=limit)
-        return make_response(results)
+        if len(commands) == 1:
+            results = connect().run_query(commands[0], limit=limit)
+            results = get_results(results)
+        else:
+            # Perform each query without limits and take the intersection of matched reactions.
+            connection = connect()
+            reactions = {}
+            intersection = None
+            for command in commands:
+                this_results = {result["reaction_id"]: result for result in get_results(connection.run_query(command))}
+                reactions |= this_results
+                if intersection is None:
+                    intersection = set(this_results.keys())
+                else:
+                    intersection &= this_results.keys()
+            results = [reactions[reaction_id] for reaction_id in intersection]
+            if limit:
+                results = results[:limit]
+        return flask.jsonify(results)
     except query.QueryException as error:
         return flask.abort(flask.make_response(str(error), 400))
 
 
-def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
-    """Builds a query from GET parameters.
+def build_query() -> Tuple[List[query.ReactionQueryBase], Optional[int]]:
+    """Builds queries from GET parameters.
 
     Returns:
-        query: ReactionQueryBase subclass instance.
-        limit: Maximum number of results to return.
+        queries: List of ReactionQueryBase subclass instances.
+        limit: Maximum number of results to return, or None.
     """
     dataset_ids = flask.request.args.get("dataset_ids")
     reaction_ids = flask.request.args.get("reaction_ids")
     reaction_smarts = flask.request.args.get("reaction_smarts")
+    min_conversion = flask.request.args.get("min_conversion")
+    max_conversion = flask.request.args.get("max_conversion")
+    min_yield = flask.request.args.get("min_yield")
+    max_yield = flask.request.args.get("max_yield")
     dois = flask.request.args.get("dois")
     components = flask.request.args.getlist("component")
     use_stereochemistry = flask.request.args.get("use_stereochemistry")
@@ -216,15 +237,20 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
         limit = MAX_RESULTS
     else:
         limit = min(int(limit), MAX_RESULTS)
+    queries = []
     if dataset_ids is not None:
-        command = query.DatasetIdQuery(dataset_ids.split(","))
-    elif reaction_ids is not None:
-        command = query.ReactionIdQuery(reaction_ids.split(","))
-    elif reaction_smarts is not None:
-        command = query.ReactionSmartsQuery(reaction_smarts)
-    elif dois is not None:
-        command = query.DoiQuery(dois.split(","))
-    elif components:
+        queries.append(query.DatasetIdQuery(dataset_ids.split(",")))
+    if reaction_ids is not None:
+        queries.append(query.ReactionIdQuery(reaction_ids.split(",")))
+    if reaction_smarts is not None:
+        queries.append(query.ReactionSmartsQuery(reaction_smarts))
+    if min_conversion is not None and max_conversion is not None:
+        queries.append(query.ReactionConversionQuery(min_conversion, max_conversion))
+    if min_yield is not None and max_yield is not None:
+        queries.append(query.ReactionYieldQuery(min_yield, max_yield))
+    if dois is not None:
+        queries.append(query.DoiQuery(dois.split(",")))
+    if components:
         predicates = []
         for component in components:
             pattern, target_name, mode_name = component.split(";")
@@ -236,10 +262,8 @@ def build_query() -> Tuple[Optional[query.ReactionQueryBase], Optional[int]]:
             kwargs["do_chiral_sss"] = use_stereochemistry
         if similarity is not None:
             kwargs["tanimoto_threshold"] = float(similarity)
-        command = query.ReactionComponentQuery(predicates, **kwargs)
-    else:
-        command = None
-    return command, limit
+        queries.append(query.ReactionComponentQuery(predicates, **kwargs))
+    return queries, limit
 
 
 @bp.route("/ketcher/molfile", methods=["POST"])
