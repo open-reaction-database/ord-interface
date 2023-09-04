@@ -358,7 +358,6 @@ class ReactionConversionQuery(ReactionQueryBase):
             QueryException if the query is not valid.
         """
         # NOTE(skearnes): Reported values may be outside of [0, 100].
-        pass
 
     def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         query = """
@@ -369,7 +368,7 @@ class ReactionConversionQuery(ReactionQueryBase):
             JOIN percentage on percentage.reaction_outcome_id = reaction_outcome.id
             WHERE percentage.value >= %s
               AND percentage.value <= %s
-            """
+        """
         args = [self._min_conversion, self._max_conversion]
         if limit:
             query += "LIMIT %s"
@@ -403,7 +402,6 @@ class ReactionYieldQuery(ReactionQueryBase):
             QueryException if the query is not valid.
         """
         # NOTE(skearnes): Reported values may be outside of [0, 100].
-        pass
 
     def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         query = """
@@ -417,7 +415,7 @@ class ReactionYieldQuery(ReactionQueryBase):
             WHERE product_measurement.type = 'YIELD'
               AND percentage.value >= %s
               AND percentage.value <= %s
-            """
+        """
         args = [self._min_yield, self._max_yield]
         if limit:
             query += "LIMIT %s"
