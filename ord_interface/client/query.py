@@ -334,6 +334,97 @@ class ReactionSmartsQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
+class ReactionConversionQuery(ReactionQueryBase):
+    """Looks up reactions by conversion."""
+
+    def __init__(self, min_conversion: float, max_conversion: float) -> None:
+        """Initializes the query.
+
+        Args:
+            min_conversion: Minimum conversion, as a percentage.
+            max_conversion: Maximum conversion, as a percentage.
+        """
+        self._min_conversion = min_conversion
+        self._max_conversion = max_conversion
+
+    def json(self) -> str:
+        """Returns a JSON representation of the query."""
+        return json.dumps({"min_conversion": self._min_conversion, "max_conversion": self._max_conversion})
+
+    def validate(self) -> None:
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        # NOTE(skearnes): Reported values may be outside of [0, 100].
+
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+        query = """
+            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            FROM reaction
+            JOIN dataset ON dataset.id = reaction.dataset_id
+            JOIN reaction_outcome on reaction_outcome.reaction_id = reaction.id
+            JOIN percentage on percentage.reaction_outcome_id = reaction_outcome.id
+            WHERE percentage.value >= %s
+              AND percentage.value <= %s
+        """
+        args = [self._min_conversion, self._max_conversion]
+        if limit:
+            query += "LIMIT %s"
+            args.append(limit)
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        cursor.execute(query, args)
+        return fetch_results(cursor)
+
+
+class ReactionYieldQuery(ReactionQueryBase):
+    """Looks up reactions by yield."""
+
+    def __init__(self, min_yield: float, max_yield: float) -> None:
+        """Initializes the query.
+
+        Args:
+            min_yield: Minimum yield, as a percentage.
+            max_yield: Maximum yield, as a percentage.
+        """
+        self._min_yield = min_yield
+        self._max_yield = max_yield
+
+    def json(self) -> str:
+        """Returns a JSON representation of the query."""
+        return json.dumps({"min_yield": self._min_yield, "max_yield": self._max_yield})
+
+    def validate(self) -> None:
+        """Checks the query for correctness.
+
+        Raises:
+            QueryException if the query is not valid.
+        """
+        # NOTE(skearnes): Reported values may be outside of [0, 100].
+
+    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+        query = """
+            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            FROM reaction
+            JOIN dataset ON dataset.id = reaction.dataset_id
+            JOIN reaction_outcome on reaction_outcome.reaction_id = reaction.id
+            JOIN product_compound on product_compound.reaction_outcome_id = reaction_outcome.id
+            JOIN product_measurement on product_measurement.product_compound_id = product_compound.id
+            JOIN percentage on percentage.product_measurement_id = product_measurement.id
+            WHERE product_measurement.type = 'YIELD'
+              AND percentage.value >= %s
+              AND percentage.value <= %s
+        """
+        args = [self._min_yield, self._max_yield]
+        if limit:
+            query += "LIMIT %s"
+            args.append(limit)
+        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        cursor.execute(query, args)
+        return fetch_results(cursor)
+
+
 class DoiQuery(ReactionQueryBase):
     """Looks up reactions by DOI."""
 

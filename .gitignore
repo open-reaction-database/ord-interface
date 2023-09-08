@@ -25,3 +25,5 @@ __pycache__
 # Node stuff.
 **/node_modules/
 **/package-lock.json
+# VSCode.
+.vscode/
