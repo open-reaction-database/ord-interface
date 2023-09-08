@@ -1,11 +1,13 @@
 <script>
 import ModalKetcher from '@/components/ModalKetcher'
 import SearchItemList from './SearchItemList'
+import Slider from 'primevue/slider'
 
 export default {
   components: {
     ModalKetcher,
-    SearchItemList
+    SearchItemList,
+    Slider
   },
   emits: ["searchOptions"],
   data() {
@@ -23,8 +25,8 @@ export default {
       reactionOptions: {
         reactionIds: [],
         reactionSmarts: [],
-        min_yield: 0,
-        min_conversion: 0,
+        yield: 50,
+        conversion: 50,
       },
       datasetOptions: {
         datasetIds: [],
@@ -98,7 +100,9 @@ export default {
       // reaction options
       this.reactionOptions.reactionIds = q.reaction_ids?.split(",") || []
       this.reactionOptions.reactionSmarts = q.reaction_smarts?.split(",") || []
-      if (this.reactionOptions.reactionIds.length || this.reactionOptions.reactionSmarts.length) 
+      this.reactionOptions.yield = q.min_yield || 50
+      this.reactionOptions.conversion = q.min_conversion || 50
+      if (this.reactionOptions.reactionIds.length || this.reactionOptions.reactionSmarts.length || this.reactionOptions.yield !== 50 || this.reactionOptions.conversion !== 50) 
         this.showReactionOptions = true
 
       // general search params
@@ -156,6 +160,12 @@ export default {
                 step="0.01"
                 v-model='reagentOptions.similarityThreshold'
               )
+              //- Slider#similarity.w-14rem(
+              //-   v-model='reagentOptions.similarityThreshold'
+              //-   :min='0.1'
+              //-   :max='1.0'
+              //-   :step='0.01'
+              //- )
       .section
         .subtitle Reactants & Reagents
         .reagent.options
@@ -222,23 +232,23 @@ export default {
       )
       .slider-input
         label(for='min-yield') Minimum Yield
-        .value {{reactionOptions.min_yield}}%
+        .value {{reactionOptions.yield}}%
         input#min-yield(
           type='range'
           min="0"
           max="100"
           step="1"
-          v-model='reactionOptions.min_yield'
+          v-model='reactionOptions.yield'
         )
       .slider-input
         label(for='min-conversion') Minimum Conversion
-        .value {{reactionOptions.min_conversion}}%
+        .value {{reactionOptions.conversion}}%
         input#min-conversion(
           type='range'
           min="0"
           max="100"
           step="1"
-          v-model='reactionOptions.min_conversion'
+          v-model='reactionOptions.conversion'
         )
   .options-title(
     @click='showDatasetOptions = !showDatasetOptions'

@@ -74,6 +74,7 @@ export default {
         delete this.searchParams["dois"]
 
       // reaction options
+      console.log('options.reaction',options.reaction)
       if (options.reaction.reactionIds.length)
         this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
       else
@@ -82,6 +83,15 @@ export default {
         this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
       else
         delete this.searchParams["reaction_smarts"]
+      if (options.reaction.yield) {
+        this.searchParams["min_yield"] = options.reaction.yield
+        this.searchParams["max_yield"] = 100
+      }
+      if (options.reaction.conversion) {
+        this.searchParams["min_conversion"] = options.reaction.conversion
+        this.searchParams["max_conversion"] = 100
+      }
+
 
       // general options
       this.searchParams["limit"] = options.general.limit || 100
