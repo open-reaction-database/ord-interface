@@ -74,7 +74,6 @@ export default {
         delete this.searchParams["dois"]
 
       // reaction options
-      console.log('options.reaction',options.reaction)
       if (options.reaction.reactionIds.length)
         this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
       else

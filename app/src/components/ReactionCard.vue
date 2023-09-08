@@ -35,8 +35,12 @@ export default {
       if (yieldObj.percentage) {
         return `${yieldObj.percentage.value}%`
       } else {
-        return ""
+        return "Not listed"
       }
+    },
+    getConversion(reaction) {
+      if (!reaction.outcomesList[0].conversion) return "Not listed"
+      // decode conversion
     },
     conditionsAndDuration(reaction) {
       const details = []
@@ -103,6 +107,7 @@ export default {
           button View Full Details
       .col
         .yield Yield: {{getYield(reaction.data.outcomesList[0].productsList[0].measurementsList)}}
+        .conversion Conversion: {{getConversion(reaction.data)}}
         .conditions Conditions: {{conditionsAndDuration(reaction.data).join("; ")}}
         .smile(v-if='reaction.data.outcomesList[0].productsList[0].identifiersList.length')
           CopyButton(
