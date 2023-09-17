@@ -22,7 +22,7 @@ docker compose up --detach
 set +x
 
 echo "Waiting for the server to start..."
-sleep 15
+sleep 60
 
 set +e
 status=0

@@ -318,9 +318,9 @@ class ReactionSmartsQuery(ReactionQueryBase):
                 """
                 SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
                 FROM reaction
-                INNER JOIN rdkit.reactions ON rdkit.reactions.reaction_id = reaction.id
+                JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
                 JOIN dataset ON dataset.id = reaction.dataset_id
-                WHERE rdkit.reactions.reaction OPERATOR(rdkit.@>) rdkit.reaction_from_smarts(%s)
+                WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s::cstring)
                 """
             )
         ]
@@ -597,13 +597,13 @@ class ReactionComponentQuery(ReactionQueryBase):
                 mols_sql = """
                 JOIN reaction_input ON reaction_input.reaction_id = reaction.id
                 JOIN compound ON compound.reaction_input_id = reaction_input.id
-                JOIN rdkit.mols ON rdkit.mols.compound_id = compound.id
+                JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
                 """
             else:
                 mols_sql = """
                 JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
                 JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
-                JOIN rdkit.mols ON rdkit.mols.product_compound_id = product_compound.id
+                JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
                 """
             predicate_sql, predicate_args = predicate.get()
             components.append(
@@ -696,11 +696,11 @@ class ReactionComponentPredicate:
             args: List of arguments for `predicate`.
         """
         if self._mode in [ReactionComponentPredicate.MatchMode.SIMILAR, ReactionComponentPredicate.MatchMode.EXACT]:
-            predicate = "rdkit.mols.morgan_bfp OPERATOR(rdkit.%%) rdkit.morganbv_fp(%s)"  # Escape the % operator.
+            predicate = "rdkit.mols.morgan_bfp %% morganbv_fp(%s)"  # Escape the % operator.
         elif self._mode == ReactionComponentPredicate.MatchMode.SUBSTRUCTURE:
-            predicate = "rdkit.mols.mol OPERATOR(rdkit.@>) %s"
+            predicate = "rdkit.mols.mol @> %s"
         elif self._mode == ReactionComponentPredicate.MatchMode.SMARTS:
-            predicate = "rdkit.mols.mol OPERATOR(rdkit.@>) %s::rdkit.qmol"
+            predicate = "rdkit.mols.mol @> %s::qmol"
         else:
             raise ValueError(f"unsupported mode: {self._mode}")
         return predicate, [self._pattern]
@@ -719,7 +719,9 @@ class OrdPostgres:
             host: Text host name.
             port: Integer port.
         """
-        self._connection = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
+        self._connection = psycopg2.connect(
+            dbname=dbname, user=user, password=password, host=host, port=port, options="-c search_path=public,ord"
+        )
         self._connection.set_session(readonly=True)
 
     @property

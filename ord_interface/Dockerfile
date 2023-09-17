@@ -51,6 +51,11 @@ RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contri
    && mkdir -p externs \
    && mv jquery-3.3.js externs
 RUN npm install google-closure-compiler@20220803
+WORKDIR /usr/src/app
+RUN wget https://github.com/open-reaction-database/ord-schema/archive/refs/tags/v0.3.67.zip \
+   && unzip v0.3.67.zip \
+   && rm v0.3.67.zip \
+   && mv ord-schema-0.3.67 ord-schema
 
 # Install dependencies.
 WORKDIR /usr/src/app/ord-interface
