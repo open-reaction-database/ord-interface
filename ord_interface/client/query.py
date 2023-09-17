@@ -320,7 +320,7 @@ class ReactionSmartsQuery(ReactionQueryBase):
                 FROM reaction
                 JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
                 JOIN dataset ON dataset.id = reaction.dataset_id
-                WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s::cstring)
+                WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s)
                 """
             )
         ]
