@@ -1,17 +1,18 @@
 <script>
 import ModalKetcher from '@/components/ModalKetcher'
 import SearchItemList from './SearchItemList'
-import Slider from 'primevue/slider'
+import MultiRangeSlider from "multi-range-slider-vue"
 
 export default {
   components: {
     ModalKetcher,
     SearchItemList,
-    Slider
+    MultiRangeSlider,
   },
   emits: ["searchOptions"],
   data() {
     return {
+      test: null,
       showReagentOptions: false,
       showReactionOptions: false,
       showDatasetOptions: false,
@@ -25,8 +26,10 @@ export default {
       reactionOptions: {
         reactionIds: [],
         reactionSmarts: [],
-        yield: 50,
-        conversion: 50,
+        min_yield: 50,
+        max_yield: 100,
+        min_conversion: 50,
+        max_conversion: 100
       },
       datasetOptions: {
         datasetIds: [],
@@ -87,7 +90,7 @@ export default {
         else
           this.addCompToOptions(q.component)
         this.reagentOptions.useStereochemistry = q.use_stereochemistry || false
-        this.reagentOptions.similarityThreshold = q.similarity || 0.5
+        this.reagentOptions.similarityThreshold = Number(q.similarity) || 0.5
         this.showReagentOptions = true
       }
 
@@ -100,7 +103,7 @@ export default {
       // reaction options
       this.reactionOptions.reactionIds = q.reaction_ids?.split(",") || []
       this.reactionOptions.reactionSmarts = q.reaction_smarts?.split(",") || []
-      this.reactionOptions.yield = q.min_yield || 50
+      this.reactionOptions.yield = Number(q.min_yield) || 50
       this.reactionOptions.conversion = q.min_conversion || 50
       if (this.reactionOptions.reactionIds.length || this.reactionOptions.reactionSmarts.length || this.reactionOptions.yield !== 50 || this.reactionOptions.conversion !== 50) 
         this.showReactionOptions = true
@@ -113,6 +116,10 @@ export default {
       const compType = compArray[1] == "input" ? "reactants" : "products"
       this.reagentOptions.matchMode = compArray[2]
       this.reagentOptions[compType].push({smileSmart: compArray[0].replaceAll("%3D","="), source: compArray[1], matchMode: compArray[2]})
+    },
+    updateYield (e) {
+      this.reactionOptions.min_yield = e.minValue
+      this.reactionOptions.max_yield = e.maxValue
     }
   },
   mounted() {
@@ -160,12 +167,6 @@ export default {
                 step="0.01"
                 v-model='reagentOptions.similarityThreshold'
               )
-              //- Slider#similarity.w-14rem(
-              //-   v-model='reagentOptions.similarityThreshold'
-              //-   :min='0.1'
-              //-   :max='1.0'
-              //-   :step='0.01'
-              //- )
       .section
         .subtitle Reactants & Reagents
         .reagent.options
@@ -230,15 +231,19 @@ export default {
         title='Reaction SMARTS'
         :itemList.sync='reactionOptions.reactionSmarts'
       )
-      .slider-input
-        label(for='min-yield') Minimum Yield
-        .value {{reactionOptions.yield}}%
-        input#min-yield(
-          type='range'
-          min="0"
-          max="100"
-          step="1"
-          v-model='reactionOptions.yield'
+      .slider-input.multi
+        label(for='yield') Yield
+        .value {{reactionOptions.min_yield}}% - {{reactionOptions.max_yield}}%
+        MultiRangeSlider(
+          baseClassName="multi-range-slider"
+          :miin='0'
+          :max='100'
+          :step='1'
+          :ruler='false'
+          :label='false'
+          :minValue='reactionOptions.min_yield'
+          :maxValue='reactionOptions.max_yield'
+          @input='updateYield'
         )
       .slider-input
         label(for='min-conversion') Minimum Conversion
@@ -387,5 +392,7 @@ ModalKetcher(
       column-gap: 0.5rem
       .value
         text-align: right
-
+      &.multi
+        grid-template-columns: 4rem 6rem 1fr
+        align-items: center
 </style>
