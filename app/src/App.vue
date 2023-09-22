@@ -49,4 +49,20 @@ button
   border-radius: 0.25rem
   cursor: pointer
   padding: 0.25rem 0.5rem
+
+// multi-value-slider styles
+.multi-range-slider
+  border: none !important
+  box-shadow: none !important
+  .thumb::before
+    height: 18px !important
+    width: 18px !important
+    margin: -5px !important
+    box-shadow: none !important
+    background-color: #0d6efd !important
+  .bar-left, .bar-inner, .bar-right
+    box-shadow: none !important
+    border: grey 1px solid
+  .bar-inner
+    background-color: #0d6efd !important
 </style>
