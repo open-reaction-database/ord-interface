@@ -82,15 +82,23 @@ export default {
         this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
       else
         delete this.searchParams["reaction_smarts"]
-      if (options.reaction.yield) {
-        this.searchParams["min_yield"] = options.reaction.yield
-        this.searchParams["max_yield"] = 100
+      //yield and conversion add if not max values, otherwise remove from query
+      if (options.reaction.min_yield !== 0 || options.reaction.max_yield !== 100) {
+        this.searchParams["min_yield"] = options.reaction.min_yield
+        this.searchParams["max_yield"] = options.reaction.max_yield
       }
-      if (options.reaction.conversion) {
-        this.searchParams["min_conversion"] = options.reaction.conversion
-        this.searchParams["max_conversion"] = 100
+      else {
+        delete this.searchParams["min_yield"]
+        delete this.searchParams["max_yield"]
       }
-
+      if (options.reaction.min_conversion !== 0 || options.reaction.max_conversion !== 100) {
+        this.searchParams["min_conversion"] = options.reaction.min_conversion
+        this.searchParams["max_conversion"] = options.reaction.max_conversion
+      }
+      else {
+        delete this.searchParams["min_conversion"]
+        delete this.searchParams["max_conversion"]
+      }
 
       // general options
       this.searchParams["limit"] = options.general.limit || 100
