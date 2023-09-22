@@ -120,6 +120,10 @@ export default {
     updateYield (e) {
       this.reactionOptions.min_yield = e.minValue
       this.reactionOptions.max_yield = e.maxValue
+    },
+    updateConversion (e) {
+      this.reactionOptions.min_conversion = e.minValue
+      this.reactionOptions.max_conversion = e.maxValue
     }
   },
   mounted() {
@@ -245,15 +249,19 @@ export default {
           :maxValue='reactionOptions.max_yield'
           @input='updateYield'
         )
-      .slider-input
-        label(for='min-conversion') Minimum Conversion
-        .value {{reactionOptions.conversion}}%
-        input#min-conversion(
-          type='range'
-          min="0"
-          max="100"
-          step="1"
-          v-model='reactionOptions.conversion'
+      .slider-input.multi
+        label(for='yield') Conversion
+        .value {{reactionOptions.min_conversion}}% - {{reactionOptions.max_conversion}}%
+        MultiRangeSlider(
+          baseClassName="multi-range-slider"
+          :miin='0'
+          :max='100'
+          :step='1'
+          :ruler='false'
+          :label='false'
+          :minValue='reactionOptions.min_conversion'
+          :maxValue='reactionOptions.max_conversion'
+          @input='updateConversion'
         )
   .options-title(
     @click='showDatasetOptions = !showDatasetOptions'
