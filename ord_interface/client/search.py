@@ -231,17 +231,9 @@ def run_query():
     Returns:
         A serialized Dataset proto containing the matched reactions.
     """
-<<<<<<< HEAD
-    command, limit = build_query()
-
-    if command is None:
-        command = query.RandomSampleQuery(100)
-        # return flask.abort(flask.make_response("no query defined", 400))
-=======
     commands, limit = build_query()
     if len(commands) == 0:
         return flask.abort(flask.make_response("no query defined", 400))
->>>>>>> origin
     try:
         return flask.jsonify(prep_results_for_json(_run_query(commands, limit)))
     except query.QueryException as error:
