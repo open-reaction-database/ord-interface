@@ -103,8 +103,10 @@ export default {
       // reaction options
       this.reactionOptions.reactionIds = q.reaction_ids?.split(",") || []
       this.reactionOptions.reactionSmarts = q.reaction_smarts?.split(",") || []
-      this.reactionOptions.yield = Number(q.min_yield) || 50
-      this.reactionOptions.conversion = q.min_conversion || 50
+      this.reactionOptions.min_yield = Number(q.min_yield) || 0
+      this.reactionOptions.max_yield = Number(q.max_yield) || 100
+      this.reactionOptions.min_conversion = Number(q.min_conversion) || 0
+      this.reactionOptions.max_conversion = Number(q.max_conversion) || 100
       if (this.reactionOptions.reactionIds.length || this.reactionOptions.reactionSmarts.length || this.reactionOptions.yield !== 50 || this.reactionOptions.conversion !== 50) 
         this.showReactionOptions = true
 
