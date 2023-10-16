@@ -71,3 +71,11 @@ docker run -d -p 5432:5432 openreactiondatabase/ord-postgres:test
 # Start the development server.
 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres FLASK_APP=interface.py FLASK_ENV=development python3 -m flask run
 ```
+  - You can also use an ssh tunnel to the actual ORD database if you need a more complete dataset to test with. I run the tunnel on port 5433 to avoid conflict with other local postgres setup.
+```bash
+# In terminal 1:
+ssh -L 5433:backend.cluster-c5oagyqrwied.us-east-1.rds.amazonaws.com:5432 -i /path/to/ord_ssh_tunnel.pem ubuntu@44.202.196.38
+# In terminal 2 (password omitted):
+cd ord_interface
+POSTGRES_USER=ord_ro POSTGRES_PASSWORD=<ord_ro password> POSTGRES_PORT=5433 FLASK_APP=interface.py FLASK_ENV=development python3 -m flask run
+```
