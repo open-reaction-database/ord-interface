@@ -164,7 +164,7 @@ class RandomSampleQuery(ReactionQueryBase):
             """
         )
         args = [self._num_rows]
-        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        logger.info("Running SQL command:%s", cursor.mogrify(query.as_string(cursor.connection), args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -219,7 +219,7 @@ class DatasetIdQuery(ReactionQueryBase):
             components.append(sql.SQL(" LIMIT %s"))
             args.append(limit)
         query = sql.Composed(components).join("")
-        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        logger.info("Running SQL command:%s", cursor.mogrify(query.as_string(cursor.connection), args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -269,7 +269,7 @@ class ReactionIdQuery(ReactionQueryBase):
             """
         )
         args = [self._reaction_ids]
-        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        logger.info("Running SQL command:%s", cursor.mogrify(query.as_string(cursor.connection), args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -329,7 +329,7 @@ class ReactionSmartsQuery(ReactionQueryBase):
             components.append(sql.SQL(" LIMIT %s"))
             args.append(limit)
         query = sql.Composed(components).join("")
-        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        logger.info("Running SQL command:%s", cursor.mogrify(query.as_string(cursor.connection), args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -483,7 +483,7 @@ class DoiQuery(ReactionQueryBase):
             components.append(sql.SQL(" LIMIT %s"))
             args.append(limit)
         query = sql.Composed(components).join("")
-        logger.info("Running SQL command:%s", cursor.mogrify(query, args).decode())
+        logger.info("Running SQL command:%s", cursor.mogrify(query.as_string(cursor.connection), args).decode())
         cursor.execute(query, args)
         return fetch_results(cursor)
 
@@ -525,7 +525,7 @@ class ReactionComponentQuery(ReactionQueryBase):
         """
         command = sql.SQL("SET rdkit.do_chiral_sss=%s")
         args = [self._do_chiral_sss]
-        logger.info("Running SQL command: %s", cursor.mogrify(command, args).decode())
+        logger.info("Running SQL command: %s", cursor.mogrify(command.as_string(cursor.connection), args).decode())
         cursor.execute(command, args)
         command = sql.SQL("SET rdkit.tanimoto_threshold=%s")
         tanimoto_threshold = self._tanimoto_threshold
@@ -533,7 +533,7 @@ class ReactionComponentQuery(ReactionQueryBase):
             if predicate.mode == ReactionComponentPredicate.MatchMode.EXACT:
                 tanimoto_threshold = 1.0
         args = [tanimoto_threshold]
-        logger.info("Running SQL command: %s", cursor.mogrify(command, args).decode())
+        logger.info("Running SQL command: %s", cursor.mogrify(command.as_string(cursor.connection), args).decode())
         cursor.execute(command, args)
 
     def validate(self) -> None:
