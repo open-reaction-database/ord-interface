@@ -62,9 +62,11 @@ def main(kwargs):
         for filename in filenames:
             dataset = message_helpers.load_message(filename, dataset_pb2.Dataset)
             database.add_dataset(dataset, session)
-        session.flush()
-        database.add_rdkit(session)
-        session.commit()
+            session.flush()
+            database.update_rdkit_tables(dataset.dataset_id, session=session)
+            session.flush()
+            database.update_rdkit_ids(dataset.dataset_id, session=session)
+            session.commit()
 
 
 if __name__ == "__main__":

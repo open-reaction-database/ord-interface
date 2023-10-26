@@ -2,7 +2,7 @@ name: "Deoxyfluorination screen"
 description: "Reactions from Figure 1 of DOI: 10.1021/jacs.8b01523"
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -238,7 +238,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.245899"
+        value: "2021-02-25 08:49:31.108138"
       }
       person {
         username: "skearnes"
@@ -247,10 +247,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-0"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -486,7 +487,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.249899"
+        value: "2021-02-25 08:49:31.112631"
       }
       person {
         username: "skearnes"
@@ -495,10 +496,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-1"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -734,7 +736,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.254085"
+        value: "2021-02-25 08:49:31.116890"
       }
       person {
         username: "skearnes"
@@ -743,10 +745,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-2"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -982,7 +985,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.258032"
+        value: "2021-02-25 08:49:31.121073"
       }
       person {
         username: "skearnes"
@@ -991,10 +994,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-3"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -1234,7 +1238,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.262162"
+        value: "2021-02-25 08:49:31.125435"
       }
       person {
         username: "skearnes"
@@ -1243,10 +1247,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-4"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -1486,7 +1491,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.266469"
+        value: "2021-02-25 08:49:31.129771"
       }
       person {
         username: "skearnes"
@@ -1495,10 +1500,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-5"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -1738,7 +1744,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.270803"
+        value: "2021-02-25 08:49:31.134287"
       }
       person {
         username: "skearnes"
@@ -1747,10 +1753,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-6"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -1990,7 +1997,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.274847"
+        value: "2021-02-25 08:49:31.139474"
       }
       person {
         username: "skearnes"
@@ -1999,10 +2006,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-7"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2238,7 +2246,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.278830"
+        value: "2021-02-25 08:49:31.143899"
       }
       person {
         username: "skearnes"
@@ -2247,10 +2255,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-8"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2486,7 +2495,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.282863"
+        value: "2021-02-25 08:49:31.147927"
       }
       person {
         username: "skearnes"
@@ -2495,10 +2504,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-9"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2734,7 +2744,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.286833"
+        value: "2021-02-25 08:49:31.151938"
       }
       person {
         username: "skearnes"
@@ -2743,10 +2753,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-10"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -2982,7 +2993,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.290854"
+        value: "2021-02-25 08:49:31.156141"
       }
       person {
         username: "skearnes"
@@ -2991,10 +3002,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-11"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3230,7 +3242,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.294960"
+        value: "2021-02-25 08:49:31.160325"
       }
       person {
         username: "skearnes"
@@ -3239,10 +3251,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-12"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3478,7 +3491,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.298928"
+        value: "2021-02-25 08:49:31.164349"
       }
       person {
         username: "skearnes"
@@ -3487,10 +3500,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-13"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3726,7 +3740,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.302968"
+        value: "2021-02-25 08:49:31.168717"
       }
       person {
         username: "skearnes"
@@ -3735,10 +3749,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-14"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -3974,7 +3989,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.306919"
+        value: "2021-02-25 08:49:31.172952"
       }
       person {
         username: "skearnes"
@@ -3983,10 +3998,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-15"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4225,7 +4241,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.310923"
+        value: "2021-02-25 08:49:31.177534"
       }
       person {
         username: "skearnes"
@@ -4234,10 +4250,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-16"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4476,7 +4493,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.316503"
+        value: "2021-02-25 08:49:31.181896"
       }
       person {
         username: "skearnes"
@@ -4485,10 +4502,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-17"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4727,7 +4745,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.320895"
+        value: "2021-02-25 08:49:31.186285"
       }
       person {
         username: "skearnes"
@@ -4736,10 +4754,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-18"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -4978,7 +4997,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.325299"
+        value: "2021-02-25 08:49:31.190553"
       }
       person {
         username: "skearnes"
@@ -4987,10 +5006,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-19"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5226,7 +5246,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.329278"
+        value: "2021-02-25 08:49:31.194963"
       }
       person {
         username: "skearnes"
@@ -5235,10 +5255,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-20"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5474,7 +5495,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.333190"
+        value: "2021-02-25 08:49:31.199564"
       }
       person {
         username: "skearnes"
@@ -5483,10 +5504,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-21"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5722,7 +5744,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.337095"
+        value: "2021-02-25 08:49:31.203776"
       }
       person {
         username: "skearnes"
@@ -5731,10 +5753,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-22"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -5970,7 +5993,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.341069"
+        value: "2021-02-25 08:49:31.208037"
       }
       person {
         username: "skearnes"
@@ -5979,10 +6002,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-23"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6222,7 +6246,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.345169"
+        value: "2021-02-25 08:49:31.212324"
       }
       person {
         username: "skearnes"
@@ -6231,10 +6255,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-24"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6474,7 +6499,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.349194"
+        value: "2021-02-25 08:49:31.216506"
       }
       person {
         username: "skearnes"
@@ -6483,10 +6508,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-25"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6726,7 +6752,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.353191"
+        value: "2021-02-25 08:49:31.220877"
       }
       person {
         username: "skearnes"
@@ -6735,10 +6761,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-26"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -6978,7 +7005,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.357188"
+        value: "2021-02-25 08:49:31.225619"
       }
       person {
         username: "skearnes"
@@ -6987,10 +7014,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-27"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7226,7 +7254,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.361157"
+        value: "2021-02-25 08:49:31.229773"
       }
       person {
         username: "skearnes"
@@ -7235,10 +7263,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-28"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7474,7 +7503,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.365343"
+        value: "2021-02-25 08:49:31.234132"
       }
       person {
         username: "skearnes"
@@ -7483,10 +7512,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-29"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7722,7 +7752,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.369696"
+        value: "2021-02-25 08:49:31.238292"
       }
       person {
         username: "skearnes"
@@ -7731,10 +7761,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-30"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -7970,7 +8001,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.373659"
+        value: "2021-02-25 08:49:31.242777"
       }
       person {
         username: "skearnes"
@@ -7979,10 +8010,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-31"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8218,7 +8250,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.377617"
+        value: "2021-02-25 08:49:31.246928"
       }
       person {
         username: "skearnes"
@@ -8227,10 +8259,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-32"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8466,7 +8499,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.381830"
+        value: "2021-02-25 08:49:31.251107"
       }
       person {
         username: "skearnes"
@@ -8475,10 +8508,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-33"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8714,7 +8748,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.385764"
+        value: "2021-02-25 08:49:31.255941"
       }
       person {
         username: "skearnes"
@@ -8723,10 +8757,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-34"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -8962,7 +8997,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.389744"
+        value: "2021-02-25 08:49:31.260220"
       }
       person {
         username: "skearnes"
@@ -8971,10 +9006,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-35"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9213,7 +9249,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.393724"
+        value: "2021-02-25 08:49:31.264488"
       }
       person {
         username: "skearnes"
@@ -9222,10 +9258,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-36"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9464,7 +9501,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.397694"
+        value: "2021-02-25 08:49:31.269369"
       }
       person {
         username: "skearnes"
@@ -9473,10 +9510,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-37"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9715,7 +9753,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.401717"
+        value: "2021-02-25 08:49:31.274497"
       }
       person {
         username: "skearnes"
@@ -9724,10 +9762,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-38"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -9966,7 +10005,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.405790"
+        value: "2021-02-25 08:49:31.278603"
       }
       person {
         username: "skearnes"
@@ -9975,10 +10014,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-39"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10214,7 +10254,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.410414"
+        value: "2021-02-25 08:49:31.282744"
       }
       person {
         username: "skearnes"
@@ -10223,10 +10263,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-40"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10462,7 +10503,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.414374"
+        value: "2021-02-25 08:49:31.286979"
       }
       person {
         username: "skearnes"
@@ -10471,10 +10512,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-41"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10710,7 +10752,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.418727"
+        value: "2021-02-25 08:49:31.291356"
       }
       person {
         username: "skearnes"
@@ -10719,10 +10761,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-42"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -10958,7 +11001,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.422676"
+        value: "2021-02-25 08:49:31.296100"
       }
       person {
         username: "skearnes"
@@ -10967,10 +11010,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-43"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11210,7 +11254,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.426729"
+        value: "2021-02-25 08:49:31.300315"
       }
       person {
         username: "skearnes"
@@ -11219,10 +11263,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-44"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11462,7 +11507,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.430744"
+        value: "2021-02-25 08:49:31.304663"
       }
       person {
         username: "skearnes"
@@ -11471,10 +11516,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-45"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11714,7 +11760,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.434821"
+        value: "2021-02-25 08:49:31.309009"
       }
       person {
         username: "skearnes"
@@ -11723,10 +11769,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-46"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -11966,7 +12013,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.438823"
+        value: "2021-02-25 08:49:31.313509"
       }
       person {
         username: "skearnes"
@@ -11975,10 +12022,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-47"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12214,7 +12262,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.442755"
+        value: "2021-02-25 08:49:31.318283"
       }
       person {
         username: "skearnes"
@@ -12223,10 +12271,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-48"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12462,7 +12511,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.446690"
+        value: "2021-02-25 08:49:31.322623"
       }
       person {
         username: "skearnes"
@@ -12471,10 +12520,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-49"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12710,7 +12760,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.450623"
+        value: "2021-02-25 08:49:31.326882"
       }
       person {
         username: "skearnes"
@@ -12719,10 +12769,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-50"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -12958,7 +13009,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.455010"
+        value: "2021-02-25 08:49:31.331219"
       }
       person {
         username: "skearnes"
@@ -12967,10 +13018,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-51"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13206,7 +13258,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.459040"
+        value: "2021-02-25 08:49:31.335489"
       }
       person {
         username: "skearnes"
@@ -13215,10 +13267,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-52"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13454,7 +13507,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.463214"
+        value: "2021-02-25 08:49:31.340199"
       }
       person {
         username: "skearnes"
@@ -13463,10 +13516,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-53"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13702,7 +13756,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.467177"
+        value: "2021-02-25 08:49:31.344275"
       }
       person {
         username: "skearnes"
@@ -13711,10 +13765,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-54"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -13950,7 +14005,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.471269"
+        value: "2021-02-25 08:49:31.348380"
       }
       person {
         username: "skearnes"
@@ -13959,10 +14014,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-55"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14201,7 +14257,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.475288"
+        value: "2021-02-25 08:49:31.352499"
       }
       person {
         username: "skearnes"
@@ -14210,10 +14266,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-56"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14452,7 +14509,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.479500"
+        value: "2021-02-25 08:49:31.356741"
       }
       person {
         username: "skearnes"
@@ -14461,10 +14518,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-57"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14703,7 +14761,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.483753"
+        value: "2021-02-25 08:49:31.361493"
       }
       person {
         username: "skearnes"
@@ -14712,10 +14770,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-58"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -14954,7 +15013,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.487781"
+        value: "2021-02-25 08:49:31.366024"
       }
       person {
         username: "skearnes"
@@ -14963,10 +15022,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-59"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15202,7 +15262,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.491671"
+        value: "2021-02-25 08:49:31.370675"
       }
       person {
         username: "skearnes"
@@ -15211,10 +15271,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-60"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15450,7 +15511,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.495640"
+        value: "2021-02-25 08:49:31.374936"
       }
       person {
         username: "skearnes"
@@ -15459,10 +15520,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-61"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15698,7 +15760,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.499537"
+        value: "2021-02-25 08:49:31.379638"
       }
       person {
         username: "skearnes"
@@ -15707,10 +15769,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-62"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -15946,7 +16009,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.503436"
+        value: "2021-02-25 08:49:31.384869"
       }
       person {
         username: "skearnes"
@@ -15955,10 +16018,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-63"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16198,7 +16262,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.507406"
+        value: "2021-02-25 08:49:31.390575"
       }
       person {
         username: "skearnes"
@@ -16207,10 +16271,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-64"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16450,7 +16515,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.511365"
+        value: "2021-02-25 08:49:31.396090"
       }
       person {
         username: "skearnes"
@@ -16459,10 +16524,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-65"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16702,7 +16768,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.515456"
+        value: "2021-02-25 08:49:31.401657"
       }
       person {
         username: "skearnes"
@@ -16711,10 +16777,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-66"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -16954,7 +17021,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.519712"
+        value: "2021-02-25 08:49:31.407171"
       }
       person {
         username: "skearnes"
@@ -16963,10 +17030,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-67"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17202,7 +17270,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.523777"
+        value: "2021-02-25 08:49:31.412616"
       }
       person {
         username: "skearnes"
@@ -17211,10 +17279,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-68"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17450,7 +17519,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.527724"
+        value: "2021-02-25 08:49:31.418123"
       }
       person {
         username: "skearnes"
@@ -17459,10 +17528,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-69"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17698,7 +17768,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.531670"
+        value: "2021-02-25 08:49:31.423494"
       }
       person {
         username: "skearnes"
@@ -17707,10 +17777,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-70"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -17946,7 +18017,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.535649"
+        value: "2021-02-25 08:49:31.428882"
       }
       person {
         username: "skearnes"
@@ -17955,10 +18026,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-71"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18194,7 +18266,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.539944"
+        value: "2021-02-25 08:49:31.434432"
       }
       person {
         username: "skearnes"
@@ -18203,10 +18275,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-72"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18442,7 +18515,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.544456"
+        value: "2021-02-25 08:49:31.439861"
       }
       person {
         username: "skearnes"
@@ -18451,10 +18524,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-73"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18690,7 +18764,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.550566"
+        value: "2021-02-25 08:49:31.445302"
       }
       person {
         username: "skearnes"
@@ -18699,10 +18773,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-74"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -18938,7 +19013,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.554992"
+        value: "2021-02-25 08:49:31.450720"
       }
       person {
         username: "skearnes"
@@ -18947,10 +19022,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-75"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -19189,7 +19265,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.560390"
+        value: "2021-02-25 08:49:31.456411"
       }
       person {
         username: "skearnes"
@@ -19198,10 +19274,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-76"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -19440,7 +19517,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.565305"
+        value: "2021-02-25 08:49:31.462122"
       }
       person {
         username: "skearnes"
@@ -19449,10 +19526,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-77"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -19691,7 +19769,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.569890"
+        value: "2021-02-25 08:49:31.467522"
       }
       person {
         username: "skearnes"
@@ -19700,10 +19778,11 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-78"
 }
 reactions {
   identifiers {
-    type: NAME
+    type: REACTION_TYPE
     value: "deoxyfluorination"
   }
   inputs {
@@ -19942,7 +20021,7 @@ reactions {
     }
     record_modified {
       time {
-        value: "2021-02-25 09:11:43.574303"
+        value: "2021-02-25 08:49:31.472679"
       }
       person {
         username: "skearnes"
@@ -19951,4 +20030,6 @@ reactions {
       details: "Automatic migration from schema v0.2.15 to v0.3.0"
     }
   }
+  reaction_id: "test_reaction-79"
 }
+dataset_id: "test_dataset"

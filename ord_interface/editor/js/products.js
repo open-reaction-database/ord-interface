@@ -26,9 +26,8 @@ const utils = goog.require('ord.utils');
 const FloatValue = goog.require('proto.ord.FloatValue');
 const Percentage = goog.require('proto.ord.Percentage');
 const ProductCompound = goog.require('proto.ord.ProductCompound');
-const Texture = goog.require('proto.ord.ProductCompound.Texture');
-const TextureType =
-    goog.require('proto.ord.ProductCompound.Texture.TextureType');
+const Texture = goog.require('proto.ord.Texture');
+const TextureType = goog.require('proto.ord.Texture.TextureType');
 const ProductMeasurement = goog.require('proto.ord.ProductMeasurement');
 const MeasurementType =
     goog.require('proto.ord.ProductMeasurement.ProductMeasurementType');
