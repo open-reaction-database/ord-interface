@@ -125,7 +125,7 @@ export default {
       .col
         .yield Yield: {{getYield(reaction.data.outcomesList[0].productsList[0].measurementsList)}}
         .conversion Conversion: {{getConversion(reaction.data)}}
-        .conditions Conditions: {{conditionsAndDuration(reaction.data).join("; ")}}
+        .conditions Conditions: {{conditionsAndDuration(reaction.data).join("; ") || "Not Listed"}}
         .smile(v-if='reaction.data.outcomesList[0].productsList[0].identifiersList.length')
           CopyButton(
             :textToCopy='reaction.data.outcomesList[0].productsList[0].identifiersList[0].value'
