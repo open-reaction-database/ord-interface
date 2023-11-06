@@ -65,17 +65,6 @@ BOND_LENGTH = 20
 MAX_RESULTS = 1000
 
 
-@bp.route("/")
-def show_root():
-    flask.redirect(flask.url_for(".show_browse"))
-
-
-@bp.route("/browse")
-def show_browse():
-    """Shows the browser interface."""
-    return flask.render_template("browse.html", datasets=fetch_datasets())
-
-
 def _run_query(commands: list[query.ReactionQueryBase], limit: int | None) -> list[query.Result]:
     """Runs a query and returns the matched reactions."""
     if len(commands) == 0:
@@ -100,31 +89,6 @@ def _run_query(commands: list[query.ReactionQueryBase], limit: int | None) -> li
     return results
 
 
-@bp.route("/search")
-def show_search():
-    """Shows the search interface.
-
-    Creates a query to show a set of randomly selected reactions so the
-    page won't be empty.
-    """
-    commands, limit = build_query()
-    if len(commands) == 0:
-        commands = [query.RandomSampleQuery(100)]
-    query_args = {}
-    for command in commands:
-        query_args |= json.loads(command.json())
-    try:
-        results = _run_query(commands, limit)
-        error = None
-    except query.QueryException as exception:
-        results = None
-        error = f"(Error) {exception}"
-    if results is not None and not results:
-        results = None
-        error = "query did not match any reactions"
-    return flask.render_template("search.html", results=results, error=error, query=json.dumps(query_args))
-
-
 @bp.route("/id/<reaction_id>")
 def show_id(reaction_id):
     """Returns the pbtxt of a single reaction as plain text."""
@@ -141,13 +105,14 @@ def show_id(reaction_id):
         bond_length=BOND_LENGTH,
     )
 
+
 @bp.route("/api/render/<reaction_id>")
 def render_reaction(reaction_id):
     """Renders a reaction as an HTML table with images and text."""
     command = query.ReactionIdQuery([reaction_id])
     results = connect().run_query(command)
-    compact = flask.request.args.get('compact') != "false" #defaults to true
-    print('compact',compact)
+    compact = flask.request.args.get("compact") != "false"  # defaults to true
+    print("compact", compact)
     if len(results) == 0 or len(results) > 1:
         return flask.abort(404)
     result = results[0]
@@ -156,6 +121,7 @@ def render_reaction(reaction_id):
         return flask.jsonify(html)
     except (ValueError, KeyError):
         return flask.jsonify("[Reaction cannot be displayed]")
+
 
 @bp.route("/api/render/compound/svg", methods=["POST"])
 def render_compound():
@@ -169,6 +135,7 @@ def render_compound():
         return flask.jsonify(svg)
     except (ValueError, KeyError):
         return flask.jsonify("[Compound cannot be displayed]")
+
 
 def connect():
     return query.OrdPostgres(
@@ -193,7 +160,7 @@ def prep_results_for_json(results: list[query.Result]) -> list[dict]:
 @bp.route("/api/fetch_reactions", methods=["POST"])
 def fetch_reactions():
     """Fetches a list of Reactions by ID."""
-    print('request',flask.request.get_json())
+    print("request", flask.request.get_json())
     reaction_ids = flask.request.get_json()
     command = query.ReactionIdQuery(reaction_ids)
     try:
