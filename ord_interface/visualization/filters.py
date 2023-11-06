@@ -289,11 +289,11 @@ def _product_color_texture(product: reaction_pb2.ProductCompound) -> str:
     txt = ""
     txt += f"{product.isolated_color} "
     txt += {
-        product.Texture.UNSPECIFIED: "",
-        product.Texture.CUSTOM: product.texture.details,
-        product.Texture.POWDER: f"powder {_parenthetical_if_def(product.texture.details)}",
-        product.Texture.CRYSTAL: f"set of crystals {_parenthetical_if_def(product.texture.details)}",
-        product.Texture.OIL: f"oil {_parenthetical_if_def(product.texture.details)}",
+        reaction_pb2.Texture.UNSPECIFIED: "",
+        reaction_pb2.Texture.CUSTOM: product.texture.details,
+        reaction_pb2.Texture.POWDER: f"powder {_parenthetical_if_def(product.texture.details)}",
+        reaction_pb2.Texture.CRYSTAL: f"set of crystals {_parenthetical_if_def(product.texture.details)}",
+        reaction_pb2.Texture.OIL: f"oil {_parenthetical_if_def(product.texture.details)}",
     }[product.texture.type]
     if not txt.strip():
         return ""
