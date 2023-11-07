@@ -37,7 +37,8 @@ RUN apt-get update \
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.
 WORKDIR /app/ord-interface/ord_interface
 RUN wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip \
-   && unzip ketcher-standalone-2.5.1.zip
+   && unzip ketcher-standalone-2.5.1.zip \
+   && cp -r standalone/ ../app/src/ketcher
 WORKDIR /app/ord-interface/ord_interface/editor
 RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
    && tar -xzf v20200517.tar.gz \
