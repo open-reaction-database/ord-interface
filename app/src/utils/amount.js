@@ -20,21 +20,19 @@ export const amountObj =
     (amount) => {
       if (!amount)
         return {}
-      let units = {} let unitCategory = ""
+      let units = {};
+      let unitCategory = "";
       // determine unit type
       if (amount.moles) {
         units = reaction_pb.Moles.MolesUnit
         unitCategory = "moles"
-      }
-      else if (amount.volume) {
+      } else if (amount.volume) {
         units = reaction_pb.Volume.VolumeUnit
         unitCategory = "volume"
-      }
-      else if (amount.mass) {
+      } else if (amount.mass) {
         units = reaction_pb.Mass.MassUnit
         unitCategory = "mass"
-      }
-      else if (amount.unmeasured) {
+      } else if (amount.unmeasured) {
         return { unitAmount: "", unitCategory: "unmeasured" }
       }
       const unitVal = amount[unitCategory].units
