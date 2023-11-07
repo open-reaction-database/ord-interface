@@ -10,7 +10,7 @@ nav.navbar.navbar-expand-lg.bg-light
   .container
     a.navbar-brand(href="/")
       img(
-        src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg" 
+        src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg"
         alt="ORD Logo"
         height="30"
       )
@@ -19,9 +19,11 @@ nav.navbar.navbar-expand-lg.bg-light
         .nav-item
           router-link.nav-link(:to='{name: "browse"}') Browse
           router-link.nav-link(:to='{name: "search"}') Search
-          router-link.nav-link(:to='{name: "contribute"}') Contribute
         .nav-item
+          a.nav-link(href="https://open-reaction-database.org/editor") Contribute
           a.nav-link(href="https://docs.open-reaction-database.org") Docs
+        .nav-item
+          router-link.nav-link(:to='{name: "about"}') About
 </template>
 
 <style lang="sass" scoped>

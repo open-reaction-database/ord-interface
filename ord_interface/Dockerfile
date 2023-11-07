@@ -26,6 +26,7 @@ RUN apt-get update \
    && apt-get install -y \
    build-essential \
    default-jre \
+   nginx \
    npm \
    procps \
    unzip \
@@ -34,10 +35,10 @@ RUN apt-get update \
 
 # Fetch and build editor dependencies.
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.
-WORKDIR /usr/src/app/ord-interface/ord_interface
+WORKDIR /app/ord-interface/ord_interface
 RUN wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip \
    && unzip ketcher-standalone-2.5.1.zip
-WORKDIR editor
+WORKDIR /app/ord-interface/ord_interface/editor
 RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
    && tar -xzf v20200517.tar.gz \
    && rm v20200517.tar.gz
@@ -46,14 +47,19 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/p
    && rm protobuf-js-3.14.0.tar.gz
 RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip \
    && unzip protoc-3.14.0-linux-x86_64.zip
-ENV PATH="/usr/src/app/ord-interface/ord_interface/editor/bin:${PATH}"
+ENV PATH="/app/ord-interface/ord_interface/editor/bin:${PATH}"
 RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
    && mkdir -p externs \
    && mv jquery-3.3.js externs
 RUN npm install google-closure-compiler@20220803
+WORKDIR /app
+RUN wget https://github.com/open-reaction-database/ord-schema/archive/refs/tags/v0.3.71.zip \
+   && unzip v0.3.71.zip \
+   && rm v0.3.71.zip \
+   && mv ord-schema-0.3.71 ord-schema
 
 # Install dependencies.
-WORKDIR /usr/src/app/ord-interface
+WORKDIR /app/ord-interface
 COPY setup.py README.md ./
 RUN pip install --upgrade pip \
    && pip install gunicorn wheel
@@ -65,9 +71,16 @@ RUN python setup.py egg_info \
 # Copy the local state.
 COPY ord_interface/editor/js/ ord_interface/editor/js/
 COPY ord_interface/editor/build.sh ord_interface/editor
-WORKDIR ord_interface/editor
+WORKDIR /app/ord-interface/ord_interface/editor
 RUN ./build.sh
-WORKDIR ../..
+WORKDIR /app/ord-interface
+# Build the Vue app.
+COPY app/ app/
+WORKDIR /app/ord-interface/app
+RUN npm install \
+   && npm run build \
+   && mv dist/ /app/ord-interface/vue
+WORKDIR /app/ord-interface
 # Copy the rest of the editor files.
 COPY ord_interface/editor/ ord_interface/editor/
 # Now copy everything else.
@@ -78,9 +91,9 @@ COPY ord_interface/visualization/ ord_interface/visualization/
 RUN pip install .
 
 # Build and launch the interface.
-EXPOSE 5001
-CMD gunicorn ord_interface.interface:app \
-   --bind 0.0.0.0:5001 \
-   --workers 2 \
-   --access-logfile - \
-   --access-logformat '%(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
+COPY ord_interface/start_app.sh .
+COPY ord_interface/nginx.conf /etc/nginx/nginx.conf
+
+RUN ln -sf /dev/stderr /var/log/nginx.log \
+   && chmod +x start_app.sh
+ENTRYPOINT ["/app/ord-interface/start_app.sh"]

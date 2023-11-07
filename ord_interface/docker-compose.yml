@@ -30,4 +30,4 @@ services:
       - GH_CLIENT_SECRET=${GH_CLIENT_SECRET}
     image: "openreactiondatabase/ord-interface:latest"
     ports:
-      - "5001:5001"
+      - "8080:8080"

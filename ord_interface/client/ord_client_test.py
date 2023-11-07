@@ -19,7 +19,7 @@ from ord_interface.client import ord_client
 
 @pytest.fixture
 def client() -> ord_client.OrdClient:
-    yield ord_client.OrdClient(target="http://localhost:5001")
+    yield ord_client.OrdClient(target="http://localhost:8080")
 
 
 @pytest.mark.parametrize("dataset_id,expected_num_reactions", (("ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c", 264),))
@@ -76,8 +76,8 @@ def test_query_reaction_ids(client):
 
 
 def test_query_reaction_smarts(client):
-    results = client.query(reaction_smarts="[Br]C1=CC=C(C(C)=O)C=C1>CN(C)C=O>")
-    assert len(results) == 9
+    results = client.query(reaction_smarts="[Br]c1ccc(C(=O)C)cc1>CN(C)C=O>")
+    assert len(results) == 10
 
 
 def test_query_dois(client):
