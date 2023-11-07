@@ -3,18 +3,6 @@ const path = require('path')
 
 module.exports = defineConfig({
     transpileDependencies: true,
-    devServer: {
-        proxy: {
-            "^/api": {
-                target: process.env.NODE_ENV === 'production' ? "https://open-reaction-database.org/client/" : "http://0.0.0.0:5000/client/",
-                changeOrigin: true
-            },
-            "^/editor-api": {
-                target: process.env.NODE_ENV === 'production' ? "https://open-reaction-database.org/editor/" : "http://0.0.0.0:5000/editor/",
-                changeOrigin: true
-            }
-        }
-    },
     chainWebpack: config => {
         config.plugin('copy')
             .tap(entries => {
