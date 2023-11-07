@@ -32,11 +32,6 @@ app.register_blueprint(search.bp)
 app.register_blueprint(serve.bp)
 
 
-@app.route("/editor")
-def show_editor():
-    return flask.redirect(flask.url_for("editor.show_root"))
-
-
 @app.route("/ketcher")
 def show_ketcher():
     return flask.redirect("/standalone/index.html")

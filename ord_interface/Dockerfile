@@ -77,7 +77,8 @@ WORKDIR /app/ord-interface
 # Build the Vue app.
 COPY app/ app/
 WORKDIR /app/ord-interface/app
-RUN npm install \
+RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/src/ketcher \
+   && npm install \
    && npm run build \
    && mv dist/ /app/ord-interface/vue
 WORKDIR /app/ord-interface
