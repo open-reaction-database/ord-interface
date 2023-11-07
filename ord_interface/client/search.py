@@ -40,13 +40,10 @@ be URL-encoded.
 import dataclasses
 import gzip
 import io
-import json
 import os
-from typing import Dict, List, Optional, Tuple, Union
-import json
+from typing import List, Optional, Tuple
 
 import flask
-from urllib.parse import unquote
 from rdkit import Chem
 
 from ord_schema.proto import dataset_pb2, reaction_pb2
@@ -127,10 +124,9 @@ def render_reaction(reaction_id):
 def render_compound():
     """Returns svg of compound"""
     data = flask.request.get_data()
-    # get compound svg
     compound = reaction_pb2.Compound()
     compound.ParseFromString(data)
-    svg = filters._compound_svg(compound)
+    svg = filters._compound_svg(compound)  # pylint: disable=protected-access
     try:
         return flask.jsonify(svg)
     except (ValueError, KeyError):
