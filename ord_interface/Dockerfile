@@ -37,8 +37,7 @@ RUN apt-get update \
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.
 WORKDIR /app/ord-interface/ord_interface
 RUN wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip \
-   && unzip ketcher-standalone-2.5.1.zip \
-   && cp -r standalone/ ../app/src/ketcher
+   && unzip ketcher-standalone-2.5.1.zip
 WORKDIR /app/ord-interface/ord_interface/editor
 RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
    && tar -xzf v20200517.tar.gz \
@@ -78,7 +77,8 @@ WORKDIR /app/ord-interface
 # Build the Vue app.
 COPY app/ app/
 WORKDIR /app/ord-interface/app
-RUN npm install \
+RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/src/ketcher \
+   && npm install \
    && npm run build \
    && mv dist/ /app/ord-interface/vue
 WORKDIR /app/ord-interface
