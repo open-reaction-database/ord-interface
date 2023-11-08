@@ -317,8 +317,8 @@ class ReactionSmartsQuery(ReactionQueryBase):
             sql.SQL(
                 """
                 SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-                FROM ord.reaction
-                INNER JOIN rdkit.reactions ON rdkit.reactions.reaction_id = reaction.id
+                FROM reaction
+                JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
                 JOIN dataset ON dataset.id = reaction.dataset_id
                 WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s)
                 """
@@ -601,8 +601,8 @@ class ReactionComponentQuery(ReactionQueryBase):
                 """
             else:
                 mols_sql = """
-                JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
-                JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+                JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
+                JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
                 JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
                 """
             predicate_sql, predicate_args = predicate.get()
