@@ -48,7 +48,7 @@ export default {
     },
     getYield(measurements) {
       const yieldObj = measurements.find(m => m.type == 3) // ord-schema type 3 == "YIELD"
-      if (yieldObj.percentage) {
+      if (yieldObj?.percentage) {
         return `${yieldObj.percentage.value}%`
       } else {
         return "Not listed"
@@ -61,18 +61,19 @@ export default {
     conditionsAndDuration(reaction) {
       const details = []
       // get temp
-      const tempSetPoint = conditionUtil.tempSetPoint(reaction.conditions.temperature.setpoint)
+      const tempSetPoint = conditionUtil.tempSetPoint(reaction.conditions.temperature?.setpoint)
       if (tempSetPoint !== "None")
         details.push(`at ${tempSetPoint}`)
 
       // get Pressure
-      const pressureSetPoint = conditionUtil.pressureSetPoint(reaction.conditions.pressure.setpoint)
+      const pressureSetPoint = conditionUtil.pressureSetPoint(reaction.conditions.pressure?.setpoint)
       if (pressureSetPoint !== "None")
         details.push(`under ${pressureSetPoint}`)
 
       // get duration
       const formattedTime = outcomesUtil.formattedTime(reaction.outcomesList[0].reactionTime)
-      details.push(`for ${formattedTime}`)
+      if (formattedTime)
+        details.push(`for ${formattedTime}`)
 
       return details
     },
