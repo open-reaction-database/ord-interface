@@ -46,7 +46,7 @@ nav.navbar.navbar-expand-lg.bg-light
 @import @/styles/vars
 
 nav
-  background-color: white
+  background-color: white !important
   .container
     display: flex
     flex-wrap: inherit
@@ -59,9 +59,9 @@ nav
     #navbarNav
       flex-direction: row
       .navbar-nav
-        display: flex
         margin-left: 1rem
         .nav-item
+          display: flex
           .nav-link
             padding: 0.5rem
             text-decoration: none

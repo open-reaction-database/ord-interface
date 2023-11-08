@@ -176,6 +176,9 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-.about
-  margin-top: 20vh
+#about
+  margin-top: 2rem
+  background-color: white
+  padding: 0 2rem
+  border-radius: 0.5rem
 </style>
