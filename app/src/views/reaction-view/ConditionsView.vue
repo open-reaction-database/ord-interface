@@ -34,7 +34,7 @@ export default {
       return conditionUtil.pressureType(this.conditions.pressure.control.type)
     },
     pressureSetPoint () {
-      return conditionUtil.pressureSetPoint(this.conditions.pressure.setpoint)
+      return conditionUtil.pressureSetPoint(this.conditions.pressure?.setpoint)
     },
     pressureAtmo () {
       return conditionUtil.pressureAtmo(this.conditions.pressure.atmosphere)
