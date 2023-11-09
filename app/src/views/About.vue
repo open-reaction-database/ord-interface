@@ -23,10 +23,6 @@ export default {
 </script>
 
 <template>
-  <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" />
-  <script type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
   <div id="about" class="container">
     <div class="row mt-5">
         <div class="col-3 border-top pt-3">
@@ -180,6 +176,9 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-.about
-  margin-top: 20vh
+#about
+  margin-top: 2rem
+  background-color: white
+  padding: 0 2rem
+  border-radius: 0.5rem
 </style>

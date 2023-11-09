@@ -26,11 +26,19 @@ JQUERY_EXTERNS=externs/jquery-3.3.js
 # https://github.com/protocolbuffers/protobuf/releases
 PROTOBUF=protobuf-3.14.0
 echo "protoc: $(which protoc) $(protoc --version)"
+<<<<<<< HEAD
 for source in /app/ord-schema/proto/*.proto; do
   protoc \
     --experimental_allow_proto3_optional \
     --js_out=binary:gen/js/proto/ord \
     --proto_path=/app \
+=======
+for source in /usr/src/app/ord-schema/proto/*.proto; do
+  protoc \
+    --experimental_allow_proto3_optional \
+    --js_out=binary:gen/js/proto/ord \
+    --proto_path=/usr/src/app \
+>>>>>>> 1f67179 (bump ord-schema (#73))
     "${source}"
 done
 # Build dataset.js
