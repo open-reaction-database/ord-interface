@@ -58,8 +58,10 @@ export default {
                 </li>
             </ul>
             <p>
-                Please reach out to help@open-reaction-database.org for help preparing a contribution or to discuss
-                using the ORD in your company or lab.
+                <a href="https://www.linkedin.com/in/benjamin-deadman-78786242/">Ben Deadman</a>
+                is our Reaction Data Evangelist and ORD Program Manager. Please reach out to him at
+                <a href="mailto:help@open-reaction-database.org">help@open&#8209;reaction&#8209;database.org</a>
+                for help preparing a contribution or to discuss using the ORD in your company or lab.
             </p>
         </div>
     </div>
