@@ -80,7 +80,7 @@ export default {
       raw.type = this.getAnalysisType(raw.type)
       this.rawAnalysis = raw
       this.showRawAnalysis = true
-    }
+    },
   }
 }
 </script>
@@ -95,7 +95,7 @@ export default {
         .value {{reactionTime}}
       template(v-if='outcome.conversion')
         .label Conversion
-        .value {{outcome.conversion}}
+        .value {{outcome.conversion.value}} {{isNaN(outcome.conversion.precision) ? "" : `\\pm ${outcome.conversion.precision}`}}
   .title Products
   .sub-section
     .tabs
