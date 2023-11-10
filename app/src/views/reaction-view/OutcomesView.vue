@@ -51,7 +51,7 @@ export default {
     },
     getMeasurementValue (measurement) {
       if (measurement.percentage) 
-        return `${measurement.percentage.value}%`
+        return `${Math.round(measurement.percentage.value * 10)/10}%`
       if (measurement.amount) {
         return amountStr(amountObj(measurement.amount))
       }
