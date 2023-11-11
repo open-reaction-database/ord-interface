@@ -351,28 +351,29 @@ export default {
     column-gap: 1rem
   .nav-holder
     height: 100%
-  .nav
-    background-color: white
-    border-radius: 0.25rem
-    box-sizing: border-box
-    margin-left: 1rem
-    min-width: 8rem
-    width: 15vw
-    height: auto
-    max-height: 70vh
-    overflow-x: hidden
-    overflow-y: auto
-    position: sticky
-    top: 1rem
-    .nav-item
-      padding: 0.5rem 1rem
-      text-transform: capitalize
-      cursor: pointer
-      transition: 0.16s
-      color: black
-      &.active
-        color: white
-        background-color: $linkblue
+    .nav
+      background-color: white
+      border-radius: 0.25rem
+      box-sizing: border-box
+      margin-left: 1rem
+      min-width: 8rem
+      width: 15vw
+      height: auto
+      max-height: 70vh
+      overflow-x: hidden
+      overflow-y: auto
+      position: sticky
+      top: 1rem
+      display: block
+      .nav-item
+        padding: 0.5rem 1rem
+        text-transform: capitalize
+        cursor: pointer
+        transition: 0.16s
+        color: black
+        &.active
+          color: white
+          background-color: $linkblue
 .loading
   position: absolute
   width: 100%

@@ -51,7 +51,7 @@ export default {
     },
     getMeasurementValue (measurement) {
       if (measurement.percentage) 
-        return `${measurement.percentage.value}%`
+        return `${Math.round(measurement.percentage.value * 10)/10}%`
       if (measurement.amount) {
         return amountStr(amountObj(measurement.amount))
       }
@@ -80,7 +80,7 @@ export default {
       raw.type = this.getAnalysisType(raw.type)
       this.rawAnalysis = raw
       this.showRawAnalysis = true
-    }
+    },
   }
 }
 </script>
@@ -95,7 +95,7 @@ export default {
         .value {{reactionTime}}
       template(v-if='outcome.conversion')
         .label Conversion
-        .value {{outcome.conversion}}
+        .value {{outcome.conversion.value}} {{isNaN(outcome.conversion.precision) ? "" : `± ${outcome.conversion.precision}`}}
   .title Products
   .sub-section
     .tabs
