@@ -49,6 +49,10 @@ export default {
         return `${type}${prep.details ? `: ${prep.details}` : ""}`
       }).join(", ")
     },
+    vesselMaterial () {
+      const materialTypes = reaction_pb.VesselMaterial.VesselMaterialType
+      return Object.keys(materialTypes).find(key => materialTypes[key] == this.vessel.material?.type)
+    },
   },
 }
 </script>
@@ -62,7 +66,7 @@ export default {
       .label Details
       .value {{vessel.details}}
     .label Material
-    .value {{vessel.material || "UNSPECIFIED"}}
+    .value {{vesselMaterial || "UNSPECIFIED"}}
     .label Volume
     .value {{vesselVolume}}
     template(v-if='vessel.attachmentsList?.length')

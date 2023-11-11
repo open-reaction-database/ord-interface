@@ -58,6 +58,10 @@ export default {
     const stirTypes = reaction_pb.StirringConditions.StirringMethodType
     return Object.keys(stirTypes).find(key => stirTypes[key] == stirType)
   },
+  stirRate(stirRate) {
+    const stirRates = reaction_pb.StirringConditions.StirringRate
+    return Object.keys(stirRates).find(key => stirRates[key] == stirRate)
+  },
   illumType(illum) {
     const illumTypes = reaction_pb.IlluminationConditions.IlluminationType
     const illumType =

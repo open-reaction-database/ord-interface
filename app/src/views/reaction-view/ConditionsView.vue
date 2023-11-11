@@ -42,6 +42,9 @@ export default {
     stirType () {
       return conditionUtil.stirType(this.conditions.stirring.type)
     },
+    stirRate () {
+      return conditionUtil.stirRate(this.conditions.stirring.rate)
+    },
     illumType () {
       return conditionUtil.illumType(this.conditions.illumination)
     }
@@ -85,9 +88,8 @@ export default {
     template(v-if='conditions.stirring.details')
       .label Details
       .value {{conditions.stirring.details}}
-      // TODO Flesh out stirring rate
     .label Rate
-    .value {{conditions.stirring.rate || "UNSPECIFIED"}}
+    .value {{stirRate || "UNSPECIFIED"}}
     template(v-if='conditions.stirring.rate?.rpm')
       .label RPM
       .value {{conditions.stirring.rate.rpm}}
