@@ -16,10 +16,12 @@
 
 <script>
 import EntityTable from '@/components/EntityTable'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
 
 export default {
   components: {
     EntityTable,
+    LoadingSpinner,
   },
   data() {
     return {
@@ -59,6 +61,8 @@ export default {
         .column {{row.Name}}
         .column {{row.Description?.length > 75 ? row.Description.substr(0,75)+"..." : row.Description}}
         .column {{row.Size}}
+  .loading(v-else)
+    LoadingSpinner
 </template>
 
 <style lang="sass" scoped>
@@ -67,4 +71,6 @@ export default {
   padding: 1rem 0
   .table-container
     grid-template-columns: 1fr 1fr 1fr auto
+  .loading
+    margin-top: 30vh
 </style>
