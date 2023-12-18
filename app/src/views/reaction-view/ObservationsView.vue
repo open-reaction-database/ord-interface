@@ -15,11 +15,16 @@
 -->
 
 <script>
-import reaction_pb from "ord-schema"
+import outcomesUtil from "../../utils/outcomes"
 
 export default {
   props: {
     observations: Array,
+  },
+  methods: {
+    getTime(element) {
+      return outcomesUtil.formattedTime(element)
+    }
   },
 }
 </script>
@@ -30,7 +35,7 @@ export default {
     .label Time
     .label Comment
     template(v-for='obs in observations')
-      .value {{obs.time}}
+      .value {{getTime(obs.time)}}
       .value {{obs.comment}}
 </template>
 
