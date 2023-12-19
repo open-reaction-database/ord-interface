@@ -16,6 +16,7 @@
 
 <script>
 import reaction_pb from "ord-schema"
+import { amountObj, amountStr } from "../../utils/amount"
 
 export default {
   props: {
@@ -26,6 +27,17 @@ export default {
       const workupTypes = reaction_pb.ReactionWorkup.ReactionWorkupType
       return Object.keys(workupTypes).find(key => workupTypes[key] == this.workup?.type)
     },
+  },
+  methods: {
+    getIdentifier (identifiersList) {
+      return identifiersList.find(identifier => identifier.type == 6).value
+    },
+    getAmount (amount) {
+      return amountStr(amountObj(amount))
+    }
+  },
+  mounted () {
+    console.log('workup',this.workup)
   }
 }
 </script>
@@ -53,6 +65,13 @@ export default {
     template(v-if='workup.isAutomated')
       .label Automated
       .value {{workup.Automated}}
+  .inputs(v-if='workup.input')
+    .title Inputs
+    .components
+      template(v-for='component in workup.input.componentsList')
+        .identifier {{getIdentifier(component.identifiersList)}}
+        .amount {{getAmount(component.amount)}}
+
 </template>
 
 <style lang="sass" scoped>
@@ -62,4 +81,13 @@ export default {
     grid-template-columns: auto 1fr
     column-gap: 1rem
     row-gap: 0.5rem
+  .inputs
+    margin-top: 0.5rem
+    .title
+      font-weight: 700
+    .components
+      display: grid
+      grid-template-columns: auto 1fr
+      column-gap: 1rem
+      row-gap: 0.5rem
 </style>

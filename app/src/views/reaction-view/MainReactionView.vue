@@ -16,7 +16,6 @@
 
 <script>
 import reaction_pb from "ord-schema"
-import ordSchema from "ord-schema"
 import CompoundView from "./CompoundView"
 import SetupView from "./SetupView"
 import ConditionsView from "./ConditionsView"
@@ -282,7 +281,6 @@ export default {
               NotesView(
                 :notes='reaction.notes'
               )
-        // TODO flesh out observations section
         #observations(v-if='reaction.observationsList?.length')
           .title Observations
           .section
