@@ -28,6 +28,7 @@ import EventsView from "./EventsView"
 import FloatingModal from "../../components/FloatingModal"
 import LoadingSpinner from '@/components/LoadingSpinner'
 import hexToUint from "@/utils/hexToUint"
+import outcomesUtil from '@/utils/outcomes'
 
 export default {
   components: {
@@ -77,11 +78,28 @@ export default {
     reactionId() {
       return this.$route.params.reactionId
     },
-    displayInputs() {
+    displayDetails() {
       if (!this.reaction) return {}
       let returnArr = {...this.reaction.inputsMap[this.inputsIdx][1]}
+      // console.log('returnArr',returnArr)
       // filter out null/undefined values and arrays
-      return Object.fromEntries(Object.entries(returnArr).filter(([_,v]) => v != null && !Array.isArray(v)))
+      let formattedDetails = Object.fromEntries(Object.entries(returnArr).filter(([_,v]) => v != null && !Array.isArray(v)))
+      
+      // some details are objects that need to be broken down for display
+      if (formattedDetails.additionDevice) {
+        const deviceTypes = reaction_pb.ReactionInput.AdditionDevice.AdditionDeviceType
+        const device = Object.keys(deviceTypes).find(key => deviceTypes[key] == formattedDetails.additionDevice.type)
+        formattedDetails.additionDevice = device.toLowerCase()
+      }
+      if (formattedDetails.additionSpeed) {
+        const speedTypes = reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType
+        const speed = Object.keys(speedTypes).find(key => speedTypes[key] == formattedDetails.additionSpeed.type)
+        formattedDetails.additionSpeed = speed.toLowerCase()
+      }
+      if (formattedDetails.additionDuration) {
+        formattedDetails.additionDuration = outcomesUtil.formattedTime(formattedDetails.additionDuration)
+      }
+      return formattedDetails
     },
     displayConditionsOther() {
       const otherFields = [
@@ -231,9 +249,9 @@ export default {
             .input
               .title Details
               .details
-                template(v-for='key in Object.keys(displayInputs)')
+                template(v-for='key in Object.keys(displayDetails)')
                   .label {{key.replaceAll(/(?=[A-Z])/g, ' ')}}
-                  .value {{displayInputs[key]}}
+                  .value {{displayDetails[key]}}
               .title Components
               .compound
                 template(v-for='component in reaction.inputsMap[inputsIdx][1].componentsList')

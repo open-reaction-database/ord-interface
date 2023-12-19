@@ -36,9 +36,6 @@ export default {
       return amountStr(amountObj(amount))
     }
   },
-  mounted () {
-    console.log('workup',this.workup)
-  }
 }
 </script>
 
