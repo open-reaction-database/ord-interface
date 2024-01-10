@@ -53,7 +53,17 @@ export default {
       const materialTypes = reaction_pb.VesselMaterial.VesselMaterialType
       return Object.keys(materialTypes).find(key => materialTypes[key] == this.vessel.material?.type)
     },
+    reactionEnv () {
+      const envVal = this.setup.environment?.type
+      if (!envVal) return null
+      const envTypes = reaction_pb.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType
+      return Object.keys(envTypes).find(key => envTypes[key] == envVal)
+    }
   },
+  mounted () {
+    console.log('pb',reaction_pb)
+    console.log('props',this.setup)
+  }
 }
 </script>
 
@@ -77,7 +87,7 @@ export default {
       .value {{vesselPrep}}
   .environment.details(v-if='display=="environment"')
     .label Type
-    .value {{setup.environment?.type || "UNSPECIFIED"}}
+    .value {{reactionEnv || "UNSPECIFIED"}}
     template(v-if='setup.environment?.details')
       .label Details
       .value {{setup.environment.details}}
