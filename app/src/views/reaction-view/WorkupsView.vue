@@ -30,7 +30,10 @@ export default {
   },
   methods: {
     getIdentifier (identifiersList) {
-      return identifiersList.find(identifier => identifier.type == 6)?.value
+      let identifier = identifiersList.find(identifier => identifier.type == 6)?.value
+      if (identifier)
+        return identifier
+      else return identifiersList.find(identifier => identifier.type == 2)?.value
     },
     getAmount (amount) {
       return amountStr(amountObj(amount))
