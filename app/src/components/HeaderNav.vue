@@ -52,7 +52,7 @@ nav
     flex-wrap: inherit
     align-items: center
     width: 90%
-    margin: auto
+    margin: auto 5%
     padding: 0.5rem 0
     .navbar-brand
       padding: 0.5rem 0
