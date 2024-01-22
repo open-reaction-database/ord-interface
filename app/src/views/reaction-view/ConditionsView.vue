@@ -119,7 +119,6 @@ export default {
     .label Distance to Vessel
     .value {{conditions.illumination.distanceToVessel || "None"}}
 
-  // TODO flesh out electrochemistry
   .electro.details(v-if='display === "electrochemistry"')
     .label Type
     .value {{elecChemType}}
@@ -137,8 +136,6 @@ export default {
       .label Cell Details
       .value {{conditions.electrochemistry.cell.details}}
     .label raw
-    .value
-      pre {{conditions.electrochemistry}}
   
   // TODO flesh out flow
   .electro.details(v-if='display === "flow"')
