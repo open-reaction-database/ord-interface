@@ -70,16 +70,16 @@ export default {
   },
   elecChemType(elecChem) {
     const elecChemTypes = reaction_pb.ElectrochemistryConditions.ElectrochemistryType
-    return Object.keys(elecChemTypes).find(key => elecChemTypes[key] = elecChem?.type)
+    return Object.keys(elecChemTypes).find(key => elecChemTypes[key] == elecChem?.type)
   },
   elecChemCurrent(elecChem) {
     if (!elecChem?.current) return null
     const currentTypes = reaction_pb.Current.CurrentUnit
-    const currentType = Object.keys(currentTypes).find(key => currentTypes[key] = elecChem.current.units)
+    const currentType = Object.keys(currentTypes).find(key => currentTypes[key] == elecChem.current.units)
     return `${elecChem.current.value} (± ${elecChem.current.precision}) ${currentType}`
   },
   elecChemCellType(elecChem) {
     const elecChemCellTypes = reaction_pb.ElectrochemistryConditions.ElectrochemistryCell.ElectrochemistryCellType
-    return Object.keys(elecChemCellTypes).find(key => elecChemCellTypes[key] = elecChem?.cell?.type)
+    return Object.keys(elecChemCellTypes).find(key => elecChemCellTypes[key] == elecChem?.cell?.type)
   }
 }
