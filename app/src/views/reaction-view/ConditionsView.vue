@@ -45,6 +45,9 @@ export default {
     stirRate () {
       return conditionUtil.stirRate(this.conditions.stirring?.rate)
     },
+    stirRate () {
+      return conditionUtil.stirRate(this.conditions.stirring.rate)
+    },
     illumType () {
       return conditionUtil.illumType(this.conditions.illumination)
     },
