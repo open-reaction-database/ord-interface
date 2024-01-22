@@ -30,7 +30,7 @@ export default {
   },
   methods: {
     getIdentifier (identifiersList) {
-      return identifiersList.find(identifier => identifier.type == 6).value
+      return identifiersList.find(identifier => identifier.type == 6)?.value
     },
     getAmount (amount) {
       return amountStr(amountObj(amount))
