@@ -47,8 +47,20 @@ export default {
     },
     illumType () {
       return conditionUtil.illumType(this.conditions.illumination)
+    },
+    elecChemType () {
+      return conditionUtil.elecChemType(this.conditions.electrochemistry)
+    },
+    elecChemCurrent () {
+      return conditionUtil.elecChemCurrent(this.conditions.electrochemistry)
+    },
+    elecChemCellType () {
+      return conditionUtil.elecChemCellType(this.conditions.electrochemistry)
     }
   },
+  mounted () {
+    console.log('reaction_pb',reaction_pb)
+  }
 }
 </script>
 
@@ -110,7 +122,23 @@ export default {
   // TODO flesh out electrochemistry
   .electro.details(v-if='display === "electrochemistry"')
     .label Type
-    .value {{conditions.electrochemistry}}
+    .value {{elecChemType}}
+    .label Details
+    .value {{conditions.electrochemistry.details}}
+    .label Current
+    .value {{elecChemCurrent}}
+    .label Anode
+    .value {{conditions.electrochemistry.anodeMaterial}}
+    .label Cathode
+    .value {{conditions.electrochemistry.cathodeMaterial}}
+    template(v-if='conditions.electrochemistry.cell')
+      .label Cell Type
+      .value {{elecChemCellType}}
+      .label Cell Details
+      .value {{conditions.electrochemistry.cell.details}}
+    .label raw
+    .value
+      pre {{conditions.electrochemistry}}
   
   // TODO flesh out flow
   .electro.details(v-if='display === "flow"')
