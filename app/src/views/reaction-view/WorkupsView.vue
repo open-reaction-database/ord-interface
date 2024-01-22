@@ -33,7 +33,8 @@ export default {
       let identifier = identifiersList.find(identifier => identifier.type == 6)?.value
       if (identifier)
         return identifier
-      else return identifiersList.find(identifier => identifier.type == 2)?.value
+      else 
+        return identifiersList.find(identifier => identifier.type == 2)?.value
     },
     getAmount (amount) {
       return amountStr(amountObj(amount))
