@@ -77,7 +77,7 @@ export default {
 
 <template lang="pug">
 .background
-  #ketcher_modal.modal
+  #ketcher_modal
     .modal-content
       .modal-body
         iframe#ketcher-iframe( src='/ketcher' )
@@ -107,7 +107,7 @@ export default {
   position: fixed
   top: 0
   left: 0
-  .modal
+  #ketcher_modal
     width: 75vw
     height: 75vh
     background-color: white
@@ -127,6 +127,7 @@ export default {
       .modal-body
         width: 100%
         height: 100%
+        padding: 0
         iframe
           width: 100%
           height: 100%
