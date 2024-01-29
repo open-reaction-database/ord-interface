@@ -101,7 +101,7 @@ export default {
 
 <template lang="pug">
 .reaction-container
-  .row(:class='isSelected ? "selected" : ""')
+  .reaction-row(:class='isSelected ? "selected" : ""')
     .select(v-if='isSelectable')
       input(
         type="checkbox"
@@ -147,7 +147,7 @@ export default {
 @import '@/styles/vars.sass'
 .reaction-container
   text-decoration: none
-  .row
+  .reaction-row
     background-color: white
     border-radius: 0.25rem
     padding: 0.75rem
