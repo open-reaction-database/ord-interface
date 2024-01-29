@@ -114,7 +114,7 @@ export default {
 @import '@/styles/transition.sass'
 .search-results-main
   .action-button-holder
-    margin: -2.5rem 0 1rem // bring button row inline with title without having to pass too much into EntityTable
+    margin: -3.25rem 0 1.167rem // bring button row inline with title without having to pass too much into EntityTable
     display: flex
     justify-content: flex-end
     column-gap: 0.5rem
