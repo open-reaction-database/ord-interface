@@ -31,7 +31,7 @@ export default {
       return conditionUtil.tempSetPoint(this.conditions.temperature?.setpoint)
     },
     pressureType () {
-      return conditionUtil.pressureType(this.conditions.pressure.control?.type)
+      return conditionUtil.pressureType(this.conditions.pressure?.control?.type)
     },
     pressureSetPoint () {
       return conditionUtil.pressureSetPoint(this.conditions.pressure?.setpoint)
