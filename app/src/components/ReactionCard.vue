@@ -142,7 +142,7 @@ export default {
           ) Publication URL
         .dataset Dataset: 
           a(
-            :href='"/search?dataset_ids=" + reaction.dataset_id'
+            :href='"/search?dataset_ids=" + reaction.dataset_id + "&limit=100"'
             target="_blank"
           ) {{reaction.dataset_id}}
 </template>
