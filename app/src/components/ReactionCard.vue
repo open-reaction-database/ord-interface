@@ -140,7 +140,7 @@ export default {
             :href='reaction.data.provenance.publicationUrl'
             target="_blank"
           ) Publication URL
-        .dataset Dataset:
+        .dataset Dataset: 
           a(
             :href='"/search?dataset_ids=" + reaction.dataset_id'
             target="_blank"
