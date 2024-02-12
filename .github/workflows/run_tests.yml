@@ -23,7 +23,7 @@ env:
 
 jobs:
   test_ord_interface:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, macos-14]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
