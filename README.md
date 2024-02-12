@@ -15,6 +15,7 @@ To build and launch the interface (available at `http://localhost:5001`):
 ```shell
 $ cd ord_interface
 $ ./build_test_database.sh
+# If you are running on Apple silicon, append `--build-arg="ARCH=aarch_64"` to the next command.
 $ docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
 $ docker compose up
 ```
