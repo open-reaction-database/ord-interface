@@ -44,7 +44,7 @@ if __name__ == "__main__":
             "flask>=1.1.2",
             "flask-talisman>=1.0.0",
             "jinja2>=2.0.0",
-            "ord-schema==0.3.71",
+            "ord-schema==0.3.72",
             "pandas>=1.0.4",
             "protobuf==4.22.3",
             "rdkit>=2021.9.5",
