@@ -26,7 +26,7 @@ from ord_schema.proto import reaction_pb2
 
 from ord_interface.client import query
 
-TARGET = "https://client.open-reaction-database.org"
+TARGET = "https://open-reaction-database.org"
 
 
 def parse_response(response: requests.Response) -> list[query.Result]:
@@ -41,7 +41,7 @@ def parse_response(response: requests.Response) -> list[query.Result]:
 class OrdClient:
     """Client for the Open Reaction Database."""
 
-    def __init__(self, target: Optional[str] = None, prefix: str = "/client") -> None:
+    def __init__(self, target: Optional[str] = None, prefix: str = "") -> None:
         """Initializes the client.
 
         Args:

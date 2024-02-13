@@ -40,17 +40,16 @@ be URL-encoded.
 import dataclasses
 import gzip
 import io
-import json
 import os
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import flask
 from rdkit import Chem
 
-from ord_schema.proto import dataset_pb2
+from ord_schema.proto import dataset_pb2, reaction_pb2
 
 from ord_interface.client import query
-from ord_interface.visualization import generate_text
+from ord_interface.visualization import generate_text, filters
 
 bp = flask.Blueprint("client", __name__, url_prefix="/client", template_folder=".")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
@@ -61,17 +60,6 @@ POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE", "ord")
 
 BOND_LENGTH = 20
 MAX_RESULTS = 1000
-
-
-@bp.route("/")
-def show_root():
-    flask.redirect(flask.url_for(".show_browse"))
-
-
-@bp.route("/browse")
-def show_browse():
-    """Shows the browser interface."""
-    return flask.render_template("browse.html", datasets=fetch_datasets())
 
 
 def _run_query(commands: list[query.ReactionQueryBase], limit: int | None) -> list[query.Result]:
@@ -98,31 +86,6 @@ def _run_query(commands: list[query.ReactionQueryBase], limit: int | None) -> li
     return results
 
 
-@bp.route("/search")
-def show_search():
-    """Shows the search interface.
-
-    Creates a query to show a set of randomly selected reactions so the
-    page won't be empty.
-    """
-    commands, limit = build_query()
-    if len(commands) == 0:
-        commands = [query.RandomSampleQuery(100)]
-    query_args = {}
-    for command in commands:
-        query_args |= json.loads(command.json())
-    try:
-        results = _run_query(commands, limit)
-        error = None
-    except query.QueryException as exception:
-        results = None
-        error = f"(Error) {exception}"
-    if results is not None and not results:
-        results = None
-        error = "query did not match any reactions"
-    return flask.render_template("search.html", results=results, error=error, query=json.dumps(query_args))
-
-
 @bp.route("/id/<reaction_id>")
 def show_id(reaction_id):
     """Returns the pbtxt of a single reaction as plain text."""
@@ -140,19 +103,34 @@ def show_id(reaction_id):
     )
 
 
-@bp.route("/render/<reaction_id>")
+@bp.route("/api/render/<reaction_id>")
 def render_reaction(reaction_id):
     """Renders a reaction as an HTML table with images and text."""
     command = query.ReactionIdQuery([reaction_id])
     results = connect().run_query(command)
+    compact = flask.request.args.get("compact") != "false"  # defaults to true
+    print("compact", compact)
     if len(results) == 0 or len(results) > 1:
         return flask.abort(404)
     result = results[0]
     try:
-        html = generate_text.generate_html(reaction=result.reaction, compact=True)
+        html = generate_text.generate_html(reaction=result.reaction, compact=compact)
         return flask.jsonify(html)
     except (ValueError, KeyError):
         return flask.jsonify("[Reaction cannot be displayed]")
+
+
+@bp.route("/api/render/compound/svg", methods=["POST"])
+def render_compound():
+    """Returns svg of compound"""
+    data = flask.request.get_data()
+    compound = reaction_pb2.Compound()
+    compound.ParseFromString(data)
+    svg = filters._compound_svg(compound)  # pylint: disable=protected-access
+    try:
+        return flask.jsonify(svg)
+    except (ValueError, KeyError):
+        return flask.jsonify("[Compound cannot be displayed]")
 
 
 def connect():
@@ -178,6 +156,7 @@ def prep_results_for_json(results: list[query.Result]) -> list[dict]:
 @bp.route("/api/fetch_reactions", methods=["POST"])
 def fetch_reactions():
     """Fetches a list of Reactions by ID."""
+    print("request", flask.request.get_json())
     reaction_ids = flask.request.get_json()
     command = query.ReactionIdQuery(reaction_ids)
     try:
@@ -187,7 +166,8 @@ def fetch_reactions():
         return flask.abort(flask.make_response(str(error), 400))
 
 
-def fetch_datasets() -> List[Dict[str, Union[str, int]]]:
+@bp.route("/api/fetch_datasets", methods=["GET"])
+def fetch_datasets():
     """Fetches info about the current datasets."""
     engine = connect()
     rows = {}
@@ -275,7 +255,7 @@ def build_query() -> Tuple[List[query.ReactionQueryBase], Optional[int]]:
     return queries, limit
 
 
-@bp.route("/ketcher/molfile", methods=["POST"])
+@bp.route("api/ketcher/molfile", methods=["POST"])
 def get_molfile():
     """Returns a molblock for the given SMILES."""
     smiles = flask.request.get_data()
@@ -288,7 +268,7 @@ def get_molfile():
         return f"could not parse SMILES: {smiles}", 400
 
 
-@bp.route("/download_results", methods=["POST"])
+@bp.route("/api/download_results", methods=["POST"])
 def download_results():
     """Downloads search results as a Dataset proto."""
     reaction_ids = [row["Reaction ID"] for row in flask.request.get_json()]

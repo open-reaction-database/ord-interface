@@ -19,7 +19,7 @@ from ord_interface.client import ord_client
 
 @pytest.fixture
 def client() -> ord_client.OrdClient:
-    yield ord_client.OrdClient(target="http://localhost:5001")
+    yield ord_client.OrdClient(target="http://localhost:8080")
 
 
 @pytest.mark.parametrize("dataset_id,expected_num_reactions", (("ord_dataset-d319c2a22ecf4ce59db1a18ae71d529c", 264),))

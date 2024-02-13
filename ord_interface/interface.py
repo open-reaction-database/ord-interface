@@ -32,26 +32,6 @@ app.register_blueprint(search.bp)
 app.register_blueprint(serve.bp)
 
 
-@app.route("/")
-def show_root():
-    return flask.redirect("/about")
-
-
-@app.route("/about")
-def show_about():
-    return flask.render_template("about.html")
-
-
-@app.route("/browse")
-def show_browse():
-    return flask.redirect(flask.url_for("client.show_browse"))
-
-
-@app.route("/search")
-def show_search():
-    return flask.redirect(flask.url_for("client.show_search", **flask.request.args))
-
-
 @app.route("/ketcher")
 def show_ketcher():
     return flask.redirect("/standalone/index.html")
