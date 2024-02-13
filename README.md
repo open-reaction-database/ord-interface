@@ -32,13 +32,15 @@ Web interface and api for the Open Reaction Database
 git clone git@github.com:open-reaction-database/ord-interface.git
 cd ord-interface
 ```
-### 2. Set up the test database
-```bash
-# activate the virtual env of your choice, ex. venv, conda, etc.
-# install requirements and run setup script
-pip install -e .
-cd ./ord_interface
-./build_test_database.sh 
+
+To build and launch the interface (available at `http://localhost:5001`):
+
+```shell
+$ cd ord_interface
+$ ./build_test_database.sh
+# If you are running on Apple silicon, append `--build-arg="ARCH=aarch_64"` to the next command.
+$ docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
+$ docker compose up
 ```
 ### 3. Set up and run the API via Docker
 Note: currently this also runs the old flask ui at port :5001

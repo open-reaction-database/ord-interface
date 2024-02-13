@@ -17,7 +17,11 @@ set -e
 
 set -x
 ./build_test_database.sh
-docker build -f Dockerfile -t openreactiondatabase/ord-interface .. "$@"
+ARCH="x86_64"
+if [[ "$(uname -p)" =~ "arm" ]]; then
+  ARCH="aarch_64"
+fi
+docker build -f Dockerfile -t openreactiondatabase/ord-interface .. --build-arg="ARCH=${ARCH}" "$@"
 docker compose up --detach
 set +x
 

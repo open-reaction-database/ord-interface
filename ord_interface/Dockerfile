@@ -45,8 +45,9 @@ RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
 RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protobuf-js-3.14.0.tar.gz \
    && tar -xzf protobuf-js-3.14.0.tar.gz \
    && rm protobuf-js-3.14.0.tar.gz
-RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip \
-   && unzip protoc-3.14.0-linux-x86_64.zip
+ARG ARCH=x86_64
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-${ARCH}.zip \
+   && unzip protoc-3.14.0-linux-${ARCH}.zip
 ENV PATH="/app/ord-interface/ord_interface/editor/bin:${PATH}"
 RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
    && mkdir -p externs \
