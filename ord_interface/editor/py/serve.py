@@ -90,6 +90,7 @@ def show_datasets():
     with flask.g.db.cursor() as cursor:
         query = psycopg2.sql.SQL("SELECT name FROM datasets WHERE user_id=%s")
         cursor.execute(query, [flask.g.user_id])
+        print("flask user id", flask.g.user_id)
         for row in cursor:
             names.append(row[0])
     if len(flask.g.user_name) == 32:
@@ -101,6 +102,26 @@ def show_datasets():
         names=sorted(names),
         user_avatar=flask.g.user_avatar,
         user_name=flask.g.user_name,
+        client_id=client_id,
+    )
+
+
+@bp.route("/getDatasetsByUser/<user_id>", methods=["GET"])
+def get_datasets_by_id(user_id):
+    """Returns datasets for a provided user id"""
+    print("flask user id", user_id)
+    names = []
+    with flask.g.db.cursor() as cursor:
+        query = psycopg2.sql.SQL("SELECT name FROM datasets WHERE user_id=%s")
+        cursor.execute(query, [user_id])
+        for row in cursor:
+            names.append(row[0])
+    if len(flask.g.user_name) == 32:
+        client_id = GH_CLIENT_ID
+    else:
+        client_id = None
+    return flask.jsonify(
+        names=sorted(names),
         client_id=client_id,
     )
 
@@ -157,7 +178,7 @@ def upload_dataset(name):
             text_format.Parse(flask.request.get_data(as_text=True), dataset)
         user_id = flask.g.user_id
         with flask.g.db.cursor() as cursor:
-            query = psycopg2.sql.SQL("INSERT INTO datasets VALUES (%s, %s, %s)")
+            query = psycopg2.sql.SQL("INSERT INTO datasets (user_id, name, serialized) VALUES (%s, %s, %s)")
             cursor.execute(query, [user_id, name, serialize_for_db(dataset)])
             flask.g.db.commit()
         return "ok"
@@ -172,7 +193,7 @@ def new_dataset(name):
         response = flask.make_response(f"dataset already exists: {name}", 409)
         flask.abort(response)
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL("INSERT INTO datasets VALUES (%s, %s, %s)")
+        query = psycopg2.sql.SQL("INSERT INTO datasets (user_id, name, serialized) VALUES (%s, %s, %s)")
         user_id = flask.g.user_id
         cursor.execute(query, [user_id, name, ""])
         flask.g.db.commit()
@@ -604,7 +625,7 @@ def sync_reviews():
                     continue
                 prefix = remote.filename[:-6]
                 name = f"PR_{pr.number} ___{pr.title}___ {prefix}"
-                query = psycopg2.sql.SQL("INSERT INTO datasets VALUES (%s, %s, %s)")
+                query = psycopg2.sql.SQL("INSERT INTO datasets (user_id, name, serialized) VALUES (%s, %s, %s)")
                 cursor.execute(query, [user_id, name, serialize_for_db(dataset)])
     flask.g.db.commit()
     return flask.redirect(flask.url_for(".show_submissions"))
@@ -637,7 +658,8 @@ def put_dataset(name, dataset):
     """Write a dataset proto to the dataset table, clobbering if needed."""
     with flask.g.db.cursor() as cursor:
         query = psycopg2.sql.SQL(
-            "INSERT INTO datasets VALUES (%s, %s, %s) " "ON CONFLICT (user_id, name) DO UPDATE SET serialized=%s"
+            "INSERT INTO datasets (user_id, name, serialized) VALUES (%s, %s, %s) "
+            "ON CONFLICT (user_id, name) DO UPDATE SET serialized=%s"
         )
         user_id = flask.g.user_id
         serialized = serialize_for_db(dataset)
@@ -841,7 +863,7 @@ def authenticate():
 def issue_access_token(user_id):
     """Login as the given user and set the access token in a response."""
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL("INSERT INTO logins VALUES (%s, %s, %s)")
+        query = psycopg2.sql.SQL("INSERT INTO logins (access_token, user_id, timestamp) VALUES (%s, %s, %s)")
         access_token = uuid.uuid4().hex
         timestamp = int(time.time())
         cursor.execute(query, [access_token, user_id, timestamp])
@@ -859,7 +881,7 @@ def make_user():
         The 32-character generated UUID of the user, currently used in the UI.
     """
     with flask.g.db.cursor() as cursor:
-        query = psycopg2.sql.SQL("INSERT INTO users VALUES (%s, %s, %s)")
+        query = psycopg2.sql.SQL("INSERT INTO users (user_id, name, created_time) VALUES (%s, %s, %s)")
         user_id = uuid.uuid4().hex
         timestamp = int(time.time())
         cursor.execute(query, [user_id, None, timestamp])

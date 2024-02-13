@@ -159,7 +159,7 @@ class RandomSampleQuery(ReactionQueryBase):
         query = sql.SQL(
             """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-            FROM reaction TABLESAMPLE SYSTEM_ROWS (%s)
+            FROM ord.reaction TABLESAMPLE SYSTEM_ROWS (%s)
             JOIN dataset ON dataset.id = reaction.dataset_id
             """
         )
@@ -208,8 +208,8 @@ class DatasetIdQuery(ReactionQueryBase):
         components = [
             sql.SQL(
                 """
-            SELECT DISTINCT reaction.dataset_id, reaction.reaction_id, reaction.proto
-            FROM reaction
+            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE dataset.dataset_id = ANY (%s)"""
             )
@@ -263,7 +263,7 @@ class ReactionIdQuery(ReactionQueryBase):
         query = sql.SQL(
             """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-            FROM reaction
+            FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE reaction.reaction_id = ANY (%s)
             """
@@ -362,9 +362,9 @@ class ReactionConversionQuery(ReactionQueryBase):
     def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         query = """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-            FROM reaction
+            FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
-            JOIN reaction_outcome on reaction_outcome.reaction_id = reaction.id
+            JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
             JOIN percentage on percentage.reaction_outcome_id = reaction_outcome.id
             WHERE percentage.value >= %s
               AND percentage.value <= %s
@@ -406,11 +406,11 @@ class ReactionYieldQuery(ReactionQueryBase):
     def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
         query = """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-            FROM reaction
+            FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
-            JOIN reaction_outcome on reaction_outcome.reaction_id = reaction.id
-            JOIN product_compound on product_compound.reaction_outcome_id = reaction_outcome.id
-            JOIN product_measurement on product_measurement.product_compound_id = product_compound.id
+            JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
+            JOIN ord.product_compound on product_compound.reaction_outcome_id = reaction_outcome.id
+            JOIN ord.product_measurement on product_measurement.product_compound_id = product_compound.id
             JOIN percentage on percentage.product_measurement_id = product_measurement.id
             WHERE product_measurement.type = 'YIELD'
               AND percentage.value >= %s
@@ -471,7 +471,7 @@ class DoiQuery(ReactionQueryBase):
             sql.SQL(
                 """
                 SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-                FROM reaction
+                FROM ord.reaction
                 JOIN dataset ON dataset.id = reaction.dataset_id
                 JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
                 WHERE reaction_provenance.doi = ANY (%s)
@@ -609,9 +609,9 @@ class ReactionComponentQuery(ReactionQueryBase):
             components.append(
                 f"""
                 SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-                FROM reaction
+                FROM ord.reaction
                 {mols_sql}
-                JOIN dataset ON dataset.id = reaction.dataset_id
+                JOIN ord.dataset ON dataset.id = reaction.dataset_id
                 WHERE
                 {predicate_sql}
                 """

@@ -545,7 +545,7 @@
                             {% endif %}
                             <tr>
                                 <td>Setpoint</td>
-                                <td>{{ reaction.conditions.pressure.setpoint|unit_format }}</td>
+                                <td>{{ reaction.conditions.pressure?.setpoint|unit_format }}</td>
                             </tr>
                             <tr>
                                 <td>Atmosphere</td>
