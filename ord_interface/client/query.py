@@ -208,7 +208,7 @@ class DatasetIdQuery(ReactionQueryBase):
         components = [
             sql.SQL(
                 """
-            SELECT DISTINCT reaction.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE dataset.dataset_id = ANY (%s)"""
