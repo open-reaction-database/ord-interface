@@ -151,6 +151,14 @@ export default {
 </script>
 
 <template lang="pug">
+.search-box
+  input(
+    type='text'
+    placeholder='Search All Fields...'
+    v-model='searchAllQuery'
+  )
+  button (@click='searchAll(searchAllQuery)')
+    b Search
 .search-options
   .options-title(
     @click='showReagentOptions = !showReagentOptions'
