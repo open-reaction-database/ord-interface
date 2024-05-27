@@ -726,8 +726,7 @@ def _events(
     """Returns a generator of RecordEvent messages."""
     events = [message.record_created]
     events.extend(message.record_modified)
-    for event in events:
-        yield event
+    yield from events
 
 
 TEMPLATE_FILTERS = {
