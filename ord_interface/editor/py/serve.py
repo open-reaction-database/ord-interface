@@ -30,21 +30,15 @@ import uuid
 import flask
 import github
 import google.protobuf.message  # pytype: disable=import-error
-from google.protobuf import text_format  # pytype: disable=import-error
 import psycopg2
 import psycopg2.sql
 import requests
+from google.protobuf import text_format  # pytype: disable=import-error
+from ord_schema import message_helpers, resolvers, templating, validations
+from ord_schema.proto import dataset_pb2, reaction_pb2
 from werkzeug import security
 
-from ord_schema import templating
-from ord_schema import message_helpers
-from ord_schema import resolvers
-from ord_schema import validations
-from ord_schema.proto import dataset_pb2
-from ord_schema.proto import reaction_pb2
-
-from ord_interface.visualization import drawing
-from ord_interface.visualization import generate_text
+from ord_interface.visualization import drawing, generate_text
 
 # pylint: disable=invalid-name,no-member,inconsistent-return-statements,assigning-non-slot
 bp = flask.Blueprint("editor", __name__, url_prefix="/editor", template_folder="../html")

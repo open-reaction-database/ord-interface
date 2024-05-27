@@ -13,9 +13,7 @@
 # limitations under the License.
 """Tests for ord_interface.visualization.generate_text."""
 import pytest
-
-from ord_schema import units
-from ord_schema import message_helpers
+from ord_schema import message_helpers, units
 from ord_schema.proto import reaction_pb2
 
 from ord_interface.visualization import generate_text
