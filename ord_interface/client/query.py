@@ -421,8 +421,6 @@ class ReactionYieldQuery(ReactionQuery):
             JOIN ord.product_measurement on product_measurement.product_compound_id = product_compound.id
             JOIN percentage on percentage.product_measurement_id = product_measurement.id
             WHERE product_measurement.type = 'YIELD'
-              AND percentage.value >= %s
-              AND percentage.value <= %s
         """
         args = []
         if self._min_yield is not None:

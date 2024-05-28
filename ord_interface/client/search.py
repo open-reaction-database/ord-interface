@@ -61,7 +61,7 @@ BOND_LENGTH = 20
 MAX_RESULTS = 1000
 
 
-def _run_query(commands: list[query.ReactionQueryBase], limit: int | None) -> list[query.Result]:
+def _run_query(commands: list[query.ReactionQuery], limit: int | None) -> list[query.Result]:
     """Runs a query and returns the matched reactions."""
     if len(commands) == 0:
         results = []
@@ -170,7 +170,7 @@ def fetch_datasets():
     """Fetches info about the current datasets."""
     engine = connect()
     rows = {}
-    with engine.connection, engine.cursor() as cursor:
+    with engine.connection as connection, connection.cursor() as cursor:
         cursor.execute("SELECT id, dataset_id, name, description FROM dataset")
         for row_id, dataset_id, name, description in cursor:
             rows[row_id] = {
@@ -202,11 +202,11 @@ def run_query():
         return flask.abort(flask.make_response(str(error), 400))
 
 
-def build_query() -> Tuple[List[query.ReactionQueryBase], Optional[int]]:
+def build_query() -> Tuple[List[query.ReactionQuery], Optional[int]]:
     """Builds queries from GET parameters.
 
     Returns:
-        queries: List of ReactionQueryBase subclass instances.
+        queries: List of ReactionQuery subclass instances.
         limit: Maximum number of results to return, or None.
     """
     dataset_ids = flask.request.args.get("dataset_ids")
@@ -233,9 +233,9 @@ def build_query() -> Tuple[List[query.ReactionQueryBase], Optional[int]]:
     if reaction_smarts is not None:
         queries.append(query.ReactionSmartsQuery(reaction_smarts))
     if min_conversion is not None and max_conversion is not None:
-        queries.append(query.ReactionConversionQuery(min_conversion, max_conversion))
+        queries.append(query.ReactionConversionQuery(float(min_conversion), float(max_conversion)))
     if min_yield is not None and max_yield is not None:
-        queries.append(query.ReactionYieldQuery(min_yield, max_yield))
+        queries.append(query.ReactionYieldQuery(float(min_yield), float(max_yield)))
     if dois is not None:
         queries.append(query.DoiQuery(dois.split(",")))
     if components:
