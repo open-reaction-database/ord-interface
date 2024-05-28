@@ -14,7 +14,7 @@
 """Python API for the Open Reaction Database."""
 from __future__ import annotations
 
-import binascii
+from base64 import b64decode
 from typing import List, Optional
 
 import requests
@@ -30,7 +30,7 @@ def parse_response(response: requests.Response) -> list[query.Result]:
     """Parses a JSON response into Result objects."""
     results = []
     for result in response.json():
-        result["proto"] = binascii.unhexlify(result["proto"])
+        result["proto"] = b64decode(result["proto"])
         results.append(query.Result(**result))
     return results
 

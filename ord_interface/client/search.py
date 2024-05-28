@@ -41,6 +41,7 @@ import dataclasses
 import gzip
 import io
 import os
+from base64 import b64encode
 from typing import List, Optional, Tuple
 
 import flask
@@ -147,7 +148,7 @@ def prep_results_for_json(results: list[query.Result]) -> list[dict]:
     response = []
     for result in results:
         result = dataclasses.asdict(result)
-        result["proto"] = result["proto"].hex()  # Convert to hex for JSON.
+        result["proto"] = b64encode(result["proto"]).decode()  # Convert to base64 for JSON.
         response.append(result)
     return response
 

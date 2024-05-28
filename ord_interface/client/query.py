@@ -49,10 +49,10 @@ import logging
 from typing import Dict, List, Optional, Tuple
 
 import psycopg2
-import psycopg2.extensions
 from ord_schema import message_helpers, validations
 from ord_schema.proto import reaction_pb2
 from psycopg2 import sql
+from psycopg2.extras import DictCursor
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 
@@ -75,7 +75,7 @@ class Result:
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
-def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
+def fetch_results(cursor: DictCursor) -> List[Result]:
     """Fetches query results.
 
     Args:
@@ -85,8 +85,9 @@ def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
         List of Result instances.
     """
     results = []
-    for dataset_id, reaction_id, proto in cursor:
-        results.append(Result(reaction_id=reaction_id, dataset_id=dataset_id, proto=proto.tobytes()))
+    for row in cursor:
+        row["proto"] = row["proto"].tobytes()
+        results.append(Result(**row))
     return results
 
 
@@ -106,7 +107,7 @@ class ReactionQuery(abc.ABC):
         """
 
     @abc.abstractmethod
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -143,7 +144,7 @@ class RandomSampleQuery(ReactionQuery):
         if self._num_rows <= 0:
             raise QueryException("num_rows must be greater than zero")
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -192,7 +193,7 @@ class DatasetIdQuery(ReactionQuery):
             if not validations.is_valid_dataset_id(dataset_id):
                 raise QueryException(f"invalid dataset ID: {dataset_id}")
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -247,7 +248,7 @@ class ReactionIdQuery(ReactionQuery):
             if not validations.is_valid_reaction_id(reaction_id):
                 raise QueryException(f"invalid reaction ID: {reaction_id}")
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -300,7 +301,7 @@ class ReactionSmartsQuery(ReactionQuery):
         except ValueError as error:
             raise QueryException(f"cannot parse reaction SMARTS: {self._reaction_smarts}") from error
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -359,7 +360,7 @@ class ReactionConversionQuery(ReactionQuery):
         """
         # NOTE(skearnes): Reported values may be outside of [0, 100].
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         query = """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
@@ -411,7 +412,7 @@ class ReactionYieldQuery(ReactionQuery):
         """
         # NOTE(skearnes): Reported values may be outside of [0, 100].
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         query = """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
@@ -468,7 +469,7 @@ class DoiQuery(ReactionQuery):
                 logger.info(f"Updating DOI: {doi} -> {parsed}")
                 self._dois[i] = parsed
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -528,7 +529,7 @@ class ReactionComponentQuery(ReactionQuery):
             }
         )
 
-    def _setup(self, predicates: List[ReactionComponentPredicate], cursor: psycopg2.extensions.cursor) -> None:
+    def _setup(self, predicates: List[ReactionComponentPredicate], cursor: DictCursor) -> None:
         """Prepares the database for a query.
 
         Args:
@@ -562,7 +563,7 @@ class ReactionComponentQuery(ReactionQuery):
             if not mol:
                 raise QueryException(f"cannot parse pattern: {predicate.pattern}")
 
-    def run(self, cursor: psycopg2.extensions.cursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
         """Runs the query.
 
         Args:
@@ -595,7 +596,7 @@ class ReactionComponentQuery(ReactionQuery):
     def _run(
         self,
         predicates: List[ReactionComponentPredicate],
-        cursor: psycopg2.extensions.cursor,
+        cursor: DictCursor,
         limit: Optional[int] = None,
     ) -> List[Result]:
         """Runs the query for a set of predicates."""
@@ -727,7 +728,7 @@ class OrdPostgres:
         Args:
             **kwargs: Keyword arguments for psycopg2.connect().
         """
-        self._connect_kwargs = kwargs | {"options": "-c search_path=public,ord"}
+        self._connect_kwargs = kwargs | {"options": "-c search_path=public,ord", "cursor_factory": DictCursor}
 
     @property
     def connection(self) -> psycopg2.extensions.connection:
