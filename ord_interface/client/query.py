@@ -90,7 +90,7 @@ def fetch_results(cursor: psycopg2.extensions.cursor) -> List[Result]:
     return results
 
 
-class ReactionQueryBase(abc.ABC):
+class ReactionQuery(abc.ABC):
     """Base class for reaction-based queries."""
 
     @abc.abstractmethod
@@ -119,7 +119,7 @@ class ReactionQueryBase(abc.ABC):
         """
 
 
-class RandomSampleQuery(ReactionQueryBase):
+class RandomSampleQuery(ReactionQuery):
     """Takes a random sample of reactions."""
 
     def __init__(self, num_rows: int) -> None:
@@ -167,7 +167,7 @@ class RandomSampleQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
-class DatasetIdQuery(ReactionQueryBase):
+class DatasetIdQuery(ReactionQuery):
     """Looks up reactions by dataset ID."""
 
     def __init__(self, dataset_ids: List[str]) -> None:
@@ -222,7 +222,7 @@ class DatasetIdQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
-class ReactionIdQuery(ReactionQueryBase):
+class ReactionIdQuery(ReactionQuery):
     """Looks up reactions by ID."""
 
     def __init__(self, reaction_ids: List[str]) -> None:
@@ -272,7 +272,7 @@ class ReactionIdQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
-class ReactionSmartsQuery(ReactionQueryBase):
+class ReactionSmartsQuery(ReactionQuery):
     """Matches reactions by reaction SMARTS."""
 
     def __init__(self, reaction_smarts: str) -> None:
@@ -332,16 +332,18 @@ class ReactionSmartsQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
-class ReactionConversionQuery(ReactionQueryBase):
+class ReactionConversionQuery(ReactionQuery):
     """Looks up reactions by conversion."""
 
-    def __init__(self, min_conversion: float, max_conversion: float) -> None:
+    def __init__(self, min_conversion: float | None, max_conversion: float | None) -> None:
         """Initializes the query.
 
         Args:
             min_conversion: Minimum conversion, as a percentage.
             max_conversion: Maximum conversion, as a percentage.
         """
+        if min_conversion is None and max_conversion is None:
+            raise ValueError("At least one of min_conversion or max_conversion must be specified.")
         self._min_conversion = min_conversion
         self._max_conversion = max_conversion
 
@@ -364,10 +366,16 @@ class ReactionConversionQuery(ReactionQueryBase):
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
             JOIN percentage on percentage.reaction_outcome_id = reaction_outcome.id
-            WHERE percentage.value >= %s
-              AND percentage.value <= %s
         """
-        args = [self._min_conversion, self._max_conversion]
+        if self._min_conversion is not None and self._max_conversion is not None:
+            query += "WHERE percentage.value >= %s AND percentage.value <= %s\n"
+            args = [self._min_conversion, self._max_conversion]
+        elif self._min_conversion is not None:
+            query += "WHERE percentage.value >= %s\n"
+            args = [self._min_conversion]
+        else:
+            query += "WHERE percentage.value <= %s\n"
+            args = [self._max_conversion]
         if limit:
             query += "LIMIT %s"
             args.append(limit)
@@ -376,16 +384,18 @@ class ReactionConversionQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
-class ReactionYieldQuery(ReactionQueryBase):
+class ReactionYieldQuery(ReactionQuery):
     """Looks up reactions by yield."""
 
-    def __init__(self, min_yield: float, max_yield: float) -> None:
+    def __init__(self, min_yield: float | None, max_yield: float | None) -> None:
         """Initializes the query.
 
         Args:
             min_yield: Minimum yield, as a percentage.
             max_yield: Maximum yield, as a percentage.
         """
+        if min_yield is None and max_yield is None:
+            raise ValueError("At least one of min_yield or max_yield must be specified.")
         self._min_yield = min_yield
         self._max_yield = max_yield
 
@@ -414,7 +424,13 @@ class ReactionYieldQuery(ReactionQueryBase):
               AND percentage.value >= %s
               AND percentage.value <= %s
         """
-        args = [self._min_yield, self._max_yield]
+        args = []
+        if self._min_yield is not None:
+            query += "AND percentage.value >= %s\n"
+            args.append(self._min_yield)
+        if self._max_yield is not None:
+            query += "AND percentage.value <= %s\n"
+            args.append(self._max_yield)
         if limit:
             query += "LIMIT %s"
             args.append(limit)
@@ -423,7 +439,7 @@ class ReactionYieldQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
-class DoiQuery(ReactionQueryBase):
+class DoiQuery(ReactionQuery):
     """Looks up reactions by DOI."""
 
     def __init__(self, dois: List[str]) -> None:
@@ -486,7 +502,7 @@ class DoiQuery(ReactionQueryBase):
         return fetch_results(cursor)
 
 
-class ReactionComponentQuery(ReactionQueryBase):
+class ReactionComponentQuery(ReactionQuery):
     """Matches reactions by reaction component predicates."""
 
     def __init__(
@@ -707,35 +723,25 @@ class ReactionComponentPredicate:
 class OrdPostgres:
     """Class for performing SQL queries on the ORD."""
 
-    def __init__(self, dbname: str, user: str, password: str, host: str, port: int) -> None:
+    def __init__(self, **kwargs) -> None:
         """Initializes an instance of OrdPostgres.
 
         Args:
-            dbname: Text database name.
-            user: Text user name.
-            password: Text user password.
-            host: Text host name.
-            port: Integer port.
+            **kwargs: Keyword arguments for psycopg2.connect().
         """
-        self._connection = psycopg2.connect(
-            dbname=dbname, user=user, password=password, host=host, port=port, options="-c search_path=public,ord"
-        )
-        self._connection.set_session(readonly=True)
+        self._connect_kwargs = kwargs | {"options": "-c search_path=public,ord"}
 
     @property
     def connection(self) -> psycopg2.extensions.connection:
-        return self._connection
+        connection = psycopg2.connect(**self._connect_kwargs)
+        connection.set_session(readonly=True)
+        return connection
 
-    def cursor(self) -> psycopg2.extensions.cursor:
-        return self._connection.cursor()
-
-    def run_query(
-        self, query: ReactionQueryBase, limit: Optional[int] = None, return_ids: bool = False
-    ) -> List[Result]:
+    def run_query(self, query: ReactionQuery, limit: Optional[int] = None, return_ids: bool = False) -> List[Result]:
         """Runs a query against the database.
 
         Args:
-            query: ReactionQueryBase query.
+            query: ReactionQuery query.
             limit: Integer maximum number of matches. If None (the default), no
                 limit is set.
             return_ids: If True, only return reaction IDs. If False, return
@@ -745,9 +751,9 @@ class OrdPostgres:
             List of Result instances.
         """
         query.validate()
-        with self._connection, self.cursor() as cursor:
+        with self.connection as connection, connection.cursor() as cursor:
             results = query.run(cursor, limit=limit)
-            self._connection.rollback()  # Revert rdkit runtime configuration.
+            connection.rollback()  # Revert rdkit runtime configuration.
         if return_ids:
             only_ids = []
             for result in results:
