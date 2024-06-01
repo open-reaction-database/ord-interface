@@ -31,11 +31,10 @@ import logging
 
 import docopt
 import sqlalchemy
-from sqlalchemy import orm
-
 from ord_schema import message_helpers
 from ord_schema.orm import database
 from ord_schema.proto import dataset_pb2
+from sqlalchemy import orm
 
 import ord_interface.client
 

@@ -17,16 +17,15 @@ This module contains two molecular drawing functions to render SVGs or PNGs
 given an RDKit molecule object: mol_to_svg and mol_to_png.
 """
 
-import io
 import base64
+import io
 import re
 from typing import Optional
 
 import numpy as np
 from PIL import Image, ImageOps
 from rdkit import Chem
-from rdkit.Chem import Draw
-from rdkit.Chem import rdDepictor
+from rdkit.Chem import Draw, rdDepictor
 
 rdDepictor.SetPreferCoordGen(True)
 
