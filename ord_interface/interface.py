@@ -15,7 +15,7 @@
 import flask
 
 from ord_interface.client import search
-from ord_interface.editor.py import serve
+from ord_interface.editor.py import serve  # pytype: disable=import-error
 from ord_interface.visualization import filters
 
 # TODO(skearnes): Figure out how to use this.
