@@ -21,7 +21,6 @@ import time
 
 import psycopg2
 import psycopg2.sql
-
 from ord_schema import message_helpers
 from ord_schema.proto import dataset_pb2
 

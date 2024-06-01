@@ -19,14 +19,11 @@ from urllib import parse
 
 import flask
 import pytest
-from google.protobuf import text_format
-from rdkit import Chem
-
-from ord_schema import message_helpers
-from ord_schema.proto import dataset_pb2
-from ord_schema.proto import reaction_pb2
-
 import serve  # pylint: disable=import-error,wrong-import-order
+from google.protobuf import text_format
+from ord_schema import message_helpers
+from ord_schema.proto import dataset_pb2, reaction_pb2
+from rdkit import Chem
 
 # These temporary datasets are leaked by tests and must be deleted in setUp().
 DATASETS = [

@@ -50,13 +50,11 @@ from typing import Dict, List, Optional, Tuple
 
 import psycopg2
 import psycopg2.extensions
+from ord_schema import message_helpers, validations
+from ord_schema.proto import reaction_pb2
 from psycopg2 import sql
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
-
-from ord_schema import message_helpers
-from ord_schema import validations
-from ord_schema.proto import reaction_pb2
 
 logger = logging.getLogger()
 
