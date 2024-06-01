@@ -18,7 +18,6 @@ import re
 from typing import Optional
 
 import jinja2
-
 from ord_schema import message_helpers
 from ord_schema.proto import reaction_pb2
 

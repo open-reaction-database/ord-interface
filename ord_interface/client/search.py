@@ -44,12 +44,11 @@ import os
 from typing import List, Optional, Tuple
 
 import flask
+from ord_schema.proto import dataset_pb2, reaction_pb2
 from rdkit import Chem
 
-from ord_schema.proto import dataset_pb2, reaction_pb2
-
 from ord_interface.client import query
-from ord_interface.visualization import generate_text, filters
+from ord_interface.visualization import filters, generate_text
 
 bp = flask.Blueprint("client", __name__, url_prefix="/client", template_folder=".")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
