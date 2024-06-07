@@ -23,9 +23,7 @@ from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
 from dateutil import parser
 from google.protobuf import text_format  # pytype: disable=import-error
-
-from ord_schema import units
-from ord_schema import message_helpers
+from ord_schema import message_helpers, units
 from ord_schema.proto import reaction_pb2
 
 from ord_interface.visualization import drawing
@@ -728,8 +726,7 @@ def _events(
     """Returns a generator of RecordEvent messages."""
     events = [message.record_created]
     events.extend(message.record_modified)
-    for event in events:
-        yield event
+    yield from events
 
 
 TEMPLATE_FILTERS = {
