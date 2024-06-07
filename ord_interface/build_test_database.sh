@@ -18,7 +18,7 @@ set -e
 export PGPASSWORD=postgres
 # Use a non-standard PGDATA so the database persists; see
 # https://nickjanetakis.com/blog/docker-tip-79-saving-a-postgres-database-in-a-docker-image.
-CONTAINER="$(docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=${PGPASSWORD} -e PGDATA=/data mcs07/postgres-rdkit)"
+CONTAINER="$(docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=${PGPASSWORD} -e PGDATA=/data informaticsmatters/rdkit-cartridge-debian)"
 
 # Wait for the database to become available.
 function connect() {
