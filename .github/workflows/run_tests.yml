@@ -23,7 +23,7 @@ env:
 
 jobs:
   test_ord_interface:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # NOTE(skearnes): Docker is not supported in MacOS GitLab runners.
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
