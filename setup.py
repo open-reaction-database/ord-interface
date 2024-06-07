@@ -41,8 +41,7 @@ if __name__ == "__main__":
         python_requires=">=3.10",
         install_requires=[
             "docopt>=0.6.2",
-            "flask>=1.1.2",
-            "flask-talisman>=1.0.0",
+            "fastapi",
             "jinja2>=2.0.0",
             "ord-schema==0.3.71",
             "pandas>=1.0.4",
