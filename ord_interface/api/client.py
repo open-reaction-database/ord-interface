@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import os
-from base64 import b64encode
 from typing import Annotated
 
 from fastapi import APIRouter, Query
@@ -28,6 +27,7 @@ from ord_interface.client.query import (
     DoiQuery,
     OrdPostgres,
     QueryException,
+    QueryResult,
     ReactionComponentPredicate,
     ReactionComponentQuery,
     ReactionConversionQuery,
@@ -35,7 +35,6 @@ from ord_interface.client.query import (
     ReactionQuery,
     ReactionSmartsQuery,
     ReactionYieldQuery,
-    Result,
 )
 
 router = APIRouter(prefix="/api", tags=["client"])
@@ -60,7 +59,7 @@ def connect():
     )
 
 
-def run_query(commands: list[ReactionQuery], limit: int | None) -> list[Result]:
+def run_query(commands: list[ReactionQuery], limit: int | None) -> list[QueryResult]:
     """Runs a query and returns the matched reactions."""
     if not commands:
         results = []
@@ -82,27 +81,6 @@ def run_query(commands: list[ReactionQuery], limit: int | None) -> list[Result]:
         if limit:
             results = results[:limit]
     return results
-
-
-class QueryResult(BaseModel):
-    """Query result."""
-
-    dataset_id: str
-    reaction_id: str
-    reaction: str | None = None  # Serialized Reaction protocol buffer (base64).
-
-    @classmethod
-    def from_result(cls, result: Result) -> QueryResult:
-        """Creates a QueryResult from a Result."""
-        return cls(
-            dataset_id=result.dataset_id,
-            reaction_id=result.reaction_id,
-            reaction=b64encode(result.proto).decode() if result.reaction else None,
-        )
-
-    @classmethod
-    def from_results(cls, results: list[Result]) -> list[QueryResult]:
-        return [cls.from_result(result) for result in results]
 
 
 @router.get("/query")
@@ -157,14 +135,14 @@ def query(
     return QueryResult.from_results(results)
 
 
-class ReactionQuery(BaseModel):
+class ReactionQueryInputs(BaseModel):
     """Reaction query."""
 
     reaction_ids: list[str]
 
 
 @router.post("/api/fetch_reactions")
-def fetch_reactions(inputs: ReactionQuery) -> list[QueryResult]:
+def fetch_reactions(inputs: ReactionQueryInputs) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
     command = ReactionIdQuery(inputs.reaction_ids)
     results = connect().run_query(command)

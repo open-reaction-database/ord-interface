@@ -42,52 +42,51 @@ Note that a predicate is matched if it applies to _any_ input/output.
 from __future__ import annotations
 
 import abc
-import dataclasses
 import enum
 import json
 import logging
-from typing import Dict, List, Optional, Tuple
+from base64 import b64decode, b64encode
 
 import psycopg2
 from ord_schema import message_helpers, validations
 from ord_schema.proto import reaction_pb2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
+from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 
 logger = logging.getLogger()
 
 
-@dataclasses.dataclass(frozen=True)
-class Result:
+class QueryResult(BaseModel):
     """Container for a single result from database query."""
 
     dataset_id: str
     reaction_id: str
-    proto: Optional[bytes] = None
+    proto: str | None = None  # Serialized Reaction protocol buffer (base64).
 
     @property
     def reaction(self) -> reaction_pb2.Reaction:
-        return reaction_pb2.Reaction.FromString(self.proto)
+        return reaction_pb2.Reaction.FromString(b64decode(self.proto))
 
-    def __eq__(self, other: Result) -> bool:
+    def __eq__(self, other: QueryResult) -> bool:
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
-def fetch_results(cursor: DictCursor) -> List[Result]:
+def fetch_results(cursor: DictCursor) -> list[QueryResult]:
     """Fetches query results.
 
     Args:
         cursor: psycopg.cursor instance.
 
     Returns:
-        List of Result instances.
+        List of QueryResult instances.
     """
     results = []
     for row in cursor:
-        row["proto"] = row["proto"].tobytes()
-        results.append(Result(**row))
+        row["proto"] = b64encode(row["proto"].tobytes()).decode()
+        results.append(QueryResult(**row))
     return results
 
 
@@ -107,7 +106,7 @@ class ReactionQuery(abc.ABC):
         """
 
     @abc.abstractmethod
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         """Runs the query.
 
         Args:
@@ -116,7 +115,7 @@ class ReactionQuery(abc.ABC):
                 limit is set.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
 
 
@@ -144,7 +143,7 @@ class RandomSampleQuery(ReactionQuery):
         if self._num_rows <= 0:
             raise QueryException("num_rows must be greater than zero")
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         """Runs the query.
 
         Args:
@@ -152,7 +151,7 @@ class RandomSampleQuery(ReactionQuery):
             limit: Maximum number of matches. If None, no limit is set.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
         del limit  # Unused.
         query = sql.SQL(
@@ -171,7 +170,7 @@ class RandomSampleQuery(ReactionQuery):
 class DatasetIdQuery(ReactionQuery):
     """Looks up reactions by dataset ID."""
 
-    def __init__(self, dataset_ids: List[str]) -> None:
+    def __init__(self, dataset_ids: list[str]) -> None:
         """Initializes the query.
 
         Args:
@@ -193,7 +192,7 @@ class DatasetIdQuery(ReactionQuery):
             if not validations.is_valid_dataset_id(dataset_id):
                 raise QueryException(f"invalid dataset ID: {dataset_id}")
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         """Runs the query.
 
         Args:
@@ -202,7 +201,7 @@ class DatasetIdQuery(ReactionQuery):
                 limit is set.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
         components = [
             sql.SQL(
@@ -226,7 +225,7 @@ class DatasetIdQuery(ReactionQuery):
 class ReactionIdQuery(ReactionQuery):
     """Looks up reactions by ID."""
 
-    def __init__(self, reaction_ids: List[str]) -> None:
+    def __init__(self, reaction_ids: list[str]) -> None:
         """Initializes the query.
 
         Args:
@@ -248,7 +247,7 @@ class ReactionIdQuery(ReactionQuery):
             if not validations.is_valid_reaction_id(reaction_id):
                 raise QueryException(f"invalid reaction ID: {reaction_id}")
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         """Runs the query.
 
         Args:
@@ -256,7 +255,7 @@ class ReactionIdQuery(ReactionQuery):
             limit: Not used; present for compatibility.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
         del limit  # Unused.
         query = sql.SQL(
@@ -301,7 +300,7 @@ class ReactionSmartsQuery(ReactionQuery):
         except ValueError as error:
             raise QueryException(f"cannot parse reaction SMARTS: {self._reaction_smarts}") from error
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         """Runs the query.
 
         Args:
@@ -310,7 +309,7 @@ class ReactionSmartsQuery(ReactionQuery):
                 limit is set.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
         components = [
             sql.SQL(
@@ -360,7 +359,7 @@ class ReactionConversionQuery(ReactionQuery):
         """
         # NOTE(skearnes): Reported values may be outside of [0, 100].
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         query = """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
@@ -412,7 +411,7 @@ class ReactionYieldQuery(ReactionQuery):
         """
         # NOTE(skearnes): Reported values may be outside of [0, 100].
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         query = """
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
@@ -441,7 +440,7 @@ class ReactionYieldQuery(ReactionQuery):
 class DoiQuery(ReactionQuery):
     """Looks up reactions by DOI."""
 
-    def __init__(self, dois: List[str]) -> None:
+    def __init__(self, dois: list[str]) -> None:
         """Initializes the query.
 
         Args:
@@ -469,7 +468,7 @@ class DoiQuery(ReactionQuery):
                 logger.info(f"Updating DOI: {doi} -> {parsed}")
                 self._dois[i] = parsed
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         """Runs the query.
 
         Args:
@@ -478,7 +477,7 @@ class DoiQuery(ReactionQuery):
                 limit is set.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
         components = [
             sql.SQL(
@@ -505,7 +504,7 @@ class ReactionComponentQuery(ReactionQuery):
     """Matches reactions by reaction component predicates."""
 
     def __init__(
-        self, predicates: List[ReactionComponentPredicate], do_chiral_sss: bool = False, tanimoto_threshold: float = 0.5
+        self, predicates: list[ReactionComponentPredicate], do_chiral_sss: bool = False, tanimoto_threshold: float = 0.5
     ) -> None:
         """Initializes the query.
 
@@ -529,7 +528,7 @@ class ReactionComponentQuery(ReactionQuery):
             }
         )
 
-    def _setup(self, predicates: List[ReactionComponentPredicate], cursor: DictCursor) -> None:
+    def _setup(self, predicates: list[ReactionComponentPredicate], cursor: DictCursor) -> None:
         """Prepares the database for a query.
 
         Args:
@@ -563,7 +562,7 @@ class ReactionComponentQuery(ReactionQuery):
             if not mol:
                 raise QueryException(f"cannot parse pattern: {predicate.pattern}")
 
-    def run(self, cursor: DictCursor, limit: Optional[int] = None) -> List[Result]:
+    def run(self, cursor: DictCursor, limit: int | None = None) -> list[QueryResult]:
         """Runs the query.
 
         Args:
@@ -572,7 +571,7 @@ class ReactionComponentQuery(ReactionQuery):
                 limit is set.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
         # The RDKit Postgres cartridge only allows the Tanimoto threshold to be
         # set once per query. If we mix EXACT and SIMILAR modes, we need to get
@@ -594,11 +593,8 @@ class ReactionComponentQuery(ReactionQuery):
         return []
 
     def _run(
-        self,
-        predicates: List[ReactionComponentPredicate],
-        cursor: DictCursor,
-        limit: Optional[int] = None,
-    ) -> List[Result]:
+        self, predicates: list[ReactionComponentPredicate], cursor: DictCursor, limit: int | None = None
+    ) -> list[QueryResult]:
         """Runs the query for a set of predicates."""
         if not predicates:
             return []
@@ -697,11 +693,11 @@ class ReactionComponentPredicate:
     def mode(self) -> MatchMode:
         return self._mode
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         """Returns a dict representation of the predicate."""
         return {"pattern": self._pattern, "target": self._target.name.lower(), "mode": self._mode.name.lower()}
 
-    def get(self) -> Tuple[str, List[str]]:
+    def get(self) -> tuple[str, list[str]]:
         """Builds the SQL predicate.
 
         Returns:
@@ -736,7 +732,7 @@ class OrdPostgres:
         connection.set_session(readonly=True)
         return connection
 
-    def run_query(self, query: ReactionQuery, limit: Optional[int] = None, return_ids: bool = False) -> List[Result]:
+    def run_query(self, query: ReactionQuery, limit: int | None = None, return_ids: bool = False) -> list[QueryResult]:
         """Runs a query against the database.
 
         Args:
@@ -747,7 +743,7 @@ class OrdPostgres:
                 full Reaction records.
 
         Returns:
-            List of Result instances.
+            List of QueryResult instances.
         """
         query.validate()
         with self.connection as connection, connection.cursor() as cursor:
@@ -756,7 +752,7 @@ class OrdPostgres:
         if return_ids:
             only_ids = []
             for result in results:
-                only_ids.append(Result(dataset_id=result.dataset_id, reaction_id=result.reaction_id))
+                only_ids.append(QueryResult(dataset_id=result.dataset_id, reaction_id=result.reaction_id))
             return only_ids
         return results
 
