@@ -16,12 +16,16 @@
 
 from __future__ import annotations
 
+import io
+import gzip
 import os
 from typing import Annotated
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
+from rdkit import Chem
 
+from ord_schema.proto import dataset_pb2
 from ord_interface.client.query import (
     DatasetIdQuery,
     DoiQuery,
@@ -62,24 +66,23 @@ def connect():
 def run_query(commands: list[ReactionQuery], limit: int | None) -> list[QueryResult]:
     """Runs a query and returns the matched reactions."""
     if not commands:
-        results = []
-    elif len(commands) == 1:
-        results = connect().run_query(commands[0], limit=limit)
-    else:
-        # Perform each query without limits and take the intersection of the matched reactions.
-        connection = connect()
-        reactions = {}
-        intersection = None
-        for command in commands:
-            this_results = {result.reaction_id: result for result in connection.run_query(command)}
-            reactions |= this_results
-            if intersection is None:
-                intersection = set(this_results.keys())
-            else:
-                intersection &= this_results.keys()
-        results = [reactions[reaction_id] for reaction_id in intersection]
-        if limit:
-            results = results[:limit]
+        return []
+    if len(commands) == 1:
+        return connect().run_query(commands[0], limit=limit)
+    # Perform each query without limits and take the intersection of the matched reactions.
+    connection = connect()
+    reactions = {}
+    intersection = None
+    for command in commands:
+        this_results = {result.reaction_id: result for result in connection.run_query(command)}
+        reactions |= this_results
+        if intersection is None:
+            intersection = set(this_results.keys())
+        else:
+            intersection &= this_results.keys()
+    results = [reactions[reaction_id] for reaction_id in intersection]
+    if limit:
+        results = results[:limit]
     return results
 
 
@@ -135,14 +138,14 @@ def query(
     return QueryResult.from_results(results)
 
 
-class ReactionQueryInputs(BaseModel):
-    """Reaction query."""
+class ReactionIdList(BaseModel):
+    """Reaction ID input."""
 
     reaction_ids: list[str]
 
 
-@router.post("/api/fetch_reactions")
-def fetch_reactions(inputs: ReactionQueryInputs) -> list[QueryResult]:
+@router.post("/reactions")
+def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
     command = ReactionIdQuery(inputs.reaction_ids)
     results = connect().run_query(command)
@@ -158,8 +161,8 @@ class DatasetInfo(BaseModel):
     size: int
 
 
-@router.get("/api/fetch_datasets")
-def fetch_datasets() -> list[DatasetInfo]:
+@router.get("/datasets")
+def get_datasets() -> list[DatasetInfo]:
     """Returns info about the current datasets."""
     with connect().connection as connection, connection.cursor() as cursor:
         cursor.execute(
@@ -175,5 +178,27 @@ def fetch_datasets() -> list[DatasetInfo]:
         )
         rows = []
         for row in cursor:
+            assert isinstance(row, dict)  # Type hint.
             rows.append(DatasetInfo(**row))
         return rows
+
+
+@router.get("/molfile")
+def get_molfile(smiles: str) -> str:
+    """Returns a molblock for the given SMILES."""
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        raise ValueError(smiles)
+    return Chem.MolToMolBlock(mol)
+
+
+@router.post("/download_results")
+def download_results(inputs: ReactionIdList):
+    """Downloads search results as a Dataset proto."""
+    results = get_reactions(inputs)
+    dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
+    return flask.send_file(
+        io.BytesIO(gzip.compress(dataset.SerializeToString())),
+        as_attachment=True,
+        download_name="ord_search_results.pb.gz",
+    )
