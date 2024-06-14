@@ -32,8 +32,14 @@ Web interface and api for the Open Reaction Database
 git clone git@github.com:open-reaction-database/ord-interface.git
 cd ord-interface
 ```
+If the above command for git doesn't work, try:
+```bash
+git clone https://github.com/open-reaction-database/ord-interface
+cd ord-interface
+```
 ### 2. Set up the test database
 ```bash
+# you will need python 3, pip, and postgresql installed on your computer first
 # activate the virtual env of your choice, ex. venv, conda, etc.
 # install requirements and run setup script
 pip install -e .
@@ -43,6 +49,7 @@ cd ./ord_interface
 ### 3. Set up and run the API via Docker
 Note: currently this also runs the old flask ui at port :5001
 ```bash
+# you will need docker installed on your computer first
 # from ./ord_interface
 docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
 docker compose up
@@ -52,6 +59,7 @@ docker compose up
   - Download [Ketcher](https://github.com/epam/ketcher/releases/tag/v2.5.1) (Here's a direct link to the [.zip file](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip)) and extract the files into `./app/src/ketcher`
   - In a new terminal window:
 ```bash
+# you will need node.js and npm installed on your computer first
 cd ./app
 # install node packages
 npm i 
