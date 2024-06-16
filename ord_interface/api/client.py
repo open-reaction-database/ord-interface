@@ -19,71 +19,47 @@ from __future__ import annotations
 import io
 import gzip
 import os
-from typing import Annotated
+from typing import Annotated, Iterator
 
+import psycopg2
 from fastapi import APIRouter, Query
+from psycopg2.extras import DictCursor
 from pydantic import BaseModel
 from rdkit import Chem
 
 from ord_schema.proto import dataset_pb2
-from ord_interface.client.query import (
+from ord_interface.api.queries import (
     DatasetIdQuery,
     DoiQuery,
-    OrdPostgres,
-    QueryException,
     QueryResult,
-    ReactionComponentPredicate,
     ReactionComponentQuery,
     ReactionConversionQuery,
     ReactionIdQuery,
-    ReactionQuery,
     ReactionSmartsQuery,
     ReactionYieldQuery,
+    run_queries,
 )
 
 router = APIRouter(prefix="/api", tags=["client"])
-
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "ord-postgres")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "ord-postgres")
-POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE", "ord")
 
 BOND_LENGTH = 20
 MAX_RESULTS = 1000
 
 
-def connect():
-    return OrdPostgres(
-        dbname=POSTGRES_DATABASE,
-        user=POSTGRES_USER,
-        password=POSTGRES_PASSWORD,
-        host=POSTGRES_HOST,
-        port=int(POSTGRES_PORT),
-    )
-
-
-def run_query(commands: list[ReactionQuery], limit: int | None) -> list[QueryResult]:
-    """Runs a query and returns the matched reactions."""
-    if not commands:
-        return []
-    if len(commands) == 1:
-        return connect().run_query(commands[0], limit=limit)
-    # Perform each query without limits and take the intersection of the matched reactions.
-    connection = connect()
-    reactions = {}
-    intersection = None
-    for command in commands:
-        this_results = {result.reaction_id: result for result in connection.run_query(command)}
-        reactions |= this_results
-        if intersection is None:
-            intersection = set(this_results.keys())
-        else:
-            intersection &= this_results.keys()
-    results = [reactions[reaction_id] for reaction_id in intersection]
-    if limit:
-        results = results[:limit]
-    return results
+def get_cursor() -> Iterator[DictCursor]:
+    kwargs = {
+        "dbname": os.getenv("POSTGRES_DATABASE", "ord"),
+        "user": os.getenv("POSTGRES_USER", "ord-postgres"),
+        "password": os.getenv("POSTGRES_PASSWORD", "ord-postgres"),
+        "host": os.getenv("POSTGRES_HOST", "localhost"),
+        "port": int(os.getenv("POSTGRES_PORT", "5432")),
+        "cursor_factory": DictCursor,
+        "options": "-c search_path=public,ord",
+    }
+    with psycopg2.connect(**kwargs) as connection:
+        connection.set_session(readonly=True)
+        with connection.cursor() as cursor:
+            yield cursor
 
 
 @router.get("/query")
@@ -116,25 +92,29 @@ def query(
     if doi:
         queries.append(DoiQuery(doi))
     if component:
-        predicates = []
-        for spec in component:
-            pattern, target_name, mode_name = spec.split(";")
-            target = ReactionComponentPredicate.Target.from_name(target_name)
-            mode = ReactionComponentPredicate.MatchMode.from_name(mode_name)
-            predicates.append(ReactionComponentPredicate(pattern, target, mode))
         kwargs = {}
         if use_stereochemistry is not None:
-            kwargs["do_chiral_sss"] = use_stereochemistry
+            kwargs["use_chirality"] = use_stereochemistry
         if similarity is not None:
-            kwargs["tanimoto_threshold"] = similarity
-        queries.append(ReactionComponentQuery(predicates, **kwargs))
+            kwargs["similarity_threshold"] = similarity
+        for spec in component:
+            pattern, target_name, mode_name = spec.split(";")
+            queries.append(
+                ReactionComponentQuery(
+                    pattern,
+                    ReactionComponentQuery.Target[target_name.upper()],
+                    ReactionComponentQuery.MatchMode[mode_name.upper()],
+                    **kwargs,
+                )
+            )
     if not queries:
         raise ValueError("No query parameters were specified.")
     if limit:
         limit = min(limit, MAX_RESULTS)
     else:
         limit = MAX_RESULTS
-    results = run_query(queries, limit)
+    with get_cursor() as cursor:
+        results = run_queries(cursor, queries, limit=limit)
     return QueryResult.from_results(results)
 
 
@@ -147,8 +127,8 @@ class ReactionIdList(BaseModel):
 @router.post("/reactions")
 def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
-    command = ReactionIdQuery(inputs.reaction_ids)
-    results = connect().run_query(command)
+    with get_cursor() as cursor:
+        results = run_queries(cursor, ReactionIdQuery(inputs.reaction_ids))
     return QueryResult.from_results(results)
 
 
@@ -158,29 +138,15 @@ class DatasetInfo(BaseModel):
     dataset_id: str
     name: str
     description: str
-    size: int
+    num_reactions: int
 
 
 @router.get("/datasets")
 def get_datasets() -> list[DatasetInfo]:
     """Returns info about the current datasets."""
-    with connect().connection as connection, connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT dataset.dataset_id, name, description, size
-            FROM dataset
-            JOIN (
-                SELECT dataset_id, COUNT(*) AS size
-                FROM reaction
-                GROUP BY dataset_id
-            ) dataset_counts ON dataset.id = dataset_counts.dataset_id
-            """
-        )
-        rows = []
-        for row in cursor:
-            assert isinstance(row, dict)  # Type hint.
-            rows.append(DatasetInfo(**row))
-        return rows
+    with get_cursor() as cursor:
+        cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
+        return [DatasetInfo(**row) for row in cursor]
 
 
 @router.get("/molfile")

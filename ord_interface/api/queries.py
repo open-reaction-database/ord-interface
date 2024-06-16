@@ -380,7 +380,7 @@ class ReactionComponentQuery(ReactionQuery):
         return query, params
 
 
-def run(
+def run_queries(
     cursor: DictCursor,
     reaction_queries: list[ReactionQuery] | ReactionQuery,
     limit: int | None = None,
