@@ -82,7 +82,10 @@ def fetch_results(cursor: DictCursor) -> list[QueryResult]:
         List of QueryResult instances.
     """
     results = []
+    reaction_ids = set()
     for row in cursor:
+        assert row["reaction_id"] not in reaction_ids
+        reaction_ids.add(row["reaction_id"])
         row["proto"] = b64encode(row["proto"].tobytes()).decode()
         results.append(QueryResult(**row))
     return results
@@ -306,7 +309,7 @@ class ReactionComponentQuery(ReactionQuery):
         self,
         pattern: str,
         target: Target,
-        mode: MatchMode,
+        match_mode: MatchMode,
         similarity_threshold: float = 0.5,
         use_chirality: bool = False,
     ) -> None:
@@ -315,11 +318,11 @@ class ReactionComponentQuery(ReactionQuery):
         Args:
             pattern: SMILES or SMARTS pattern.
             target: ReactionComponentQuery.Target.
-            mode: ReactionComponentQuery.MatchMode.
+            match_mode: ReactionComponentQuery.MatchMode.
             similarity_threshold: Similarity threshold for SIMILAR mode.
             use_chirality: Whether to use chirality in SUBSTRUCTURE/SMARTS modes.
         """
-        if mode == ReactionComponentQuery.MatchMode.SMARTS:
+        if match_mode == ReactionComponentQuery.MatchMode.SMARTS:
             mol = Chem.MolFromSmarts(pattern)
         else:
             mol = Chem.MolFromSmiles(pattern)
@@ -327,7 +330,7 @@ class ReactionComponentQuery(ReactionQuery):
             raise ValueError(f"Cannot parse pattern: {pattern}")
         self._pattern = pattern
         self._target = target
-        self._mode = mode
+        self._match_mode = match_mode
         self._similarity_threshold = similarity_threshold
         self._use_chirality = use_chirality
 
@@ -346,27 +349,27 @@ class ReactionComponentQuery(ReactionQuery):
             JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
             JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
         """
-        if self._mode in [ReactionComponentQuery.MatchMode.SIMILAR, ReactionComponentQuery.MatchMode.EXACT]:
+        if self._match_mode in [ReactionComponentQuery.MatchMode.SIMILAR, ReactionComponentQuery.MatchMode.EXACT]:
             predicate_sql = "tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s)) >= %s"
             params = [self._pattern]
-            if self._mode == ReactionComponentQuery.MatchMode.EXACT:
+            if self._match_mode == ReactionComponentQuery.MatchMode.EXACT:
                 params.append(1.0)
             else:
                 params.append(self._similarity_threshold)
-        elif self._mode == ReactionComponentQuery.MatchMode.SUBSTRUCTURE:
+        elif self._match_mode == ReactionComponentQuery.MatchMode.SUBSTRUCTURE:
             if self._use_chirality:
                 predicate_sql = "substruct_chiral(rdkit.mols.mol, %s)"
             else:
                 predicate_sql = "substruct(rdkit.mols.mol, %s)"
             params = [self._pattern]
-        elif self._mode == ReactionComponentQuery.MatchMode.SMARTS:
+        elif self._match_mode == ReactionComponentQuery.MatchMode.SMARTS:
             if self._use_chirality:
                 predicate_sql = "substruct_chiral(rdkit.mols.mol, %s::qmol)"
             else:
                 predicate_sql = "substruct(rdkit.mols.mol, %s::qmol)"
             params = [self._pattern]
         else:
-            raise NotImplementedError(f"Unsupported mode: {self._mode}")
+            raise NotImplementedError(f"Unsupported match_mode: {self._match_mode}")
         query = f"""
             SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction

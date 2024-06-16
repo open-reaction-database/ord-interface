@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for ord_interface.api.queries."""
-import numpy as np
 import pytest
 
 from ord_interface.api.queries import (
@@ -30,7 +29,7 @@ from ord_interface.api.queries import (
 def test_dataset_id_query(test_cursor):
     dataset_ids = ["ord_dataset-89b083710e2d441aa0040c361d63359f"]
     query = DatasetIdQuery(dataset_ids)
-    results = run(test_cursor, query, limit=10, return_ids=True)
+    results = run(test_cursor, query, limit=10)
     assert len(results) == 10
 
 
@@ -74,45 +73,63 @@ def test_exact_query(test_cursor):
     )
     results = run(test_cursor, query, limit=5, return_ids=True)
     assert len(results) == 5
-    # Check that we remove repeated reaction IDs.
-    reaction_ids = [result.reaction_id for result in results]
-    assert len(reaction_ids) == len(np.unique(reaction_ids))
 
 
 def test_substructure_query(test_cursor):
     query = ReactionComponentQuery(
-        "C", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+        "C", ReactionComponentQuery.Target.OUTPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
     )
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert len(results) == 10
-    # Check that we remove repeated reaction IDs.
-    reaction_ids = [result.reaction_id for result in results]
-    assert len(reaction_ids) == len(np.unique(reaction_ids))
+
+
+def test_chiral_substructure_query(test_cursor):
+    query = ReactionComponentQuery(
+        "OC1CC(O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+    )
+    results = run(test_cursor, query, limit=10, return_ids=True)
+    assert len(results) == 10
+    query = ReactionComponentQuery(
+        "O[C@H]1C[C@H](O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+    )
+    results = run(test_cursor, query, limit=10, return_ids=True)
+    assert len(results) == 10
+    query = ReactionComponentQuery(
+        "O[C@H]1C[C@H](O)C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
+        use_chirality=True,
+    )
+    results = run(test_cursor, query, limit=10, return_ids=True)
+    assert not results
+    query = ReactionComponentQuery(
+        "O[C@@H]1C[C@H](O)C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
+        use_chirality=True,
+    )
+    results = run(test_cursor, query, limit=10, return_ids=True)
+    assert len(results) == 10
 
 
 def test_smarts_query(test_cursor):
     query = ReactionComponentQuery("[#6]", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SMARTS)
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert len(results) == 10
-    # Check that we remove repeated reaction IDs.
-    reaction_ids = [result.reaction_id for result in results]
-    assert len(reaction_ids) == len(np.unique(reaction_ids))
 
 
 def test_similarity_query(test_cursor):
-    query = ReactionComponentQuery(
-        "CC=O", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SIMILAR, similarity_threshold=0.5
-    )
+    kwargs = {
+        "pattern": "CC=O",
+        "target": ReactionComponentQuery.Target.INPUT,
+        "match_mode": ReactionComponentQuery.MatchMode.SIMILAR,
+    }
+    query = ReactionComponentQuery(**kwargs, similarity_threshold=0.5)
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert not results
-    query = ReactionComponentQuery(
-        "CC=O", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SIMILAR, similarity_threshold=0.05
-    )
+    query = ReactionComponentQuery(**kwargs, similarity_threshold=0.05)
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert len(results) == 10
-    # Check that we remove repeated reaction IDs.
-    reaction_ids = [result.reaction_id for result in results]
-    assert len(reaction_ids) == len(np.unique(reaction_ids))
 
 
 def test_bad_smiles(test_cursor):
