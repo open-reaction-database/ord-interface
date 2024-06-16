@@ -46,7 +46,6 @@ from base64 import b64decode, b64encode
 from enum import Enum, auto
 from logging import getLogger
 
-import psycopg2
 from psycopg2.extras import DictCursor
 from pydantic import BaseModel
 from rdkit import Chem
@@ -96,30 +95,6 @@ class ReactionQuery(ABC):
     @abstractmethod
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
-
-
-class RandomSampleQuery(ReactionQuery):
-    """Takes a random sample of reactions."""
-
-    def __init__(self, num_rows: int) -> None:
-        """Initializes the query.
-
-        Args:
-            num_rows: Number of rows to return.
-        """
-        if num_rows <= 0:
-            raise ValueError("num_rows must be greater than zero")
-        self._num_rows = num_rows
-
-    @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        query = """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
-            FROM ord.reaction TABLESAMPLE SYSTEM_ROWS (%s)
-            JOIN dataset ON dataset.id = reaction.dataset_id
-        """
-        return query, [self._num_rows]
 
 
 class DatasetIdQuery(ReactionQuery):

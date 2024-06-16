@@ -18,7 +18,6 @@ import pytest
 from ord_interface.api.queries import (
     DatasetIdQuery,
     DoiQuery,
-    RandomSampleQuery,
     ReactionComponentQuery,
     ReactionConversionQuery,
     ReactionIdQuery,
@@ -26,13 +25,6 @@ from ord_interface.api.queries import (
     ReactionYieldQuery,
     run,
 )
-
-
-@pytest.mark.skip("tsm_system_rows is not part of testing.postgresql")
-def test_random_sample_query(test_cursor):
-    query = RandomSampleQuery(16)
-    results = run(test_cursor, query, return_ids=True)
-    assert len(results) == 16
 
 
 def test_dataset_id_query(test_cursor):
@@ -77,85 +69,54 @@ def test_doi_query(test_cursor):
 
 
 def test_exact_query(test_cursor):
-    pattern = "[Br]C1=CC=C(C(C)=O)C=C1"
-    predicates = [
-        ReactionComponentPredicate(
-            pattern,
-            target=ReactionComponentPredicate.Target.INPUT,
-            mode=ReactionComponentPredicate.MatchMode.EXACT,
-        )
-    ]
-    query = ReactionComponentQuery(predicates)
+    query = ReactionComponentQuery(
+        "[Br]C1=CC=C(C(C)=O)C=C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.EXACT
+    )
     results = run(test_cursor, query, limit=5, return_ids=True)
     assert len(results) == 5
-    # Check that we remove redundant reaction IDs.
+    # Check that we remove repeated reaction IDs.
     reaction_ids = [result.reaction_id for result in results]
     assert len(reaction_ids) == len(np.unique(reaction_ids))
 
 
 def test_substructure_query(test_cursor):
-    pattern = "C"
-    predicates = [
-        ReactionComponentPredicate(
-            pattern,
-            target=ReactionComponentPredicate.Target.INPUT,
-            mode=ReactionComponentPredicate.MatchMode.SUBSTRUCTURE,
-        )
-    ]
-    query = ReactionComponentQuery(predicates)
+    query = ReactionComponentQuery(
+        "C", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+    )
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert len(results) == 10
-    # Check that we remove redundant reaction IDs.
+    # Check that we remove repeated reaction IDs.
     reaction_ids = [result.reaction_id for result in results]
     assert len(reaction_ids) == len(np.unique(reaction_ids))
 
 
 def test_smarts_query(test_cursor):
-    pattern = "[#6]"
-    predicates = [
-        ReactionComponentPredicate(
-            pattern,
-            target=ReactionComponentPredicate.Target.INPUT,
-            mode=ReactionComponentPredicate.MatchMode.SMARTS,
-        )
-    ]
-    query = ReactionComponentQuery(predicates)
+    query = ReactionComponentQuery("[#6]", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SMARTS)
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert len(results) == 10
-    # Check that we remove redundant reaction IDs.
+    # Check that we remove repeated reaction IDs.
     reaction_ids = [result.reaction_id for result in results]
     assert len(reaction_ids) == len(np.unique(reaction_ids))
 
 
 def test_similarity_query(test_cursor):
-    pattern = "CC=O"
-    predicates = [
-        ReactionComponentPredicate(
-            pattern,
-            ReactionComponentPredicate.MatchMode.SMARTS,
-            mode=ReactionComponentPredicate.MatchMode.SIMILAR,
-        )
-    ]
-    query = ReactionComponentQuery(predicates, tanimoto_threshold=0.5)
+    query = ReactionComponentQuery(
+        "CC=O", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SIMILAR, similarity_threshold=0.5
+    )
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert not results
-    query = ReactionComponentQuery(predicates, tanimoto_threshold=0.05)
+    query = ReactionComponentQuery(
+        "CC=O", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SIMILAR, similarity_threshold=0.05
+    )
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert len(results) == 10
-    # Check that we remove redundant reaction IDs.
+    # Check that we remove repeated reaction IDs.
     reaction_ids = [result.reaction_id for result in results]
     assert len(reaction_ids) == len(np.unique(reaction_ids))
 
 
 def test_bad_smiles(test_cursor):
-    pattern = "invalid_smiles"
-    predicates = [
-        ReactionComponentPredicate(
-            pattern,
-            ReactionComponentPredicate.MatchMode.SIMILAR,
-            mode=ReactionComponentPredicate.MatchMode.SUBSTRUCTURE,
+    with pytest.raises(ValueError, match="Cannot parse pattern"):
+        ReactionComponentQuery(
+            "invalid_smiles", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
         )
-    ]
-    query = ReactionComponentQuery(predicates)
-    with pytest.raises(QueryException, match="cannot parse pattern: invalid_smiles"):
-        run(test_cursor, query)
