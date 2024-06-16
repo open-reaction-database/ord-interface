@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for ord_schema.orm.queries."""
+"""Tests for ord_interface.api.queries."""
 import numpy as np
 import pytest
 
-from ord_schema.orm.queries import (
+from ord_interface.api.queries import (
     DatasetIdQuery,
     DoiQuery,
     RandomSampleQuery,
@@ -36,20 +36,16 @@ def test_random_sample_query(test_cursor):
 
 
 def test_dataset_id_query(test_cursor):
-    dataset_ids = ["test_dataset"]
-    with pytest.raises(ValueError, match="Invalid dataset ID"):
-        DatasetIdQuery(dataset_ids)
-    query = DatasetIdQuery(dataset_ids, validate=False)
+    dataset_ids = ["ord_dataset-89b083710e2d441aa0040c361d63359f"]
+    query = DatasetIdQuery(dataset_ids)
     results = run(test_cursor, query, limit=10, return_ids=True)
     assert len(results) == 10
 
 
 def test_reaction_id_query(test_cursor):
-    reaction_ids = ["test_reaction-79"]
-    with pytest.raises(ValueError, match="Invalid reaction ID"):
-        ReactionIdQuery(reaction_ids)
-    query = ReactionIdQuery(reaction_ids, validate=False)
-    results = run(test_cursor, query, limit=10, return_ids=False)
+    reaction_ids = ["ord-3f67aa5592fd434d97a577988d3fd241"]
+    query = ReactionIdQuery(reaction_ids)
+    results = run(test_cursor, query, return_ids=False)
     assert [result.reaction_id for result in results] == reaction_ids
 
 

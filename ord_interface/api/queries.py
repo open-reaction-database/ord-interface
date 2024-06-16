@@ -125,15 +125,14 @@ class RandomSampleQuery(ReactionQuery):
 class DatasetIdQuery(ReactionQuery):
     """Looks up reactions by dataset ID."""
 
-    def __init__(self, dataset_ids: list[str], validate: bool = True) -> None:
+    def __init__(self, dataset_ids: list[str]) -> None:
         """Initializes the query.
 
         Args:
             dataset_ids: List of dataset IDs.
-            validate: Whether to validate dataset IDs.
         """
         for dataset_id in dataset_ids:
-            if validate and not validations.is_valid_dataset_id(dataset_id):
+            if not validations.is_valid_dataset_id(dataset_id):
                 raise ValueError(f"Invalid dataset ID: {dataset_id}")
         self._dataset_ids = dataset_ids
 
@@ -152,15 +151,14 @@ class DatasetIdQuery(ReactionQuery):
 class ReactionIdQuery(ReactionQuery):
     """Looks up reactions by ID."""
 
-    def __init__(self, reaction_ids: list[str], validate: bool = True) -> None:
+    def __init__(self, reaction_ids: list[str]) -> None:
         """Initializes the query.
 
         Args:
             reaction_ids: List of reaction IDs.
-            validate: Whether to validate reaction IDs.
         """
         for reaction_id in reaction_ids:
-            if validate and not validations.is_valid_reaction_id(reaction_id):
+            if not validations.is_valid_reaction_id(reaction_id):
                 raise ValueError(f"Invalid reaction ID: {reaction_id}")
         self._reaction_ids = reaction_ids
 
