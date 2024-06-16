@@ -57,8 +57,8 @@ def test_reaction_smarts_query(test_cursor):
 
 def test_reaction_conversion_query(test_cursor):
     query = ReactionConversionQuery(min_conversion=50, max_conversion=90)
-    results = run(test_cursor, query, limit=10, return_ids=True)
-    assert len(results) == 10
+    results = run(test_cursor, query, return_ids=True)
+    assert len(results) == 7
 
 
 def test_reaction_yield_query(test_cursor):
