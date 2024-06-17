@@ -23,6 +23,7 @@ from testing.postgresql import Postgresql
 from ord_interface.api import client, editor
 from ord_interface.api.testing import setup_test_postgres
 
+
 @asynccontextmanager
 async def lifespan(*args, **kwargs):
     """FastAPI lifespan setup; see https://fastapi.tiangolo.com/advanced/events/#lifespan."""
