@@ -112,8 +112,7 @@ def query(
     else:
         limit = MAX_RESULTS
     with get_cursor() as cursor:
-        results = run_queries(cursor, queries, limit=limit)
-    return QueryResult.from_results(results)
+        return run_queries(cursor, queries, limit=limit)
 
 
 class ReactionIdList(BaseModel):
@@ -126,8 +125,7 @@ class ReactionIdList(BaseModel):
 def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
     with get_cursor() as cursor:
-        results = run_queries(cursor, ReactionIdQuery(inputs.reaction_ids))
-    return QueryResult.from_results(results)
+        return run_queries(cursor, ReactionIdQuery(inputs.reaction_ids))
 
 
 class DatasetInfo(BaseModel):
@@ -156,7 +154,7 @@ def get_molfile(smiles: str) -> str:
     return Chem.MolToMolBlock(mol)
 
 
-@router.post("/search_results")
+@router.post("/download_search_results")
 def get_search_results(inputs: ReactionIdList):
     """Downloads search results as a Dataset proto."""
     results = get_reactions(inputs)
