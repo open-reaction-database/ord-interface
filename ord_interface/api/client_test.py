@@ -31,6 +31,38 @@ def client_fixture(test_postgres) -> Iterator[TestClient]:
         yield client
 
 
+@pytest.mark.parametrize(
+    "params,num_expected",
+    [
+        # Single factor queries.
+        ({"dataset_id": ["ord_dataset-89b083710e2d441aa0040c361d63359f"]}, 24),
+        ({"reaction_id": ["ord-3f67aa5592fd434d97a577988d3fd241"]}, 1),
+        ({"reaction_smarts": "[#6]>>[#7]"}, 83),
+        ({"min_conversion": 50, "max_conversion": 90}, 7),
+        ({"min_yield": 50, "max_yield": 90}, 51),
+        ({"doi": ["10.1126/science.1255525"]}, 24),
+        ({"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]}, 10),
+        ({"component": ["C;input;substructure"]}, 144),
+        ({"component": ["O[C@@H]1C[C@H](O)C1;input;substructure"], "use_stereochemistry": True}, 20),
+        ({"component": ["[#6];input;smarts"]}, 144),
+        ({"component": ["CC=O;input;similar"], "similarity": 0.5}, 0),
+        ({"component": ["CC=O;input;similar"], "similarity": 0.05}, 120),
+        # Multi-factor queries.
+        (
+            {
+                "min_yield": 50,
+                "max_yield": 90,
+                "component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact", "CC(C)(C)OC(=O)NC;input;substructure"],
+            },
+            7,
+        ),
+    ],
+)
+def test_query(client, params, num_expected):
+    response = client.get("/api/query", params=params)
+    assert len(response.json()) == num_expected
+
+
 def test_get_reactions(client):
     response = client.post("/api/reactions", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]})
     reactions = response.json()
@@ -61,7 +93,9 @@ M  END
 
 
 def test_get_search_results(client):
-    response = client.post("/api/download_search_results", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]})
+    response = client.post(
+        "/api/download_search_results", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]}
+    )
     dataset = dataset_pb2.Dataset.FromString(gzip.decompress(response.read()))
     assert dataset.name == "ORD Search Results"
     assert len(dataset.reactions) == 1

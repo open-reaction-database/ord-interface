@@ -75,7 +75,7 @@ def query(
     similarity: float | None = None,
     limit: int | None = None,
 ) -> list[QueryResult]:
-    """Returns a serialized Dataset proto containing matched reactions."""
+    """Runs a query and returns a list of matched reactions."""
     queries = []
     if dataset_id:
         queries.append(DatasetIdQuery(dataset_id))
