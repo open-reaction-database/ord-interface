@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for ord_interface.api.client."""
+"""Tests for ord_interface.api.search."""
 import gzip
 import os
 from typing import Iterator
