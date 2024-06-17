@@ -17,10 +17,10 @@
 from base64 import b64decode
 
 from fastapi import APIRouter
-from pydantic import BaseModel
 from ord_schema.proto import reaction_pb2
+from pydantic import BaseModel
 
-from ord_interface.api.client import get_reactions, ReactionIdList
+from ord_interface.api.client import ReactionIdList, get_reactions
 from ord_interface.visualization import filters, generate_text
 
 router = APIRouter(prefix="/api/view", tags=["view"])

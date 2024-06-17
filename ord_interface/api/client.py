@@ -16,18 +16,18 @@
 
 from __future__ import annotations
 
-import io
 import gzip
 import os
+from contextlib import contextmanager
 from typing import Annotated, Iterator
 
 import psycopg2
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
+from ord_schema.proto import dataset_pb2
 from psycopg2.extras import DictCursor
 from pydantic import BaseModel
 from rdkit import Chem
 
-from ord_schema.proto import dataset_pb2
 from ord_interface.api.queries import (
     DatasetIdQuery,
     DoiQuery,
@@ -46,13 +46,11 @@ BOND_LENGTH = 20
 MAX_RESULTS = 1000
 
 
+@contextmanager
 def get_cursor() -> Iterator[DictCursor]:
+    """Returns a psycopg2 cursor."""
     kwargs = {
-        "dbname": os.getenv("POSTGRES_DATABASE", "ord"),
-        "user": os.getenv("POSTGRES_USER", "ord-postgres"),
-        "password": os.getenv("POSTGRES_PASSWORD", "ord-postgres"),
-        "host": os.getenv("POSTGRES_HOST", "localhost"),
-        "port": int(os.getenv("POSTGRES_PORT", "5432")),
+        "dsn": os.getenv("ORD_INTERFACE_POSTGRES", "postgresql://postgres@localhost:5432/ord"),
         "cursor_factory": DictCursor,
         "options": "-c search_path=public,ord",
     }
@@ -137,7 +135,7 @@ class DatasetInfo(BaseModel):
 
     dataset_id: str
     name: str
-    description: str
+    description: str | None
     num_reactions: int
 
 
@@ -158,13 +156,9 @@ def get_molfile(smiles: str) -> str:
     return Chem.MolToMolBlock(mol)
 
 
-@router.post("/download_results")
-def download_results(inputs: ReactionIdList):
+@router.post("/search_results")
+def get_search_results(inputs: ReactionIdList):
     """Downloads search results as a Dataset proto."""
     results = get_reactions(inputs)
     dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
-    return flask.send_file(
-        io.BytesIO(gzip.compress(dataset.SerializeToString())),
-        as_attachment=True,
-        download_name="ord_search_results.pb.gz",
-    )
+    return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")

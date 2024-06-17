@@ -46,13 +46,12 @@ from base64 import b64decode, b64encode
 from enum import Enum, auto
 from logging import getLogger
 
+from ord_schema import message_helpers, validations
+from ord_schema.proto import reaction_pb2
 from psycopg2.extras import DictCursor
 from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
-
-from ord_schema import message_helpers, validations
-from ord_schema.proto import reaction_pb2
 
 logger = getLogger()
 

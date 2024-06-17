@@ -14,11 +14,29 @@
 
 """Open Reaction Database API."""
 
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+from testing.postgresql import Postgresql
 
 from ord_interface.api import client, editor
+from ord_interface.api.testing import setup_test_postgres
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(*args, **kwargs):
+    """FastAPI lifespan setup; see https://fastapi.tiangolo.com/advanced/events/#lifespan."""
+    del args, kwargs  # Unused.
+    if os.getenv("ORD_INTERFACE_TESTING", "FALSE") == "TRUE":
+        with Postgresql() as postgres:
+            setup_test_postgres(postgres.url())
+            os.environ["ORD_INTERFACE_POSTGRES"] = postgres.url()
+            yield
+    else:
+        yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(client.router)
 app.include_router(editor.router)
 

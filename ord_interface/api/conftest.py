@@ -13,8 +13,6 @@
 # limitations under the License.
 
 """Pytest fixtures."""
-import os
-from glob import glob
 from typing import Iterator
 
 import psycopg2
@@ -24,29 +22,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from testing.postgresql import Postgresql
 
-from ord_schema.message_helpers import load_message
-from ord_schema.orm.database import add_dataset, prepare_database, update_rdkit_ids, update_rdkit_tables
-from ord_schema.proto import dataset_pb2
+from ord_interface.api.testing import setup_test_postgres
 
 
-@pytest.fixture(scope="session")
-def test_postgres() -> Iterator[Postgresql]:
-    datasets = [
-        load_message(filename, dataset_pb2.Dataset)
-        for filename in glob(os.path.join(os.path.dirname(__file__), "testdata", "*.pb.gz"))
-    ]
+@pytest.fixture(name="test_postgres", scope="session")
+def test_postgres_fixture() -> Iterator[Postgresql]:
     with Postgresql() as postgres:
-        engine = create_engine(postgres.url(), future=True)
-        rdkit_cartridge = prepare_database(engine)
-        with Session(engine) as session:
-            for dataset in datasets:
-                add_dataset(dataset, session)
-                if rdkit_cartridge:
-                    session.flush()
-                    update_rdkit_tables(dataset.dataset_id, session)
-                    session.flush()
-                    update_rdkit_ids(dataset.dataset_id, session)
-                session.commit()
+        setup_test_postgres(postgres.url())
         yield postgres
 
 
