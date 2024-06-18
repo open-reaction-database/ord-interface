@@ -18,12 +18,22 @@
 set -e
 
 # Start nginx server.
-nginx -g 'daemon off;' &
+nginx
 
-# Start gunicorn.
-LOG_FORMAT='GUNICORN %(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
+# Start flask app.
+LOG_FORMAT='FLASK %(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
 gunicorn ord_interface.interface:app \
-  --bind unix:/run/gunicorn.sock \
+  --bind unix:/run/flask.sock \
+  --workers 2 \
+  --access-logfile - \
+  --access-logformat "${LOG_FORMAT}" \
+  --daemon
+
+# Start fastapi app.
+LOG_FORMAT='FASTAPI %(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
+gunicorn ord_interface.api.main:app \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind unix:/run/fastapi.sock \
   --workers 2 \
   --access-logfile - \
   --access-logformat "${LOG_FORMAT}"

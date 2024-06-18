@@ -14,28 +14,19 @@
 
 """View API."""
 
-from base64 import b64decode
-
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from ord_schema.proto import reaction_pb2
-from pydantic import BaseModel
 
-from ord_interface.api.client import ReactionIdList, get_reactions
+from ord_interface.api.search import ReactionIdList, get_reactions
 from ord_interface.visualization import filters, generate_text
 
-router = APIRouter(prefix="/api/view", tags=["view"])
+router = APIRouter(prefix="/api", tags=["view"])
 
 
-class ViewCompoundInputs(BaseModel):
-    """View compound inputs."""
-
-    proto: str  # Serialized Compound protocol buffer (base64).
-
-
-@router.post("/compound")
-def get_compound(inputs: ViewCompoundInputs) -> str:
+@router.post("/compound_svg")
+def get_compound(request: Request) -> str:
     """Returns an SVG of a molecule."""
-    compound = reaction_pb2.Compound.FromString(b64decode(inputs.proto))
+    compound = reaction_pb2.Compound.FromString(request.body())
     try:
         return filters._compound_svg(compound)  # pylint: disable=protected-access
     except (ValueError, KeyError):
@@ -52,20 +43,3 @@ def get_reaction_summary(reaction_id: str, compact: bool = True) -> str:
         return generate_text.generate_html(reaction=results[0].reaction, compact=compact)
     except (ValueError, KeyError):
         return "[Reaction cannot be displayed]"
-
-
-@router.get("/reaction_page")
-def get_reaction_page(reaction_id: str, compact: bool = True):
-    """Returns the pbtxt of a single reaction as plain text."""
-    results = get_reactions(ReactionIdList(reaction_ids=[reaction_id]))
-    if len(results) == 0 or len(results) > 1:
-        raise ValueError(reaction_id)
-    reaction = results[0].reaction
-    reaction_summary = generate_text.generate_html(reaction=reaction, compact=compact)
-    return flask.render_template(
-        "reaction_view.html",
-        reaction=reaction,
-        dataset_id=results[0].dataset_id,
-        reaction_summary=reaction_summary,
-        bond_length=20,
-    )

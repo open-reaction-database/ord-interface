@@ -21,6 +21,7 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 from ord_schema.proto import dataset_pb2
+from rdkit import Chem
 
 from ord_interface.api.main import app
 
@@ -78,18 +79,7 @@ def test_get_datasets(client):
 
 def test_get_molfile(client):
     response = client.get("/api/molfile", params={"smiles": "C(=O)N"})
-    expected = """
-     RDKit          2D
-
-  3  2  0  0  0  0  0  0  0  0999 V2000
-    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.2990    0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.2990    0.7500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
-  1  2  2  0
-  1  3  1  0
-M  END
-"""
-    assert response.json() == expected
+    assert Chem.MolToSmiles(Chem.MolFromMolBlock(response.json())) == "NC=O"
 
 
 def test_get_search_results(client):

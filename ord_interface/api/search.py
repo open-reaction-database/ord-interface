@@ -50,7 +50,7 @@ MAX_RESULTS = 1000
 def get_cursor() -> Iterator[DictCursor]:
     """Returns a psycopg2 cursor."""
     kwargs = {
-        "dsn": os.getenv("ORD_INTERFACE_POSTGRES", "postgresql://postgres@localhost:5432/ord"),
+        "dsn": os.getenv("ORD_INTERFACE_POSTGRES", "postgresql://postgres@localhost:5432/ord?client_encoding=utf-8"),
         "cursor_factory": DictCursor,
         "options": "-c search_path=public,ord",
     }

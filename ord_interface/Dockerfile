@@ -88,7 +88,7 @@ COPY ord_interface/editor/ ord_interface/editor/
 # Now copy everything else.
 COPY ord_interface/about.html ord_interface/
 COPY ord_interface/interface.py ord_interface/
-COPY ord_interface/client/ ord_interface/client/
+COPY ord_interface/api/ ord_interface/api/
 COPY ord_interface/visualization/ ord_interface/visualization/
 RUN pip install .
 

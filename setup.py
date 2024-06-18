@@ -42,14 +42,18 @@ if __name__ == "__main__":
         install_requires=[
             "docopt>=0.6.2",
             "fastapi",
+            "gunicorn",
             "jinja2>=2.0.0",
+            "numpy<2",
             "ord-schema==0.3.72",
             "pandas>=1.0.4",
             "protobuf==4.22.3",
-            "rdkit>=2021.9.5",
             "psycopg2-binary>=2.8.5",
             "pygithub>=1.51",
+            "rdkit>=2021.9.5",
             "requests>=2.24.0",
+            "testing-postgresql",
+            "uvicorn[standard]",
         ],
         extras_require={
             "tests": [
