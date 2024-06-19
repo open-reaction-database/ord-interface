@@ -45,7 +45,7 @@ if __name__ == "__main__":
             "gunicorn",
             "jinja2>=2.0.0",
             "numpy<2",
-            "ord-schema==0.3.72",
+            "ord-schema==0.3.79",
             "pandas>=1.0.4",
             "protobuf==4.22.3",
             "psycopg2-binary>=2.8.5",

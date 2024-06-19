@@ -17,7 +17,7 @@ import logging
 from ord_schema.orm import database
 
 from ord_interface.api.testing import setup_test_postgres
-from ord_interface.client import POSTGRES_PORT, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_USER, POSTGRES_HOST
+from ord_interface.client import POSTGRES_DB, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER
 
 
 def main():
