@@ -23,7 +23,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 
-def setup_test_postgres(url: str, require_rdkit: bool = True) -> None:
+def setup_test_postgres(url: str) -> None:
     """Adds test data to a postgres database."""
     datasets = [
         load_message(filename, dataset_pb2.Dataset)
@@ -32,8 +32,6 @@ def setup_test_postgres(url: str, require_rdkit: bool = True) -> None:
     assert datasets
     engine = create_engine(url, future=True)
     rdkit_cartridge = prepare_database(engine)
-    if require_rdkit and not rdkit_cartridge:
-        raise EnvironmentError("RDKit cartridge is not installed")
     with Session(engine) as session:
         for dataset in datasets:
             add_dataset(dataset, session)
