@@ -31,8 +31,9 @@ sleep 60
 set +e
 status=0
 
-# Run tests (only the ones that don't use testing.postgresql).
-pytest -vv --ignore=api/queries_test.py || status=1
+# Run tests (only the ones that depend on the running app; not those that use testing.postgresql).
+ORD_INTERFACE_POSTGRES='postgresql://postgres:postgres@localhost:5432/ord?client_encoding=utf-8' \
+  pytest -vv --ignore=api/queries_test.py || status=1
 node editor/js/test.js || status=1
 
 # Shut down the containers.
