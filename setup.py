@@ -33,6 +33,7 @@ if __name__ == "__main__":
         ],
         packages=setuptools.find_packages(),
         package_data={
+            # NOTE(skearnes): These entries seem to be required for actions/checkout to find these files.
             "ord_interface.api": ["**/*.pb.gz"],
             "ord_interface.visualization": ["template.html", "template.txt"],
         },
