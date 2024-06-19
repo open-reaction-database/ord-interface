@@ -15,20 +15,29 @@
 """Tests for ord_interface.api.search."""
 import gzip
 import os
+from contextlib import ExitStack
 from typing import Iterator
 from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
+from ord_schema.logging import get_logger
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 
 from ord_interface.api.main import app
 
+logger = get_logger(__name__)
+
 
 @pytest.fixture(name="client", scope="session")
 def client_fixture(test_postgres) -> Iterator[TestClient]:
-    with TestClient(app) as client, patch.dict(os.environ, {"ORD_INTERFACE_POSTGRES": test_postgres.url()}):
+    with TestClient(app) as client, ExitStack() as stack:
+        # NOTE(skearnes): Set ORD_INTERFACE_POSTGRES to use that database instead of a testing.postgresql instance.
+        # To force the use of testing.postgresl, set ORD_INTERFACE_TESTING=TRUE.
+        if os.environ.get("ORD_INTERFACE_TESTING", "FALSE") == "FALSE" and not os.environ.get("ORD_INTERFACE_POSTGRES"):
+            stack.enter_context(patch.dict(os.environ, {"ORD_INTERFACE_POSTGRES": test_postgres.url()}))
+        logger.info(f"ORD_INTERFACE_POSTGRES={os.environ['ORD_INTERFACE_POSTGRES']}")
         yield client
 
 
