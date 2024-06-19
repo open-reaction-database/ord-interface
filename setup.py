@@ -59,8 +59,10 @@ if __name__ == "__main__":
         extras_require={
             "tests": [
                 "black>=22.3.0",
+                "coverage>=5.2.1",
                 "pylint>=2.13.9",
                 "pytest>=6.2.5",
+                "pytest-cov>=3.0.0",
                 "pytype>=2022.5.19",
             ],
         },
