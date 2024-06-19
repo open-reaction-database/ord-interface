@@ -98,4 +98,5 @@ COPY ord_interface/nginx.conf /etc/nginx/nginx.conf
 
 RUN ln -sf /dev/stderr /var/log/nginx.log \
    && chmod +x start_app.sh
+ENV ORD_POSTGRES_RDKIT=1
 ENTRYPOINT ["/app/ord-interface/start_app.sh"]
