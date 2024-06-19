@@ -42,6 +42,7 @@ if __name__ == "__main__":
         install_requires=[
             "docopt>=0.6.2",
             "fastapi",
+            "flask>=1.1.2",
             "gunicorn",
             "jinja2>=2.0.0",
             "numpy<2",
