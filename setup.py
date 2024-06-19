@@ -33,10 +33,8 @@ if __name__ == "__main__":
         ],
         packages=setuptools.find_packages(),
         package_data={
-            "ord_interface.visualization": [
-                "template.html",
-                "template.txt",
-            ],
+            "ord_interface.api.testdata": ["*.pb.gz"],
+            "ord_interface.visualization": ["template.html", "template.txt"],
         },
         python_requires=">=3.10",
         install_requires=[
