@@ -81,6 +81,7 @@ jobs:
       - name: Run tests
         run: |
           cd "${GITHUB_WORKSPACE}/ord_interface"
+          ls -lh api/*
           ./run_tests.sh "--cache-from=${CACHE_TARGET}"
       - name: Update docker cache
         run: |
