@@ -263,7 +263,7 @@ class DoiQuery(ReactionQuery):
             dois: List of DOIs.
         """
         parsed_dois = []
-        for i, doi in enumerate(dois):
+        for doi in dois:
             try:
                 parsed = message_helpers.parse_doi(doi)
             except ValueError as error:

@@ -57,6 +57,7 @@ def get_cursor() -> Iterator[DictCursor]:
     with psycopg2.connect(**kwargs) as connection:
         connection.set_session(readonly=True)
         with connection.cursor() as cursor:
+            assert isinstance(cursor, DictCursor)  # Type hint.
             yield cursor
 
 
@@ -76,6 +77,7 @@ def query(
     limit: int | None = None,
 ) -> list[QueryResult]:
     """Runs a query and returns a list of matched reactions."""
+    # pylint: disable=too-many-arguments,too-many-branches,too-many-locals
     queries = []
     if dataset_id:
         queries.append(DatasetIdQuery(dataset_id))

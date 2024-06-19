@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 
 
 def setup_test_postgres(url: str) -> None:
+    """Adds test data to a postgres database."""
     datasets = [
         load_message(filename, dataset_pb2.Dataset)
         for filename in glob(os.path.join(os.path.dirname(__file__), "testdata", "*.pb.gz"))

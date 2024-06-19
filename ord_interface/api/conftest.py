@@ -45,4 +45,5 @@ def test_cursor(test_postgres) -> Iterator[DictCursor]:
     with psycopg2.connect(test_postgres.url(), cursor_factory=DictCursor, options=options) as connection:
         connection.set_session(readonly=True)
         with connection.cursor() as cursor:
+            assert isinstance(cursor, DictCursor)  # Type hint.
             yield cursor
