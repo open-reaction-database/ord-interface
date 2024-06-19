@@ -49,7 +49,7 @@ export default {
       this.loading = true
       try {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/fetch_reactions`)
+        xhr.open("POST", `/api/reactions`)
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onload = () => {
           // if response is good, deserialize reaction and return object from protobuff
@@ -65,7 +65,7 @@ export default {
           this.reactions = fetchedReactions
           this.loading = false
         }
-        xhr.send(JSON.stringify(this.reactionIds))
+        xhr.send(JSON.stringify({"reaction_ids": this.reactionIds}))
       } catch (e) {
         console.log(e)
         this.loading = false

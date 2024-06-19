@@ -17,18 +17,23 @@ set -e
 
 set -x
 ./build_test_database.sh
-docker build -f Dockerfile -t openreactiondatabase/ord-interface .. "$@"
+ARCH="x86_64"
+if [[ "$(uname -p)" =~ "arm" ]]; then
+  ARCH="aarch_64"
+fi
+docker build -f Dockerfile -t openreactiondatabase/ord-interface .. --build-arg="ARCH=${ARCH}" "$@"
 docker compose up --detach
 set +x
 
-echo "Waiting for the server to start..."
+echo "Waiting 60s for the server to start..."
 sleep 60
 
 set +e
 status=0
 
-# Run tests.
-pytest -vv || status=1
+# Run tests (only the ones that depend on the running app; not those that use testing.postgresql).
+ORD_INTERFACE_POSTGRES='postgresql://postgres:postgres@localhost:5432/ord?client_encoding=utf-8' \
+  pytest -vv --ignore=api/queries_test.py || status=1
 node editor/js/test.js || status=1
 
 # Shut down the containers.

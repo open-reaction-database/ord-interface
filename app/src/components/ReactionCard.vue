@@ -40,7 +40,7 @@ export default {
   },
   methods: {
     getReactionTable() {
-      fetch(`/api/render/${this.reaction.reaction_id}`)
+      fetch(`/api/reaction_summary?reaction_id=${this.reaction.reaction_id}`)
         .then(response => response.json())
         .then(responseData => {
           this.reactionTable = responseData
