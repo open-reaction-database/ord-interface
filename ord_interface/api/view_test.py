@@ -6,7 +6,7 @@ from ord_schema.proto import reaction_pb2
 def test_get_compound_svg(test_client):
     compound = reaction_pb2.Compound()
     compound.identifiers.add(value="c1ccccc1", type="SMILES")
-    response = test_client.post("/api/compound_svg", data=compound.SerializeToString())
+    response = test_client.post("/api/compound_svg", content=compound.SerializeToString())
     response.raise_for_status()
 
 
