@@ -62,7 +62,7 @@ def get_cursor() -> Iterator[DictCursor]:
 
 
 @router.get("/query")
-def query(
+async def query(
     dataset_id: Annotated[list[str] | None, Query()] = None,
     reaction_id: Annotated[list[str] | None, Query()] = None,
     reaction_smarts: str | None = None,
@@ -124,7 +124,7 @@ class ReactionIdList(BaseModel):
 
 
 @router.post("/reactions")
-def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
+async def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
     with get_cursor() as cursor:
         return run_queries(cursor, ReactionIdQuery(inputs.reaction_ids))
@@ -140,7 +140,7 @@ class DatasetInfo(BaseModel):
 
 
 @router.get("/datasets")
-def get_datasets() -> list[DatasetInfo]:
+async def get_datasets() -> list[DatasetInfo]:
     """Returns info about the current datasets."""
     with get_cursor() as cursor:
         cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
@@ -148,7 +148,7 @@ def get_datasets() -> list[DatasetInfo]:
 
 
 @router.get("/molfile")
-def get_molfile(smiles: str) -> str:
+async def get_molfile(smiles: str) -> str:
     """Returns a molblock for the given SMILES."""
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
@@ -157,8 +157,8 @@ def get_molfile(smiles: str) -> str:
 
 
 @router.post("/download_search_results")
-def get_search_results(inputs: ReactionIdList):
+async def get_search_results(inputs: ReactionIdList):
     """Downloads search results as a Dataset proto."""
-    results = get_reactions(inputs)
+    results = await get_reactions(inputs)
     dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
     return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
