@@ -25,10 +25,17 @@ docker build -f Dockerfile -t openreactiondatabase/ord-interface .. --build-arg=
 docker compose up --detach
 set +x
 
-echo "Waiting 60s for the server to start..."
-sleep 60
-
+# Wait for the database to become available.
+function connect() {
+  PGPASSWORD=postgres psql -p 5432 -h localhost -U postgres < /dev/null
+}
 set +e
+connect
+while [ $? -ne 0 ]; do
+  echo waiting for postgres
+  sleep 1
+  connect
+done
 status=0
 
 # Run tests (only the ones that depend on the running app; not those that use testing.postgresql).

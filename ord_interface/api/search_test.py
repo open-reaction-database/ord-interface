@@ -19,6 +19,8 @@ import pytest
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 
+from ord_interface.api.queries import QueryResult
+
 
 @pytest.mark.parametrize(
     "params,num_expected",
@@ -51,6 +53,13 @@ def test_query(test_client, params, num_expected):
     response = test_client.get("/api/query", params=params)
     response.raise_for_status()
     assert len(response.json()) == num_expected
+
+
+def test_get_reaction(test_client):
+    response = test_client.get("/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"})
+    response.raise_for_status()
+    result = QueryResult(**response.json())
+    assert result.dataset_id == "ord_dataset-89b083710e2d441aa0040c361d63359f"
 
 
 def test_get_reactions(test_client):

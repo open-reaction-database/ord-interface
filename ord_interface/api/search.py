@@ -117,6 +117,14 @@ async def query(
         return run_queries(cursor, queries, limit=limit)
 
 
+@router.get("/reaction")
+async def get_reaction(reaction_id: str) -> QueryResult:
+    """Fetches a Reaction by ID."""
+    with get_cursor() as cursor:
+        results = run_queries(cursor, ReactionIdQuery([reaction_id]))
+    return results[0]
+
+
 class ReactionIdList(BaseModel):
     """Reaction ID input."""
 
