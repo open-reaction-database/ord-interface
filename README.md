@@ -55,10 +55,10 @@ docker compose up
 
 ```shell
 cd ord_interface/api
-ORD_INTERFACE_TESTING=TRUE fastapi dev main.py
+ORD_INTERFACE_TESTING=TRUE fastapi dev main.py --port=5000
 ```
 
-### 4. Set up and run the Vue SPA
+### 3. Set up and run the Vue SPA
   - Download [Ketcher](https://github.com/epam/ketcher/releases/tag/v2.5.1) (Here's a direct link to the [.zip file](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip)) and extract the files into `./app/src/ketcher`
   - In a new terminal window:
 
