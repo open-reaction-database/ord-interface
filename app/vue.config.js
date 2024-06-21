@@ -35,7 +35,7 @@ module.exports = defineConfig({
     devServer: {
       proxy: process.env.NODE_ENV === 'development' ? {
         "^/api": {
-          target: "http://0.0.0.0:5000/client",
+          target: "http://0.0.0.0:5000",
           changeOrigin: true
         }
       } : {}

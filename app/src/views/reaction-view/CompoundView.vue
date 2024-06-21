@@ -117,7 +117,7 @@ export default {
       // send http request
       return new Promise(resolve => {
         const xhr = new XMLHttpRequest()
-        xhr.open("POST", "/api/render/compound/svg")
+        xhr.open("POST", "/api/compound_svg")
         const binary = compound.serializeBinary()
         xhr.responseType = "json"
         xhr.onload = function () {

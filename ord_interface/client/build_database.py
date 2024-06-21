@@ -11,62 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Populates a PostgreSQL database containing the ORD (for local testing).
-
-NOTE: For production, use ord_schema/orm/add_datasets.py instead of this script.
-
-Usage:
-    build_database.py --input=<str> [options]
-
-Options:
-    --input=<str>       Input pattern (glob)
-    --host=<str>        PostgreSQL server host [default: localhost]
-    --dbname=<str>      Database name
-    --user=<str>        Username
-    --password=<str>    Password
-    --port=<int>        Port
-"""
-import glob
+"""Populates a PostgreSQL database containing the ORD (for local testing)."""
 import logging
 
-import docopt
-import sqlalchemy
-from ord_schema import message_helpers
 from ord_schema.orm import database
-from ord_schema.proto import dataset_pb2
-from sqlalchemy import orm
 
-import ord_interface.client
-
-logger = logging.getLogger()
+from ord_interface.api.testing import setup_test_postgres
+from ord_interface.client import POSTGRES_DB, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER
 
 
-def main(kwargs):
-    filenames = glob.glob(kwargs["--input"])
-    logger.info("Found %d datasets", len(filenames))
-    if not filenames:
-        raise ValueError("--input did not match any files")
+def main():
+    logging.disable(logging.DEBUG)
     connection_string = database.get_connection_string(
-        database=kwargs["--dbname"] or ord_interface.client.POSTGRES_DB,
-        username=kwargs["--user"] or ord_interface.client.POSTGRES_USER,
-        password=kwargs["--password"] or ord_interface.client.POSTGRES_PASSWORD,
-        host=kwargs["--host"],
-        port=kwargs["--port"] or ord_interface.client.POSTGRES_PORT,
+        database=POSTGRES_DB, username=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST, port=POSTGRES_PORT
     )
-    engine = sqlalchemy.create_engine(connection_string, future=True)
-    with engine.begin() as connection:  # pytype: disable=attribute-error
-        connection.execute(sqlalchemy.text("CREATE EXTENSION IF NOT EXISTS tsm_system_rows"))
-    database.prepare_database(engine)
-    with orm.Session(engine) as session:
-        for filename in filenames:
-            dataset = message_helpers.load_message(filename, dataset_pb2.Dataset)
-            database.add_dataset(dataset, session)
-            session.flush()
-            database.update_rdkit_tables(dataset.dataset_id, session=session)
-            session.flush()
-            database.update_rdkit_ids(dataset.dataset_id, session=session)
-            session.commit()
+    setup_test_postgres(connection_string)
 
 
 if __name__ == "__main__":
-    main(docopt.docopt(__doc__))
+    main()

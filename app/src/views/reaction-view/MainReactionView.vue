@@ -146,7 +146,7 @@ export default {
     getReactionData () {
       return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/fetch_reactions`)
+        xhr.open("POST", `/api/reactions`)
         xhr.setRequestHeader("Content-Type", "application/json");
         // xhr.responseType = "arraybuffer";
         xhr.onload = () => {
@@ -161,11 +161,11 @@ export default {
           }
           resolve(reaction);
         }
-        xhr.send(JSON.stringify([this.reactionId]))
+        xhr.send(JSON.stringify({"reaction_ids": [this.reactionId]}))
       })
     },
     async getReactionSummary () {
-      const res = await fetch(`/api/render/${this.reactionId}?compact=false`)
+      const res = await fetch(`/api/reaction_summary?reaction_id=${this.reactionId}&compact=false`)
       const data = await res.json()
       return data
     },

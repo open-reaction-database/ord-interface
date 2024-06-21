@@ -5,6 +5,7 @@ line-length = 120
 skip_glob = ["**/*_pb2.py*"]
 line_length = 120
 profile = "black"
+known_third_party = ["ord_schema"]
 
 [tool.pytype]
 inputs = ["ord_interface"]
