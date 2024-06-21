@@ -5,7 +5,7 @@
 Set up your environment by installing postgres with the RDKit cartridge:
 
 ```shell
-# rdkit-postgres is currently only available on x86_64.
+# rdkit-postgresql is currently only available on x86_64.
 # If you have an ARM processor, use `conda install postgresql` instead.
 conda install -c rdkit rdkit-postgresql
 cd ord-interface
