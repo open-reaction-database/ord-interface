@@ -15,7 +15,7 @@ pip install -e ".[tests]"
 To start a test server locally, run:
 
 ```shell
-cd ord_interface/api
+cd ord-interface/ord_interface/api
 ORD_INTERFACE_TESTING=TRUE fastapi dev main.py
 ```
 
@@ -25,3 +25,14 @@ This does a few things:
 * Launches a FastAPI server (see https://fastapi.tiangolo.com/#run-it)
 
 To view the API docs, navigate to http://localhost:8000/docs.
+
+To test with the Vue interface:
+
+```shell
+# In one terminal session:
+cd ord-interface/ord_interface/api
+ORD_INTERFACE_TESTING=TRUE fastapi dev main --port=5000
+# In a second terminal session:
+cd ord-interface/app
+npm run serve
+```
