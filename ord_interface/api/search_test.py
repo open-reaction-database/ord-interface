@@ -14,31 +14,12 @@
 
 """Tests for ord_interface.api.search."""
 import gzip
-import os
-from contextlib import ExitStack
-from typing import Iterator
-from unittest.mock import patch
 
 import pytest
-from fastapi.testclient import TestClient
-from ord_schema.logging import get_logger
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 
-from ord_interface.api.main import app
-
-logger = get_logger(__name__)
-
-
-@pytest.fixture(name="client", scope="session")
-def client_fixture(test_postgres) -> Iterator[TestClient]:
-    with TestClient(app) as client, ExitStack() as stack:
-        # NOTE(skearnes): Set ORD_INTERFACE_POSTGRES to use that database instead of a testing.postgresql instance.
-        # To force the use of testing.postgresl, set ORD_INTERFACE_TESTING=TRUE.
-        if os.environ.get("ORD_INTERFACE_TESTING", "FALSE") == "FALSE" and not os.environ.get("ORD_INTERFACE_POSTGRES"):
-            stack.enter_context(patch.dict(os.environ, {"ORD_INTERFACE_POSTGRES": test_postgres.url()}))
-        logger.info(f"ORD_INTERFACE_POSTGRES={os.environ['ORD_INTERFACE_POSTGRES']}")
-        yield client
+from ord_interface.api.queries import QueryResult
 
 
 @pytest.mark.parametrize(
@@ -68,33 +49,45 @@ def client_fixture(test_postgres) -> Iterator[TestClient]:
         ),
     ],
 )
-def test_query(client, params, num_expected):
-    response = client.get("/api/query", params=params)
+def test_query(test_client, params, num_expected):
+    response = test_client.get("/api/query", params=params)
+    response.raise_for_status()
     assert len(response.json()) == num_expected
 
 
-def test_get_reactions(client):
-    response = client.post("/api/reactions", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]})
+def test_get_reaction(test_client):
+    response = test_client.get("/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"})
+    response.raise_for_status()
+    result = QueryResult(**response.json())
+    assert result.dataset_id == "ord_dataset-89b083710e2d441aa0040c361d63359f"
+
+
+def test_get_reactions(test_client):
+    response = test_client.post("/api/reactions", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]})
+    response.raise_for_status()
     reactions = response.json()
     assert len(reactions) == 1
     assert reactions[0]["dataset_id"] == "ord_dataset-89b083710e2d441aa0040c361d63359f"
 
 
-def test_get_datasets(client):
-    response = client.get("/api/datasets")
+def test_get_datasets(test_client):
+    response = test_client.get("/api/datasets")
+    response.raise_for_status()
     dataset_info = response.json()
     assert len(dataset_info) == 3
 
 
-def test_get_molfile(client):
-    response = client.get("/api/molfile", params={"smiles": "C(=O)N"})
+def test_get_molfile(test_client):
+    response = test_client.get("/api/molfile", params={"smiles": "C(=O)N"})
+    response.raise_for_status()
     assert Chem.MolToSmiles(Chem.MolFromMolBlock(response.json())) == "NC=O"
 
 
-def test_get_search_results(client):
-    response = client.post(
+def test_get_search_results(test_client):
+    response = test_client.post(
         "/api/download_search_results", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]}
     )
+    response.raise_for_status()
     dataset = dataset_pb2.Dataset.FromString(gzip.decompress(response.read()))
     assert dataset.name == "ORD Search Results"
     assert len(dataset.reactions) == 1

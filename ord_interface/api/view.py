@@ -15,6 +15,7 @@
 """View API."""
 
 from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse
 from ord_schema.proto import reaction_pb2
 
 from ord_interface.api.search import ReactionIdList, get_reactions
@@ -24,19 +25,20 @@ router = APIRouter(prefix="/api", tags=["view"])
 
 
 @router.post("/compound_svg")
-def get_compound(request: Request) -> str:
+async def get_compound(request: Request) -> str:
     """Returns an SVG of a molecule."""
-    compound = reaction_pb2.Compound.FromString(request.body())
+    data = await request.body()
+    compound = reaction_pb2.Compound.FromString(data)
     try:
         return filters._compound_svg(compound)  # pylint: disable=protected-access
     except (ValueError, KeyError):
         return "[Compound cannot be displayed]"
 
 
-@router.get("/reaction_summary")
-def get_reaction_summary(reaction_id: str, compact: bool = True) -> str:
+@router.get("/reaction_summary", response_class=HTMLResponse)
+async def get_reaction_summary(reaction_id: str, compact: bool = True) -> str:
     """Renders a reaction as an HTML table with images and text."""
-    results = get_reactions(ReactionIdList(reaction_ids=[reaction_id]))
+    results = await get_reactions(ReactionIdList(reaction_ids=[reaction_id]))
     if len(results) == 0 or len(results) > 1:
         raise ValueError(reaction_id)
     try:
