@@ -34,5 +34,9 @@ cd ord-interface/ord_interface/api
 ORD_INTERFACE_TESTING=TRUE fastapi dev main --port=5000
 # In a second terminal session:
 cd ord-interface/app
+wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip
+unzip ketcher-standalone-2.5.1.zip
+mv standalone src/ketcher
+npm install
 npm run serve
 ```

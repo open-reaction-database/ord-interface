@@ -11,7 +11,7 @@
     "core-js": "^3.8.3",
     "multi-range-slider-vue": "^1.1.4",
     "ord-schema": "^0.3.54",
-    "vue": "^3.2.13",
+    "vue": "^3.4.33",
     "vue-router": "^4.0.3",
     "vuex": "^4.1.0"
   },
