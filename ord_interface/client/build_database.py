@@ -25,6 +25,7 @@ def main():
     connection_string = database.get_connection_string(
         database=POSTGRES_DB, username=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST, port=POSTGRES_PORT
     )
+    connection_string += "?client_encoding=utf8"
     setup_test_postgres(connection_string)
 
 
