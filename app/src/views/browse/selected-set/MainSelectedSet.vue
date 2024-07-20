@@ -17,7 +17,7 @@
 <script>
 import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
-import hexToUint from "@/utils/hexToUint"
+import base64ToBytes from "@/utils/base64"
 import ReactionCard from '@/components/ReactionCard'
 import DownloadResults from '@/components/DownloadResults'
 import CopyButton from '@/components/CopyButton'
@@ -57,8 +57,8 @@ export default {
           if (xhr.response !== null) {
             fetchedReactions = JSON.parse(xhr.response)
             fetchedReactions.forEach(reaction => {
-              const hexString = reaction.proto
-              const bytes = hexToUint(hexString)
+              const base64string = reaction.proto
+              const bytes = base64ToBytes(base64string)
               reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
             })
           }

@@ -60,6 +60,7 @@ def test_get_reaction(test_client):
     response.raise_for_status()
     result = QueryResult(**response.json())
     assert result.dataset_id == "ord_dataset-89b083710e2d441aa0040c361d63359f"
+    assert result.reaction.reaction_id == result.reaction_id
 
 
 def test_get_reactions(test_client):

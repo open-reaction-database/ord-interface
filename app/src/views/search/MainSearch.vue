@@ -19,7 +19,7 @@ import SearchOptions from './SearchOptions'
 import SearchResults from './SearchResults'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
-import hexToUint from "@/utils/hexToUint"
+import base64ToBytes from "@/utils/base64"
 
 export default {
   components: {
@@ -55,7 +55,7 @@ export default {
         this.searchResults = await res.json()
         // unpack protobuff for each reaction in results
         this.searchResults.forEach((reaction) => {
-          const bytes = hexToUint(reaction.proto)
+          const bytes = base64ToBytes(reaction.proto)
           reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
         })
         this.loading = false

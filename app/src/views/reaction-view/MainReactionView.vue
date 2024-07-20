@@ -27,7 +27,7 @@ import ProvenanceView from "./ProvenanceView"
 import EventsView from "./EventsView"
 import FloatingModal from "../../components/FloatingModal"
 import LoadingSpinner from '@/components/LoadingSpinner'
-import hexToUint from "@/utils/hexToUint"
+import base64ToBytes from "@/utils/base64"
 import outcomesUtil from '@/utils/outcomes'
 
 export default {
@@ -146,22 +146,22 @@ export default {
     getReactionData () {
       return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/reactions`)
+        xhr.open("POST", `/api/reaction`)
         xhr.setRequestHeader("Content-Type", "application/json");
         // xhr.responseType = "arraybuffer";
         xhr.onload = () => {
           // if response is good, deserialize reaction and return object from protobuff
           let reaction = null
           if (xhr.response !== null) {
-            const hexString = JSON.parse(xhr.response)[0].proto
-            const bytes = hexToUint(hexString)
+            const base64string = JSON.parse(xhr.response).proto
+            const bytes = base64ToBytes(base64string)
             reaction = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
             // sort inputs by addition order
             reaction.inputsMap.sort((a,b) => a[1].additionOrder - b[1].additionOrder)
           }
           resolve(reaction);
         }
-        xhr.send(JSON.stringify({"reaction_ids": [this.reactionId]}))
+        xhr.send(JSON.stringify({"reaction_id": this.reactionId}))
       })
     },
     async getReactionSummary () {
