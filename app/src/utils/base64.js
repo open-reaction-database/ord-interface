@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Buffer } from 'buffer';
+import {Buffer} from 'buffer';
 
 export default (base64String) => {
   // converts a base64 encoded string to Uint8Array so it can be parsed by
