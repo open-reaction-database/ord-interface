@@ -22,8 +22,27 @@ from ord_interface.api.queries import (
     ReactionIdQuery,
     ReactionSmartsQuery,
     ReactionYieldQuery,
+    fetch_results,
     run_queries,
 )
+
+
+def test_fetch_results(test_cursor):
+    test_cursor.execute(
+        """
+        SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
+        FROM ord.reaction
+        JOIN ord.dataset on reaction.dataset_id = dataset.id
+        WHERE reaction.reaction_id = %s
+        """,
+        ("ord-1e8382606d99485b9859da6a92f80a72",),
+    )
+    results = fetch_results(test_cursor)
+    assert len(results) == 1
+    result = results[0]
+    assert result.dataset_id == "ord_dataset-b440f8c90b6343189093770060fc4098"
+    assert result.reaction_id == "ord-1e8382606d99485b9859da6a92f80a72"
+    assert result.reaction.reaction_id == result.reaction_id
 
 
 def test_dataset_id_query(test_cursor):

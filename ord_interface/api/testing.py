@@ -34,5 +34,5 @@ def setup_test_postgres(url: str) -> None:
     rdkit_cartridge = prepare_database(engine)
     with Session(engine) as session:
         for dataset in datasets:
-            add_dataset(dataset, session, rdkit_cartridge=rdkit_cartridge)
-            session.commit()
+            with session.begin():
+                add_dataset(dataset, session, rdkit_cartridge=rdkit_cartridge)
