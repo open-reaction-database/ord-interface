@@ -18,11 +18,10 @@ __pycache__
 # Folder tracking files
 .DS_Store
 # Vendored ketcher.
-**/ketcher*
+**/ketcher
 **/standalone
 # Node stuff.
-**/node_modules/
-**/package-lock.json
+**/node_modules
 
 # React dependencies
 **/.pnp
