@@ -15,7 +15,6 @@
 -->
 
 <script>
-import reaction_pb from "ord-schema"
 import conditionUtil from "@/utils/conditions"
 
 export default {

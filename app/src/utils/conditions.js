@@ -51,8 +51,8 @@ export default {
   pressureAtmo(atmo) {
     const atmoTypes = reaction_pb.PressureConditions.Atmosphere.AtmosphereType
     const atmoType =
-        Object.keys(atmoTypes).find(key => atmoTypes[key] == atmo.type)
-    return `${atmoType}${atmo.details ? `, ${atmo.details}` : ""}`
+        Object.keys(atmoTypes).find(key => atmoTypes[key] == atmo?.type)
+    return `${atmoType}${atmo?.details ? `, ${atmo.details}` : ""}`
   },
   stirType(stirType) {
     const stirTypes = reaction_pb.StirringConditions.StirringMethodType
