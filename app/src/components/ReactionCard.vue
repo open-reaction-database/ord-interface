@@ -41,7 +41,7 @@ export default {
   methods: {
     getReactionTable() {
       fetch(`/api/reaction_summary?reaction_id=${this.reaction.reaction_id}`)
-        .then(response => response.json())
+        .then(response => response.text())
         .then(responseData => {
           this.reactionTable = responseData
         })

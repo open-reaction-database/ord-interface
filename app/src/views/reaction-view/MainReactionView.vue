@@ -146,14 +146,14 @@ export default {
     getReactionData () {
       return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/reaction`)
+        xhr.open("POST", `/api/reactions`)
         xhr.setRequestHeader("Content-Type", "application/json");
         // xhr.responseType = "arraybuffer";
         xhr.onload = () => {
           // if response is good, deserialize reaction and return object from protobuff
           let reaction = null
           if (xhr.response !== null) {
-            const base64string = JSON.parse(xhr.response).proto
+            const base64string = JSON.parse(xhr.response)[0].proto
             const bytes = base64ToBytes(base64string)
             reaction = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
             // sort inputs by addition order
@@ -161,13 +161,12 @@ export default {
           }
           resolve(reaction);
         }
-        xhr.send(JSON.stringify({"reaction_id": this.reactionId}))
+        xhr.send(JSON.stringify({"reaction_ids": [this.reactionId]}))
       })
     },
     async getReactionSummary () {
       const res = await fetch(`/api/reaction_summary?reaction_id=${this.reactionId}&compact=false`)
-      const data = await res.json()
-      return data
+      return await res.text()
     },
     getReactionType (id) {
       const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
