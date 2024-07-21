@@ -25,25 +25,25 @@ export default {
   },
   computed: {
     tempType () {
-      return conditionUtil.tempType(this.conditions.temperature.control.type)
+      return conditionUtil.tempType(this.conditions.temperature?.control.type)
     },
     tempSetPoint () {
-      return conditionUtil.tempSetPoint(this.conditions.temperature.setpoint)
+      return conditionUtil.tempSetPoint(this.conditions.temperature?.setpoint)
     },
     pressureType () {
-      return conditionUtil.pressureType(this.conditions.pressure.control.type)
+      return conditionUtil.pressureType(this.conditions.pressure?.control.type)
     },
     pressureSetPoint () {
       return conditionUtil.pressureSetPoint(this.conditions.pressure?.setpoint)
     },
     pressureAtmo () {
-      return conditionUtil.pressureAtmo(this.conditions.pressure.atmosphere)
+      return conditionUtil.pressureAtmo(this.conditions.pressure?.atmosphere)
     },
     stirType () {
-      return conditionUtil.stirType(this.conditions.stirring.type)
+      return conditionUtil.stirType(this.conditions.stirring?.type)
     },
     stirRate () {
-      return conditionUtil.stirRate(this.conditions.stirring.rate)
+      return conditionUtil.stirRate(this.conditions.stirring?.rate)
     },
     illumType () {
       return conditionUtil.illumType(this.conditions.illumination)
@@ -57,20 +57,20 @@ export default {
   .temperature.details(v-if='display==="temperature"')
     .label Control Type
     .value {{tempType}}
-    template(v-if='conditions.temperature.control.details')
+    template(v-if='conditions.temperature?.control.details')
       .label Details
       .value {{conditions.temperature.control.details}}
     .label Setpoint
     .value {{tempSetPoint}}
     // TODO Flesh out temp measurements
-    template(v-if='conditions.temperature.measurementsList?.length')
+    template(v-if='conditions.temperature?.measurementsList?.length')
       .label Measurements
       .value {{conditions.temperature.measurementsList}}
     
   .pressure.details(v-if='display==="pressure"')
     .label Control Type
     .value {{pressureType}}
-    template(v-if='conditions.pressure.control.details')
+    template(v-if='conditions.pressure?.control.details')
       .label Details
       .value {{conditions.pressure.control.details}}
     .label Setpoint
@@ -78,19 +78,19 @@ export default {
     .label Atmosphere
     .value {{pressureAtmo}}
     // TODO Flesh out pressure measurements
-    template(v-if='conditions.pressure.measurementsList?.length')
+    template(v-if='conditions.pressure?.measurementsList?.length')
       .label Measurements
       .value {{conditions.pressure.measurementsList}}
 
   .stirring.details(v-if='display==="stirring"')
     .label Type
     .value {{stirType}}
-    template(v-if='conditions.stirring.details')
+    template(v-if='conditions.stirring?.details')
       .label Details
       .value {{conditions.stirring.details}}
     .label Rate
     .value {{stirRate || "UNSPECIFIED"}}
-    template(v-if='conditions.stirring.rate?.rpm')
+    template(v-if='conditions.stirring?.rate?.rpm')
       .label RPM
       .value {{conditions.stirring.rate.rpm}}
 
@@ -100,7 +100,7 @@ export default {
     // TODO flesh out wave length
     .label Peak Wavelength
     .value {{conditions.illumination.peakWaveLength || "None"}}
-    template(v-if='conditions.illumination.color')
+    template(v-if='conditions.illumination?.color')
       .label Color
       .value {{conditions.illumination.color}}
     // TODO flesh out distance
