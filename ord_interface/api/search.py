@@ -52,19 +52,20 @@ MAX_RESULTS = 1000
 @contextmanager
 def get_cursor() -> Iterator[Cursor]:
     """Returns a psycopg cursor."""
-    dsn = os.getenv(
-        "ORD_INTERFACE_POSTGRES",
-        re.sub(
-            r"postgresql\+psycopg",
-            "postgresql",
-            get_connection_string(
-                database=os.environ["POSTGRES_DATABASE"],
-                username=os.environ["POSTGRES_USER"],
-                password=os.environ["POSTGRES_PASSWORD"],
-                host=os.environ["POSTGRES_HOST"],
-            ),
-        ),
-    )
+    # dsn = os.getenv(
+    #     "ORD_INTERFACE_POSTGRES",
+    #     re.sub(
+    #         r"postgresql\+psycopg",
+    #         "postgresql",
+    #         get_connection_string(
+    #             database=os.environ["POSTGRES_DATABASE"],
+    #             username=os.environ["POSTGRES_USER"],
+    #             password=os.environ["POSTGRES_PASSWORD"],
+    #             host=os.environ["POSTGRES_HOST"],
+    #         ),
+    #     ),
+    # )
+    dsn = os.environ["ORD_INTERFACE_POSTGRES"]
     with psycopg.connect(  # pylint: disable=not-context-manager
         dsn, row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:

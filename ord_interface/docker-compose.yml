@@ -22,12 +22,9 @@ services:
     depends_on:
       - database
     environment:
-      - POSTGRES_HOST=database
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DATABASE=ord
       - GH_CLIENT_ID=${GH_CLIENT_ID}
       - GH_CLIENT_SECRET=${GH_CLIENT_SECRET}
+      - ORD_INTERFACE_POSTGRES=postgresql://postgres:postgres@database:5432/ord?client_encoding=utf-8
     image: "openreactiondatabase/ord-interface:latest"
     ports:
       - "8080:8080"
