@@ -50,9 +50,10 @@ def test_session(test_postgres) -> Iterator[Session]:
 
 @pytest.fixture
 def test_cursor(test_postgres) -> Iterator[Cursor]:
-    options = "-c search_path=public,ord"
-    with psycopg.connect(test_postgres.url(), row_factory=dict_row, options=options) as connection:
-        connection.set_session(readonly=True)
+    with psycopg.connect(  # pylint: disable=not-context-manager
+        test_postgres.url(), row_factory=dict_row, options="-c search_path=public,ord"
+    ) as connection:
+        connection.set_read_only(True)
         with connection.cursor() as cursor:
             yield cursor
 
