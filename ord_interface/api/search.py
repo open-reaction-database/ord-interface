@@ -18,13 +18,16 @@ from __future__ import annotations
 
 import gzip
 import os
+import re
 from contextlib import contextmanager
 from typing import Annotated, Iterator
 
-import psycopg2
+import psycopg
 from fastapi import APIRouter, Query, Response
+from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
-from psycopg2.extras import DictCursor
+from psycopg import Cursor
+from psycopg.rows import dict_row
 from pydantic import BaseModel
 from rdkit import Chem
 
@@ -47,17 +50,19 @@ MAX_RESULTS = 1000
 
 
 @contextmanager
-def get_cursor() -> Iterator[DictCursor]:
-    """Returns a psycopg2 cursor."""
-    kwargs = {
-        "dsn": os.environ["ORD_INTERFACE_POSTGRES"],
-        "cursor_factory": DictCursor,
-        "options": "-c search_path=public,ord",
-    }
-    with psycopg2.connect(**kwargs) as connection:
+def get_cursor() -> Iterator[Cursor]:
+    """Returns a psycopg cursor."""
+    dsn = get_connection_string(
+        database=os.environ["POSTGRES_DATABASE"],
+        username=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        host=os.environ["POSTGRES_HOST"],
+    )
+    dsn = re.sub(r"postgresql\+psycopg", "postgresql", dsn)
+    kwargs = {"dsn": dsn, "row_factory": dict_row, "options": "-c search_path=public,ord"}
+    with psycopg.connect(**kwargs) as connection:
         connection.set_session(readonly=True)
         with connection.cursor() as cursor:
-            assert isinstance(cursor, DictCursor)  # Type hint.
             yield cursor
 
 

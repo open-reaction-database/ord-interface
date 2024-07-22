@@ -48,6 +48,7 @@ if __name__ == "__main__":
             "ord-schema==0.3.88",
             "pandas>=1.0.4",
             "protobuf==4.22.3",
+            "psycopg[binary,pool]>=3",
             "psycopg2-binary>=2.8.5",
             "pygithub>=1.51",
             "rdkit>=2021.9.5",

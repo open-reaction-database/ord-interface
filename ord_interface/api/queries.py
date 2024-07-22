@@ -48,7 +48,7 @@ from logging import getLogger
 
 from ord_schema import message_helpers, validations
 from ord_schema.proto import reaction_pb2
-from psycopg2.extras import DictCursor
+from psycopg import Cursor
 from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
@@ -71,7 +71,7 @@ class QueryResult(BaseModel):
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
-def fetch_results(cursor: DictCursor) -> list[QueryResult]:
+def fetch_results(cursor: Cursor) -> list[QueryResult]:
     """Fetches query results.
 
     Args:
@@ -380,7 +380,7 @@ class ReactionComponentQuery(ReactionQuery):
 
 
 def run_queries(
-    cursor: DictCursor,
+    cursor: Cursor,
     reaction_queries: list[ReactionQuery] | ReactionQuery,
     limit: int | None = None,
     return_ids: bool = False,

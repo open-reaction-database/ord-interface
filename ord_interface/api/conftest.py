@@ -18,11 +18,12 @@ from contextlib import ExitStack
 from typing import Iterator
 from unittest.mock import patch
 
-import psycopg2
+import psycopg
 import pytest
 from fastapi.testclient import TestClient
 from ord_schema.logging import get_logger
-from psycopg2.extras import DictCursor
+from psycopg import Cursor
+from psycopg.rows import dict_row
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from testing.postgresql import Postgresql
@@ -48,12 +49,11 @@ def test_session(test_postgres) -> Iterator[Session]:
 
 
 @pytest.fixture
-def test_cursor(test_postgres) -> Iterator[DictCursor]:
+def test_cursor(test_postgres) -> Iterator[Cursor]:
     options = "-c search_path=public,ord"
-    with psycopg2.connect(test_postgres.url(), cursor_factory=DictCursor, options=options) as connection:
+    with psycopg.connect(test_postgres.url(), row_factory=dict_row, options=options) as connection:
         connection.set_session(readonly=True)
         with connection.cursor() as cursor:
-            assert isinstance(cursor, DictCursor)  # Type hint.
             yield cursor
 
 
