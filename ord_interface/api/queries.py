@@ -85,7 +85,7 @@ def fetch_results(cursor: Cursor) -> list[QueryResult]:
     for row in cursor:
         assert row["reaction_id"] not in reaction_ids
         reaction_ids.add(row["reaction_id"])
-        row["proto"] = b64encode(row["proto"].tobytes()).decode()
+        row["proto"] = b64encode(row["proto"]).decode()
         results.append(QueryResult(**row))
     return results
 
@@ -407,7 +407,6 @@ def run_queries(
     if limit:
         combined_query += "\nLIMIT %s\n"
         combined_params.append(limit)
-    logger.debug(f"Running SQL command: {cursor.mogrify(combined_query, combined_params).decode()}")
     cursor.execute(combined_query, combined_params)
     results = fetch_results(cursor)
     if return_ids:

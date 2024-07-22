@@ -39,11 +39,8 @@ done
 status=0
 
 # Run tests (only the ones that depend on the running app; not those that use testing.postgresql).
-export POSTGRES_HOST=localhost
-export POSTGRES_USER=postgres
-export POSTGRES_PASSWORD=postgres
-export POSTGRES_DATABASE=ord
-pytest -vv --ignore=api/queries_test.py || status=1
+ORD_INTERFACE_POSTGRES='postgresql://postgres:postgres@localhost:5432/ord?client_encoding=utf-8' \
+  pytest -vv --ignore=api/queries_test.py || status=1
 node editor/js/test.js || status=1
 
 # Shut down the containers.
