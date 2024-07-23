@@ -117,7 +117,7 @@ class DatasetIdQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE dataset.dataset_id = ANY (%s)
@@ -143,7 +143,7 @@ class ReactionIdQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE reaction.reaction_id = ANY (%s)
@@ -169,7 +169,7 @@ class ReactionSmartsQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM reaction
             JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
             JOIN dataset ON dataset.id = reaction.dataset_id
@@ -197,7 +197,7 @@ class ReactionConversionQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
@@ -234,7 +234,7 @@ class ReactionYieldQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
@@ -278,7 +278,7 @@ class DoiQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
@@ -370,7 +370,7 @@ class ReactionComponentQuery(ReactionQuery):
         else:
             raise NotImplementedError(f"Unsupported match_mode: {self._match_mode}")
         query = f"""
-            SELECT DISTINCT dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
             {mols_sql}
             JOIN ord.dataset ON dataset.id = reaction.dataset_id
