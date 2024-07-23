@@ -372,8 +372,8 @@ class ReactionComponentQuery(ReactionQuery):
         query = f"""
             SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
             FROM ord.reaction
-            {mols_sql}
             JOIN ord.dataset ON dataset.id = reaction.dataset_id
+            {mols_sql}
             WHERE {predicate_sql}
         """
         return query, params
@@ -405,7 +405,9 @@ def run_queries(
         combined_params.extend(params)
     combined_query = "\nINTERSECT\n".join(queries)
     if limit:
-        combined_query += "\nLIMIT %s\n"
+        # TODO(skearnes): Adding LIMIT can significantly slow down queries, especially if they return few results.
+        # See https://stackoverflow.com/q/21385555.
+        combined_query += "\nLIMIT %s"
         combined_params.append(limit)
     cursor.execute(combined_query, combined_params)
     results = fetch_results(cursor)
