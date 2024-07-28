@@ -53,6 +53,7 @@ if __name__ == "__main__":
             "pygithub>=1.51",
             "rdkit>=2021.9.5",
             "requests>=2.24.0",
+            "setuptools",
             "testing-postgresql",
             "uvicorn[standard]",
         ],
