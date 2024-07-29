@@ -57,7 +57,7 @@ export default {
       showKetcherModal: false,
       ketcherModalSmile: 0,
       ketcherModalSet: "reactants",
-      matchModes: ["exact", "similar", "substructure"]
+      matchModes: ["exact", "similar", "substructure", "SMARTS"]
     }
   },
   computed: {

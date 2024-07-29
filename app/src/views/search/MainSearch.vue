@@ -70,7 +70,7 @@ export default {
       if (options.reagent.reagents.length) {
         this.searchParams["component"] = []
         options.reagent.reagents.forEach(reagent => {
-          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode}`)
+          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`)
         })
 
         this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
