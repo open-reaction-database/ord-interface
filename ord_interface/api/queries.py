@@ -117,7 +117,7 @@ class DatasetIdQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT reaction.reaction_id
+            SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE dataset.dataset_id = ANY (%s)
@@ -143,9 +143,8 @@ class ReactionIdQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT reaction.reaction_id
+            SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE reaction.reaction_id = ANY (%s)
         """
         return query, [self._reaction_ids]
@@ -169,10 +168,9 @@ class ReactionSmartsQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT reaction.reaction_id
+            SELECT DISTINCT reaction.reaction_id
             FROM reaction
             JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
-            JOIN dataset ON dataset.id = reaction.dataset_id
             WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s)
         """
         return query, [self._reaction_smarts]
@@ -197,9 +195,8 @@ class ReactionConversionQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT reaction.reaction_id
+            SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
             JOIN percentage on percentage.reaction_outcome_id = reaction_outcome.id
         """
@@ -234,9 +231,8 @@ class ReactionYieldQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT reaction.reaction_id
+            SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
             JOIN ord.product_compound on product_compound.reaction_outcome_id = reaction_outcome.id
             JOIN ord.product_measurement on product_measurement.product_compound_id = product_compound.id
@@ -278,9 +274,8 @@ class DoiQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT reaction.reaction_id
+            SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
             WHERE reaction_provenance.doi = ANY (%s)
         """
@@ -370,9 +365,8 @@ class ReactionComponentQuery(ReactionQuery):
         else:
             raise NotImplementedError(f"Unsupported match_mode: {self._match_mode}")
         query = f"""
-            SELECT reaction.reaction_id
+            SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN ord.dataset ON dataset.id = reaction.dataset_id
             {mols_sql}
             WHERE {predicate_sql}
         """
@@ -404,19 +398,17 @@ def run_queries(
         queries.append(query)
         combined_params.extend(params)
     subquery = "\nINTERSECT\n".join(queries)
-    combined_query = f"""
-    SELECT DISTINCT ON (reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
-    FROM ord.reaction
-    JOIN ord.dataset ON dataset.id = reaction.dataset_id
-    WHERE reaction.reaction_id IN (
-        {subquery}
-    )
-    """
     if limit:
         # TODO(skearnes): Adding LIMIT can significantly slow down queries, especially if they return few results.
         # See https://stackoverflow.com/q/21385555.
-        combined_query += "LIMIT %s"
+        subquery += "LIMIT %s"
         combined_params.append(limit)
+    combined_query = f"""
+        SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+        FROM ord.reaction
+        JOIN ord.dataset ON dataset.id = reaction.dataset_id
+        WHERE reaction.reaction_id IN ({subquery})
+    """
     logger.info((combined_query, combined_params))
     cursor.execute(combined_query, combined_params)
     results = fetch_results(cursor)
