@@ -44,16 +44,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from base64 import b64decode, b64encode
 from enum import Enum, auto
-from logging import getLogger
 
 from ord_schema import message_helpers, validations
+from ord_schema.logging import get_logger
 from ord_schema.proto import reaction_pb2
 from psycopg import Cursor
 from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 
-logger = getLogger()
+logger = get_logger(__name__)
 
 
 class QueryResult(BaseModel):
@@ -117,10 +117,10 @@ class DatasetIdQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
-            WHERE dataset.dataset_id = ANY (%s)
+            WHERE dataset.dataset_id IN (%s)
         """
         return query, [self._dataset_ids]
 
@@ -143,10 +143,10 @@ class ReactionIdQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
-            WHERE reaction.reaction_id = ANY (%s)
+            WHERE reaction.reaction_id IN (%s)
         """
         return query, [self._reaction_ids]
 
@@ -169,7 +169,7 @@ class ReactionSmartsQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT reaction.reaction_id
             FROM reaction
             JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
             JOIN dataset ON dataset.id = reaction.dataset_id
@@ -197,7 +197,7 @@ class ReactionConversionQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
@@ -234,7 +234,7 @@ class ReactionYieldQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
@@ -278,11 +278,11 @@ class DoiQuery(ReactionQuery):
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
         query = """
-            SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
-            WHERE reaction_provenance.doi = ANY (%s)
+            WHERE reaction_provenance.doi IN (%s)
         """
         return query, [self._dois]
 
@@ -370,7 +370,7 @@ class ReactionComponentQuery(ReactionQuery):
         else:
             raise NotImplementedError(f"Unsupported match_mode: {self._match_mode}")
         query = f"""
-            SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+            SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN ord.dataset ON dataset.id = reaction.dataset_id
             {mols_sql}
@@ -403,12 +403,21 @@ def run_queries(
         query, params = reaction_query.query_and_parameters
         queries.append(query)
         combined_params.extend(params)
-    combined_query = "\nINTERSECT\n".join(queries)
+    subquery = "\nINTERSECT\n".join(queries)
+    combined_query = f"""
+    SELECT DISTINCT ON (reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+    FROM ord.reaction
+    JOIN ord.dataset ON dataset.id = reaction.dataset_id
+    WHERE reaction.reaction_id IN (
+        {subquery}
+    )
+    """
     if limit:
         # TODO(skearnes): Adding LIMIT can significantly slow down queries, especially if they return few results.
         # See https://stackoverflow.com/q/21385555.
-        combined_query += "\nLIMIT %s"
+        combined_query += "LIMIT %s"
         combined_params.append(limit)
+    logger.info((combined_query, combined_params))
     cursor.execute(combined_query, combined_params)
     results = fetch_results(cursor)
     if return_ids:
