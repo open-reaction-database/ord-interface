@@ -120,7 +120,7 @@ class DatasetIdQuery(ReactionQuery):
             SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
-            WHERE dataset.dataset_id IN (%s)
+            WHERE dataset.dataset_id = ANY (%s)
         """
         return query, [self._dataset_ids]
 
@@ -146,7 +146,7 @@ class ReactionIdQuery(ReactionQuery):
             SELECT reaction.reaction_id
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
-            WHERE reaction.reaction_id IN (%s)
+            WHERE reaction.reaction_id = ANY (%s)
         """
         return query, [self._reaction_ids]
 
@@ -282,7 +282,7 @@ class DoiQuery(ReactionQuery):
             FROM ord.reaction
             JOIN dataset ON dataset.id = reaction.dataset_id
             JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
-            WHERE reaction_provenance.doi IN (%s)
+            WHERE reaction_provenance.doi = ANY (%s)
         """
         return query, [self._dois]
 
