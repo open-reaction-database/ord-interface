@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: "3"
 services:
   database:
     image: "openreactiondatabase/ord-postgres:test"
@@ -26,6 +25,7 @@ services:
       - POSTGRES_HOST=database
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=ord
       - GH_CLIENT_ID=${GH_CLIENT_ID}
       - GH_CLIENT_SECRET=${GH_CLIENT_SECRET}
     image: "openreactiondatabase/ord-interface:latest"

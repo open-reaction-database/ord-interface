@@ -232,8 +232,15 @@ def enumerate_dataset():
             spreadsheet_data = data["spreadsheet_data"]
         spreadsheet_data = io.BytesIO(base64.b64decode(spreadsheet_data))
         dataframe = templating.read_spreadsheet(spreadsheet_data, suffix=suffix)
-        dataset = templating.generate_dataset(data["template_string"], dataframe, validate=False)
-        put_dataset(f"{basename}_dataset", dataset)
+        name = f"{basename}_dataset"
+        dataset = templating.generate_dataset(
+            name=name,
+            description="Enumerated by the ORD web interface.",
+            template_string=data["template_string"],
+            df=dataframe,
+            validate=False,
+        )
+        put_dataset(name, dataset)
         return "ok"
     except Exception as error:  # pylint: disable=broad-except
         flask.abort(flask.make_response(str(error), 406))

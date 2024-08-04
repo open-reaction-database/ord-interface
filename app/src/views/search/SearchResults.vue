@@ -58,7 +58,7 @@ export default {
     goToViewSelected() {
       // store storedSet in vuex so we can retrieve it if user comes back from selected-set
       this.$store.commit('setStoredSet', { query: window.location.search, reactions: this.selectedReactions})
-      this.$router.push({ name: 'selected-set', query: {reaction_ids: this.selectedReactions}})
+      this.$router.push({ name: 'selected-set', query: {reaction_id: this.selectedReactions}})
     }
   },
   async mounted() {

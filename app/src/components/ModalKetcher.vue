@@ -50,16 +50,11 @@ export default {
     drawSmiles() {
       if (this.mutatedSmiles) {
         // get molblock if we already have SMILES
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/ketcher/molfile');
-        xhr.responseType = 'json';
-        xhr.onload = function () {
-          if (xhr.status === 200) {
-            const molblock = xhr.response;
-            document.getElementById('ketcher-iframe').contentWindow.ketcher.setMolecule(molblock);
-          }
-        };
-        xhr.send(this.mutatedSmiles);
+        fetch(`/api/molfile?smiles=${this.mutatedSmiles}`)
+            .then(response => response.json())
+            .then(responseData => {
+              document.getElementById('ketcher-iframe').contentWindow.ketcher.setMolecule(responseData);
+            })
       }
     },
     async saveSmiles() {

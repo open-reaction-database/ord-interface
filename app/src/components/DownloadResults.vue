@@ -41,7 +41,7 @@ export default {
     downloadResults () {
       // create .pb download of search results
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/download_results');
+      xhr.open('POST', '/api/download_search_results');
       xhr.responseType = "blob";
       xhr.onload = () => {
         if (xhr.status === 200) {
@@ -58,10 +58,7 @@ export default {
         }
       };
       xhr.setRequestHeader('Content-Type', 'application/json');
-
-      // format request json to expected key/value in api
-      const requestJson = this.reactionIds.map(reactionId => {return {"Reaction ID": reactionId}})
-      xhr.send(JSON.stringify(requestJson));
+      xhr.send(JSON.stringify({"reaction_id": this.reactionIds}));
     }
   },
   mounted() {

@@ -57,7 +57,7 @@ export default {
       showKetcherModal: false,
       ketcherModalSmile: 0,
       ketcherModalSet: "reactants",
-      matchModes: ["exact", "similar", "substructure"]
+      matchModes: ["exact", "similar", "substructure", "SMARTS"]
     }
   },
   computed: {
@@ -111,14 +111,29 @@ export default {
       }
 
       // dataset options
-      this.datasetOptions.datasetIds = q.dataset_ids?.split(",") || []
-      this.datasetOptions.DOIs = q.dois?.split(",") || []
+      if (Array.isArray(q.dataset_id))
+        this.datasetOptions.datasetIds = q.dataset_id
+      else if (q.dataset_id?.length)
+        this.datasetOptions.datasetIds = [q.dataset_id]
+      else
+        this.datasetOptions.datasetIds = []
+      if (Array.isArray(q.doi))
+        this.datasetOptions.DOIs = q.doi
+      else if (q.doi?.length)
+        this.datasetOptions.DOIs = [q.doi]
+      else
+        this.datasetOptions.DOIs = []
       if (this.datasetOptions.datasetIds.length || this.datasetOptions.DOIs.length) 
         this.showDatasetOptions = true
 
       // reaction options
-      this.reactionOptions.reactionIds = q.reaction_ids?.split(",") || []
-      this.reactionOptions.reactionSmarts = q.reaction_smarts?.split(",") || []
+      if (Array.isArray(q.reaction_id))
+        this.datasetOptions.reactionIds = q.reaction_id
+      else if (q.reaction_id?.length)
+        this.datasetOptions.reactionIds = [q.reaction_id]
+      else
+        this.datasetOptions.reactionIds = []
+      this.reactionOptions.reactionSmarts = q.reaction_smarts
       this.reactionOptions.min_yield = Number(q.min_yield) || 0
       this.reactionOptions.max_yield = Number(q.max_yield) || 100
       this.reactionOptions.min_conversion = Number(q.min_conversion) || 0

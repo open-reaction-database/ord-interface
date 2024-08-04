@@ -18,7 +18,7 @@ set -e
 export PGPASSWORD=postgres
 # Use a non-standard PGDATA so the database persists; see
 # https://nickjanetakis.com/blog/docker-tip-79-saving-a-postgres-database-in-a-docker-image.
-CONTAINER="$(docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=${PGPASSWORD} -e PGDATA=/data mcs07/postgres-rdkit)"
+CONTAINER="$(docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=${PGPASSWORD} -e PGDATA=/data informaticsmatters/rdkit-cartridge-debian)"
 
 # Wait for the database to become available.
 function connect() {
@@ -41,9 +41,7 @@ cd ..
 
 # Client.
 psql -p 5432 -h localhost -U postgres -c 'CREATE DATABASE ord;'
-wget --no-clobber https://github.com/open-reaction-database/ord-data/raw/main/data/89/ord_dataset-89b083710e2d441aa0040c361d63359f.pb.gz
-wget --no-clobber https://github.com/open-reaction-database/ord-data/raw/main/data/b4/ord_dataset-b440f8c90b6343189093770060fc4098.pb.gz
-python client/build_database.py --input="*.pb.gz"
+python client/build_database.py
 
 # Save and shut down the container.
 docker commit "${CONTAINER}" "openreactiondatabase/ord-postgres:test"

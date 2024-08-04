@@ -19,7 +19,7 @@ import SearchOptions from './SearchOptions'
 import SearchResults from './SearchResults'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
-import hexToUint from "@/utils/hexToUint"
+import base64ToBytes from "@/utils/base64"
 
 export default {
   components: {
@@ -55,7 +55,7 @@ export default {
         this.searchResults = await res.json()
         // unpack protobuff for each reaction in results
         this.searchResults.forEach((reaction) => {
-          const bytes = hexToUint(reaction.proto)
+          const bytes = base64ToBytes(reaction.proto)
           reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
         })
         this.loading = false
@@ -70,7 +70,7 @@ export default {
       if (options.reagent.reagents.length) {
         this.searchParams["component"] = []
         options.reagent.reagents.forEach(reagent => {
-          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode}`)
+          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`)
         })
 
         this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
@@ -81,21 +81,21 @@ export default {
 
       // dataset options
       if (options.dataset.datasetIds.length)
-        this.searchParams["dataset_ids"] = options.dataset.datasetIds.join(",")
+        this.searchParams["dataset_id"] = options.dataset.datasetIds
       else
-        delete this.searchParams["dataset_ids"]
+        delete this.searchParams["dataset_id"]
       if (options.dataset.DOIs.length)
-        this.searchParams["dois"] = options.dataset.DOIs.join(",")
+        this.searchParams["doi"] = options.dataset.DOIs
       else
-        delete this.searchParams["dois"]
+        delete this.searchParams["doi"]
 
       // reaction options
       if (options.reaction.reactionIds.length)
-        this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
+        this.searchParams["reaction_id"] = options.reaction.reactionIds
       else
-        delete this.searchParams["reaction_ids"]
-      if (options.reaction.reactionSmarts.length)
-        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
+        delete this.searchParams["reaction_id"]
+      if (options.reaction.reactionSmarts)
+        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts
       else
         delete this.searchParams["reaction_smarts"]
       //yield and conversion add if not max values, otherwise remove from query
