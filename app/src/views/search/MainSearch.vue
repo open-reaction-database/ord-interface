@@ -91,9 +91,9 @@ export default {
 
       // reaction options
       if (options.reaction.reactionIds.length)
-        this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
+        this.searchParams["reaction_id"] = options.reaction.reactionIds
       else
-        delete this.searchParams["reaction_ids"]
+        delete this.searchParams["reaction_id"]
       if (options.reaction.reactionSmarts.length)
         this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
       else

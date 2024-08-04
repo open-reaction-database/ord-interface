@@ -117,7 +117,7 @@ export default {
         this.showDatasetOptions = true
 
       // reaction options
-      this.reactionOptions.reactionIds = q.reaction_ids?.split(",") || []
+      this.reactionOptions.reactionIds = q.reaction_id || []
       this.reactionOptions.reactionSmarts = q.reaction_smarts?.split(",") || []
       this.reactionOptions.min_yield = Number(q.min_yield) || 0
       this.reactionOptions.max_yield = Number(q.max_yield) || 100

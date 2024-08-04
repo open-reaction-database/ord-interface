@@ -58,7 +58,7 @@ export default {
         }
       };
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.send(JSON.stringify({"reaction_ids": this.reactionIds}));
+      xhr.send(JSON.stringify({"reaction_id": this.reactionIds}));
     }
   },
   mounted() {
