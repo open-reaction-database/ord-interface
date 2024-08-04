@@ -81,13 +81,13 @@ export default {
 
       // dataset options
       if (options.dataset.datasetIds.length)
-        this.searchParams["dataset_ids"] = options.dataset.datasetIds.join(",")
+        this.searchParams["dataset_id"] = options.dataset.datasetIds.join(",")
       else
-        delete this.searchParams["dataset_ids"]
+        delete this.searchParams["dataset_id"]
       if (options.dataset.DOIs.length)
-        this.searchParams["dois"] = options.dataset.DOIs.join(",")
+        this.searchParams["doi"] = options.dataset.DOIs
       else
-        delete this.searchParams["dois"]
+        delete this.searchParams["doi"]
 
       // reaction options
       if (options.reaction.reactionIds.length)

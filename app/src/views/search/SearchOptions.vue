@@ -111,8 +111,8 @@ export default {
       }
 
       // dataset options
-      this.datasetOptions.datasetIds = q.dataset_ids?.split(",") || []
-      this.datasetOptions.DOIs = q.dois?.split(",") || []
+      this.datasetOptions.datasetIds = q.dataset_id || []
+      this.datasetOptions.DOIs = q.doi || []
       if (this.datasetOptions.datasetIds.length || this.datasetOptions.DOIs.length) 
         this.showDatasetOptions = true
 
