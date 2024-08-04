@@ -61,6 +61,7 @@ if __name__ == "__main__":
             "tests": [
                 "black>=22.3.0",
                 "coverage>=5.2.1",
+                "httpx",
                 "pylint>=2.13.9",
                 "pytest>=6.2.5",
                 "pytest-cov>=3.0.0",
