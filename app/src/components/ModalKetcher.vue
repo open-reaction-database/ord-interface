@@ -107,6 +107,7 @@ export default {
     height: 75vh
     background-color: white
     border-radius: 0.25rem
+    display: block
     position: absolute
     top: 50%
     left: 50%

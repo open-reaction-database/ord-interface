@@ -67,9 +67,9 @@ export default {
     simThresholdDisplay() {
       let trailingZeros = ""
       const simThresh = this.reagentOptions.similarityThreshold.toString()
-      if (simThresh.length < 2)
+      if (simThresh?.length < 2)
         trailingZeros = ".00"
-      else if (simThresh.length < 4)
+      else if (simThresh?.length < 4)
         trailingZeros = "0"
       return simThresh+trailingZeros
     }
@@ -123,7 +123,7 @@ export default {
         this.datasetOptions.DOIs = [q.doi]
       else
         this.datasetOptions.DOIs = []
-      if (this.datasetOptions.datasetIds.length || this.datasetOptions.DOIs.length) 
+      if (this.datasetOptions.datasetIds?.length || this.datasetOptions.DOIs?.length)
         this.showDatasetOptions = true
 
       // reaction options
@@ -138,7 +138,7 @@ export default {
       this.reactionOptions.max_yield = Number(q.max_yield) || 100
       this.reactionOptions.min_conversion = Number(q.min_conversion) || 0
       this.reactionOptions.max_conversion = Number(q.max_conversion) || 100
-      if (this.reactionOptions.reactionIds.length || this.reactionOptions.reactionSmarts.length || this.reactionOptions.yield !== 50 || this.reactionOptions.conversion !== 50) 
+      if (this.reactionOptions.reactionIds?.length || this.reactionOptions.reactionSmarts?.length || this.reactionOptions?.yield !== 50 || this.reactionOptions?.conversion !== 50)
         this.showReactionOptions = true
 
       // general search params
@@ -219,7 +219,7 @@ export default {
             .delete
               button(@click='reagentOptions.reactants.splice(idx,1)')
                 i.material-icons delete
-          .copy(v-if='!reagentOptions.reactants.length') No components
+          .copy(v-if='!reagentOptions.reactants?.length') No components
           #add-component
             button(
               type='button' 
@@ -242,7 +242,7 @@ export default {
             .delete
               button(@click='reagentOptions.products.splice(idx,1)')
                 i.material-icons delete
-          .copy(v-if='!reagentOptions.products.length') No components
+          .copy(v-if='!reagentOptions.products?.length') No components
           #add-component
             button(
               type='button' 
