@@ -336,20 +336,19 @@ class ReactionComponentQuery(ReactionQuery):
             JOIN reaction_input ON reaction_input.reaction_id = reaction.id
             JOIN compound ON compound.reaction_input_id = reaction_input.id
             JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
-        """
+            """
         else:
             mols_sql = """
             JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
             JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
             JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
-        """
-        if self._match_mode in [ReactionComponentQuery.MatchMode.SIMILAR, ReactionComponentQuery.MatchMode.EXACT]:
+            """
+        if self._match_mode == ReactionComponentQuery.MatchMode.EXACT:
+            predicate_sql = "rdkit.mols.smiles = %s"
+            params = [Chem.CanonSmiles(self._pattern)]
+        elif self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR:
             predicate_sql = "tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s)) >= %s"
-            params = [self._pattern]
-            if self._match_mode == ReactionComponentQuery.MatchMode.EXACT:
-                params.append(1.0)
-            else:
-                params.append(self._similarity_threshold)
+            params = [self._pattern, self._similarity_threshold]
         elif self._match_mode == ReactionComponentQuery.MatchMode.SUBSTRUCTURE:
             if self._use_chirality:
                 predicate_sql = "substruct_chiral(rdkit.mols.mol, %s)"
