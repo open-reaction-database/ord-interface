@@ -21,7 +21,7 @@ import os
 import re
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from typing import Iterator
+from typing import Iterator, cast
 
 import psycopg
 from celery import shared_task
@@ -144,7 +144,7 @@ def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] | list
 @router.get("/query")
 def query(params: QueryParams = Depends()) -> list[QueryResult]:
     """Runs a query."""
-    return run_query(params, return_ids=False)
+    return cast(list[QueryResult], run_query(params, return_ids=False))
 
 
 @router.get("/reaction")
