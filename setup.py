@@ -39,6 +39,7 @@ if __name__ == "__main__":
         },
         python_requires=">=3.10",
         install_requires=[
+            "celery",
             "docopt>=0.6.2",
             "fastapi",
             "flask>=1.1.2",
@@ -63,9 +64,11 @@ if __name__ == "__main__":
                 "coverage>=5.2.1",
                 "httpx",
                 "pylint>=2.13.9",
+                "pytest-celery",
                 "pytest>=6.2.5",
                 "pytest-cov>=3.0.0",
                 "pytype>=2022.5.19",
+                "tenacity",
             ],
         },
     )

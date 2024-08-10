@@ -20,10 +20,14 @@ import gzip
 import os
 import re
 from contextlib import contextmanager
-from typing import Annotated, Iterator
+from dataclasses import asdict, dataclass
+from typing import Iterator
 
 import psycopg
-from fastapi import APIRouter, Query, Response
+from celery import shared_task
+from celery.result import AsyncResult
+from celery.states import SUCCESS, UNREADY_STATES
+from fastapi import APIRouter, Depends, Query, Response, status
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
 from psycopg import Cursor
@@ -35,6 +39,7 @@ from ord_interface.api.queries import (
     DatasetIdQuery,
     DoiQuery,
     QueryResult,
+    QueryResults,
     ReactionComponentQuery,
     ReactionConversionQuery,
     ReactionIdQuery,
@@ -72,43 +77,50 @@ def get_cursor() -> Iterator[Cursor]:
             yield cursor
 
 
+@dataclass
+class QueryParams:
+    """Query parameters."""
+
+    # NOTE(skearnes): BaseModel does not work here; see https://github.com/fastapi/fastapi/discussions/10556.
+
+    dataset_id: list[str] | None = Query(None)
+    reaction_id: list[str] = Query(None)
+    reaction_smarts: str | None = None
+    min_conversion: float | None = None
+    max_conversion: float | None = None
+    min_yield: float | None = None
+    max_yield: float | None = None
+    doi: list[str] | None = Query(None)
+    component: list[str] | None = Query(None)
+    use_stereochemistry: bool | None = None
+    similarity: float | None = None
+    limit: int | None = None
+
+
 @router.get("/query")
-async def query(
-    dataset_id: Annotated[list[str] | None, Query()] = None,
-    reaction_id: Annotated[list[str] | None, Query()] = None,
-    reaction_smarts: str | None = None,
-    min_conversion: float | None = None,
-    max_conversion: float | None = None,
-    min_yield: float | None = None,
-    max_yield: float | None = None,
-    doi: Annotated[list[str] | None, Query()] = None,
-    component: Annotated[list[str] | None, Query()] = None,
-    use_stereochemistry: bool | None = None,
-    similarity: float | None = None,
-    limit: int | None = None,
-) -> list[QueryResult]:
+def query(params: QueryParams = Depends()) -> QueryResults:
     """Runs a query and returns a list of matched reactions."""
     # pylint: disable=too-many-arguments,too-many-branches,too-many-locals
     queries = []
-    if dataset_id:
-        queries.append(DatasetIdQuery(dataset_id))
-    if reaction_id:
-        queries.append(ReactionIdQuery(reaction_id))
-    if reaction_smarts:
-        queries.append(ReactionSmartsQuery(reaction_smarts))
-    if min_conversion is not None or max_conversion is not None:
-        queries.append(ReactionConversionQuery(min_conversion, max_conversion))
-    if min_yield is not None or max_yield is not None:
-        queries.append(ReactionYieldQuery(min_yield, max_yield))
-    if doi:
-        queries.append(DoiQuery(doi))
-    if component:
+    if params.dataset_id and isinstance(params.dataset_id, list):
+        queries.append(DatasetIdQuery(params.dataset_id))
+    if params.reaction_id and isinstance(params.reaction_id, list):
+        queries.append(ReactionIdQuery(params.reaction_id))
+    if params.reaction_smarts:
+        queries.append(ReactionSmartsQuery(params.reaction_smarts))
+    if params.min_conversion is not None or params.max_conversion is not None:
+        queries.append(ReactionConversionQuery(params.min_conversion, params.max_conversion))
+    if params.min_yield is not None or params.max_yield is not None:
+        queries.append(ReactionYieldQuery(params.min_yield, params.max_yield))
+    if params.doi and isinstance(params.doi, list):
+        queries.append(DoiQuery(params.doi))
+    if params.component and isinstance(params.component, list):
         kwargs = {}
-        if use_stereochemistry is not None:
-            kwargs["use_chirality"] = use_stereochemistry
-        if similarity is not None:
-            kwargs["similarity_threshold"] = similarity
-        for spec in component:
+        if params.use_stereochemistry is not None:
+            kwargs["use_chirality"] = params.use_stereochemistry
+        if params.similarity is not None:
+            kwargs["similarity_threshold"] = params.similarity
+        for spec in params.component:
             pattern, target_name, mode_name = spec.split(";")
             queries.append(
                 ReactionComponentQuery(
@@ -120,10 +132,9 @@ async def query(
             )
     if not queries:
         raise ValueError("No query parameters were specified.")
-    if limit:
-        limit = min(limit, MAX_RESULTS)
-    else:
-        limit = MAX_RESULTS
+    limit = MAX_RESULTS
+    if params.limit:
+        limit = min(params.limit, MAX_RESULTS)
     with get_cursor() as cursor:
         return run_queries(cursor, queries, limit=limit)
 
@@ -133,7 +144,7 @@ async def get_reaction(reaction_id: str) -> QueryResult:
     """Fetches a Reaction by ID."""
     with get_cursor() as cursor:
         results = run_queries(cursor, ReactionIdQuery([reaction_id]))
-    return results[0]
+    return results.results[0]
 
 
 class ReactionIdList(BaseModel):
@@ -143,7 +154,7 @@ class ReactionIdList(BaseModel):
 
 
 @router.post("/reactions")
-async def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
+async def get_reactions(inputs: ReactionIdList) -> QueryResults:
     """Fetches a list of Reactions by ID."""
     with get_cursor() as cursor:
         return run_queries(cursor, ReactionIdQuery(inputs.reaction_ids))
@@ -179,5 +190,31 @@ async def get_molfile(smiles: str) -> str:
 async def get_search_results(inputs: ReactionIdList):
     """Downloads search results as a Dataset proto."""
     results = await get_reactions(inputs)
-    dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
+    dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results.results])
     return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
+
+
+@shared_task(track_started=True)
+def run_task(config: dict) -> dict:
+    """Wraps query() for celery."""
+    result = query(QueryParams(**config))
+    return result.model_dump()
+
+
+@router.get("/submit_task")
+def submit_task(params: QueryParams = Depends()) -> str:
+    """Submits a query as a celery task."""
+    task = run_task.delay(asdict(params))
+    return task.id
+
+
+@router.get("/fetch_task")
+def fetch_task(task_id: str):
+    """Checks the query status, returning the results if the query is complete."""
+    task = AsyncResult(task_id)
+    state = task.state
+    if state in UNREADY_STATES:
+        return Response(state, status_code=status.HTTP_102_PROCESSING, media_type="text/plain")
+    if state == SUCCESS:
+        return QueryResults(**task.get())
+    return Response(state, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, media_type="text/plain")
