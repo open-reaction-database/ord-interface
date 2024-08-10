@@ -56,40 +56,6 @@ from rdkit.Chem import rdChemReactions
 logger = get_logger(__name__)
 
 
-class QueryResult(BaseModel):
-    """Container for a single result from database query."""
-
-    dataset_id: str
-    reaction_id: str
-    proto: str | None = None  # Serialized Reaction protocol buffer (base64).
-
-    @property
-    def reaction(self) -> reaction_pb2.Reaction:
-        return reaction_pb2.Reaction.FromString(b64decode(self.proto))
-
-    def __eq__(self, other: QueryResult) -> bool:
-        return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
-
-
-def fetch_results(cursor: Cursor) -> list[QueryResult]:
-    """Fetches query results.
-
-    Args:
-        cursor: psycopg.cursor instance.
-
-    Returns:
-        List of QueryResult instances.
-    """
-    results = []
-    reaction_ids = set()
-    for row in cursor:
-        assert row["reaction_id"] not in reaction_ids
-        reaction_ids.add(row["reaction_id"])
-        row["proto"] = b64encode(row["proto"]).decode()
-        results.append(QueryResult(**row))
-    return results
-
-
 class ReactionQuery(ABC):
     """Base class for reaction-based queries."""
 
@@ -372,22 +338,36 @@ class ReactionComponentQuery(ReactionQuery):
         return query, params
 
 
+def fetch_results(cursor: Cursor) -> list[str]:
+    """Fetches query results.
+
+    Args:
+        cursor: psycopg.cursor instance.
+
+    Returns:
+        List of reaction IDs.
+    """
+    reaction_ids = set()
+    for row in cursor:
+        assert row["reaction_id"] not in reaction_ids
+        reaction_ids.add(row["reaction_id"])
+    return list(reaction_ids)
+
+
 def run_queries(
     cursor: Cursor,
     reaction_queries: list[ReactionQuery] | ReactionQuery,
     limit: int | None = None,
-    return_ids: bool = False,
-) -> list[QueryResult]:
+) -> list[str]:
     """Runs a query against the database.
 
     Args:
         cursor: DictCursor.
         reaction_queries: ReactionQuery or list of ReactionQuery.
         limit: Integer maximum number of matches. If None (the default), no limit is set.
-        return_ids: If True, only return reaction IDs. If False, return full Reaction records.
 
     Returns:
-        List of QueryResult instances.
+        List of reaction IDs.
     """
     if not isinstance(reaction_queries, list):
         reaction_queries = [reaction_queries]
@@ -396,24 +376,46 @@ def run_queries(
         query, params = reaction_query.query_and_parameters
         queries.append(query)
         combined_params.extend(params)
-    subquery = "\nINTERSECT\n".join(queries)
+    combined_query = "\nINTERSECT\n".join(queries)
     if limit:
         # TODO(skearnes): Adding LIMIT can significantly slow down queries, especially if they return few results.
         # See https://stackoverflow.com/q/21385555.
-        subquery += "LIMIT %s"
+        combined_query += "LIMIT %s"
         combined_params.append(limit)
-    combined_query = f"""
+    logger.info((combined_query, combined_params))
+    cursor.execute(combined_query, combined_params)
+    return fetch_results(cursor)
+
+
+class QueryResult(BaseModel):
+    """Container for a single result from database query."""
+
+    dataset_id: str
+    reaction_id: str
+    proto: str  # Serialized Reaction protocol buffer (base64).
+
+    @property
+    def reaction(self) -> reaction_pb2.Reaction:
+        return reaction_pb2.Reaction.FromString(b64decode(self.proto))
+
+    def __eq__(self, other: QueryResult) -> bool:
+        return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
+
+
+def fetch_reactions(cursor: Cursor, reaction_ids: list[str]) -> list[QueryResult]:
+    """Fetches dataset and proto information for a list of reaction IDs."""
+    query = f"""
         SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
         FROM ord.reaction
         JOIN ord.dataset ON dataset.id = reaction.dataset_id
-        WHERE reaction.reaction_id IN ({subquery})
+        WHERE reaction.reaction_id = ANY (%s)
     """
-    logger.info((combined_query, combined_params))
-    cursor.execute(combined_query, combined_params)
-    results = fetch_results(cursor)
-    if return_ids:
-        only_ids = []
-        for result in results:
-            only_ids.append(QueryResult(dataset_id=result.dataset_id, reaction_id=result.reaction_id))
-        return only_ids
+    cursor.execute(query, (reaction_ids,))
+    results = []
+    for row in cursor:
+        results.append(
+            QueryResult(
+                dataset_id=row["dataset_id"], reaction_id=row["reaction_id"], proto=b64encode(row["proto"]).decode()
+            )
+        )
     return results

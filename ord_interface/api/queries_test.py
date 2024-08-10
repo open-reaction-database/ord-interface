@@ -22,22 +22,13 @@ from ord_interface.api.queries import (
     ReactionIdQuery,
     ReactionSmartsQuery,
     ReactionYieldQuery,
-    fetch_results,
+    fetch_reactions,
     run_queries,
 )
 
 
-def test_fetch_results(test_cursor):
-    test_cursor.execute(
-        """
-        SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
-        FROM ord.reaction
-        JOIN ord.dataset on reaction.dataset_id = dataset.id
-        WHERE reaction.reaction_id = %s
-        """,
-        ("ord-1e8382606d99485b9859da6a92f80a72",),
-    )
-    results = fetch_results(test_cursor)
+def test_fetch_reactions(test_cursor):
+    results = fetch_reactions(test_cursor, ["ord-1e8382606d99485b9859da6a92f80a72"])
     assert len(results) == 1
     result = results[0]
     assert result.dataset_id == "ord_dataset-b440f8c90b6343189093770060fc4098"
@@ -55,32 +46,32 @@ def test_dataset_id_query(test_cursor):
 def test_reaction_id_query(test_cursor):
     reaction_ids = ["ord-3f67aa5592fd434d97a577988d3fd241"]
     query = ReactionIdQuery(reaction_ids)
-    results = run_queries(test_cursor, query, return_ids=False)
-    assert [result.reaction_id for result in results] == reaction_ids
+    results = run_queries(test_cursor, query)
+    assert results == reaction_ids
 
 
 def test_reaction_smarts_query(test_cursor):
     query = ReactionSmartsQuery("[#6]>>[#7]")
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
 
 def test_reaction_conversion_query(test_cursor):
     query = ReactionConversionQuery(min_conversion=50, max_conversion=90)
-    results = run_queries(test_cursor, query, return_ids=True)
+    results = run_queries(test_cursor, query)
     assert len(results) == 7
 
 
 def test_reaction_yield_query(test_cursor):
     query = ReactionYieldQuery(min_yield=50, max_yield=90)
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
 
 def test_doi_query(test_cursor):
     dois = ["10.1126/science.1255525"]
     query = DoiQuery(dois)
-    results = run_queries(test_cursor, query, limit=10)
+    results = fetch_reactions(test_cursor, run_queries(test_cursor, query, limit=10))
     assert len(results) == 10
     for result in results:
         assert result.reaction.provenance.doi in dois
@@ -90,7 +81,7 @@ def test_exact_query(test_cursor):
     query = ReactionComponentQuery(
         "[Br]C1=CC=C(C(C)=O)C=C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.EXACT
     )
-    results = run_queries(test_cursor, query, limit=5, return_ids=True)
+    results = run_queries(test_cursor, query, limit=5)
     assert len(results) == 5
 
 
@@ -98,7 +89,7 @@ def test_substructure_query(test_cursor):
     query = ReactionComponentQuery(
         "C", ReactionComponentQuery.Target.OUTPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
     )
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
 
@@ -106,12 +97,12 @@ def test_chiral_substructure_query(test_cursor):
     query = ReactionComponentQuery(
         "OC1CC(O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
     )
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
     query = ReactionComponentQuery(
         "O[C@H]1C[C@H](O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
     )
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
     query = ReactionComponentQuery(
         "O[C@H]1C[C@H](O)C1",
@@ -119,7 +110,7 @@ def test_chiral_substructure_query(test_cursor):
         ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
         use_chirality=True,
     )
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert not results
     query = ReactionComponentQuery(
         "O[C@@H]1C[C@H](O)C1",
@@ -127,13 +118,13 @@ def test_chiral_substructure_query(test_cursor):
         ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
         use_chirality=True,
     )
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
 
 def test_smarts_query(test_cursor):
     query = ReactionComponentQuery("[#6]", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SMARTS)
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
 
@@ -144,10 +135,10 @@ def test_similarity_query(test_cursor):
         "match_mode": ReactionComponentQuery.MatchMode.SIMILAR,
     }
     query = ReactionComponentQuery(**kwargs, similarity_threshold=0.5)
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert not results
     query = ReactionComponentQuery(**kwargs, similarity_threshold=0.05)
-    results = run_queries(test_cursor, query, limit=10, return_ids=True)
+    results = run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
 

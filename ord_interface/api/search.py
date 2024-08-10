@@ -44,6 +44,7 @@ from ord_interface.api.queries import (
     ReactionIdQuery,
     ReactionSmartsQuery,
     ReactionYieldQuery,
+    fetch_reactions,
     run_queries,
 )
 
@@ -96,8 +97,7 @@ class QueryParams:  # pylint: disable=too-many-instance-attributes
     limit: int | None = None
 
 
-@router.get("/query")
-def query(params: QueryParams = Depends()) -> list[QueryResult]:
+def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] | list[str]:
     """Runs a query and returns a list of matched reactions."""
     # pylint: disable=too-many-arguments,too-many-branches,too-many-locals
     queries = []
@@ -135,14 +135,23 @@ def query(params: QueryParams = Depends()) -> list[QueryResult]:
     if params.limit:
         limit = min(params.limit, MAX_RESULTS)
     with get_cursor() as cursor:
-        return run_queries(cursor, queries, limit=limit)
+        reaction_ids = run_queries(cursor, queries, limit=limit)
+        if return_ids:
+            return reaction_ids
+        return fetch_reactions(cursor, reaction_ids)
+
+
+@router.get("/query")
+def query(params: QueryParams = Depends()) -> list[QueryResult]:
+    """Runs a query."""
+    return run_query(params, return_ids=False)
 
 
 @router.get("/reaction")
 async def get_reaction(reaction_id: str) -> QueryResult:
     """Fetches a Reaction by ID."""
     with get_cursor() as cursor:
-        results = run_queries(cursor, ReactionIdQuery([reaction_id]))
+        results = fetch_reactions(cursor, [reaction_id])
     return results[0]
 
 
@@ -156,7 +165,7 @@ class ReactionIdList(BaseModel):
 async def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
     with get_cursor() as cursor:
-        return run_queries(cursor, ReactionIdQuery(inputs.reaction_ids))
+        return fetch_reactions(cursor, inputs.reaction_ids)
 
 
 class DatasetInfo(BaseModel):
@@ -193,17 +202,10 @@ async def get_search_results(inputs: ReactionIdList):
     return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
 
 
-class QueryResults(BaseModel):
-    """Container for a query results. Only used for celery task result serialization."""
-
-    results: list[QueryResult]
-
-
 @shared_task(track_started=True)
-def run_task(config: dict) -> dict:
+def run_task(config: dict) -> list[str]:
     """Wraps query() for celery."""
-    results = query(QueryParams(**config))
-    return QueryResults(results=results).model_dump()
+    return run_query(QueryParams(**config), return_ids=True)
 
 
 @router.get("/submit_task")
@@ -221,6 +223,6 @@ def fetch_task(task_id: str):
     if state in UNREADY_STATES:
         return Response(state, status_code=status.HTTP_102_PROCESSING, media_type="text/plain")
     if state == SUCCESS:
-        results = QueryResults(**task.get())
-        return results.results
+        with get_cursor() as cursor:
+            return fetch_reactions(cursor, task.get())
     return Response(state, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, media_type="text/plain")
