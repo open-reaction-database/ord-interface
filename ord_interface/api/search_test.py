@@ -21,7 +21,7 @@ from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from ord_interface.api.queries import QueryResult
-from ord_interface.api.search import fetch_task, run_task
+from ord_interface.api.search import fetch_query_result, run_task
 
 
 @pytest.mark.parametrize(
@@ -99,7 +99,7 @@ def test_get_search_results(test_client):
 
 @retry(stop=stop_after_attempt(10), wait=wait_fixed(1))
 def wait_for_task(task_id) -> list[QueryResult]:
-    result = fetch_task(task_id)
+    result = fetch_query_result(task_id)
     assert isinstance(result, list)
     return result
 

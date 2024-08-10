@@ -209,15 +209,15 @@ def run_task(config: dict) -> list[str]:
     return run_query(QueryParams(**config), return_ids=True)
 
 
-@router.get("/submit_task")
-def submit_task(params: QueryParams = Depends()) -> str:
+@router.get("/submit_query")
+def submit_query(params: QueryParams = Depends()) -> str:
     """Submits a query as a celery task."""
     task = run_task.delay(asdict(params))
     return task.id
 
 
-@router.get("/fetch_task")
-def fetch_task(task_id: str):
+@router.get("/fetch_query_result")
+def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
     task = AsyncResult(task_id)
     state = task.state

@@ -349,7 +349,7 @@ def fetch_results(cursor: Cursor) -> list[str]:
     """
     reaction_ids = set()
     for row in cursor:
-        assert row["reaction_id"] not in reaction_ids
+        assert row["reaction_id"] not in reaction_ids  # Sanity check for well-written queries.
         reaction_ids.add(row["reaction_id"])
     return list(reaction_ids)
 
@@ -405,12 +405,12 @@ class QueryResult(BaseModel):
 def fetch_reactions(cursor: Cursor, reaction_ids: list[str]) -> list[QueryResult]:
     """Fetches dataset and proto information for a list of reaction IDs."""
     query = """
-        SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
+        SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
         FROM ord.reaction
         JOIN ord.dataset ON dataset.id = reaction.dataset_id
         WHERE reaction.reaction_id = ANY (%s)
     """
-    cursor.execute(query, (reaction_ids,))
+    cursor.execute(query, (list(set(reaction_ids)),))
     results = []
     for row in cursor:
         results.append(
