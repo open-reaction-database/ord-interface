@@ -97,13 +97,13 @@ def test_get_search_results(test_client):
     assert dataset.reactions[0].reaction_id == "ord-3f67aa5592fd434d97a577988d3fd241"
 
 
-def test_async(test_client, celery_session_worker):
+@retry(stop=stop_after_attempt(10), wait=wait_fixed(1))
+def wait_for_task(task_id) -> QueryResults:
+    result = fetch_task(task_id)
+    assert isinstance(result, QueryResults)
+    return result
+
+
+def test_async(celery_session_worker):
     task = run_task.delay({"dataset_id": ["ord_dataset-89b083710e2d441aa0040c361d63359f"]})
-
-    @retry(stop=stop_after_attempt(10), wait=wait_fixed(1))
-    def wait_for_task(task_id) -> QueryResults:
-        result = fetch_task(task_id)
-        assert isinstance(result, QueryResults)
-        return result
-
     assert len(wait_for_task(task.id).results) == 24
