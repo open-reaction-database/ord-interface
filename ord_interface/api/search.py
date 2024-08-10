@@ -78,7 +78,7 @@ def get_cursor() -> Iterator[Cursor]:
 
 
 @dataclass
-class QueryParams:
+class QueryParams:  # pylint: disable=too-many-instance-attributes
     """Query parameters."""
 
     # NOTE(skearnes): BaseModel does not work here; see https://github.com/fastapi/fastapi/discussions/10556.
