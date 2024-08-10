@@ -48,7 +48,7 @@ from ord_interface.api.queries import (
     run_queries,
 )
 
-router = APIRouter(prefix="/api", tags=["client"])
+router = APIRouter(tags=["client"])
 
 BOND_LENGTH = 20
 MAX_RESULTS = 1000
