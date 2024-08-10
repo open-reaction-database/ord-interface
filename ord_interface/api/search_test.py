@@ -21,7 +21,7 @@ from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from ord_interface.api.queries import QueryResult
-from ord_interface.api.search import QueryResults, fetch_task, run_task
+from ord_interface.api.search import fetch_task, run_task
 
 
 @pytest.mark.parametrize(
@@ -54,7 +54,7 @@ from ord_interface.api.search import QueryResults, fetch_task, run_task
 def test_query(test_client, params, num_expected):
     response = test_client.get("/api/query", params=params)
     response.raise_for_status()
-    assert len(response.json()["results"]) == num_expected
+    assert len(response.json()) == num_expected
 
 
 def test_get_reaction(test_client):
@@ -69,8 +69,8 @@ def test_get_reactions(test_client):
     response = test_client.post("/api/reactions", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]})
     response.raise_for_status()
     reactions = response.json()
-    assert len(reactions["results"]) == 1
-    assert reactions["results"][0]["dataset_id"] == "ord_dataset-89b083710e2d441aa0040c361d63359f"
+    assert len(reactions) == 1
+    assert reactions[0]["dataset_id"] == "ord_dataset-89b083710e2d441aa0040c361d63359f"
 
 
 def test_get_datasets(test_client):
@@ -98,12 +98,12 @@ def test_get_search_results(test_client):
 
 
 @retry(stop=stop_after_attempt(10), wait=wait_fixed(1))
-def wait_for_task(task_id) -> QueryResults:
+def wait_for_task(task_id) -> list[QueryResult]:
     result = fetch_task(task_id)
-    assert isinstance(result, QueryResults)
+    assert isinstance(result, list)
     return result
 
 
 def test_async(celery_session_worker):
     task = run_task.delay({"dataset_id": ["ord_dataset-89b083710e2d441aa0040c361d63359f"]})
-    assert len(wait_for_task(task.id).results) == 24
+    assert len(wait_for_task(task.id)) == 24

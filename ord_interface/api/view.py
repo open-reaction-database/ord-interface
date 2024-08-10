@@ -39,7 +39,6 @@ async def get_compound(request: Request) -> str:
 async def get_reaction_summary(reaction_id: str, compact: bool = True) -> str:
     """Renders a reaction as an HTML table with images and text."""
     results = await get_reactions(ReactionIdList(reaction_ids=[reaction_id]))
-    results = results.results
     if len(results) == 0 or len(results) > 1:
         raise ValueError(reaction_id)
     try:
