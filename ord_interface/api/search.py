@@ -202,9 +202,10 @@ async def get_search_results(inputs: ReactionIdList):
     return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
 
 
-@shared_task(track_started=True)
+@shared_task(acks_late=True, track_started=True)
 def run_task(config: dict) -> list[str]:
     """Wraps query() for celery."""
+    # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
     return run_query(QueryParams(**config), return_ids=True)
 
 

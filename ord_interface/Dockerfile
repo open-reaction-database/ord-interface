@@ -93,6 +93,7 @@ COPY ord_interface/visualization/ ord_interface/visualization/
 RUN pip install .
 
 # Build and launch the interface.
+COPY ord_interface/celeryconfig.py .
 COPY ord_interface/start_app.sh .
 COPY ord_interface/nginx.conf /etc/nginx/nginx.conf
 
