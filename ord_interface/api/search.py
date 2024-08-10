@@ -202,9 +202,9 @@ async def get_search_results(inputs: ReactionIdList):
     return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
 
 
-@shared_task(acks_late=True, track_started=True)
+@shared_task(acks_late=True)
 def run_task(config: dict) -> list[str]:
-    """Wraps query() for celery."""
+    """Wraps run_query() for celery."""
     # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
     return run_query(QueryParams(**config), return_ids=True)
 
@@ -222,8 +222,8 @@ def fetch_task(task_id: str):
     task = AsyncResult(task_id)
     state = task.state
     if state in UNREADY_STATES:
-        return Response(state, status_code=status.HTTP_102_PROCESSING, media_type="text/plain")
+        return Response(state, status_code=status.HTTP_102_PROCESSING)
     if state == SUCCESS:
         with get_cursor() as cursor:
             return fetch_reactions(cursor, task.get())
-    return Response(state, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, media_type="text/plain")
+    return Response(state, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

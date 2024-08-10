@@ -404,7 +404,7 @@ class QueryResult(BaseModel):
 
 def fetch_reactions(cursor: Cursor, reaction_ids: list[str]) -> list[QueryResult]:
     """Fetches dataset and proto information for a list of reaction IDs."""
-    query = f"""
+    query = """
         SELECT DISTINCT ON (reaction.reaction_id) dataset.dataset_id, reaction.reaction_id, reaction.proto
         FROM ord.reaction
         JOIN ord.dataset ON dataset.id = reaction.dataset_id
