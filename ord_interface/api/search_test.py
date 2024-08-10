@@ -20,8 +20,8 @@ from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from ord_interface.api.queries import QueryResult, QueryResults
-from ord_interface.api.search import fetch_task, run_task
+from ord_interface.api.queries import QueryResult
+from ord_interface.api.search import QueryResults, fetch_task, run_task
 
 
 @pytest.mark.parametrize(

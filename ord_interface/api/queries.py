@@ -71,20 +71,14 @@ class QueryResult(BaseModel):
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
-class QueryResults(BaseModel):
-    """Container for query results."""
-
-    results: list[QueryResult]
-
-
-def fetch_results(cursor: Cursor) -> QueryResults:
+def fetch_results(cursor: Cursor) -> list[QueryResult]:
     """Fetches query results.
 
     Args:
         cursor: psycopg.cursor instance.
 
     Returns:
-        QueryResults.
+        List of QueryResult instances.
     """
     results = []
     reaction_ids = set()
@@ -93,7 +87,7 @@ def fetch_results(cursor: Cursor) -> QueryResults:
         reaction_ids.add(row["reaction_id"])
         row["proto"] = b64encode(row["proto"]).decode()
         results.append(QueryResult(**row))
-    return QueryResults(results=results)
+    return results
 
 
 class ReactionQuery(ABC):
@@ -383,7 +377,7 @@ def run_queries(
     reaction_queries: list[ReactionQuery] | ReactionQuery,
     limit: int | None = None,
     return_ids: bool = False,
-) -> QueryResults:
+) -> list[QueryResult]:
     """Runs a query against the database.
 
     Args:
@@ -393,7 +387,7 @@ def run_queries(
         return_ids: If True, only return reaction IDs. If False, return full Reaction records.
 
     Returns:
-        QueryResults.
+        List of QueryResult instances.
     """
     if not isinstance(reaction_queries, list):
         reaction_queries = [reaction_queries]
@@ -419,7 +413,7 @@ def run_queries(
     results = fetch_results(cursor)
     if return_ids:
         only_ids = []
-        for result in results.results:
+        for result in results:
             only_ids.append(QueryResult(dataset_id=result.dataset_id, reaction_id=result.reaction_id))
-        return QueryResults(results=only_ids)
+        return only_ids
     return results

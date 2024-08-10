@@ -38,8 +38,8 @@ def test_fetch_results(test_cursor):
         ("ord-1e8382606d99485b9859da6a92f80a72",),
     )
     results = fetch_results(test_cursor)
-    assert len(results.results) == 1
-    result = results.results[0]
+    assert len(results) == 1
+    result = results[0]
     assert result.dataset_id == "ord_dataset-b440f8c90b6343189093770060fc4098"
     assert result.reaction_id == "ord-1e8382606d99485b9859da6a92f80a72"
     assert result.reaction.reaction_id == result.reaction_id
@@ -49,40 +49,40 @@ def test_dataset_id_query(test_cursor):
     dataset_ids = ["ord_dataset-89b083710e2d441aa0040c361d63359f"]
     query = DatasetIdQuery(dataset_ids)
     results = run_queries(test_cursor, query, limit=10)
-    assert len(results.results) == 10
+    assert len(results) == 10
 
 
 def test_reaction_id_query(test_cursor):
     reaction_ids = ["ord-3f67aa5592fd434d97a577988d3fd241"]
     query = ReactionIdQuery(reaction_ids)
     results = run_queries(test_cursor, query, return_ids=False)
-    assert [result.reaction_id for result in results.results] == reaction_ids
+    assert [result.reaction_id for result in results] == reaction_ids
 
 
 def test_reaction_smarts_query(test_cursor):
     query = ReactionSmartsQuery("[#6]>>[#7]")
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
 
 
 def test_reaction_conversion_query(test_cursor):
     query = ReactionConversionQuery(min_conversion=50, max_conversion=90)
     results = run_queries(test_cursor, query, return_ids=True)
-    assert len(results.results) == 7
+    assert len(results) == 7
 
 
 def test_reaction_yield_query(test_cursor):
     query = ReactionYieldQuery(min_yield=50, max_yield=90)
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
 
 
 def test_doi_query(test_cursor):
     dois = ["10.1126/science.1255525"]
     query = DoiQuery(dois)
     results = run_queries(test_cursor, query, limit=10)
-    assert len(results.results) == 10
-    for result in results.results:
+    assert len(results) == 10
+    for result in results:
         assert result.reaction.provenance.doi in dois
 
 
@@ -91,7 +91,7 @@ def test_exact_query(test_cursor):
         "[Br]C1=CC=C(C(C)=O)C=C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.EXACT
     )
     results = run_queries(test_cursor, query, limit=5, return_ids=True)
-    assert len(results.results) == 5
+    assert len(results) == 5
 
 
 def test_substructure_query(test_cursor):
@@ -99,7 +99,7 @@ def test_substructure_query(test_cursor):
         "C", ReactionComponentQuery.Target.OUTPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
     )
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
 
 
 def test_chiral_substructure_query(test_cursor):
@@ -107,12 +107,12 @@ def test_chiral_substructure_query(test_cursor):
         "OC1CC(O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
     )
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
     query = ReactionComponentQuery(
         "O[C@H]1C[C@H](O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
     )
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
     query = ReactionComponentQuery(
         "O[C@H]1C[C@H](O)C1",
         ReactionComponentQuery.Target.INPUT,
@@ -120,7 +120,7 @@ def test_chiral_substructure_query(test_cursor):
         use_chirality=True,
     )
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert not results.results
+    assert not results
     query = ReactionComponentQuery(
         "O[C@@H]1C[C@H](O)C1",
         ReactionComponentQuery.Target.INPUT,
@@ -128,13 +128,13 @@ def test_chiral_substructure_query(test_cursor):
         use_chirality=True,
     )
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
 
 
 def test_smarts_query(test_cursor):
     query = ReactionComponentQuery("[#6]", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SMARTS)
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
 
 
 def test_similarity_query(test_cursor):
@@ -145,10 +145,10 @@ def test_similarity_query(test_cursor):
     }
     query = ReactionComponentQuery(**kwargs, similarity_threshold=0.5)
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert not results.results
+    assert not results
     query = ReactionComponentQuery(**kwargs, similarity_threshold=0.05)
     results = run_queries(test_cursor, query, limit=10, return_ids=True)
-    assert len(results.results) == 10
+    assert len(results) == 10
 
 
 def test_bad_smiles(test_cursor):

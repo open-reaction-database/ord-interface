@@ -39,7 +39,6 @@ from ord_interface.api.queries import (
     DatasetIdQuery,
     DoiQuery,
     QueryResult,
-    QueryResults,
     ReactionComponentQuery,
     ReactionConversionQuery,
     ReactionIdQuery,
@@ -52,6 +51,12 @@ router = APIRouter(prefix="/api", tags=["client"])
 
 BOND_LENGTH = 20
 MAX_RESULTS = 1000
+
+
+class QueryResults(BaseModel):
+    """Container for a query results."""
+
+    results: list[QueryResult]
 
 
 @contextmanager
@@ -136,7 +141,7 @@ def query(params: QueryParams = Depends()) -> QueryResults:
     if params.limit:
         limit = min(params.limit, MAX_RESULTS)
     with get_cursor() as cursor:
-        return run_queries(cursor, queries, limit=limit)
+        return QueryResults(results=run_queries(cursor, queries, limit=limit))
 
 
 @router.get("/reaction")
@@ -144,7 +149,7 @@ async def get_reaction(reaction_id: str) -> QueryResult:
     """Fetches a Reaction by ID."""
     with get_cursor() as cursor:
         results = run_queries(cursor, ReactionIdQuery([reaction_id]))
-    return results.results[0]
+    return results[0]
 
 
 class ReactionIdList(BaseModel):
@@ -157,7 +162,7 @@ class ReactionIdList(BaseModel):
 async def get_reactions(inputs: ReactionIdList) -> QueryResults:
     """Fetches a list of Reactions by ID."""
     with get_cursor() as cursor:
-        return run_queries(cursor, ReactionIdQuery(inputs.reaction_ids))
+        return QueryResults(results=run_queries(cursor, ReactionIdQuery(inputs.reaction_ids)))
 
 
 class DatasetInfo(BaseModel):
