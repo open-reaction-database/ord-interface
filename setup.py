@@ -53,6 +53,7 @@ if __name__ == "__main__":
             "psycopg2-binary>=2.8.5",
             "pygithub>=1.51",
             "rdkit>=2021.9.5",
+            "redis[hiredis]",
             "requests>=2.24.0",
             "setuptools",
             "testing-postgresql",
