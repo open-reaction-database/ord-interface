@@ -20,7 +20,7 @@ import gzip
 import json
 import os
 import re
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Iterator, cast
 from uuid import uuid4
@@ -33,7 +33,7 @@ from psycopg import Cursor
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 from rdkit import Chem
-from redis.asyncio import Redis
+from redis import Redis
 
 from ord_interface.api.queries import (
     DatasetIdQuery,
@@ -77,12 +77,10 @@ def get_cursor() -> Iterator[Cursor]:
             yield cursor
 
 
-@asynccontextmanager
-async def get_redis() -> Iterator[Redis]:
+@contextmanager
+def get_redis() -> Iterator[Redis]:
     """Returns a Redis client instance."""
-    cache = Redis(host=os.environ.get("REDIS_HOST", "localhost"), port=os.environ.get("REDIS_PORT", "6379"))
-    yield cache
-    await cache.aclose()
+    yield Redis(host=os.environ.get("REDIS_HOST", "localhost"), port=int(os.environ.get("REDIS_PORT", "6379")))
 
 
 @dataclass
@@ -211,12 +209,12 @@ async def get_search_results(inputs: ReactionIdList):
     return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
 
 
-async def run_task(task_id: str, params: QueryParams) -> None:
+async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
     # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
     result = await run_query(params, return_ids=True)
-    async with get_redis() as cache:
-        await cache.set(task_id, json.dumps(result), ex=60 * 60)
+    with get_redis() as cache:
+        return cache.set(task_id, json.dumps(result), ex=60 * 60)
 
 
 @router.get("/submit_query")
@@ -230,8 +228,8 @@ async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = 
 @router.get("/fetch_query_result")
 async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
-    async with get_redis() as cache:
-        result = await cache.get(task_id)
+    with get_redis() as cache:
+        result = cache.get(task_id)
     if result is None:
         return Response(status_code=status.HTTP_102_PROCESSING)
     with get_cursor() as cursor:
