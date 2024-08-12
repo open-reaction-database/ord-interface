@@ -22,6 +22,7 @@ nginx
 
 # Start celery.
 celery worker --detach
+celery flower --url-prefix=flower --unix-socket='/run/flower.sock' &
 sleep 5
 
 # Start flask app.

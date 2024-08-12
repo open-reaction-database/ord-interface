@@ -22,5 +22,5 @@ PORT = os.environ.get("REDIS_PORT", "6379")
 # pylint: disable=invalid-name
 
 broker_url = f"redis://{HOST}:{PORT}/1"
-imports = ("search",)
+imports = ("ord_interface.api.search",)
 result_backend = f"redis://{HOST}:{PORT}/2"
