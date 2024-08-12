@@ -64,7 +64,6 @@ if __name__ == "__main__":
                 "coverage>=5.2.1",
                 "httpx",
                 "pylint>=2.13.9",
-                "pytest-celery",
                 "pytest>=6.2.5",
                 "pytest-cov>=3.0.0",
                 "pytype>=2022.5.19",

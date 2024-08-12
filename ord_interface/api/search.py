@@ -212,7 +212,7 @@ async def get_search_results(inputs: ReactionIdList):
 
 
 async def run_task(task_id: str, params: QueryParams) -> None:
-    """Wraps run_query() for celery."""
+    """Wraps run_query() as a background task."""
     # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
     result = await run_query(params, return_ids=True)
     async with get_redis() as cache:
@@ -221,7 +221,7 @@ async def run_task(task_id: str, params: QueryParams) -> None:
 
 @router.get("/submit_query")
 async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = Depends()) -> str:
-    """Submits a query as a celery task."""
+    """Submits a query as a background task."""
     task_id = str(uuid4())
     background_tasks.add_task(run_task, task_id=task_id, params=params)
     return task_id

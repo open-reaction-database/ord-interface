@@ -20,11 +20,6 @@ set -e
 # Start nginx server.
 nginx
 
-# Start celery.
-celery worker --detach
-celery flower --url-prefix=flower --unix-socket='/run/flower.sock' &
-sleep 5
-
 # Start flask app.
 LOG_FORMAT='FLASK %(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
 gunicorn ord_interface.interface:app \
