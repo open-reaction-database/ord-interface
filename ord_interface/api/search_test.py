@@ -25,7 +25,6 @@ from testing.redis import RedisServer
 
 from ord_interface.api.queries import QueryResult
 
-
 QUERY_PARAMS = [
     # Single factor queries.
     ({"dataset_id": ["ord_dataset-89b083710e2d441aa0040c361d63359f"]}, 24),
