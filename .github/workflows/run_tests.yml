@@ -44,6 +44,8 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - name: actions-setup-redis
+        uses: shogo82148/actions-setup-redis@v1.35.0
       - name: Install ord_interface
         run: |
           python -m pip install --upgrade pip
@@ -68,6 +70,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/setup-node@v3
+      - name: actions-setup-redis
+        uses: shogo82148/actions-setup-redis@v1.35.0
       - name: Setup docker cache
         run: |
           docker login docker.pkg.github.com -u "${GITHUB_ACTOR}" --password="${{ secrets.GITHUB_TOKEN }}"
