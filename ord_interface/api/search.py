@@ -231,7 +231,6 @@ async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = 
 async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
     async with get_redis() as cache:
-        print("FETCHING", task_id)
         result = await cache.get(task_id)
     if result is None:
         return Response(status_code=status.HTTP_102_PROCESSING)
