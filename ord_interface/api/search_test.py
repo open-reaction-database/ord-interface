@@ -14,43 +14,45 @@
 
 """Tests for ord_interface.api.search."""
 import gzip
+import os
+from unittest.mock import patch
 
 import pytest
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
+from testing.redis import RedisServer
 
 from ord_interface.api.queries import QueryResult
-from ord_interface.api.search import fetch_query_result, run_task
 
 
-@pytest.mark.parametrize(
-    "params,num_expected",
-    [
-        # Single factor queries.
-        ({"dataset_id": ["ord_dataset-89b083710e2d441aa0040c361d63359f"]}, 24),
-        ({"reaction_id": ["ord-3f67aa5592fd434d97a577988d3fd241"]}, 1),
-        ({"reaction_smarts": "[#6]>>[#7]"}, 83),
-        ({"min_conversion": 50, "max_conversion": 90}, 7),
-        ({"min_yield": 50, "max_yield": 90}, 51),
-        ({"doi": ["10.1126/science.1255525"]}, 24),
-        ({"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]}, 10),
-        ({"component": ["C;input;substructure"]}, 144),
-        ({"component": ["O[C@@H]1C[C@H](O)C1;input;substructure"], "use_stereochemistry": True}, 20),
-        ({"component": ["[#6];input;smarts"]}, 144),
-        ({"component": ["CC=O;input;similar"], "similarity": 0.5}, 0),
-        ({"component": ["CC=O;input;similar"], "similarity": 0.05}, 120),
-        # Multi-factor queries.
-        (
-            {
-                "min_yield": 50,
-                "max_yield": 90,
-                "component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact", "CC(C)(C)OC(=O)NC;input;substructure"],
-            },
-            7,
-        ),
-    ],
-)
+QUERY_PARAMS = [
+    # Single factor queries.
+    ({"dataset_id": ["ord_dataset-89b083710e2d441aa0040c361d63359f"]}, 24),
+    ({"reaction_id": ["ord-3f67aa5592fd434d97a577988d3fd241"]}, 1),
+    ({"reaction_smarts": "[#6]>>[#7]"}, 83),
+    ({"min_conversion": 50, "max_conversion": 90}, 7),
+    ({"min_yield": 50, "max_yield": 90}, 51),
+    ({"doi": ["10.1126/science.1255525"]}, 24),
+    ({"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]}, 10),
+    ({"component": ["C;input;substructure"]}, 144),
+    ({"component": ["O[C@@H]1C[C@H](O)C1;input;substructure"], "use_stereochemistry": True}, 20),
+    ({"component": ["[#6];input;smarts"]}, 144),
+    ({"component": ["CC=O;input;similar"], "similarity": 0.5}, 0),
+    ({"component": ["CC=O;input;similar"], "similarity": 0.05}, 120),
+    # Multi-factor queries.
+    (
+        {
+            "min_yield": 50,
+            "max_yield": 90,
+            "component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact", "CC(C)(C)OC(=O)NC;input;substructure"],
+        },
+        7,
+    ),
+]
+
+
+@pytest.mark.parametrize("params,num_expected", QUERY_PARAMS)
 def test_query(test_client, params, num_expected):
     response = test_client.get("/api/query", params=params)
     response.raise_for_status()
@@ -97,13 +99,16 @@ def test_get_search_results(test_client):
     assert dataset.reactions[0].reaction_id == "ord-3f67aa5592fd434d97a577988d3fd241"
 
 
-@retry(stop=stop_after_attempt(10), wait=wait_fixed(1))
-def wait_for_task(task_id) -> list[QueryResult]:
-    result = fetch_query_result(task_id)
-    assert isinstance(result, list)
-    return result
+@retry(stop=stop_after_attempt(5), wait=wait_fixed(1))
+def wait_for_task(client, task_id) -> list[QueryResult]:
+    response = client.get("/api/fetch_query_result", params={"task_id": task_id})
+    response.raise_for_status()
+    return response.json()
 
 
-def test_async(celery_session_worker):
-    task = run_task.delay({"dataset_id": ["ord_dataset-89b083710e2d441aa0040c361d63359f"]})
-    assert len(wait_for_task(task.id)) == 24
+@pytest.mark.parametrize("params,num_expected", QUERY_PARAMS)
+def test_query_async(test_client, params, num_expected):
+    with RedisServer() as redis_server, patch.dict(os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}):
+        response = test_client.get("/api/submit_query", params=params)
+        response.raise_for_status()
+        assert len(wait_for_task(test_client, response.json())) == num_expected

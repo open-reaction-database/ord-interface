@@ -39,11 +39,9 @@ if __name__ == "__main__":
         },
         python_requires=">=3.10",
         install_requires=[
-            "celery[redis]",
             "docopt>=0.6.2",
             "fastapi",
             "flask>=1.1.2",
-            "flower",
             "gunicorn",
             "jinja2>=2.0.0",
             "numpy<2",
@@ -71,6 +69,7 @@ if __name__ == "__main__":
                 "pytest-cov>=3.0.0",
                 "pytype>=2022.5.19",
                 "tenacity",
+                "testing.redis",
             ],
         },
     )
