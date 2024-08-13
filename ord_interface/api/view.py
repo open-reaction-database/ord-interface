@@ -21,7 +21,7 @@ from ord_schema.proto import reaction_pb2
 from ord_interface.api.search import ReactionIdList, get_reactions
 from ord_interface.visualization import filters, generate_text
 
-router = APIRouter(prefix="/api", tags=["view"])
+router = APIRouter(tags=["view"])
 
 
 @router.post("/compound_svg")

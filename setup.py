@@ -52,6 +52,7 @@ if __name__ == "__main__":
             "psycopg2-binary>=2.8.5",
             "pygithub>=1.51",
             "rdkit>=2021.9.5",
+            "redis[hiredis]",
             "requests>=2.24.0",
             "setuptools",
             "testing-postgresql",
@@ -66,6 +67,8 @@ if __name__ == "__main__":
                 "pytest>=6.2.5",
                 "pytest-cov>=3.0.0",
                 "pytype>=2022.5.19",
+                "tenacity",
+                "testing.redis",
             ],
         },
     )
