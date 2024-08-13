@@ -83,6 +83,7 @@ def get_cursor() -> Iterator[Cursor]:
 
 class RedisDatabase(Enum):
     """Redis databases."""
+
     TASKS = 1
     TASK_RESULTS = 2
 

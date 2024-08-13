@@ -27,6 +27,7 @@ from psycopg.rows import dict_row
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from testing.postgresql import Postgresql
+from testing.redis import RedisServer
 
 from ord_interface.api.main import app
 from ord_interface.api.testing import setup_test_postgres
@@ -60,7 +61,9 @@ def test_cursor(test_postgres) -> Iterator[Cursor]:
 
 @pytest.fixture(scope="session")
 def test_client(test_postgres) -> Iterator[TestClient]:
-    with TestClient(app) as client, ExitStack() as stack:
+    with TestClient(app) as client, RedisServer() as redis_server, patch.dict(
+        os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}
+    ), ExitStack() as stack:
         # NOTE(skearnes): Set ORD_INTERFACE_POSTGRES to use that database instead of a testing.postgresql instance.
         # To force the use of testing.postgresl, set ORD_INTERFACE_TESTING=TRUE.
         if os.environ.get("ORD_INTERFACE_TESTING", "FALSE") == "FALSE" and not os.environ.get("ORD_INTERFACE_POSTGRES"):

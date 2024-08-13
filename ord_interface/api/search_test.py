@@ -14,14 +14,11 @@
 
 """Tests for ord_interface.api.search."""
 import gzip
-import os
-from unittest.mock import patch
 
 import pytest
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
-from testing.redis import RedisServer
 
 from ord_interface.api.queries import QueryResult
 
@@ -107,7 +104,6 @@ def wait_for_task(client, task_id) -> list[QueryResult]:
 
 @pytest.mark.parametrize("params,num_expected", QUERY_PARAMS)
 def test_query_async(test_client, params, num_expected):
-    with RedisServer() as redis_server, patch.dict(os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}):
-        response = test_client.get("/api/submit_query", params=params)
-        response.raise_for_status()
-        assert len(wait_for_task(test_client, response.json())) == num_expected
+    response = test_client.get("/api/submit_query", params=params)
+    response.raise_for_status()
+    assert len(wait_for_task(test_client, response.json())) == num_expected
