@@ -21,12 +21,15 @@ import json
 import os
 import re
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from enum import Enum
+from functools import cache
 from typing import Iterator, cast
 from uuid import uuid4
 
 import psycopg
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
+from ord_schema.logging import get_logger
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
 from psycopg import Cursor
@@ -48,6 +51,7 @@ from ord_interface.api.queries import (
     run_queries,
 )
 
+logger = get_logger(__name__)
 router = APIRouter(tags=["client"])
 
 BOND_LENGTH = 20
@@ -77,10 +81,22 @@ def get_cursor() -> Iterator[Cursor]:
             yield cursor
 
 
-@contextmanager
-def get_redis() -> Iterator[Redis]:
+class RedisDatabase(Enum):
+    """Redis databases."""
+    TASKS = 1
+    TASK_RESULTS = 2
+
+
+@cache
+def get_redis(database: RedisDatabase) -> Redis:
     """Returns a Redis client instance."""
-    yield Redis(host=os.environ.get("REDIS_HOST", "localhost"), port=int(os.environ.get("REDIS_PORT", "6379")))
+    host = os.environ.get("REDIS_HOST", "localhost")
+    port = int(os.environ.get("REDIS_PORT", "6379"))
+    client = Redis(host=host, port=port, db=database.value)
+    if not client.ping():
+        raise RuntimeError(f"Failed to connect to Redis server at {host}:{port}/{database.value}")
+    logger.info(f"Connected to Redis server at {host}:{port}/{database.value}")
+    return client
 
 
 @dataclass
@@ -213,14 +229,14 @@ async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
     # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
     result = await run_query(params, return_ids=True)
-    with get_redis() as cache:
-        return cache.set(task_id, json.dumps(result), ex=60 * 60)
+    return get_redis(RedisDatabase.TASK_RESULTS).set(task_id, json.dumps(result), ex=60 * 60)
 
 
 @router.get("/submit_query")
 async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = Depends()) -> str:
     """Submits a query as a background task."""
     task_id = str(uuid4())
+    get_redis(RedisDatabase.TASKS).set(task_id, json.dumps(asdict(params)), ex=60 * 60)
     background_tasks.add_task(run_task, task_id=task_id, params=params)
     return task_id
 
@@ -228,8 +244,9 @@ async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = 
 @router.get("/fetch_query_result")
 async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
-    with get_redis() as cache:
-        result = cache.get(task_id)
+    if not get_redis(RedisDatabase.TASKS).exists(task_id):
+        return Response(f"Task {task_id} does not exist", status_code=status.HTTP_400_BAD_REQUEST)
+    result = get_redis(RedisDatabase.TASK_RESULTS).get(task_id)
     if result is None:
         return Response(status_code=status.HTTP_102_PROCESSING)
     with get_cursor() as cursor:

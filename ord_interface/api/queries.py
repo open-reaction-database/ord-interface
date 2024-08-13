@@ -382,7 +382,7 @@ def run_queries(
         # See https://stackoverflow.com/q/21385555.
         combined_query += "LIMIT %s"
         combined_params.append(limit)
-    logger.info((combined_query, combined_params))
+    logger.debug((combined_query, combined_params))
     cursor.execute(combined_query, combined_params)
     return fetch_results(cursor)
 
