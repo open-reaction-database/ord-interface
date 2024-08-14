@@ -43,6 +43,9 @@ export default {
       loading: true,
       urlQuery: "",
       showOptions: false,
+      searchLoadStatus: null,
+      searchPollingInterval: null,
+      searchTaskId: null
     }
   },
   methods: {
@@ -51,14 +54,23 @@ export default {
       // get raw url query string
       this.urlQuery =  window.location.search
       try {
-        const res = await fetch(`/api/query${this.urlQuery}`, {method: "GET"})
-        this.searchResults = await res.json()
-        // unpack protobuff for each reaction in results
-        this.searchResults.forEach((reaction) => {
-          const bytes = base64ToBytes(reaction.proto)
-          reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
-        })
-        this.loading = false
+        if (this.searchTaskId == null) {
+          const taskres = await fetch(`/api/submit_query${this.urlQuery}`, {method: "GET"})
+          this.searchTaskId = await taskres.body();
+        }
+        const res = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, {method: "GET"})
+        if (res?.status != 102) {
+          this.searchTaskId = null;
+          clearInterval(this.searchPollingInterval);
+          this.searchResults = await res.json()
+          // unpack protobuff for each reaction in results
+          this.searchResults.forEach((reaction) => {
+            const bytes = base64ToBytes(reaction.proto)
+            reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+          })
+          this.loading = false          
+        }
+        this.searchLoadStatus = res;
       } catch (e) {
         console.log(e)
         this.searchResults = []
@@ -70,7 +82,7 @@ export default {
       if (options.reagent.reagents.length) {
         this.searchParams["component"] = []
         options.reagent.reagents.forEach(reagent => {
-          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`)
+          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode}`)
         })
 
         this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
@@ -81,21 +93,21 @@ export default {
 
       // dataset options
       if (options.dataset.datasetIds.length)
-        this.searchParams["dataset_id"] = options.dataset.datasetIds
+        this.searchParams["dataset_ids"] = options.dataset.datasetIds.join(",")
       else
-        delete this.searchParams["dataset_id"]
+        delete this.searchParams["dataset_ids"]
       if (options.dataset.DOIs.length)
-        this.searchParams["doi"] = options.dataset.DOIs
+        this.searchParams["dois"] = options.dataset.DOIs.join(",")
       else
-        delete this.searchParams["doi"]
+        delete this.searchParams["dois"]
 
       // reaction options
       if (options.reaction.reactionIds.length)
-        this.searchParams["reaction_id"] = options.reaction.reactionIds
+        this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
       else
-        delete this.searchParams["reaction_id"]
-      if (options.reaction.reactionSmarts)
-        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts
+        delete this.searchParams["reaction_ids"]
+      if (options.reaction.reactionSmarts.length)
+        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
       else
         delete this.searchParams["reaction_smarts"]
       //yield and conversion add if not max values, otherwise remove from query
@@ -123,10 +135,13 @@ export default {
       this.$router.push({ name: 'search', query: this.searchParams})
     },
   },
-  mounted() {
+  async mounted() {
     // fetch initial query
-    this.getSearchResults()
-
+    await this.getSearchResults()
+    if (this.searchLoadStatus?.status == 102) {
+      this.searchPollingInterval = setInterval(this.getSearchResults(), 1000);
+      setTimeout(clearInterval(this.searchPollingInterval), 120000);
+    }
   },
 }
 </script>
