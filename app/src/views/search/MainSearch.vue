@@ -58,10 +58,7 @@ export default {
         if (this.searchTaskId == null) {
           // Submit a search task to the server. This returns a GUID task ID.
           const taskres = await fetch(`/api/submit_query${this.urlQuery}`, {method: "GET"})
-          let searchTaskString = (await taskres.text());
-
-          // Remove double quotes
-          this.searchTaskId = searchTaskString.substring(1, searchTaskString.length-1);
+          this.searchTaskId = (await taskres.json());
         }
         // Check the status of the search task.
         const queryRes = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, {method: "GET"})
