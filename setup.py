@@ -65,6 +65,7 @@ if __name__ == "__main__":
                 "httpx",
                 "pylint>=2.13.9",
                 "pytest>=6.2.5",
+                "pytest-asyncio",
                 "pytest-cov>=3.0.0",
                 "pytype>=2022.5.19",
                 "tenacity",
