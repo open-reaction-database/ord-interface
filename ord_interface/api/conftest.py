@@ -14,7 +14,7 @@
 
 """Pytest fixtures."""
 import os
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncIterator
 from contextlib import ExitStack
 from typing import Iterator
 from unittest.mock import patch
@@ -52,7 +52,7 @@ def test_session(test_postgres) -> Iterator[Session]:
 
 
 @pytest_asyncio.fixture
-async def test_cursor(test_postgres) -> AsyncGenerator[AsyncCursor]:
+async def test_cursor(test_postgres) -> AsyncIterator[AsyncCursor]:
     async with await psycopg.AsyncConnection.connect(  # pylint: disable=not-context-manager
         test_postgres.url(), row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:

@@ -21,7 +21,7 @@ import json
 import os
 import re
 import time
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from functools import cache
@@ -60,7 +60,7 @@ MAX_RESULTS = 1000
 
 
 @asynccontextmanager
-async def get_cursor() -> AsyncGenerator[AsyncCursor]:
+async def get_cursor() -> AsyncIterator[AsyncCursor]:
     """Returns a psycopg cursor."""
     dsn = os.getenv("ORD_INTERFACE_POSTGRES")
     if dsn is None:
