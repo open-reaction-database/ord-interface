@@ -20,10 +20,12 @@ import gzip
 import json
 import os
 import re
-from contextlib import contextmanager
+import time
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from functools import cache
-from typing import Iterator, cast
+from typing import cast
 from uuid import uuid4
 
 import psycopg
@@ -31,7 +33,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
 from ord_schema.logging import get_logger
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
-from psycopg import Cursor
+from psycopg import AsyncCursor
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 from rdkit import Chem
@@ -57,8 +59,8 @@ BOND_LENGTH = 20
 MAX_RESULTS = 1000
 
 
-@contextmanager
-def get_cursor() -> Iterator[Cursor]:
+@asynccontextmanager
+async def get_cursor() -> AsyncGenerator[AsyncCursor]:
     """Returns a psycopg cursor."""
     dsn = os.getenv("ORD_INTERFACE_POSTGRES")
     if dsn is None:
@@ -72,11 +74,11 @@ def get_cursor() -> Iterator[Cursor]:
                 host=os.environ["POSTGRES_HOST"],
             ),
         )
-    with psycopg.connect(  # pylint: disable=not-context-manager
+    async with await psycopg.AsyncConnection.connect(  # pylint: disable=not-context-manager
         dsn, row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:
-        connection.set_read_only(True)
-        with connection.cursor() as cursor:
+        await connection.set_read_only(True)
+        async with connection.cursor() as cursor:
             yield cursor
 
 
@@ -151,11 +153,11 @@ async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] 
     limit = MAX_RESULTS
     if params.limit:
         limit = min(params.limit, MAX_RESULTS)
-    with get_cursor() as cursor:
-        reaction_ids = run_queries(cursor, queries, limit=limit)
+    async with get_cursor() as cursor:
+        reaction_ids = await run_queries(cursor, queries, limit=limit)
         if return_ids:
             return reaction_ids
-        return fetch_reactions(cursor, reaction_ids)
+        return await fetch_reactions(cursor, reaction_ids)
 
 
 @router.get("/query")
@@ -168,8 +170,8 @@ async def query(params: QueryParams = Depends()) -> list[QueryResult]:
 @router.get("/reaction")
 async def get_reaction(reaction_id: str) -> QueryResult:
     """Fetches a Reaction by ID."""
-    with get_cursor() as cursor:
-        results = fetch_reactions(cursor, [reaction_id])
+    async with get_cursor() as cursor:
+        results = await fetch_reactions(cursor, [reaction_id])
     return results[0]
 
 
@@ -182,8 +184,8 @@ class ReactionIdList(BaseModel):
 @router.post("/reactions")
 async def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
-    with get_cursor() as cursor:
-        return fetch_reactions(cursor, inputs.reaction_ids)
+    async with get_cursor() as cursor:
+        return await fetch_reactions(cursor, inputs.reaction_ids)
 
 
 class DatasetInfo(BaseModel):
@@ -198,9 +200,9 @@ class DatasetInfo(BaseModel):
 @router.get("/datasets")
 async def get_datasets() -> list[DatasetInfo]:
     """Returns info about the current datasets."""
-    with get_cursor() as cursor:
-        cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
-        return [DatasetInfo(**row) for row in cursor]
+    async with get_cursor() as cursor:
+        await cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
+        return [DatasetInfo(**row) async for row in cursor]
 
 
 @router.get("/molfile")
@@ -222,8 +224,11 @@ async def get_search_results(inputs: ReactionIdList):
 
 async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
-    # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
+    # NOTE(skearnes): Use reaction IDs so we're not stuffing full protos into the result database.
+    logger.info(f"Running task {task_id}")
+    start = time.time()
     result = await run_query(params, return_ids=True)
+    logger.info(f"Finished task {task_id} in {time.time() - start:.1f}s")
     return get_redis().set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
 
 
@@ -246,5 +251,5 @@ async def fetch_query_result(task_id: str):
     result = client.get(f"result:{task_id}")
     if result is None:
         return Response(f"Task {task_id} is pending", status_code=status.HTTP_102_PROCESSING)
-    with get_cursor() as cursor:
-        return fetch_reactions(cursor, json.loads(result))
+    async with get_cursor() as cursor:
+        return await fetch_reactions(cursor, json.loads(result))
