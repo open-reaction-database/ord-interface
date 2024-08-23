@@ -43,6 +43,9 @@ export default {
       loading: true,
       urlQuery: "",
       showOptions: false,
+      searchLoadStatus: null,
+      searchPollingInterval: null,
+      searchTaskId: null
     }
   },
   methods: {
@@ -51,14 +54,49 @@ export default {
       // get raw url query string
       this.urlQuery =  window.location.search
       try {
-        const res = await fetch(`/api/query${this.urlQuery}`, {method: "GET"})
-        this.searchResults = await res.json()
-        // unpack protobuff for each reaction in results
-        this.searchResults.forEach((reaction) => {
-          const bytes = base64ToBytes(reaction.proto)
-          reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
-        })
-        this.loading = false
+        // If this is the first time we are attempting the search, set the search task ID.
+        if (this.searchTaskId == null) {
+          // Submit a search task to the server. This returns a GUID task ID.
+          const taskres = await fetch(`/api/submit_query${this.urlQuery}`, {method: "GET"})
+          this.searchTaskId = (await taskres.json());
+        }
+        // Check the status of the search task.
+        const queryRes = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, {method: "GET"})
+        .then(
+          (res) => {
+            this.searchLoadStatus = res;
+            // If one of these codes, search is finished. Return the results or lack of results.
+            if (res?.status == 200) {
+              this.searchTaskId = null;
+              clearInterval(this.searchPollingInterval);
+              return res.json();
+            }
+            else if (res?.status == 400) {
+              let taskId = this.searchTaskId;
+              this.searchTaskId = null;
+              clearInterval(this.searchPollingInterval);
+              throw new Error("Error - Search task ID " + taskId + " does not exist");
+            }
+            else if (res?.status == 500) {
+              let taskId = this.searchTaskId;
+              this.searchTaskId = null;
+              clearInterval(this.searchPollingInterval);
+              throw new Error("Error - Search task ID " + taskId + " failed due to server error");
+            }
+          }
+        )
+        .then(
+          (searchResultsData) => {
+            // Deserialize the results.
+            this.searchResults = searchResultsData;
+            // unpack protobuff for each reaction in results
+            this.searchResults.forEach((reaction) => {
+                const bytes = base64ToBytes(reaction.proto)
+                reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+              })
+            this.loading = false
+          }
+        )
       } catch (e) {
         console.log(e)
         this.searchResults = []
@@ -123,10 +161,14 @@ export default {
       this.$router.push({ name: 'search', query: this.searchParams})
     },
   },
-  mounted() {
-    // fetch initial query
-    this.getSearchResults()
-
+  async mounted() {
+    // Fetch results. If server returns a 102, set up a poll to keep checking back until we have results.
+    await this.getSearchResults().then(() =>{
+      if (this.searchLoadStatus?.status == 102 && this.searchPollingInterval == null) {
+        this.searchPollingInterval = setInterval(this.getSearchResults(), 1000);
+        setTimeout(clearInterval(this.searchPollingInterval), 120000);
+      }
+    })
   },
 }
 </script>
