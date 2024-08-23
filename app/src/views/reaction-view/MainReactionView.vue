@@ -161,7 +161,7 @@ export default {
           }
           resolve(reaction);
         }
-        xhr.send(JSON.stringify({"reaction_id": [this.reactionId]}))
+        xhr.send(JSON.stringify({"reaction_ids": [this.reactionId]}))
       })
     },
     async getReactionSummary () {
