@@ -32,7 +32,7 @@ def setup_test_postgres(url: str) -> None:
         for filename in glob(os.path.join(os.path.dirname(__file__), "testdata", "*.pbtxt"))
     ]
     assert datasets
-    with psycopg.connect(url) as connection, connection.cursor() as cursor:
+    with psycopg.connect(url) as connection, connection.cursor() as cursor:  # pylint: disable=not-context-manager
         prepare_database(cursor)
         add_user(TEST_USER_ID, "test", cursor)
         for dataset in datasets:

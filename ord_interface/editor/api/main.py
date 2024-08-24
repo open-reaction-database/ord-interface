@@ -71,7 +71,10 @@ def get_cursor() -> Iterator[Cursor]:
             password=os.environ["POSTGRES_PASSWORD"],
             host=os.environ["POSTGRES_HOST"],
         )
-    with psycopg.connect(dsn, row_factory=dict_row) as connection, connection.cursor() as cursor:
+    with (
+        psycopg.connect(dsn, row_factory=dict_row) as connection,  # pylint: disable=not-context-manager
+        connection.cursor() as cursor,
+    ):
         yield cursor
 
 
@@ -238,6 +241,7 @@ async def validate(message_type: str, request: Request):
 
 @app.post("/resolve_input", tags=["utilities"])
 async def resolve_input(input_string: str):
+    """Resolves an input string into a ReactionInput message."""
     try:
         return send_message(resolvers.resolve_input(input_string))
     except (ValueError, KeyError) as error:
@@ -246,6 +250,7 @@ async def resolve_input(input_string: str):
 
 @app.post("/resolve_compound", tags=["utilities"])
 async def resolve_compound(identifier_type: str, compound_string: str):
+    """Resolves a compound identifier into a SMILES string."""
     try:
         smiles, resolver = resolvers.name_resolve(identifier_type, compound_string)
         return {"smiles": resolvers.canonicalize_smiles(smiles), "resolver": resolver}
@@ -255,6 +260,7 @@ async def resolve_compound(identifier_type: str, compound_string: str):
 
 @app.post("/canonicalize_smiles", tags=["utilities"])
 async def canonicalize_smiles(smiles: str):
+    """Canonicalizes a SMILES string."""
     try:
         return resolvers.canonicalize_smiles(smiles)
     except ValueError as error:

@@ -42,18 +42,21 @@ def test_postgres_fixture() -> Iterator[Postgresql]:
 
 @pytest.fixture
 def test_cursor(test_postgres) -> Iterator[Cursor]:
-    with psycopg.connect(  # pylint: disable=not-context-manager
-        test_postgres.url(), row_factory=dict_row
-    ) as connection:
-        with connection.cursor() as cursor:
-            yield cursor
+    with (
+        psycopg.connect(test_postgres.url(), row_factory=dict_row) as connection,  # pylint: disable=not-context-manager
+        connection.cursor() as cursor,
+    ):
+        yield cursor
 
 
 @pytest.fixture(scope="session")
 def test_client(test_postgres) -> Iterator[TestClient]:
-    with TestClient(app) as client, RedisServer() as redis_server, patch.dict(
-        os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}
-    ), ExitStack() as stack:
+    with (
+        TestClient(app) as client,
+        RedisServer() as redis_server,
+        patch.dict(os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}),
+        ExitStack() as stack,
+    ):
         # NOTE(skearnes): Set ORD_EDITOR_POSTGRES to use that database instead of a testing.postgresql instance.
         # To force the use of testing.postgresl, set ORD_EDITOR_TESTING=TRUE.
         if os.environ.get("ORD_EDITOR_TESTING", "FALSE") == "FALSE" and not os.environ.get("ORD_EDITOR_POSTGRES"):
