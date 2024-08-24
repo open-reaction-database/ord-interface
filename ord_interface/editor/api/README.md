@@ -7,7 +7,7 @@
    * PostgreSQL
    * Python >= 3.10
 
-1. Install the package
+2. Install the package
 
     ```shell
     git clone git@github.com:open-reaction-database/ord-interface.git
@@ -15,7 +15,7 @@
     pip install -e ".[tests]"
     ```
 
-1. Run the FastAPI server
+3. Run the FastAPI server
 
     ```shell
     cd ord_interface/editor/api
