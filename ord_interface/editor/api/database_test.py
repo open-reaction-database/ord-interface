@@ -13,3 +13,15 @@
 # limitations under the License.
 
 """Tests for ord_interface.editor.api.database."""
+from ord_interface.editor.api.database import get_dataset
+from ord_interface.editor.api.testing import TEST_USER_ID
+
+
+def test_get_dataset(test_cursor):
+    dataset = get_dataset(TEST_USER_ID, "Deoxyfluorination screen", test_cursor)
+    assert len(dataset.reactions) == 80
+
+
+def test_get_unknown_dataset(test_cursor):
+    dataset = get_dataset(TEST_USER_ID, "UNKNOWN", test_cursor)
+    assert dataset is None

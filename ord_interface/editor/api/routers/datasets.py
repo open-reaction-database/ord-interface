@@ -18,10 +18,8 @@ import gzip
 from base64 import b64encode
 
 from fastapi import APIRouter, Response, UploadFile
-from google.protobuf import json_format, text_format  # pytype: disable=import-error
-from ord_schema.proto.dataset_pb2 import Dataset
 
-from ord_interface.editor.api import download_message
+from ord_interface.editor.api import download_message, load_dataset
 from ord_interface.editor.api.database import add_dataset, get_cursor, get_dataset
 
 router = APIRouter(tags=["datasets"])
@@ -34,7 +32,7 @@ async def list_datasets(user_id: str):
     with get_cursor() as cursor:
         cursor.execute("SELECT dataset_name FROM datasets WHERE user_id = %s", (user_id,))
         for row in cursor:
-            datasets.append(row[0])
+            datasets.append(row["dataset_name"])
     return datasets
 
 
@@ -65,13 +63,14 @@ async def upload_dataset(user_id: str, file: UploadFile):
     if file.filename.endswith(".gz"):
         data = gzip.decompress(data)
     if ".json" in file.filename:
-        dataset = json_format.Parse(data.decode(), Dataset())
+        kind = "json"
     elif ".binpb" in file.filename:
-        dataset = Dataset.FromString(data)
+        kind = "binpb"
     elif ".txtpb" in file.filename:
-        dataset = text_format.Parse(data.decode(), Dataset())
+        kind = "txtpb"
     else:
         raise ValueError(file.filename)
+    dataset = load_dataset(data, kind)
     with get_cursor() as cursor:
         add_dataset(user_id, dataset, cursor)
 
