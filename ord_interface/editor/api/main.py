@@ -27,11 +27,11 @@ from fastapi import FastAPI, Request, Response, UploadFile
 from google.protobuf import json_format, text_format  # pytype: disable=import-error
 from ord_schema import resolvers
 from ord_schema.message_helpers import create_message, mol_from_compound
-from ord_schema.validations import ValidationOptions, validate_message
+from ord_schema.orm.database import get_connection_string
 from ord_schema.proto.dataset_pb2 import Dataset
 from ord_schema.proto.reaction_pb2 import Compound, Reaction
-from ord_schema.orm.database import get_connection_string
 from ord_schema.templating import generate_dataset, read_spreadsheet
+from ord_schema.validations import ValidationOptions, validate_message
 from psycopg import Cursor
 from psycopg.rows import dict_row
 from testing.postgresql import Postgresql
