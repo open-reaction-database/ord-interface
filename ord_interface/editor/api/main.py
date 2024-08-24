@@ -71,8 +71,8 @@ def get_cursor() -> Iterator[Cursor]:
             password=os.environ["POSTGRES_PASSWORD"],
             host=os.environ["POSTGRES_HOST"],
         )
-    with (
-        psycopg.connect(dsn, row_factory=dict_row) as connection,  # pylint: disable=not-context-manager
+    with (  # pylint: disable=not-context-manager
+        psycopg.connect(dsn, row_factory=dict_row) as connection,
         connection.cursor() as cursor,
     ):
         yield cursor

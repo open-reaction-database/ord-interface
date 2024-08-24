@@ -42,8 +42,8 @@ def test_postgres_fixture() -> Iterator[Postgresql]:
 
 @pytest.fixture
 def test_cursor(test_postgres) -> Iterator[Cursor]:
-    with (
-        psycopg.connect(test_postgres.url(), row_factory=dict_row) as connection,  # pylint: disable=not-context-manager
+    with (  # pylint: disable=not-context-manager
+        psycopg.connect(test_postgres.url(), row_factory=dict_row) as connection,
         connection.cursor() as cursor,
     ):
         yield cursor
