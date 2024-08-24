@@ -13,9 +13,35 @@
 # limitations under the License.
 
 """Editor database."""
+import os
+from contextlib import contextmanager
+from typing import Iterator
 
+import psycopg
+from ord_schema.orm.database import get_connection_string
 from ord_schema.proto.dataset_pb2 import Dataset
 from psycopg import Cursor
+from psycopg.rows import dict_row
+
+POSTGRES_DATABASE = "editor"
+
+
+@contextmanager
+def get_cursor() -> Iterator[Cursor]:
+    """Returns a psycopg cursor."""
+    dsn = os.getenv("ORD_EDITOR_POSTGRES")
+    if dsn is None:
+        dsn = get_connection_string(
+            database=POSTGRES_DATABASE,
+            username=os.environ["POSTGRES_USER"],
+            password=os.environ["POSTGRES_PASSWORD"],
+            host=os.environ["POSTGRES_HOST"],
+        )
+    with (  # pylint: disable=not-context-manager
+        psycopg.connect(dsn, row_factory=dict_row) as connection,
+        connection.cursor() as cursor,
+    ):
+        yield cursor
 
 
 def prepare_database(cursor: Cursor) -> None:
