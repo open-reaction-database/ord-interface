@@ -35,12 +35,13 @@ if __name__ == "__main__":
         package_data={
             # NOTE(skearnes): These entries seem to be required for actions/checkout to find these files.
             "ord_interface.api": ["**/*.pb.gz"],
+            "ord_interface.editor": ["**/*.pbtxt"],
             "ord_interface.visualization": ["template.html", "template.txt"],
         },
         python_requires=">=3.10",
         install_requires=[
             "docopt>=0.6.2",
-            "fastapi",
+            "fastapi[standard]",
             "flask>=1.1.2",
             "gunicorn",
             "jinja2>=2.0.0",
