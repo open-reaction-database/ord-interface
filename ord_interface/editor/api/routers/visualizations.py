@@ -21,7 +21,7 @@ from ord_schema.proto.reaction_pb2 import Compound, Reaction
 from ord_interface.visualization.drawing import mol_to_svg
 from ord_interface.visualization.generate_text import generate_html
 
-router = APIRouter(tags=["visualization"])
+router = APIRouter(tags=["visualizations"])
 
 
 @router.post("/render_reaction")

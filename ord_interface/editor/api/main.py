@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from testing.postgresql import Postgresql
 
-from ord_interface.editor.api.routers import datasets, reactions, users, utilities, visualization
+from ord_interface.editor.api.routers import datasets, reactions, users, utilities, visualizations
 from ord_interface.editor.api.testing import setup_test_postgres
 
 
@@ -42,7 +42,7 @@ app.include_router(datasets.router)
 app.include_router(reactions.router)
 app.include_router(users.router)
 app.include_router(utilities.router)
-app.include_router(visualization.router)
+app.include_router(visualizations.router)
 
 
 @app.get("/healthcheck")

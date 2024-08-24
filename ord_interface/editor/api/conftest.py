@@ -25,7 +25,6 @@ from ord_schema.logging import get_logger
 from psycopg import Cursor
 from psycopg.rows import dict_row
 from testing.postgresql import Postgresql
-from testing.redis import RedisServer
 
 from ord_interface.editor.api.main import app
 from ord_interface.editor.api.testing import setup_test_postgres
@@ -51,12 +50,7 @@ def test_cursor(test_postgres) -> Iterator[Cursor]:
 
 @pytest.fixture(scope="session")
 def test_client(test_postgres) -> Iterator[TestClient]:
-    with (
-        TestClient(app) as client,
-        RedisServer() as redis_server,
-        patch.dict(os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}),
-        ExitStack() as stack,
-    ):
+    with TestClient(app) as client, ExitStack() as stack:
         # NOTE(skearnes): Set ORD_EDITOR_POSTGRES to use that database instead of a testing.postgresql instance.
         # To force the use of testing.postgresl, set ORD_EDITOR_TESTING=TRUE.
         if os.environ.get("ORD_EDITOR_TESTING", "FALSE") == "FALSE" and not os.environ.get("ORD_EDITOR_POSTGRES"):

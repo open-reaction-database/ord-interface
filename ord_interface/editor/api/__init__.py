@@ -27,12 +27,12 @@ from ord_interface.editor.api.testing import setup_test_postgres
 def download_message(message: Dataset | Reaction, prefix: str, kind: str):
     """Downloads a dataset or reaction as a gzipped file."""
     match kind:
-        case "json":
-            data = json_format.MessageToJson(message)
-            filename = f"{prefix}.json"
         case "binpb":
             data = message.SerializeToString()
             filename = f"{prefix}.binpb"
+        case "json":
+            data = json_format.MessageToJson(message).encode()
+            filename = f"{prefix}.json"
         case "txtpb":
             data = text_format.MessageToBytes(message)
             filename = f"{prefix}.txtpb"
@@ -40,6 +40,20 @@ def download_message(message: Dataset | Reaction, prefix: str, kind: str):
             raise ValueError(kind)
     headers = {"Content-Disposition": f'attachment; filename="{filename}.gz"'}
     return Response(gzip.compress(data), headers=headers, media_type="application/gzip")
+
+
+def load_dataset(data: bytes, kind: str):
+    """Loads a serialized dataset."""
+    match kind:
+        case "binpb":
+            dataset = Dataset.FromString(data)
+        case "json":
+            dataset = json_format.Parse(data, Dataset())
+        case "txtpb":
+            dataset = text_format.Parse(data.decode(), Dataset())
+        case _:
+            raise ValueError(kind)
+    return dataset
 
 
 def send_message(message) -> str:

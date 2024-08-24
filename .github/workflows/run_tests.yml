@@ -56,6 +56,7 @@ jobs:
         run: |
           coverage erase
           pytest -vv --cov=ord_interface --durations=20 --ignore=ord_interface/editor
+          pytest -vv ord_interface/editor/api
           coverage xml
       - uses: codecov/codecov-action@v1
 
