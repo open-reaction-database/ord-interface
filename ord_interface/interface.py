@@ -14,12 +14,12 @@
 """Entrypoint for the web interface."""
 import flask
 
+from ord_interface.editor.py import serve  # pytype: disable=import-error
+from ord_interface.visualization import filters
+
 # TODO(skearnes): Figure out how to use this.
 # import flask_talisman
 
-from ord_interface.client import search
-from ord_interface.editor.py import serve
-from ord_interface.visualization import filters
 
 # Set the ketcher distribution as the static folder.
 app = flask.Flask(__name__, static_folder="standalone", template_folder=".")
@@ -28,7 +28,6 @@ app = flask.Flask(__name__, static_folder="standalone", template_folder=".")
 # flask_talisman.Talisman(app)
 # TODO(skearnes): Figure out bp.add_app_template_filter?
 app.jinja_env.filters.update(filters.TEMPLATE_FILTERS)  # pylint: disable=no-member
-app.register_blueprint(search.bp)
 app.register_blueprint(serve.bp)
 
 

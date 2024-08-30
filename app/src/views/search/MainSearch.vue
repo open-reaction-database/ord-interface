@@ -19,7 +19,7 @@ import SearchOptions from './SearchOptions'
 import SearchResults from './SearchResults'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
-import hexToUint from "@/utils/hexToUint"
+import base64ToBytes from "@/utils/base64"
 
 export default {
   components: {
@@ -43,6 +43,9 @@ export default {
       loading: true,
       urlQuery: "",
       showOptions: false,
+      searchLoadStatus: null,
+      searchPollingInterval: null,
+      searchTaskId: null
     }
   },
   methods: {
@@ -51,14 +54,49 @@ export default {
       // get raw url query string
       this.urlQuery =  window.location.search
       try {
-        const res = await fetch(`/api/query${this.urlQuery}`, {method: "GET"})
-        this.searchResults = await res.json()
-        // unpack protobuff for each reaction in results
-        this.searchResults.forEach((reaction) => {
-          const bytes = hexToUint(reaction.proto)
-          reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
-        })
-        this.loading = false
+        // If this is the first time we are attempting the search, set the search task ID.
+        if (this.searchTaskId == null) {
+          // Submit a search task to the server. This returns a GUID task ID.
+          const taskres = await fetch(`/api/submit_query${this.urlQuery}`, {method: "GET"})
+          this.searchTaskId = (await taskres.json());
+        }
+        // Check the status of the search task.
+        const queryRes = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, {method: "GET"})
+        .then(
+          (res) => {
+            this.searchLoadStatus = res;
+            // If one of these codes, search is finished. Return the results or lack of results.
+            if (res?.status == 200) {
+              this.searchTaskId = null;
+              clearInterval(this.searchPollingInterval);
+              return res.json();
+            }
+            else if (res?.status == 400) {
+              let taskId = this.searchTaskId;
+              this.searchTaskId = null;
+              clearInterval(this.searchPollingInterval);
+              throw new Error("Error - Search task ID " + taskId + " does not exist");
+            }
+            else if (res?.status == 500) {
+              let taskId = this.searchTaskId;
+              this.searchTaskId = null;
+              clearInterval(this.searchPollingInterval);
+              throw new Error("Error - Search task ID " + taskId + " failed due to server error");
+            }
+          }
+        )
+        .then(
+          (searchResultsData) => {
+            // Deserialize the results.
+            this.searchResults = searchResultsData;
+            // unpack protobuff for each reaction in results
+            this.searchResults.forEach((reaction) => {
+                const bytes = base64ToBytes(reaction.proto)
+                reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+              })
+            this.loading = false
+          }
+        )
       } catch (e) {
         console.log(e)
         this.searchResults = []
@@ -70,7 +108,7 @@ export default {
       if (options.reagent.reagents.length) {
         this.searchParams["component"] = []
         options.reagent.reagents.forEach(reagent => {
-          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode}`)
+          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`)
         })
 
         this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
@@ -81,21 +119,21 @@ export default {
 
       // dataset options
       if (options.dataset.datasetIds.length)
-        this.searchParams["dataset_ids"] = options.dataset.datasetIds.join(",")
+        this.searchParams["dataset_id"] = options.dataset.datasetIds
       else
-        delete this.searchParams["dataset_ids"]
+        delete this.searchParams["dataset_id"]
       if (options.dataset.DOIs.length)
-        this.searchParams["dois"] = options.dataset.DOIs.join(",")
+        this.searchParams["doi"] = options.dataset.DOIs
       else
-        delete this.searchParams["dois"]
+        delete this.searchParams["doi"]
 
       // reaction options
       if (options.reaction.reactionIds.length)
-        this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
+        this.searchParams["reaction_id"] = options.reaction.reactionIds
       else
-        delete this.searchParams["reaction_ids"]
-      if (options.reaction.reactionSmarts.length)
-        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
+        delete this.searchParams["reaction_id"]
+      if (options.reaction.reactionSmarts)
+        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts
       else
         delete this.searchParams["reaction_smarts"]
       //yield and conversion add if not max values, otherwise remove from query
@@ -123,10 +161,14 @@ export default {
       this.$router.push({ name: 'search', query: this.searchParams})
     },
   },
-  mounted() {
-    // fetch initial query
-    this.getSearchResults()
-
+  async mounted() {
+    // Fetch results. If server returns a 102, set up a poll to keep checking back until we have results.
+    await this.getSearchResults().then(() =>{
+      if (this.searchLoadStatus?.status == 102 && this.searchPollingInterval == null) {
+        this.searchPollingInterval = setInterval(this.getSearchResults(), 1000);
+        setTimeout(clearInterval(this.searchPollingInterval), 120000);
+      }
+    })
   },
 }
 </script>

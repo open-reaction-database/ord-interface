@@ -44,6 +44,7 @@ CREATE TABLE datasets (
   user_id CHARACTER(32) REFERENCES users,
   name TEXT NOT NULL,
   serialized BYTEA NOT NULL,
+  created timestamp default current_timestamp not null,
   PRIMARY KEY (user_id, name)
 );
 
