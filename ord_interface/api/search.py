@@ -245,6 +245,6 @@ async def fetch_query_result(task_id: str):
         return Response(f"Task {task_id} does not exist", status_code=status.HTTP_400_BAD_REQUEST)
     result = client.get(f"result:{task_id}")
     if result is None:
-        return Response(f"Task {task_id} is pending", status_code=status.HTTP_102_PROCESSING)
+        return Response(f"Task {task_id} is pending", status_code=202)
     with get_cursor() as cursor:
         return fetch_reactions(cursor, json.loads(result))
