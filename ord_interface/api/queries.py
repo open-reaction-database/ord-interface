@@ -265,7 +265,7 @@ class ReactionComponentQuery(ReactionQuery):
         SUBSTRUCTURE = auto()
         SMARTS = auto()
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         pattern: str,
         target: Target,
