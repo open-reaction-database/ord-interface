@@ -19,6 +19,7 @@ import collections
 import contextlib
 import difflib
 import fcntl
+import gzip
 import io
 import json
 import os
@@ -166,7 +167,10 @@ def upload_dataset(name):
         flask.abort(response)
     try:
         try:
-            dataset = dataset_pb2.Dataset.FromString(flask.request.get_data())
+            data = flask.request.get_data()
+            if name.endswith(".gz"):
+                data = gzip.decompress(data)
+            dataset = dataset_pb2.Dataset.FromString(data)
         except (google.protobuf.message.DecodeError, TypeError):
             dataset = dataset_pb2.Dataset()
             text_format.Parse(flask.request.get_data(as_text=True), dataset)
