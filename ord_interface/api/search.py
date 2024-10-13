@@ -85,12 +85,10 @@ def get_redis() -> Redis:
     """Returns a Redis client instance."""
     host = os.environ.get("REDIS_HOST", "localhost")
     port = int(os.environ.get("REDIS_PORT", "6379"))
-    # NOTE(skearnes): ElastiCache serverless uses TLS and Redis Cluster mode (db cannot be specified).
-    ssl = host != "localhost"
-    client = Redis(host=host, port=port, ssl=ssl)
+    client = Redis(host=host, port=port)
     if not client.ping():
-        raise RuntimeError(f"Failed to connect to Redis server {host}:{port} ({ssl=})")
-    logger.info(f"Connected to Redis server {host}:{port} ({ssl=})")
+        raise RuntimeError(f"Failed to connect to Redis server {host}:{port}")
+    logger.info(f"Connected to Redis server {host}:{port}")
     return client
 
 
