@@ -48,7 +48,7 @@ from enum import Enum, auto
 from ord_schema import message_helpers, validations
 from ord_schema.logging import get_logger
 from ord_schema.proto import reaction_pb2
-from psycopg import Cursor
+from psycopg import AsyncCursor
 from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
@@ -338,31 +338,31 @@ class ReactionComponentQuery(ReactionQuery):
         return query, params
 
 
-def fetch_results(cursor: Cursor) -> list[str]:
+async def fetch_results(cursor: AsyncCursor) -> list[str]:
     """Fetches query results.
 
     Args:
-        cursor: psycopg.cursor instance.
+        cursor: AsyncCursor instance.
 
     Returns:
         List of reaction IDs.
     """
     reaction_ids = set()
-    for row in cursor:
+    async for row in cursor:
         assert row["reaction_id"] not in reaction_ids  # Sanity check for well-written queries.
         reaction_ids.add(row["reaction_id"])
     return list(reaction_ids)
 
 
-def run_queries(
-    cursor: Cursor,
+async def run_queries(
+    cursor: AsyncCursor,
     reaction_queries: list[ReactionQuery] | ReactionQuery,
     limit: int | None = None,
 ) -> list[str]:
     """Runs a query against the database.
 
     Args:
-        cursor: DictCursor.
+        cursor: AsyncCursor instance.
         reaction_queries: ReactionQuery or list of ReactionQuery.
         limit: Integer maximum number of matches. If None (the default), no limit is set.
 
@@ -383,8 +383,8 @@ def run_queries(
         combined_query += "LIMIT %s"
         combined_params.append(limit)
     logger.debug((combined_query, combined_params))
-    cursor.execute(combined_query, combined_params)
-    return fetch_results(cursor)
+    await cursor.execute(combined_query, combined_params)
+    return await fetch_results(cursor)
 
 
 class QueryResult(BaseModel):
@@ -402,7 +402,7 @@ class QueryResult(BaseModel):
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
-def fetch_reactions(cursor: Cursor, reaction_ids: list[str]) -> list[QueryResult]:
+async def fetch_reactions(cursor: AsyncCursor, reaction_ids: list[str]) -> list[QueryResult]:
     """Fetches dataset and proto information for a list of reaction IDs."""
     query = """
         SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
@@ -410,9 +410,9 @@ def fetch_reactions(cursor: Cursor, reaction_ids: list[str]) -> list[QueryResult
         JOIN ord.dataset ON dataset.id = reaction.dataset_id
         WHERE reaction.reaction_id = ANY (%s)
     """
-    cursor.execute(query, (list(set(reaction_ids)),))
+    await cursor.execute(query, (list(set(reaction_ids)),))
     results = []
-    for row in cursor:
+    async for row in cursor:
         results.append(
             QueryResult(
                 dataset_id=row["dataset_id"], reaction_id=row["reaction_id"], proto=b64encode(row["proto"]).decode()
