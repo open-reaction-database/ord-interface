@@ -219,8 +219,7 @@ async def get_search_results(inputs: ReactionIdList):
 
 async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
-    # NOTE(skearnes): Use reaction IDs so we're not stuffing full protos into the result database.
-    logger.info(f"Running task {task_id}")
+    # NOTE(skearnes): Use reaction IDs to avoid stuffing full protos into the result database.
     result = await run_query(params, return_ids=True)
     async with get_redis() as client:
         return await client.set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
