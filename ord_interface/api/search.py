@@ -20,9 +20,8 @@ import gzip
 import json
 import os
 import re
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import asdict, dataclass
-from functools import cache
 from typing import Iterator, cast
 from uuid import uuid4
 
@@ -35,7 +34,7 @@ from psycopg import Cursor
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 from rdkit import Chem
-from redis import Redis
+from redis.asyncio import Redis
 
 from ord_interface.api.queries import (
     DatasetIdQuery,
@@ -80,16 +79,16 @@ def get_cursor() -> Iterator[Cursor]:
             yield cursor
 
 
-@cache
-def get_redis() -> Redis:
+@asynccontextmanager
+async def get_redis() -> Iterator[Redis]:
     """Returns a Redis client instance."""
     host = os.environ.get("REDIS_HOST", "localhost")
     port = int(os.environ.get("REDIS_PORT", "6379"))
-    client = Redis(host=host, port=port)
-    if not client.ping():
-        raise RuntimeError(f"Failed to connect to Redis server {host}:{port}")
-    logger.info(f"Connected to Redis server {host}:{port}")
-    return client
+    async with Redis(host=host, port=port) as client:
+        if not await client.ping():
+            raise RuntimeError(f"Failed to connect to Redis server {host}:{port}")
+        logger.info(f"Connected to Redis server {host}:{port}")
+        yield client
 
 
 @dataclass
@@ -222,14 +221,16 @@ async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
     # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
     result = await run_query(params, return_ids=True)
-    return get_redis().set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
+    async with get_redis() as client:
+        return await client.set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
 
 
 @router.get("/submit_query")
 async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = Depends()) -> str:
     """Submits a query as a background task."""
     task_id = str(uuid4())
-    get_redis().set(f"query:{task_id}", json.dumps(asdict(params)), ex=60 * 60)
+    async with get_redis() as client:
+        await client.set(f"query:{task_id}", json.dumps(asdict(params)), ex=60 * 60)
     background_tasks.add_task(run_task, task_id=task_id, params=params)
     logger.info(f"Created task {task_id}")
     return task_id
@@ -238,11 +239,11 @@ async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = 
 @router.get("/fetch_query_result")
 async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
-    client = get_redis()
-    if not client.exists(f"query:{task_id}"):
-        return Response(f"Task {task_id} does not exist", status_code=status.HTTP_400_BAD_REQUEST)
-    result = client.get(f"result:{task_id}")
+    async with get_redis() as client:
+        if not await client.exists(f"query:{task_id}"):
+            return Response(f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND)
+        result = await client.get(f"result:{task_id}")
     if result is None:
-        return Response(f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED)
+        return Response(f"Task {task_id} is pending", status_code=status.HTTP_404_NOT_FOUND)
     with get_cursor() as cursor:
         return fetch_reactions(cursor, json.loads(result))
