@@ -20,12 +20,11 @@ from unittest.mock import patch
 
 import psycopg
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from ord_schema.logging import get_logger
-from psycopg import Cursor
+from psycopg import AsyncCursor
 from psycopg.rows import dict_row
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 from testing.postgresql import Postgresql
 from testing.redis import RedisServer
 
@@ -42,20 +41,13 @@ def test_postgres_fixture() -> Iterator[Postgresql]:
         yield postgres
 
 
-@pytest.fixture
-def test_session(test_postgres) -> Iterator[Session]:
-    engine = create_engine(test_postgres.url(), future=True)
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture
-def test_cursor(test_postgres) -> Iterator[Cursor]:
-    with psycopg.connect(  # pylint: disable=not-context-manager
+@pytest_asyncio.fixture
+async def test_cursor(test_postgres) -> Iterator[AsyncCursor]:
+    async with await psycopg.AsyncConnection.connect(
         test_postgres.url(), row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:
-        connection.set_read_only(True)
-        with connection.cursor() as cursor:
+        await connection.set_read_only(True)
+        async with connection.cursor() as cursor:
             yield cursor
 
 
