@@ -87,7 +87,7 @@ async def get_redis() -> AsyncIterator[Redis]:
     async with Redis(host=host, port=port) as client:
         if not await client.ping():
             raise RuntimeError(f"Failed to connect to Redis server {host}:{port}")
-        logger.info(f"Connected to Redis server {host}:{port}")
+        logger.debug(f"Connected to Redis server {host}:{port}")
         yield client
 
 
@@ -221,6 +221,7 @@ async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
     # NOTE(skearnes): Use reaction IDs to avoid stuffing full protos into the result database.
     result = await run_query(params, return_ids=True)
+    logger.debug(f"Finished task {task_id}")
     async with get_redis() as client:
         return await client.set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
 
@@ -232,7 +233,7 @@ async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = 
     async with get_redis() as client:
         await client.set(f"query:{task_id}", json.dumps(asdict(params)), ex=60 * 60)
     background_tasks.add_task(run_task, task_id=task_id, params=params)
-    logger.info(f"Created task {task_id}")
+    logger.debug(f"Created task {task_id}")
     return task_id
 
 
@@ -244,6 +245,6 @@ async def fetch_query_result(task_id: str):
             return Response(f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND)
         result = await client.get(f"result:{task_id}")
     if result is None:
-        return Response(f"Task {task_id} is pending", status_code=status.HTTP_404_NOT_FOUND)
+        return Response(f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED)
     async with get_cursor() as cursor:
         return await fetch_reactions(cursor, json.loads(result))
