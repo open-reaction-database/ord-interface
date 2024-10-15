@@ -22,7 +22,7 @@ import os
 import re
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
-from typing import Iterator, cast
+from typing import AsyncIterator, cast
 from uuid import uuid4
 
 import psycopg
@@ -57,7 +57,7 @@ MAX_RESULTS = 1000
 
 
 @asynccontextmanager
-async def get_cursor() -> Iterator[AsyncCursor]:
+async def get_cursor() -> AsyncIterator[AsyncCursor]:
     """Returns a psycopg cursor."""
     dsn = os.getenv("ORD_INTERFACE_POSTGRES")
     if dsn is None:
@@ -80,7 +80,7 @@ async def get_cursor() -> Iterator[AsyncCursor]:
 
 
 @asynccontextmanager
-async def get_redis() -> Iterator[Redis]:
+async def get_redis() -> AsyncIterator[Redis]:
     """Returns a Redis client instance."""
     host = os.environ.get("REDIS_HOST", "localhost")
     port = int(os.environ.get("REDIS_PORT", "6379"))
