@@ -77,7 +77,7 @@ export default {
               clearInterval(this.searchPollingInterval);
               throw new Error("Error - Search task ID " + taskId + " does not exist");
             }
-            else if (res?.status == 500) {
+            else if (res?.status >= 500) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
@@ -167,9 +167,9 @@ export default {
     },
   },
   async mounted() {
-    // Fetch results. If server returns a 404, set up a poll to keep checking back until we have results.
+    // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
     await this.getSearchResults().then(() =>{
-      if (this.searchLoadStatus?.status == 404 && this.searchPollingInterval == null) {
+      if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
         this.searchPollingInterval = setInterval(() => {this.getSearchResults()}, 1000);
         setTimeout(() => {
           clearInterval(this.searchPollingInterval)

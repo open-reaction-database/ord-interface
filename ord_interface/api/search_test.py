@@ -98,7 +98,8 @@ def test_get_search_results(test_client):
 @retry(stop=stop_after_attempt(5), wait=wait_fixed(1))
 def wait_for_task(client, task_id) -> list[QueryResult]:
     response = client.get("/api/fetch_query_result", params={"task_id": task_id})
-    response.raise_for_status()
+    if response.status_code != 200:
+        raise ValueError(response)
     return response.json()
 
 
