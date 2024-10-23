@@ -1,10 +1,3 @@
-<template>
-  <div>
-    <h4>Frequency of Reactants</h4>
-    <svg></svg>
-    <div class="tooltip"></div>
-  </div>
-</template>
 <style>
 .tooltip {
     font: sans-serif 12pt;
@@ -19,101 +12,142 @@
 }
 </style>
 <script>
+
+import FloatingModal from "../../components/FloatingModal";
+import reaction_pb from "ord-schema"
 import * as d3 from "d3";
 export default {
     name: 'ChartView',
-    data() {
-      return {};
+    props: {
+      uniqueId: String,
+      title: String,
+      apiCall: String,
+      role: String
     },
+    components: {
+      FloatingModal
+    },
+    data() {
+      return {
+        datasetId: "",
+        inputsData: [],
+        showSmiles: false,
+        currentSmiles: "(SMILES string was empty.)",
+        currentTimesAppearing: 0,
+        molImage: null
+      };
+    },
+    /*computed: {
+      compoundSVG: function () {
+        // Add SVG of the molecule to modal
+        // prep compound
+        const compound = new reaction_pb.Compound()
+        const identifier = compound.addIdentifiers()
+        identifier.setValue(this.currentSmiles)
+        identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES)
+        // send http request
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest()
+          xhr.open("POST", "/api/compound_svg")
+          const binary = compound.serializeBinary()
+          xhr.responseType = "json"
+          xhr.onload = function () {
+            resolve(xhr.response)
+          }
+          xhr.send(binary)
+        }).then(val => {
+          this.molImage = val
+        })
+      }
+    },*/
     mounted() {
-      const reactants = [
-        {id: 'C', timesAppeared: 0},
-        {id: 'H2O', timesAppeared: 1},
-        {id: 'H2O2', timesAppeared: 2},
-        {id: 'HCl', timesAppeared: 0},
-        {id: 'CH3', timesAppeared: 3}
-      ]
+      this.datasetId = window.location.pathname.split("/")[2]
+      fetch("/api/" + this.apiCall + "?dataset_id=" + this.datasetId, {method: "GET"})
+        .then(response => response.json())
+        .then(data => {
+          this.inputsData = data
 
-      const testmap = ['C', 'H2O', 'H2O2', 'CH3']
-      // Declare the chart dimensions and margins.
-      const width = 400;
-      const height = 400;
-      const marginTop = 20;
-      const marginRight = 20;
-      const marginBottom = 30;
-      const marginLeft = 40;
+          // Dimensions and margins
+          const width = 400;
+          const height = 400;
+          const marginTop = 20;
+          const marginRight = 20;
+          const marginBottom = 30;
+          const marginLeft = 40;
 
-      // Needs to be updated to handle data that's already been binned.
-      // We dont need bins but we need mols on x axis and timesAppeared on y.
-      // Bin the data.
-      const bins = d3.bin()
-          .thresholds(40)
-          .value((d) => d.timesAppeared)(reactants);
+          // X-axis
+          const x = d3.scaleBand()
+              .domain(d3.groupSort(data, ([d]) => -d.times_appearing, (d) => d.smiles)) // descending frequency
+              .range([marginLeft, width - marginRight])
+              .padding(0.1);
+          
+          // Y-axis
+          const y = d3.scaleLinear()
+              .domain([0, d3.max(data, (d) => d.times_appearing)])
+              .range([height - marginBottom, marginTop]);
 
-      // Declare the x (horizontal position) scale.
-      // should be scaleOrdinal
-      const x = d3.scaleLinear()
-          .domain([bins[0].x0, bins[bins.length - 1].x1])
-          .range([marginLeft, width - marginRight]);
+          // SVG
+          const svg = d3.select("#" + this.uniqueId)
+              .attr("width", width)
+              .attr("height", height)
+              .attr("viewBox", [0, 0, width, height])
+              .attr("style", "max-width: 100%; height: auto;");
 
-      // Declare the y (vertical position) scale.
-      const y = d3.scaleLinear()
-          .domain([0, d3.max(bins, (d) => d.length)])
-          .range([height - marginBottom, marginTop]);
+          // SVG rects for bars
+          svg.append("g")
+              .attr("fill", "steelblue")
+            .selectAll()
+            .data(data)
+            .join("rect")
+              .attr("x", (d) => x(d.smiles))
+              .attr("y", (d) => y(d.times_appearing))
+              .attr("height", (d) => y(0) - y(d.times_appearing))
+              .attr("width", x.bandwidth())
+              .attr("style", "cursor:pointer;")
+              .on("click", (d) => {
+                this.currentSmiles = d.srcElement.__data__.smiles;
+                this.currentTimesAppearing = d.srcElement.__data__.times_appearing;
+                this.showSmiles = true;
+              });
 
-      // Add these SVG attrs below
-      /*
-          .attr("viewBox", [0, 0, width, height])
-          .attr("style", "max-width: 100%; height: auto;");*/
-      const svg = d3.select("svg").attr("width", width).attr("height", height);
+          // X-axis formatting
+          svg.append("g")
+              .attr("transform", `translate(0,${height - marginBottom})`)
+              .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0).tickFormat(function(d) {return ''}))
+              .call((g) => g.append("text")
+                          .attr("x", width)
+                          .attr("y", marginBottom - 4)
+                          .attr("fill", "currentColor")
+                          .attr("text-anchor", "end")
+                          .text("Molecules (Click each bar to view full molecule SMILES strings) →"));
 
-      const tooltip = d3.select(".tooltip");
-
-      // Add a rect for each bin.
-      svg.append("g")
-          .attr("fill", "steelblue")
-        .selectAll()
-        .data(bins)
-        .join("rect")
-          .attr("x", (d) => x(d.x0) + 1)
-          .attr("width", (d) => x(d.x1) - x(d.x0) - 1)
-          .attr("y", (d) => y(d.length))
-          .attr("height", (d) => y(0) - y(d.length))
-          .on("mouseenter", (evt, d) => {
-            const [mx, my] = d3.pointer(evt);
-            const tooltipText = `
-              <strong>SMILES</strong>: ${d["id"]} 
-              <br> 
-              <strong># of Occurrences</strong>: ${d["timesAppeared"]}`;
-            tooltip
-              .style("top", `${my}px`)
-              .style("left", `${mx}px`)
-              .html(tooltipText);
-          })
-          .on("mouseout", () => tooltip.text());
-
-      // Add the x-axis and label.
-      svg.append("g")
-          .attr("transform", `translate(0,${height - marginBottom})`)
-          .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0).tickFormat(function(d) {return testmap[d]}))
-          .call((g) => g.append("text")
-              .attr("x", width)
-              .attr("y", marginBottom - 4)
-              .attr("fill", "currentColor")
-              .attr("text-anchor", "end")
-              .text("Molecules (SMILES) →"));
-
-      // Add the y-axis and label, and remove the domain line.
-      svg.append("g")
-          .attr("transform", `translate(${marginLeft},0)`)
-          .call(d3.axisLeft(y).ticks(height / 40))
-          .call((g) => g.select(".domain").remove())
-          .call((g) => g.append("text")
-              .attr("x", -marginLeft)
-              .attr("y", 10)
-              .attr("fill", "currentColor")
-              .attr("text-anchor", "start")
-              .text("↑ Frequency (no. of occurrences)"));
+          // Y-axis formatting
+          svg.append("g")
+              .attr("transform", `translate(${marginLeft},0)`)
+              .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+              .call(g => g.select(".domain").remove())
+              .call(g => g.append("text")
+                  .attr("x", -marginLeft)
+                  .attr("y", 10)
+                  .attr("fill", "currentColor")
+                  .attr("text-anchor", "start")
+                  .text("↑ Frequency (no. of occurrences)"));
+    })
     }
 };
 </script>
+<template lang="pug">
+  .div
+    .h4 {{this.title}}
+    svg(:id='uniqueId')
+    FloatingModal(
+            v-if='showSmiles'
+            title="SMILES"
+            @closeModal='showSmiles=false'
+    )
+      .data
+        pre {{currentSmiles}} occurred {{currentTimesAppearing}} {{currentTimesAppearing == 1 ? 'time' : 'times'}} as a {{role}} in this dataset
+        .svg(
+          v-html='molHtml'
+        )
+</template>

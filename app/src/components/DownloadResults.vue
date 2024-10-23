@@ -58,7 +58,7 @@ export default {
         }
       };
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.send(JSON.stringify({"reaction_id": this.reactionIds}));
+      xhr.send(JSON.stringify({"reaction_ids": this.reactionIds}));
     }
   },
   mounted() {
@@ -71,7 +71,7 @@ export default {
 .download-results-main
   floating-modal(
       v-if='showDownloadResults'
-      title="DownloadResults"
+      title="Download Results"
       @closeModal='$emit("hideDownloadResults")'
     )
       .download-body

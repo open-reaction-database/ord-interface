@@ -16,7 +16,7 @@
 
 <script>
 import SearchOptions from '../search/SearchOptions'
-import SearchResults from '../search/SearchResults'
+import SearchResults from './SearchResults'
 import ChartView from './ChartView'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
@@ -187,24 +187,48 @@ export default {
 <template lang="pug">
 #dataset-main
   h1 Dataset View
-  ChartView
-  .span Dataset ID: {{datasetData.dataset_id}}
-  .span Dataset Name: {{datasetData.name}}
-  .span Dataset Description: {{datasetData.description ?? '(no description)'}}
-  .span Number of Reactions in Dataset: {{datasetData.num_reactions}}
+  #charts
+    ChartView(
+      uniqueId='reactantsFrequency'
+      title='Frequency of Reactants'
+      apiCall='input_stats'
+      role='reactant'
+    )
+    ChartView(
+      uniqueId='productsFrequency'
+      title='Frequency of Products'
+      apiCall='product_stats'
+      role='product'
+    )
+  .h4 Dataset Metadata
+  table
+    tr
+      td Dataset ID:
+      td {{datasetData.dataset_id ?? '(no id)'}}
+    tr
+      td Dataset Name:
+      td {{datasetData.name ?? '(no name)'}}  
+    tr
+      td Dataset Description:
+      td {{datasetData.description ?? '(no description)'}}
+    tr
+      td Number of Reactions in Dataset:
+      td {{datasetData.num_reactions}}
   .search-results
     SearchResults(
       :searchResults='searchResults'
       v-if='!loading && searchResults?.length'
     )
     .no-results(v-else-if='!loading && !searchResults?.length')
-      .title No results. Adjust the filters and options and search again.
+      .title This dataset contains no reactions.
     .loading(v-else)
       LoadingSpinner
 </template>
 
 <style lang="sass" scoped>
 @import '@/styles/vars.sass'
+#charts
+  display: flex
 #dataset-main
   width: 95%
   margin: 1rem 2.5%

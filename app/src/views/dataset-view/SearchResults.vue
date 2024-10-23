@@ -75,7 +75,7 @@ export default {
 .search-results-main
   EntityTable(
     :tableData='formattedResults'
-    title="Search Results",
+    :title='"Reactions in this Dataset (" + formattedResults.length + " Reactions)"',
     v-slot='{ entities }'
     v-if='formattedResults.length'
     :displaySearch='false'
@@ -93,7 +93,7 @@ export default {
     ReactionCard(
       v-for='row in entities'
       :reaction='row'
-      :isSelectable='true'
+      :isSelectable='false'
       :isSelected='selectedReactions.includes(row.reaction_id)'
       @clickedSelect='updateSelectedReactions'
     )
