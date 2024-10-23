@@ -248,3 +248,15 @@ async def fetch_query_result(task_id: str):
         return Response(f"Task {task_id} is pending", status_code=status.HTTP_102_PROCESSING)
     with get_cursor() as cursor:
         return fetch_reactions(cursor, json.loads(result))
+
+@router.get("/input_stats")
+async def get_input_stats(dataset_id: str) -> list[StatsResult]:
+    with get_cursor() as cursor:
+        results = fetch_dataset_most_used_smiles_for_inputs(cursor, [dataset_id])
+    return results
+
+@router.get("/product_stats")
+async def get_product_stats(dataset_id: str) -> list[StatsResult]:
+    with get_cursor() as cursor:
+        results = fetch_dataset_most_used_smiles_for_products(cursor, [dataset_id])
+    return results
