@@ -65,7 +65,7 @@ export default {
           this.reactions = fetchedReactions
           this.loading = false
         }
-        xhr.send(JSON.stringify({"reaction_id": this.reactionIds}))
+        xhr.send(JSON.stringify({"reaction_ids": this.reactionIds}))
       } catch (e) {
         console.log(e)
         this.loading = false
