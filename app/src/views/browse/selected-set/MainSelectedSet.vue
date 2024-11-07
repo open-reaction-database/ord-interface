@@ -38,7 +38,7 @@ export default {
   },
   computed: {
     reactionIds() {
-      return this.$route.query.reaction_id || []
+      return [this.$route.query.reaction_id] || []
     },
     fullUrl() {
       return window.location.href
