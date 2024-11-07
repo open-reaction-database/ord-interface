@@ -401,11 +401,6 @@ class QueryResult(BaseModel):
     def __eq__(self, other: QueryResult) -> bool:
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
-class StatsResult(BaseModel):
-    """Stats result."""
-
-    smiles: str
-    times_appearing: str
 
 async def fetch_reactions(cursor: AsyncCursor, reaction_ids: list[str]) -> list[QueryResult]:
     """Fetches dataset and proto information for a list of reaction IDs."""
@@ -425,74 +420,53 @@ async def fetch_reactions(cursor: AsyncCursor, reaction_ids: list[str]) -> list[
         )
     return results
 
-def fetch_dataset_most_used_smiles_for_inputs(cursor: Cursor, dataset_id: str) -> list[StatsResult]:
-    """Fetches the top 10 most used SMILES molecules in terms of reaction inputs for a given dataset."""
-    # query = """
-    #    SELECT rdkit.mols.smiles, COUNT(rdkit.mols.smiles) as timesAppearing
-    #    FROM ord.reaction
-    #    JOIN reaction_input ON reaction_input.reaction_id = reaction.id
-    #    JOIN compound ON compound.reaction_input_id = reaction_input.id
-    #    JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
-    #    JOIN ord.dataset ON dataset.id = reaction.dataset_id
-    #    WHERE dataset.dataset_id = %s
-    #    GROUP BY rdkit.mols.smiles
-    #    LIMIT 10;
-    # """
-    dataset_id = dataset_id[0]
+
+class StatsResult(BaseModel):
+    """Stats result."""
+
+    smiles: str
+    times_appearing: int
+
+
+async def fetch_dataset_most_used_smiles_for_inputs(
+    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+) -> list[StatsResult]:
+    """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
     query = """
-            SELECT rdkit.mols.smiles, COUNT(rdkit.mols.smiles) as timesAppearing
-            FROM ord.reaction
-            JOIN reaction_input ON reaction_input.reaction_id = reaction.id
-            JOIN compound ON compound.reaction_input_id = reaction_input.id
-            JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
-            JOIN ord.dataset ON dataset.id = reaction.dataset_id
+            SELECT DISTINCT smiles, COUNT(*) as times_appearing
+            FROM ord.compound
+            JOIN ord.reaction_input ON ord.compound.reaction_input_id = ord.reaction_input.id
+            JOIN ord.reaction ON ord.reaction_input.reaction_id = ord.reaction.id
+            JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
             WHERE ord.dataset.dataset_id = %s
-            GROUP BY rdkit.mols.smiles
-            ORDER BY timesAppearing DESC
-            LIMIT 30
+            GROUP BY smiles
+            ORDER BY times_appearing DESC
+            LIMIT %s
         """
-    cursor.execute(query, (dataset_id,))
+    await cursor.execute(query, (dataset_id, limit))
     results = []
-    for row in cursor:
-        results.append(
-            StatsResult(
-                smiles=row["smiles"], times_appearing=str(row["timesappearing"])
-            )
-        )
+    async for row in cursor:
+        results.append(StatsResult(**row))
     return results
 
-def fetch_dataset_most_used_smiles_for_products(cursor: Cursor, dataset_id: str) -> list[StatsResult]:
-    """Fetches the top 10 most used SMILES molecules in terms of reaction products for a given dataset."""
-    # query = """
-    #    SELECT rdkit.mols.smiles, COUNT(rdkit.mols.smiles) as timesAppearing
-    #    FROM ord.reaction
-    #    JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
-    #    JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
-    #    JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
-    #    JOIN ord.dataset ON dataset.id = reaction.dataset_id
-    #    WHERE dataset.dataset_id = %s
-    #    GROUP BY rdkit.mols.smiles
-    #    LIMIT 10;
-    # """
-    dataset_id = dataset_id[0]
+
+async def fetch_dataset_most_used_smiles_for_products(
+    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+) -> list[StatsResult]:
+    """Fetches the top K most used SMILES molecules in terms of reaction products for a given dataset."""
     query = """
-            SELECT rdkit.mols.smiles, COUNT(rdkit.mols.smiles) as timesAppearing
-            FROM ord.reaction
-            JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
-            JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
-            JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
-            JOIN ord.dataset ON dataset.id = reaction.dataset_id
+            SELECT DISTINCT smiles, COUNT(*) as times_appearing
+            FROM ord.product_compound
+            JOIN ord.reaction_outcome ON ord.product_compound.reaction_outcome_id = ord.reaction_outcome.id
+            JOIN ord.reaction ON ord.reaction_outcome.reaction_id = ord.reaction.id
+            JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
             WHERE ord.dataset.dataset_id = %s
-            GROUP BY rdkit.mols.smiles
-            ORDER BY timesAppearing DESC
-            LIMIT 30
+            GROUP BY smiles
+            ORDER BY times_appearing DESC
+            LIMIT %s
         """
-    cursor.execute(query, (dataset_id,))
+    await cursor.execute(query, (dataset_id, limit))
     results = []
-    for row in cursor:
-        results.append(
-            StatsResult(
-                smiles=row["smiles"], times_appearing=str(row["timesappearing"])
-            )
-        )
+    async for row in cursor:
+        results.append(StatsResult(**row))
     return results
