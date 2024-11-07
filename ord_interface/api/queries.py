@@ -433,7 +433,7 @@ async def fetch_dataset_most_used_smiles_for_inputs(
 ) -> list[StatsResult]:
     """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
     query = """
-            SELECT DISTINCT smiles, COUNT(*) as times_appearing
+            SELECT smiles, COUNT(*) as times_appearing
             FROM ord.compound
             JOIN ord.reaction_input ON ord.compound.reaction_input_id = ord.reaction_input.id
             JOIN ord.reaction ON ord.reaction_input.reaction_id = ord.reaction.id
@@ -455,7 +455,7 @@ async def fetch_dataset_most_used_smiles_for_products(
 ) -> list[StatsResult]:
     """Fetches the top K most used SMILES molecules in terms of reaction products for a given dataset."""
     query = """
-            SELECT DISTINCT smiles, COUNT(*) as times_appearing
+            SELECT smiles, COUNT(*) as times_appearing
             FROM ord.product_compound
             JOIN ord.reaction_outcome ON ord.product_compound.reaction_outcome_id = ord.reaction_outcome.id
             JOIN ord.reaction ON ord.reaction_outcome.reaction_id = ord.reaction.id
