@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for editor.py.serve."""
 import base64
+import gzip
 import json
 import os
 from urllib import parse
@@ -154,20 +155,23 @@ def test_download_dataset_with_kind(client, filename, kind, expected, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "filename,expected,as_text",
+    "filename,expected,as_text,compressed",
     (
-        ("dataset", 409, True),
-        ("dataset", 409, False),
-        ("other", 200, True),
-        ("other", 200, False),
+        ("dataset", 409, True, False),
+        ("dataset", 409, False, False),
+        ("dataset", 409, False, True),
+        ("other", 200, True, False),
+        ("other", 200, False, False),
     ),
 )
-def test_upload_dataset(client, filename, expected, as_text):
+def test_upload_dataset(client, filename, expected, as_text, compressed):
     dataset = _get_dataset()
     if as_text:
         data = text_format.MessageToString(dataset)
     else:
         data = dataset.SerializeToString()
+        if compressed:
+            data = gzip.compress(data)
     response = client.post(f"/dataset/{filename}/upload", data=data, follow_redirects=True)
     assert response.status_code == expected
     if response.status_code == 200:

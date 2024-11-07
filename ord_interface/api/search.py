@@ -20,10 +20,9 @@ import gzip
 import json
 import os
 import re
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
-from functools import cache
-from typing import Iterator, cast
+from typing import AsyncIterator, cast
 from uuid import uuid4
 
 import psycopg
@@ -31,11 +30,11 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
 from ord_schema.logging import get_logger
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
-from psycopg import Cursor
+from psycopg import AsyncCursor
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 from rdkit import Chem
-from redis import Redis
+from redis.asyncio import Redis
 
 from ord_interface.api.queries import (
     DatasetIdQuery,
@@ -57,8 +56,8 @@ BOND_LENGTH = 20
 MAX_RESULTS = 1000
 
 
-@contextmanager
-def get_cursor() -> Iterator[Cursor]:
+@asynccontextmanager
+async def get_cursor() -> AsyncIterator[AsyncCursor]:
     """Returns a psycopg cursor."""
     dsn = os.getenv("ORD_INTERFACE_POSTGRES")
     if dsn is None:
@@ -72,26 +71,24 @@ def get_cursor() -> Iterator[Cursor]:
                 host=os.environ["POSTGRES_HOST"],
             ),
         )
-    with psycopg.connect(  # pylint: disable=not-context-manager
+    async with await psycopg.AsyncConnection.connect(
         dsn, row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:
-        connection.set_read_only(True)
-        with connection.cursor() as cursor:
+        await connection.set_read_only(True)
+        async with connection.cursor() as cursor:
             yield cursor
 
 
-@cache
-def get_redis() -> Redis:
+@asynccontextmanager
+async def get_redis() -> AsyncIterator[Redis]:
     """Returns a Redis client instance."""
     host = os.environ.get("REDIS_HOST", "localhost")
     port = int(os.environ.get("REDIS_PORT", "6379"))
-    # NOTE(skearnes): ElastiCache serverless uses TLS and Redis Cluster mode (db cannot be specified).
-    ssl = host != "localhost"
-    client = Redis(host=host, port=port, ssl=ssl)
-    if not client.ping():
-        raise RuntimeError(f"Failed to connect to Redis server {host}:{port} ({ssl=})")
-    logger.info(f"Connected to Redis server {host}:{port} ({ssl=})")
-    return client
+    async with Redis(host=host, port=port) as client:
+        if not await client.ping():
+            raise RuntimeError(f"Failed to connect to Redis server {host}:{port}")
+        logger.debug(f"Connected to Redis server {host}:{port}")
+        yield client
 
 
 @dataclass
@@ -151,11 +148,11 @@ async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] 
     limit = MAX_RESULTS
     if params.limit:
         limit = min(params.limit, MAX_RESULTS)
-    with get_cursor() as cursor:
-        reaction_ids = run_queries(cursor, queries, limit=limit)
+    async with get_cursor() as cursor:
+        reaction_ids = await run_queries(cursor, queries, limit=limit)
         if return_ids:
             return reaction_ids
-        return fetch_reactions(cursor, reaction_ids)
+        return await fetch_reactions(cursor, reaction_ids)
 
 
 @router.get("/query")
@@ -168,8 +165,8 @@ async def query(params: QueryParams = Depends()) -> list[QueryResult]:
 @router.get("/reaction")
 async def get_reaction(reaction_id: str) -> QueryResult:
     """Fetches a Reaction by ID."""
-    with get_cursor() as cursor:
-        results = fetch_reactions(cursor, [reaction_id])
+    async with get_cursor() as cursor:
+        results = await fetch_reactions(cursor, [reaction_id])
     return results[0]
 
 
@@ -182,8 +179,8 @@ class ReactionIdList(BaseModel):
 @router.post("/reactions")
 async def get_reactions(inputs: ReactionIdList) -> list[QueryResult]:
     """Fetches a list of Reactions by ID."""
-    with get_cursor() as cursor:
-        return fetch_reactions(cursor, inputs.reaction_ids)
+    async with get_cursor() as cursor:
+        return await fetch_reactions(cursor, inputs.reaction_ids)
 
 
 class DatasetInfo(BaseModel):
@@ -198,9 +195,9 @@ class DatasetInfo(BaseModel):
 @router.get("/datasets")
 async def get_datasets() -> list[DatasetInfo]:
     """Returns info about the current datasets."""
-    with get_cursor() as cursor:
-        cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
-        return [DatasetInfo(**row) for row in cursor]
+    async with get_cursor() as cursor:
+        await cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
+        return [DatasetInfo(**row) async for row in cursor]
 
 
 @router.get("/molfile")
@@ -222,38 +219,43 @@ async def get_search_results(inputs: ReactionIdList):
 
 async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
-    # NOTE(skearnes): Use IDs so we're not stuffing the protos into the result backend.
+    # NOTE(skearnes): Use reaction IDs to avoid stuffing full protos into the result database.
     result = await run_query(params, return_ids=True)
-    return get_redis().set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
+    logger.debug(f"Finished task {task_id}")
+    async with get_redis() as client:
+        return await client.set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
 
 
 @router.get("/submit_query")
 async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = Depends()) -> str:
     """Submits a query as a background task."""
     task_id = str(uuid4())
-    get_redis().set(f"query:{task_id}", json.dumps(asdict(params)), ex=60 * 60)
+    async with get_redis() as client:
+        await client.set(f"query:{task_id}", json.dumps(asdict(params)), ex=60 * 60)
     background_tasks.add_task(run_task, task_id=task_id, params=params)
-    logger.info(f"Created task {task_id}")
+    logger.debug(f"Created task {task_id}")
     return task_id
 
 
 @router.get("/fetch_query_result")
 async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
-    client = get_redis()
-    if not client.exists(f"query:{task_id}"):
-        return Response(f"Task {task_id} does not exist", status_code=status.HTTP_400_BAD_REQUEST)
-    result = client.get(f"result:{task_id}")
+    async with get_redis() as client:
+        if not await client.exists(f"query:{task_id}"):
+            return Response(f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND)
+        result = await client.get(f"result:{task_id}")
     if result is None:
-        return Response(f"Task {task_id} is pending", status_code=status.HTTP_102_PROCESSING)
-    with get_cursor() as cursor:
-        return fetch_reactions(cursor, json.loads(result))
+        return Response(f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED)
+    async with get_cursor() as cursor:
+        return await fetch_reactions(cursor, json.loads(result))
+
 
 @router.get("/input_stats")
 async def get_input_stats(dataset_id: str) -> list[StatsResult]:
     with get_cursor() as cursor:
         results = fetch_dataset_most_used_smiles_for_inputs(cursor, [dataset_id])
     return results
+
 
 @router.get("/product_stats")
 async def get_product_stats(dataset_id: str) -> list[StatsResult]:

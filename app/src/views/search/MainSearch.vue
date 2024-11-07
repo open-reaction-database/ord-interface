@@ -71,13 +71,13 @@ export default {
               clearInterval(this.searchPollingInterval);
               return res.json();
             }
-            else if (res?.status == 400) {
+            else if (res?.status == 404) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
               throw new Error("Error - Search task ID " + taskId + " does not exist");
             }
-            else if (res?.status == 500) {
+            else if (res?.status >= 500) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
@@ -87,14 +87,19 @@ export default {
         )
         .then(
           (searchResultsData) => {
-            // Deserialize the results.
-            this.searchResults = searchResultsData;
-            // unpack protobuff for each reaction in results
-            this.searchResults.forEach((reaction) => {
-                const bytes = base64ToBytes(reaction.proto)
-                reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
-              })
-            this.loading = false
+            // Only show the results if we have results - or lack of results.
+            // this.searchTaskId will be populated only if we're still polling
+            // If it is null, we're done polling - either the search ended in results, or an error.
+            if (this.searchTaskId == null) {
+              // Deserialize the results.
+              this.searchResults = searchResultsData;
+              // unpack protobuff for each reaction in results
+              this.searchResults.forEach((reaction) => {
+                  const bytes = base64ToBytes(reaction.proto)
+                  reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+                })
+              this.loading = false
+            }
           }
         )
       } catch (e) {
@@ -162,11 +167,16 @@ export default {
     },
   },
   async mounted() {
-    // Fetch results. If server returns a 102, set up a poll to keep checking back until we have results.
+    // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
     await this.getSearchResults().then(() =>{
-      if (this.searchLoadStatus?.status == 102 && this.searchPollingInterval == null) {
-        this.searchPollingInterval = setInterval(this.getSearchResults(), 1000);
-        setTimeout(clearInterval(this.searchPollingInterval), 120000);
+      if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
+        this.searchPollingInterval = setInterval(() => {this.getSearchResults()}, 1000);
+        setTimeout(() => {
+          clearInterval(this.searchPollingInterval)
+          this.searchTaskId = null
+          this.searchResults = []
+          this.loading = false
+        }, 120000);
       }
     })
   },
