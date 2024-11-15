@@ -194,7 +194,7 @@ export default {
       LoadingSpinner
     FloatingModal(
             v-if='showSmiles'
-            title="SMILES"
+            title="Molecule Details"
             @closeModal='showSmiles=false; currentSmiles=null'
     )
       .data
