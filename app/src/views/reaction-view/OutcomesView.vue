@@ -122,8 +122,10 @@ export default {
       .label Analysis
       .label Raw
       template(v-for='measurement in outcome.productsList[productsIdx].measurementsList')
-        .value {{getMeasurementType(measurement.type) == CUSTOM ? 'CUSTOM' : getMeasurementType(measurement.type)}}
-        .button(@click='setCustomMeasurementDetails(measurement)') View
+        .value(v-if='getMeasurementType(measurement.type) == CUSTOM') 
+         .button(@click='setCustomMeasurementDetails(measurement)') {{'<u>CUSTOM</u>'}}
+        .value(v-else) {{getMeasurementType(measurement.type)}}
+        .value
         .value {{getMeasurementValue(measurement)}}
         .value {{measurement.analysisKey}}
         .value 
