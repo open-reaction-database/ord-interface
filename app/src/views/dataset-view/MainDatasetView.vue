@@ -175,7 +175,7 @@ export default {
     })
     // Fetch results. If server returns a 102, set up a poll to keep checking back until we have results.
     await this.getSearchResults().then(() =>{
-      if (this.searchLoadStatus?.status == 102 && this.searchPollingInterval == null) {
+      if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
         this.searchPollingInterval = setInterval(this.getSearchResults(), 1000);
         setTimeout(clearInterval(this.searchPollingInterval), 120000);
       }

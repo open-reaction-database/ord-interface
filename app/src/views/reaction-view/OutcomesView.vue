@@ -123,7 +123,7 @@ export default {
       .label Raw
       template(v-for='measurement in outcome.productsList[productsIdx].measurementsList')
         .value {{getMeasurementType(measurement.type) == CUSTOM ? 'CUSTOM' : getMeasurementType(measurement.type)}}
-        .button(@click='setCustomMeasurementDetails(measurement)') *
+        .button(@click='setCustomMeasurementDetails(measurement)') View
         .value {{getMeasurementValue(measurement)}}
         .value {{measurement.analysisKey}}
         .value 

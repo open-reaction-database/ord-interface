@@ -30,8 +30,10 @@
 <script>
 
 import FloatingModal from "../../components/FloatingModal";
-import reaction_pb from "ord-schema"
+import LoadingSpinner from '@/components/LoadingSpinner';
+import reaction_pb from "ord-schema";
 import * as d3 from "d3";
+
 export default {
     name: 'ChartView',
     props: {
@@ -41,8 +43,14 @@ export default {
       role: String
     },
     components: {
-      FloatingModal
+      FloatingModal,
+      LoadingSpinner
     },
+    watch: {
+      currentSmiles() {
+        this.getMolHtml()
+      }
+   },
     data() {
       return {
         datasetId: "",
@@ -50,7 +58,9 @@ export default {
         showSmiles: false,
         currentSmiles: "(SMILES string was empty.)",
         currentTimesAppearing: 0,
-        molImage: null
+        molImage: null,
+        loading: true,
+        molHtml: null
       };
     },
     /*computed: {
@@ -81,6 +91,7 @@ export default {
       fetch("/api/" + this.apiCall + "?dataset_id=" + this.datasetId, {method: "GET"})
         .then(response => response.json())
         .then(data => {
+          this.loading = false
           this.inputsData = data
 
           // Dimensions and margins
@@ -149,17 +160,42 @@ export default {
                   .attr("text-anchor", "start")
                   .text("↑ Frequency (no. of occurrences)"));
     })
-    }
+    },
+    methods: {
+      getMolHtml () {
+        const compoundStr = this.currentSmiles
+        // prep compound
+        const compound = new reaction_pb.Compound()
+        const identifier = compound.addIdentifiers()
+        identifier.setValue(compoundStr)
+        identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES)
+        // send http request
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest()
+          xhr.open("POST", "/api/compound_svg")
+          const binary = compound.serializeBinary()
+          xhr.responseType = "json"
+          xhr.onload = function () {
+            resolve(xhr.response)
+          }
+          xhr.send(binary)
+        }).then(val => {
+          this.molHtml = val
+        })
+      },
+  },
 };
 </script>
 <template lang="pug">
   .div
     .h4 {{this.title}}
-    svg(:id='uniqueId')
+    svg(:id='uniqueId' :style='!loading ? "visibility: visible" : "visibility: hidden"')
+    .loading(:style='loading ? "visibility: visible" : "visibility: hidden"')
+      LoadingSpinner
     FloatingModal(
             v-if='showSmiles'
             title="SMILES"
-            @closeModal='showSmiles=false'
+            @closeModal='showSmiles=false; currentSmiles=null'
     )
       .data
         pre {{currentSmiles}} occurred {{currentTimesAppearing}} {{currentTimesAppearing == 1 ? 'time' : 'times'}} as a {{role}} in this dataset
