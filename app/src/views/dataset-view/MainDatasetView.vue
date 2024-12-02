@@ -47,10 +47,14 @@ export default {
       showOptions: false,
       datasetId: "",
       datasetLoading: true,
-      datasetData: []
+      datasetData: [],
+      isCollapsed: true
     }
   },
   methods: {
+    expandOrShrink (e) {
+      this.isCollapsed = !this.isCollapsed;
+    },
     async getSearchResults() {
       this.loading = true
       // get raw url query string
@@ -176,8 +180,8 @@ export default {
     // Fetch results. If server returns a 102, set up a poll to keep checking back until we have results.
     await this.getSearchResults().then(() =>{
       if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
-        this.searchPollingInterval = setInterval(this.getSearchResults(), 1000);
-        setTimeout(clearInterval(this.searchPollingInterval), 120000);
+        this.searchPollingInterval = setInterval(() => {this.getSearchResults(), 1000});
+        setTimeout(() => {clearInterval(this.searchPollingInterval), 120000});
       }
     })
   },
@@ -187,48 +191,64 @@ export default {
 <template lang="pug">
 #dataset-main
   h1 Dataset View
-  #charts
-    ChartView(
-      uniqueId='reactantsFrequency'
-      title='Frequency of Reactants'
-      apiCall='input_stats'
-      role='reactant'
-    )
-    ChartView(
-      uniqueId='productsFrequency'
-      title='Frequency of Products'
-      apiCall='product_stats'
-      role='product'
-    )
-  .h4 Dataset Metadata
-  table
-    tr
-      td Dataset ID:
-      td {{datasetData.dataset_id ?? '(no id)'}}
-    tr
-      td Dataset Name:
-      td {{datasetData.name ?? '(no name)'}}  
-    tr
-      td Dataset Description:
-      td {{datasetData.description ?? '(no description)'}}
-    tr
-      td Number of Reactions in Dataset:
-      td {{datasetData.num_reactions}}
-  .search-results
-    SearchResults(
-      :searchResults='searchResults'
-      v-if='!loading && searchResults?.length'
-    )
-    .no-results(v-else-if='!loading && !searchResults?.length')
-      .title This dataset contains no reactions.
-    .loading(v-else)
-      LoadingSpinner
+  #charts(:style='this.isCollapsed ? "display: grid" : "display: flex; flex-direction: column"')
+    #chartsection(:style='this.isCollapsed ? "width: 40%" : "width: 100%"')
+      #chartsectioncharts(:style='this.isCollapsed ? "display: block" : "display: flex"')
+        ChartView(
+          uniqueId='reactantsFrequency'
+          title='Frequency of Reactants'
+          apiCall='input_stats'
+          role='reactant'
+          :isCollapsed='this.isCollapsed'
+        )
+        ChartView(
+          uniqueId='productsFrequency'
+          title='Frequency of Products'
+          apiCall='product_stats'
+          role='product'
+          :isCollapsed='this.isCollapsed'
+        )
+      #expand
+        button(@click='expandOrShrink')
+          i.material-icons(:style='"margin-top: 15%"' :title='this.isCollapsed ? "Expand" : "Collapse"') {{ this.isCollapsed ? "keyboard_double_arrow_right" : "keyboard_double_arrow_left" }}
+    #datasection
+      .h4 Dataset Metadata
+      table
+        tr
+          td Dataset ID:
+          td {{datasetData.dataset_id ?? '(no id)'}}
+        tr
+          td Dataset Name:
+          td {{datasetData.name ?? '(no name)'}}  
+        tr
+          td Dataset Description:
+          td {{datasetData.description ?? '(no description)'}}
+        tr
+          td Number of Reactions in Dataset:
+          td {{datasetData.num_reactions}}
+      .search-results
+        SearchResults(
+          :searchResults='searchResults'
+          :isOverflow='datasetData.num_reactions > searchResults?.length'
+          v-if='!loading && searchResults?.length'
+        )
+        .no-results(v-else-if='!loading && !searchResults?.length')
+          .title This dataset contains no reactions.
+        .loading(v-else)
+          LoadingSpinner
 </template>
 
 <style lang="sass" scoped>
 @import '@/styles/vars.sass'
 #charts
+  display: grid
+  grid-template-columns: auto 1fr
+  column-gap: 1rem
+#chartsection
+  position: sticky
+  width: 100%
   display: flex
+  flex-direction: row
 #dataset-main
   width: 95%
   margin: 1rem 2.5%

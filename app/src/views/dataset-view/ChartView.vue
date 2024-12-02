@@ -17,14 +17,17 @@
 <style>
 .tooltip {
     font: sans-serif 12pt;
-    background: #eeeeeeee;
+    background: #ffffff;
     pointer-events: none;
-    border-radius: 2px;
+    border: #000 solid;
+    border-radius: 4px;
     padding: 5px;
     position: absolute;
     top: 0px;
     left: 0px;
     z-index: 1;
+    visibility: hidden;
+    opacity: 1;
 }
 </style>
 <script>
@@ -40,7 +43,8 @@ export default {
       uniqueId: String,
       title: String,
       apiCall: String,
-      role: String
+      role: String,
+      isCollapsed: Boolean
     },
     components: {
       FloatingModal,
@@ -49,6 +53,9 @@ export default {
     watch: {
       currentSmiles() {
         this.getMolHtml()
+      },
+      isCollapsed () {
+        this.resize()
       }
    },
     data() {
@@ -60,7 +67,11 @@ export default {
         currentTimesAppearing: 0,
         molImage: null,
         loading: true,
-        molHtml: null
+        molHtml: null,
+        tooltipOffsetHorizontal: 0,
+        tooltipOffsetVertical: 0,
+        showTooltip: "hidden",
+        molloading: true
       };
     },
     /*computed: {
@@ -95,8 +106,8 @@ export default {
           this.inputsData = data
 
           // Dimensions and margins
-          const width = 400;
-          const height = 400;
+          const width = this.isCollapsed ? 180 : 400; // 400
+          const height = this.isCollapsed ? 180 : 400; // 400
           const marginTop = 20;
           const marginRight = 20;
           const marginBottom = 30;
@@ -131,10 +142,18 @@ export default {
               .attr("height", (d) => y(0) - y(d.times_appearing))
               .attr("width", x.bandwidth())
               .attr("style", "cursor:pointer;")
-              .on("click", (d) => {
+              .on("mouseover", (d) => {
                 this.currentSmiles = d.srcElement.__data__.smiles;
                 this.currentTimesAppearing = d.srcElement.__data__.times_appearing;
+                this.tooltipOffsetHorizontal = d.clientX;
+                this.tooltipOffsetVertical = this.role == "product" ? d.clientY-240 : d.clientY-140;
+                this.showTooltip = "visible";
                 this.showSmiles = true;
+              })
+              .on("mouseout", () => {
+                this.showTooltip = "hidden";
+                this.molHtml = null;
+                this.showSmiles = false;
               });
 
           // X-axis formatting
@@ -146,7 +165,7 @@ export default {
                           .attr("y", marginBottom - 4)
                           .attr("fill", "currentColor")
                           .attr("text-anchor", "end")
-                          .text("Molecules (Click each bar to view full molecule SMILES strings) →"));
+                          .text("Molecules (Hover to view) →"));
 
           // Y-axis formatting
           svg.append("g")
@@ -180,26 +199,107 @@ export default {
           }
           xhr.send(binary)
         }).then(val => {
+          this.molloading = false
           this.molHtml = val
         })
       },
+      resize () {
+        // Clear before attempting resize - everything needs to be recalculated based on new dimensions
+        d3.select("#" + this.uniqueId).selectAll("*").remove()
+
+        this.datasetId = window.location.pathname.split("/")[2]
+        // this.inputsData = data
+
+        // Dimensions and margins
+        const width = this.isCollapsed ? 180 : 400; // 400
+        const height = this.isCollapsed ? 180 : 400; // 400
+        const marginTop = 20;
+        const marginRight = 20;
+        const marginBottom = 30;
+        const marginLeft = 40;
+
+        // X-axis
+        const x = d3.scaleBand()
+            .domain(d3.groupSort(this.inputsData, ([d]) => -d.times_appearing, (d) => d.smiles)) // descending frequency
+            .range([marginLeft, width - marginRight])
+            .padding(0.1);
+        
+        // Y-axis
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(this.inputsData, (d) => d.times_appearing)])
+            .range([height - marginBottom, marginTop]);
+
+        // SVG
+        const svg = d3.select("#" + this.uniqueId)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height])
+            .attr("style", "max-width: 100%; height: auto;");
+
+        // SVG rects for bars
+        svg.append("g")
+            .attr("fill", "steelblue")
+          .selectAll()
+          .data(this.inputsData)
+          .join("rect")
+            .attr("x", (d) => x(d.smiles))
+            .attr("y", (d) => y(d.times_appearing))
+            .attr("height", (d) => y(0) - y(d.times_appearing))
+            .attr("width", x.bandwidth())
+            .attr("style", "cursor:pointer;")
+            .on("mouseover", (d) => {
+              this.currentSmiles = d.srcElement.__data__.smiles;
+              this.currentTimesAppearing = d.srcElement.__data__.times_appearing;
+              this.tooltipOffsetHorizontal = d.clientX;
+              this.tooltipOffsetVertical = !this.isCollapsed || this.role == "product" ? d.clientY-240 : d.clientY-140;
+              this.showTooltip = "visible";
+              this.showSmiles = true;
+            })
+            .on("mouseout", () => {
+              this.showTooltip = "hidden";
+              this.molHtml = null;
+              this.molloading = true;
+              this.showSmiles = false;
+            });
+
+        // X-axis formatting
+        svg.append("g")
+            .attr("transform", `translate(0,${height - marginBottom})`)
+            .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0).tickFormat(function(d) {return ''}))
+            .call((g) => g.append("text")
+                        .attr("x", width)
+                        .attr("y", marginBottom - 4)
+                        .attr("fill", "currentColor")
+                        .attr("text-anchor", "end")
+                        .text("Molecules (Hover to view) →"));
+
+        // Y-axis formatting
+        svg.append("g")
+            .attr("transform", `translate(${marginLeft},0)`)
+            .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+            .call(g => g.select(".domain").remove())
+            .call(g => g.append("text")
+                .attr("x", -marginLeft)
+                .attr("y", 10)
+                .attr("fill", "currentColor")
+                .attr("text-anchor", "start")
+                .text("↑ Frequency (no. of occurrences)"));
+        
+      }
   },
 };
 </script>
 <template lang="pug">
   .div
-    .h4 {{this.title}}
+    .span(:style='isCollapsed ? "font-size: 10pt; width: 150px;" : "font-size: 14pt;"') {{this.title}}
     svg(:id='uniqueId' :style='!loading ? "visibility: visible" : "visibility: hidden"')
     .loading(:style='loading ? "visibility: visible" : "visibility: hidden"')
       LoadingSpinner
-    FloatingModal(
-            v-if='showSmiles'
-            title="Molecule Details"
-            @closeModal='showSmiles=false; currentSmiles=null'
-    )
-      .data
-        pre {{currentSmiles}} occurred {{currentTimesAppearing}} {{currentTimesAppearing == 1 ? 'time' : 'times'}} as a {{role}} in this dataset
+    .tooltip(:style='"top: " + tooltipOffsetVertical + "px; left: " + tooltipOffsetHorizontal + "px; visibility: " + showTooltip' v-if='showSmiles')
+        pre This molecule occurred {{currentTimesAppearing}} {{currentTimesAppearing == 1 ? 'time' : 'times'}} as a {{role}} in this dataset
         .svg(
           v-html='molHtml'
         )
+        .molloading(:style='this.molloading ? "visibility: visible" : "visibility: hidden"')
+          LoadingSpinner
 </template>

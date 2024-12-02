@@ -24,6 +24,7 @@ import DownloadResults from '@/components/DownloadResults'
 export default {
   props: {
     searchResults: Array,
+    isOverflow: Boolean
   },
   components: {
     EntityTable,
@@ -75,7 +76,7 @@ export default {
 .search-results-main
   EntityTable(
     :tableData='formattedResults'
-    :title='"Reactions in this Dataset (" + formattedResults.length + " Reactions)"',
+    :title='isOverflow ? "100 Reactions From This Dataset (Sample)" : "Reactions in this Dataset (" + formattedResults.length + " Reactions)"',
     v-slot='{ entities }'
     v-if='formattedResults.length'
     :displaySearch='false'

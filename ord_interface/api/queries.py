@@ -439,6 +439,7 @@ async def fetch_dataset_most_used_smiles_for_inputs(
             JOIN ord.reaction ON ord.reaction_input.reaction_id = ord.reaction.id
             JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
             WHERE ord.dataset.dataset_id = %s
+            WHERE smiles IS NOT NULL
             GROUP BY smiles
             ORDER BY times_appearing DESC
             LIMIT %s
@@ -461,6 +462,7 @@ async def fetch_dataset_most_used_smiles_for_products(
             JOIN ord.reaction ON ord.reaction_outcome.reaction_id = ord.reaction.id
             JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
             WHERE ord.dataset.dataset_id = %s
+            WHERE smiles IS NOT NULL
             GROUP BY smiles
             ORDER BY times_appearing DESC
             LIMIT %s
