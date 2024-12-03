@@ -45,6 +45,9 @@ from ord_interface.api.queries import (
     ReactionIdQuery,
     ReactionSmartsQuery,
     ReactionYieldQuery,
+    StatsResult,
+    fetch_dataset_most_used_smiles_for_inputs,
+    fetch_dataset_most_used_smiles_for_products,
     fetch_reactions,
     run_queries,
 )
@@ -248,3 +251,17 @@ async def fetch_query_result(task_id: str):
         return Response(f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED)
     async with get_cursor() as cursor:
         return await fetch_reactions(cursor, json.loads(result))
+
+
+@router.get("/input_stats")
+async def get_input_stats(dataset_id: str, limit: int = 30) -> list[StatsResult]:
+    async with get_cursor() as cursor:
+        results = await fetch_dataset_most_used_smiles_for_inputs(cursor, dataset_id, limit=limit)
+    return results
+
+
+@router.get("/product_stats")
+async def get_product_stats(dataset_id: str, limit: int = 30) -> list[StatsResult]:
+    async with get_cursor() as cursor:
+        results = await fetch_dataset_most_used_smiles_for_products(cursor, dataset_id, limit=limit)
+    return results
