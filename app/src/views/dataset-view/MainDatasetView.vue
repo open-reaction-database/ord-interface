@@ -48,7 +48,8 @@ export default {
       datasetId: "",
       datasetLoading: true,
       datasetData: [],
-      isCollapsed: true
+      isCollapsed: true,
+      searchTaskId: null
     }
   },
   methods: {
@@ -177,11 +178,16 @@ export default {
         this.datasetData = data.filter((dataset) => dataset.dataset_id == this.datasetId)[0]
         this.datasetLoading = false
     })
-    // Fetch results. If server returns a 102, set up a poll to keep checking back until we have results.
+   // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
     await this.getSearchResults().then(() =>{
       if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
-        this.searchPollingInterval = setInterval(() => {this.getSearchResults(), 1000});
-        setTimeout(() => {clearInterval(this.searchPollingInterval), 120000});
+        this.searchPollingInterval = setInterval(() => {this.getSearchResults()}, 1000);
+        setTimeout(() => {
+          clearInterval(this.searchPollingInterval)
+          this.searchTaskId = null
+          this.searchResults = []
+          this.loading = false
+        }, 120000);
       }
     })
   },
