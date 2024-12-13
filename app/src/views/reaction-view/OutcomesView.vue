@@ -36,7 +36,9 @@ export default {
       rawMeasurement: {},
       analysesIdx: 0,
       showRawAnalysis: false,
-      rawAnalysis: {}
+      rawAnalysis: {},
+      customMeasurementDetails: "",
+      showCustomMeasurementDetails: false
     }
   },
   computed: {
@@ -70,6 +72,10 @@ export default {
       }
       this.rawMeasurement = raw
       this.showRawMeasurement = true
+    },
+    setCustomMeasurementDetails (measurement) {
+      this.customMeasurementDetails = measurement.details == "" ? "Please contact the author for details on this custom measurement." : measurement.details;
+      this.showCustomMeasurementDetails = true
     },
     getAnalysisType (type) {
       const analysisTypes = reaction_pb.Analysis.AnalysisType
@@ -111,11 +117,15 @@ export default {
     .sub-title Measurements
     .measurements
       .label Type
+      .label
       .label Value
       .label Analysis
       .label Raw
       template(v-for='measurement in outcome.productsList[productsIdx].measurementsList')
-        .value {{getMeasurementType(measurement.type)}}
+        .value(v-if='getMeasurementType(measurement.type) == CUSTOM') 
+         .button(@click='setCustomMeasurementDetails(measurement)') {{'<u>CUSTOM</u>'}}
+        .value(v-else) {{getMeasurementType(measurement.type)}}
+        .value
         .value {{getMeasurementValue(measurement)}}
         .value {{measurement.analysisKey}}
         .value 
@@ -128,6 +138,13 @@ export default {
     )
       .data
         pre {{rawMeasurement}}
+    floating-modal(
+        v-if='showCustomMeasurementDetails'
+        title="Custom Measurement Details"
+        @closeModal='showCustomMeasurementDetails=false'
+      )
+        .data
+          pre {{customMeasurementDetails}}
   template(v-if='outcome.analysesMap?.length')
     .title Analyses
     .sub-section
@@ -185,7 +202,7 @@ export default {
       font-weight: 700
     .measurements
       display: grid
-      grid-template-columns: repeat(3, auto) 1fr
+      grid-template-columns: repeat(4, auto) 1fr
       column-gap: 0.5rem
       row-gap: 1rem
       padding: 0.5rem

@@ -22,6 +22,8 @@ from ord_interface.api.queries import (
     ReactionIdQuery,
     ReactionSmartsQuery,
     ReactionYieldQuery,
+    fetch_dataset_most_used_smiles_for_inputs,
+    fetch_dataset_most_used_smiles_for_products,
     fetch_reactions,
     run_queries,
 )
@@ -160,3 +162,17 @@ async def test_bad_smiles(test_cursor):
         ReactionComponentQuery(
             "invalid_smiles", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
         )
+
+
+@pytest.mark.asyncio
+async def test_fetch_dataset_most_used_smiles_for_inputs(test_cursor):
+    dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
+    results = await fetch_dataset_most_used_smiles_for_inputs(test_cursor, dataset_id, limit=10)
+    assert len(results) == 10
+
+
+@pytest.mark.asyncio
+async def test_fetch_dataset_most_used_smiles_for_products(test_cursor):
+    dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
+    results = await fetch_dataset_most_used_smiles_for_products(test_cursor, dataset_id, limit=10)
+    assert len(results) == 10
