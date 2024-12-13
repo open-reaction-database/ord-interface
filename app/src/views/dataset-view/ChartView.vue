@@ -296,7 +296,7 @@ export default {
     .loading(:style='loading ? "visibility: visible" : "visibility: hidden"')
       LoadingSpinner
     .tooltip(:style='"top: " + tooltipOffsetVertical + "px; left: " + tooltipOffsetHorizontal + "px; visibility: " + showTooltip' v-if='showSmiles')
-        pre This molecule occurred {{currentTimesAppearing}} {{currentTimesAppearing == 1 ? 'time' : 'times'}} as a {{role}} in this dataset
+        pre Count: {{currentTimesAppearing}}
         .svg(
           v-html='molHtml'
         )
