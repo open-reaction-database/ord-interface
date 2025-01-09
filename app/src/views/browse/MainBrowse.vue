@@ -57,7 +57,7 @@ export default {
         v-for='(row, idx) in entities'
       )
         .column 
-          router-link(:to='{ name: "search", query: {dataset_id: row.dataset_id, limit: 100}}') {{row.dataset_id}}
+          router-link(:to='{ name: "dataset-view", params: {datasetId: row.dataset_id}}') {{row.dataset_id}}
         .column {{row.name}}
         .column {{row.description?.length > 75 ? row.description.substr(0,75)+"..." : row.description}}
         .column {{row.num_reactions}}
