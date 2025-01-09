@@ -185,7 +185,6 @@ export default {
         setTimeout(() => {
           clearInterval(this.searchPollingInterval)
           this.searchTaskId = null
-          this.searchResults = []
           this.loading = false
         }, 120000);
       }
