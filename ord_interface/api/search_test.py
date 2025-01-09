@@ -108,3 +108,21 @@ def test_query_async(test_client, params, num_expected):
     response = test_client.get("/api/submit_query", params=params)
     response.raise_for_status()
     assert len(wait_for_task(test_client, response.json())) == num_expected
+
+
+def test_get_input_stats(test_client):
+    response = test_client.get(
+        "/api/input_stats", params={"dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f", "limit": 10}
+    )
+    response.raise_for_status()
+    input_stats = response.json()
+    assert len(input_stats) == 10
+
+
+def test_get_product_stats(test_client):
+    response = test_client.get(
+        "/api/product_stats", params={"dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f", "limit": 10}
+    )
+    response.raise_for_status()
+    product_stats = response.json()
+    assert len(product_stats) == 10

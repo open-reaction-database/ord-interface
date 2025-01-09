@@ -419,3 +419,56 @@ async def fetch_reactions(cursor: AsyncCursor, reaction_ids: list[str]) -> list[
             )
         )
     return results
+
+
+class StatsResult(BaseModel):
+    """Stats result."""
+
+    smiles: str
+    times_appearing: int
+
+
+async def fetch_dataset_most_used_smiles_for_inputs(
+    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+) -> list[StatsResult]:
+    """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
+    query = """
+            SELECT smiles, COUNT(*) as times_appearing
+            FROM ord.compound
+            JOIN ord.reaction_input ON ord.compound.reaction_input_id = ord.reaction_input.id
+            JOIN ord.reaction ON ord.reaction_input.reaction_id = ord.reaction.id
+            JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
+            WHERE ord.dataset.dataset_id = %s
+            AND smiles IS NOT NULL
+            GROUP BY smiles
+            ORDER BY times_appearing DESC
+            LIMIT %s
+        """
+    await cursor.execute(query, (dataset_id, limit))
+    results = []
+    async for row in cursor:
+        results.append(StatsResult(**row))
+    return results
+
+
+async def fetch_dataset_most_used_smiles_for_products(
+    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+) -> list[StatsResult]:
+    """Fetches the top K most used SMILES molecules in terms of reaction products for a given dataset."""
+    query = """
+            SELECT smiles, COUNT(*) as times_appearing
+            FROM ord.product_compound
+            JOIN ord.reaction_outcome ON ord.product_compound.reaction_outcome_id = ord.reaction_outcome.id
+            JOIN ord.reaction ON ord.reaction_outcome.reaction_id = ord.reaction.id
+            JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
+            WHERE ord.dataset.dataset_id = %s
+            AND smiles IS NOT NULL
+            GROUP BY smiles
+            ORDER BY times_appearing DESC
+            LIMIT %s
+        """
+    await cursor.execute(query, (dataset_id, limit))
+    results = []
+    async for row in cursor:
+        results.append(StatsResult(**row))
+    return results

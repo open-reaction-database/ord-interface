@@ -40,6 +40,11 @@ const routes =
         component : () => import('../views/search/MainSearch.vue')
       },
       {
+        path : '/dataset/:datasetId',
+        name : 'dataset-view',
+        component : () => import('../views/dataset-view/MainDatasetView.vue')
+      },
+      {
         path : '/id/:reactionId',
         name : 'reaction-view',
         component : () => import('../views/reaction-view/MainReactionView.vue')
