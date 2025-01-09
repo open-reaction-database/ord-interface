@@ -73,3 +73,14 @@ ORD_INTERFACE_TESTING=TRUE fastapi dev main.py --port=5000
   - Open [localhost:8080](http://localhost:8080) to view the Vue ORD interface in your browser.
   - The page will reload when you make changes.
   - You may also see any lint errors in the console.
+
+## Updating the Schema
+
+### Minor changes such as ENUM additions
+  - The Vue app does not require specific modification to show additional ENUM options within existing message fields. We just have to update the package configuration to use the new ord-schema version.
+  - Update the ord-schema version number in the [install_requires configuration in ./setup.py](https://github.com/open-reaction-database/ord-interface/blob/aa37f628b176ca241d0701b4df5f6fd7b3079bef/setup.py#L48)
+  - Update the [code section in ./ord_interface/Dockerfile](https://github.com/open-reaction-database/ord-interface/blob/aa37f628b176ca241d0701b4df5f6fd7b3079bef/ord_interface/Dockerfile#L57C1-L60C38) which handles the ord-schema install
+  - Contact the ORD site administrator to request upload of the new ord-interface version to the staging environment for testing.
+
+### Major changes
+  Where there are more extensive changes to the schema, for example addition of new message types, then the Vue app will need to be modified to show these fields. Please discuss any proposed changes with the ORD team.    
