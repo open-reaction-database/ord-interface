@@ -405,6 +405,14 @@ reactions {
     target_ph: 89.0
     is_automated: true
   }
+  workups {
+    amount {
+      unmeasured {
+        type: CATALYTIC
+        details: "catalytic"
+      }
+    }
+  }
   outcomes {
     reaction_time {
       value: 113.0

@@ -169,12 +169,12 @@ function unload(node) {
   const amount = new Amount();
   // NOTE(kearnes): Take the closest amount section; there may be others
   // nested deeper (e.g. in ProductMeasurement fields under a ReactionProduct).
-  node = $('.amount', node).first();
+  if (!$(node).hasClass("amount")) {
+    node = $('.amount', node).first();
+  }
   const value = parseFloat($('.amount_value', node).text());
   const precision = parseFloat($('.amount_precision', node).text());
   const units = $('.amount_units', node).val();
-  const unmeasuredType =
-      utils.getSelectorText($('.unmeasured_amount_type', node)[0]);
   const unmeasuredDetails = $('.unmeasured_amount_details', node).text();
   if (MassUnit[units]) {
     const message = new Mass();
@@ -219,6 +219,8 @@ function unload(node) {
     }
   } else if (unmeasuredDetails) {
     const unmeasured = new UnmeasuredAmount();
+    const unmeasuredType =
+      utils.getSelectorText($('.unmeasured_amount_type', node)[0]);
     unmeasured.setType(UnmeasuredAmountType[unmeasuredType]);
     unmeasured.setDetails(asserts.assertString(unmeasuredDetails));
     if (!utils.isEmptyMessage(unmeasured)) {
