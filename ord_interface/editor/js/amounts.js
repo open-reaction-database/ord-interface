@@ -220,7 +220,7 @@ function unload(node) {
   } else if (unmeasuredDetails) {
     const unmeasured = new UnmeasuredAmount();
     const unmeasuredType =
-      utils.getSelectorText($('.unmeasured_amount_type', node)[0]);
+        utils.getSelectorText($('.unmeasured_amount_type', node)[0]);
     unmeasured.setType(UnmeasuredAmountType[unmeasuredType]);
     unmeasured.setDetails(asserts.assertString(unmeasuredDetails));
     if (!utils.isEmptyMessage(unmeasured)) {
