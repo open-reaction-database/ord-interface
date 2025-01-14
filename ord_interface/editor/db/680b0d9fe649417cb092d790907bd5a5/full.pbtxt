@@ -95,6 +95,19 @@ reactions {
   inputs {
     key: "5"
     value {
+      components {
+        identifiers {
+          type: SMILES
+          details: "6"
+          value: "5"
+        }
+        amount {
+          unmeasured {
+            type: SATURATED
+            details: "saturated"
+          }
+        }
+      }
       addition_order: 93
       addition_time {
         value: 96.0

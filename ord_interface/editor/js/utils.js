@@ -561,6 +561,7 @@ async function compareDataset(fileName, dataset) {
       if (xhr.status === 200) {
         resolve();
       } else {
+        console.log(xhr.response);
         reject();
       }
     };
