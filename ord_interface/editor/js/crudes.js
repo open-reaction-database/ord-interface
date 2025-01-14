@@ -28,8 +28,6 @@ const amounts = goog.require('ord.amounts');
 const utils = goog.require('ord.utils');
 
 const CrudeComponent = goog.require('proto.ord.CrudeComponent');
-const Texture = goog.require('proto.ord.Texture');
-const TextureType = goog.require('proto.ord.Texture.TextureType');
 
 /**
  * Adds and populates the crude components of a reaction input.
@@ -58,12 +56,6 @@ function loadCrude(root, crude) {
 
   const amount = crude.getAmount();
   amounts.load(node, amount);
-
-  const texture = crude.getTexture();
-  if (texture) {
-    utils.setSelector($('.crude_texture_type', node), texture.getType());
-    $('.crude_texture_details', node).text(texture.getDetails());
-  }
 }
 
 /**
@@ -110,15 +102,6 @@ function unloadCrude(node) {
   const amount = amounts.unload(node);
   if (!utils.isEmptyMessage(amount)) {
     crude.setAmount(amount);
-  }
-
-  const texture = new Texture();
-  const textureType = utils.getSelectorText($('.crude_texture_type', node)[0]);
-  texture.setType(TextureType[textureType]);
-  texture.setDetails(
-      asserts.assertString($('.crude_texture_details', node).text()));
-  if (!utils.isEmptyMessage(texture)) {
-    crude.setTexture(texture);
   }
 
   return crude;
