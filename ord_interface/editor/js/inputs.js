@@ -34,6 +34,8 @@ const AdditionSpeed = goog.require('proto.ord.ReactionInput.AdditionSpeed');
 const AdditionSpeedType =
     goog.require('proto.ord.ReactionInput.AdditionSpeed.AdditionSpeedType');
 const Temperature = goog.require('proto.ord.Temperature');
+const Texture = goog.require('proto.ord.Texture');
+const TextureType = goog.require('proto.ord.Texture.TextureType');
 const Time = goog.require('proto.ord.Time');
 
 exports = {
@@ -156,6 +158,13 @@ function loadInputUnnamed(node, input) {
   if (flowRate) {
     utils.writeMetric('.input_flow_rate', flowRate, node);
   }
+
+  const texture = input.getTexture();
+  if (texture) {
+    utils.setSelector($('.input_texture_type', node), texture.getType());
+    $('.input_texture_details', node).text(texture.getDetails());
+  }
+
   return node;
 }
 
@@ -248,6 +257,15 @@ function unloadInputUnnamed(node) {
   const flowRate = utils.readMetric('.input_flow_rate', new FlowRate(), node);
   if (!utils.isEmptyMessage(flowRate)) {
     input.setFlowRate(flowRate);
+  }
+
+  const texture = new Texture();
+  const textureType = utils.getSelectorText($('.input_texture_type', node)[0]);
+  texture.setType(TextureType[textureType]);
+  texture.setDetails(
+      asserts.assertString($('.input_texture_details', node).text()));
+  if (!utils.isEmptyMessage(texture)) {
+    input.setTexture(texture);
   }
 
   return input;
