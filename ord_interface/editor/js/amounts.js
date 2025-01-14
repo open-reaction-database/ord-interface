@@ -33,7 +33,8 @@ const MolesUnit = goog.require('proto.ord.Moles.MolesUnit');
 const Volume = goog.require('proto.ord.Volume');
 const VolumeUnit = goog.require('proto.ord.Volume.VolumeUnit');
 const UnmeasuredAmount = goog.require('proto.ord.UnmeasuredAmount');
-const UnmeasuredAmountType = goog.require('proto.ord.UnmeasuredAmount.UnmeasuredAmountType');
+const UnmeasuredAmountType =
+    goog.require('proto.ord.UnmeasuredAmount.UnmeasuredAmountType');
 
 /**
  * Initializes the selector for an Amount section.
@@ -172,7 +173,8 @@ function unload(node) {
   const value = parseFloat($('.amount_value', node).text());
   const precision = parseFloat($('.amount_precision', node).text());
   const units = $('.amount_units', node).val();
-  const unmeasuredType = utils.getSelectorText($('.unmeasured_amount_type', node)[0]);
+  const unmeasuredType =
+      utils.getSelectorText($('.unmeasured_amount_type', node)[0]);
   const unmeasuredDetails = $('.unmeasured_amount_details', node).text();
   if (MassUnit[units]) {
     const message = new Mass();
