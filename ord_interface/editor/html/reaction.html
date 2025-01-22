@@ -70,7 +70,7 @@ limitations under the License.
       <div id="header_buttons">
         <button type="button" id="download" onclick="ord.reaction.commit(); ord.reaction.downloadReaction();">download</button>
         <button type="button" class="add" onclick="location.href='{{ url_for(".clone_reaction", name=name, index=index) }}';">clone</button>
-        <button type="button" class="remove" id="delete" style="float: none;" onclick="location.href={{ url_for(".delete_reaction", name=name, index=index) }}';"><i class="far fa-trash-alt"></i></button>
+        <button type="button" class="remove" id="delete" style="float: none;" onclick="location.href='{{ url_for(".delete_reaction", name=name, index=index) }}';"><i class="far fa-trash-alt"></i></button>
         <button type="button" id="save" onclick="ord.reaction.commit();" style="visibility: hidden;">save</button>
         <button type="button" id="toggle_autosave" onclick="ord.utils.toggleAutosave()"></button>
         <button type="button" id="reaction_validate_button" onclick="ord.reaction.validateReaction()">validate</button>
