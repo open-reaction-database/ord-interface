@@ -29,11 +29,6 @@ Web interface and api for the Open Reaction Database
 ## Setup
 ### 1. Download the repo
 ```bash
-git clone git@github.com:open-reaction-database/ord-interface.git
-cd ord-interface
-```
-If the above command for git doesn't work, try:
-```bash
 git clone https://github.com/open-reaction-database/ord-interface
 cd ord-interface
 ```
