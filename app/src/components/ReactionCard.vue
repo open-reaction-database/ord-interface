@@ -134,8 +134,12 @@ export default {
       .col
         .creator Uploaded by {{reaction.data.provenance.recordCreated.person.name}}, {{reaction.data.provenance.recordCreated.person.organization}}
         .date Uploaded on {{new Date(reaction.data.provenance.recordCreated.time.value).toLocaleDateString()}}
-        .doi DOI: {{reaction.data.provenance.doi}}
-        .publication 
+        .doi(v-if='reaction.data.provenance.doi != null') DOI: 
+          a(
+            :href='reaction.data.provenance.publicationUrl'
+            target="_blank"
+          ) {{reaction.data.provenance.doi}}
+        .publication(v-if='reaction.data.provenance.doi == null') 
           a(
             :href='reaction.data.provenance.publicationUrl'
             target="_blank"
