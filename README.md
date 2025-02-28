@@ -33,7 +33,7 @@ Web interface and api for the Open Reaction Database
 ### 1. Download and install
 
 ```bash
-# you will need python, pip, and postgres installed on your computer first
+# you will need git, python, pip, and postgres installed on your computer first
 git clone https://github.com/open-reaction-database/ord-interface
 cd ord-interface
 # If you are running on Apple silicon, use `conda install postgresql` instead.
