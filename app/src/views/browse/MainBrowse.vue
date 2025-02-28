@@ -30,7 +30,7 @@ export default {
     }
   },
   mounted() {
-    fetch("/api/fetch_datasets", {method: "GET"})
+    fetch("/api/datasets", {method: "GET"})
       .then(response => response.json())
       .then(data => {
         this.tableData = data
@@ -57,10 +57,10 @@ export default {
         v-for='(row, idx) in entities'
       )
         .column 
-          router-link(:to='{ name: "search", query: {dataset_ids: row["Dataset ID"], limit: 100}}') {{row["Dataset ID"]}}
-        .column {{row.Name}}
-        .column {{row.Description?.length > 75 ? row.Description.substr(0,75)+"..." : row.Description}}
-        .column {{row.Size}}
+          router-link(:to='{ name: "dataset-view", params: {datasetId: row.dataset_id}}') {{row.dataset_id}}
+        .column {{row.name}}
+        .column {{row.description?.length > 75 ? row.description.substr(0,75)+"..." : row.description}}
+        .column {{row.num_reactions}}
   .loading(v-else)
     LoadingSpinner
 </template>

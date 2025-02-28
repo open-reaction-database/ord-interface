@@ -57,7 +57,7 @@ export default {
       showKetcherModal: false,
       ketcherModalSmile: 0,
       ketcherModalSet: "reactants",
-      matchModes: ["exact", "similar", "substructure"]
+      matchModes: ["exact", "similar", "substructure", "SMARTS"]
     }
   },
   computed: {
@@ -67,9 +67,9 @@ export default {
     simThresholdDisplay() {
       let trailingZeros = ""
       const simThresh = this.reagentOptions.similarityThreshold.toString()
-      if (simThresh.length < 2)
+      if (simThresh?.length < 2)
         trailingZeros = ".00"
-      else if (simThresh.length < 4)
+      else if (simThresh?.length < 4)
         trailingZeros = "0"
       return simThresh+trailingZeros
     }
@@ -111,19 +111,34 @@ export default {
       }
 
       // dataset options
-      this.datasetOptions.datasetIds = q.dataset_ids?.split(",") || []
-      this.datasetOptions.DOIs = q.dois?.split(",") || []
-      if (this.datasetOptions.datasetIds.length || this.datasetOptions.DOIs.length) 
+      if (Array.isArray(q.dataset_id))
+        this.datasetOptions.datasetIds = q.dataset_id
+      else if (q.dataset_id?.length)
+        this.datasetOptions.datasetIds = [q.dataset_id]
+      else
+        this.datasetOptions.datasetIds = []
+      if (Array.isArray(q.doi))
+        this.datasetOptions.DOIs = q.doi
+      else if (q.doi?.length)
+        this.datasetOptions.DOIs = [q.doi]
+      else
+        this.datasetOptions.DOIs = []
+      if (this.datasetOptions.datasetIds?.length || this.datasetOptions.DOIs?.length)
         this.showDatasetOptions = true
 
       // reaction options
-      this.reactionOptions.reactionIds = q.reaction_ids?.split(",") || []
-      this.reactionOptions.reactionSmarts = q.reaction_smarts?.split(",") || []
+      if (Array.isArray(q.reaction_id))
+        this.datasetOptions.reactionIds = q.reaction_id
+      else if (q.reaction_id?.length)
+        this.datasetOptions.reactionIds = [q.reaction_id]
+      else
+        this.datasetOptions.reactionIds = []
+      this.reactionOptions.reactionSmarts = q.reaction_smarts
       this.reactionOptions.min_yield = Number(q.min_yield) || 0
       this.reactionOptions.max_yield = Number(q.max_yield) || 100
       this.reactionOptions.min_conversion = Number(q.min_conversion) || 0
       this.reactionOptions.max_conversion = Number(q.max_conversion) || 100
-      if (this.reactionOptions.reactionIds.length || this.reactionOptions.reactionSmarts.length || this.reactionOptions.yield !== 50 || this.reactionOptions.conversion !== 50) 
+      if (this.reactionOptions.reactionIds?.length || this.reactionOptions.reactionSmarts?.length || this.reactionOptions?.yield !== 50 || this.reactionOptions?.conversion !== 50)
         this.showReactionOptions = true
 
       // general search params
@@ -204,7 +219,7 @@ export default {
             .delete
               button(@click='reagentOptions.reactants.splice(idx,1)')
                 i.material-icons delete
-          .copy(v-if='!reagentOptions.reactants.length') No components
+          .copy(v-if='!reagentOptions.reactants?.length') No components
           #add-component
             button(
               type='button' 
@@ -227,7 +242,7 @@ export default {
             .delete
               button(@click='reagentOptions.products.splice(idx,1)')
                 i.material-icons delete
-          .copy(v-if='!reagentOptions.products.length') No components
+          .copy(v-if='!reagentOptions.products?.length') No components
           #add-component
             button(
               type='button' 

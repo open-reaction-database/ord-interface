@@ -13,44 +13,8 @@
 # limitations under the License.
 """Constants for the ORD interface backend."""
 
-import collections
-
+POSTGRES_HOST = "localhost"
 POSTGRES_PORT = 5432
 POSTGRES_USER = "postgres"
 POSTGRES_PASSWORD = "postgres"
 POSTGRES_DB = "ord"
-
-RDKIT_SCHEMA = "rdk"
-
-# Postgres table schema.
-TABLES = {
-    "datasets": collections.OrderedDict(
-        [
-            ("dataset_id", "text"),
-            ("name", "text"),
-            ("description", "text"),
-        ]
-    ),
-    "reactions": collections.OrderedDict(
-        [
-            ("reaction_id", "text"),
-            ("reaction_smiles", "text"),
-            ("doi", "text"),
-            ("dataset_id", "text"),
-            ("serialized", "bytea"),
-        ]
-    ),
-    "inputs": collections.OrderedDict(
-        [
-            ("reaction_id", "text"),
-            ("smiles", "text"),
-        ]
-    ),
-    "outputs": collections.OrderedDict(
-        [
-            ("reaction_id", "text"),
-            ("smiles", "text"),
-            ("yield", "double precision"),
-        ]
-    ),
-}

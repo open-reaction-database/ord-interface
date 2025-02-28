@@ -17,7 +17,7 @@
 <script>
 import LoadingSpinner from '@/components/LoadingSpinner'
 import reaction_pb from "ord-schema"
-import hexToUint from "@/utils/hexToUint"
+import base64ToBytes from "@/utils/base64"
 import ReactionCard from '@/components/ReactionCard'
 import DownloadResults from '@/components/DownloadResults'
 import CopyButton from '@/components/CopyButton'
@@ -38,7 +38,7 @@ export default {
   },
   computed: {
     reactionIds() {
-      return this.$route.query.reaction_ids || []
+      return [this.$route.query.reaction_id] || []
     },
     fullUrl() {
       return window.location.href
@@ -49,7 +49,7 @@ export default {
       this.loading = true
       try {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/fetch_reactions`)
+        xhr.open("POST", `/api/reactions`)
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onload = () => {
           // if response is good, deserialize reaction and return object from protobuff
@@ -57,15 +57,15 @@ export default {
           if (xhr.response !== null) {
             fetchedReactions = JSON.parse(xhr.response)
             fetchedReactions.forEach(reaction => {
-              const hexString = reaction.proto
-              const bytes = hexToUint(hexString)
+              const base64string = reaction.proto
+              const bytes = base64ToBytes(base64string)
               reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
             })
           }
           this.reactions = fetchedReactions
           this.loading = false
         }
-        xhr.send(JSON.stringify(this.reactionIds))
+        xhr.send(JSON.stringify({"reaction_ids": this.reactionIds}))
       } catch (e) {
         console.log(e)
         this.loading = false

@@ -50,6 +50,7 @@ export default {
           // check matching for each search param
           this.searchArray.forEach((param, pIdx) => {
             Object.keys(entity).forEach(key => {
+              if (entity[key] == null) entity[key] = "null"
               if (entity[key].toString().toLowerCase().includes(param.toLowerCase())) matching[pIdx] = true
             })
           })

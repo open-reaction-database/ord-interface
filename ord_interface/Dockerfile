@@ -16,7 +16,7 @@
 # $ cd path/to/ord-interface/ord_interface
 # $ docker build --file=Dockerfile -t openreactiondatabase/ord-interface ..
 
-FROM python:3.10
+FROM python:3.11
 
 # default-jre is required for running the closure compiler linter.
 # For this next line, see:
@@ -45,18 +45,19 @@ RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
 RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protobuf-js-3.14.0.tar.gz \
    && tar -xzf protobuf-js-3.14.0.tar.gz \
    && rm protobuf-js-3.14.0.tar.gz
-RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip \
-   && unzip protoc-3.14.0-linux-x86_64.zip
+ARG ARCH=x86_64
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-${ARCH}.zip \
+   && unzip protoc-3.14.0-linux-${ARCH}.zip
 ENV PATH="/app/ord-interface/ord_interface/editor/bin:${PATH}"
 RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
    && mkdir -p externs \
    && mv jquery-3.3.js externs
 RUN npm install google-closure-compiler@20220803
 WORKDIR /app
-RUN wget https://github.com/open-reaction-database/ord-schema/archive/refs/tags/v0.3.71.zip \
-   && unzip v0.3.71.zip \
-   && rm v0.3.71.zip \
-   && mv ord-schema-0.3.71 ord-schema
+RUN wget https://github.com/open-reaction-database/ord-schema/archive/refs/tags/v0.3.93.zip \
+   && unzip v0.3.93.zip \
+   && rm v0.3.93.zip \
+   && mv ord-schema-0.3.93 ord-schema
 
 # Install dependencies.
 WORKDIR /app/ord-interface
@@ -87,7 +88,7 @@ COPY ord_interface/editor/ ord_interface/editor/
 # Now copy everything else.
 COPY ord_interface/about.html ord_interface/
 COPY ord_interface/interface.py ord_interface/
-COPY ord_interface/client/ ord_interface/client/
+COPY ord_interface/api/ ord_interface/api/
 COPY ord_interface/visualization/ ord_interface/visualization/
 RUN pip install .
 

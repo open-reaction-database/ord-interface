@@ -40,8 +40,8 @@ export default {
   },
   methods: {
     getReactionTable() {
-      fetch(`/api/render/${this.reaction.reaction_id}`)
-        .then(response => response.json())
+      fetch(`/api/reaction_summary?reaction_id=${this.reaction.reaction_id}`)
+        .then(response => response.text())
         .then(responseData => {
           this.reactionTable = responseData
         })
@@ -140,7 +140,11 @@ export default {
             :href='reaction.data.provenance.publicationUrl'
             target="_blank"
           ) Publication URL
-        .dataset Dataset: {{reaction.dataset_id}}
+        .dataset Dataset: 
+          a(
+            :href='"/search?dataset_id=" + reaction.dataset_id + "&limit=100"'
+            target="_blank"
+          ) {{reaction.dataset_id}}
 </template>
 
 <style lang="sass" scoped>
