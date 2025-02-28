@@ -44,7 +44,9 @@ export default {
       title: String,
       apiCall: String,
       role: String,
-      isCollapsed: Boolean
+      isCollapsed: Boolean,
+      xAxisText: String,
+      yAxisText: String
     },
     components: {
       FloatingModal,
@@ -165,7 +167,7 @@ export default {
                           .attr("y", marginBottom - 4)
                           .attr("fill", "currentColor")
                           .attr("text-anchor", "end")
-                          .text("Molecules (Hover to view) →"));
+                          .text(this.xAxisText));
 
           // Y-axis formatting
           svg.append("g")
@@ -177,7 +179,7 @@ export default {
                   .attr("y", 10)
                   .attr("fill", "currentColor")
                   .attr("text-anchor", "start")
-                  .text("↑ Frequency (no. of occurrences)"));
+                  .text(this.yAxisText));
     })
     },
     methods: {

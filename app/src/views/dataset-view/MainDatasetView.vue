@@ -185,7 +185,6 @@ export default {
         setTimeout(() => {
           clearInterval(this.searchPollingInterval)
           this.searchTaskId = null
-          this.searchResults = []
           this.loading = false
         }, 120000);
       }
@@ -205,6 +204,8 @@ export default {
           title='Frequency of Reactants'
           apiCall='input_stats'
           role='reactant'
+          xAxisText='Molecules (Hover to view) →'
+          yAxisText='↑ Frequency (no. of occurrences)'
           :isCollapsed='this.isCollapsed'
         )
         ChartView(
@@ -212,6 +213,17 @@ export default {
           title='Frequency of Products'
           apiCall='product_stats'
           role='product'
+          xAxisText='Molecules (Hover to view) →'
+          yAxisText='↑ Frequency (no. of occurrences)'
+          :isCollapsed='this.isCollapsed'
+        )
+        ChartView(
+          uniqueId='yieldHistogram'
+          title='Frequency of Yields'
+          apiCall='product_stats'
+          role='yield'
+          xAxisText='Yield Percentages →'
+          yAxisText='↑ Frequency (no. of reactions)'
           :isCollapsed='this.isCollapsed'
         )
       #expand

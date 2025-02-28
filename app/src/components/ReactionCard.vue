@@ -111,6 +111,8 @@ export default {
         @change='$emit("clickedSelect", $event)'
       )
       label(:for='"select_"+reaction.reaction_id') Select reaction
+    .is-mined(v-if='!reaction.data.provenance.isMined')
+      .is-mined-badge USPTO
     .reaction-table(
       v-html='reactionTable'
       v-if='reactionTable'
@@ -134,7 +136,11 @@ export default {
       .col
         .creator Uploaded by {{reaction.data.provenance.recordCreated.person.name}}, {{reaction.data.provenance.recordCreated.person.organization}}
         .date Uploaded on {{new Date(reaction.data.provenance.recordCreated.time.value).toLocaleDateString()}}
-        .doi DOI: {{reaction.data.provenance.doi}}
+        .doi DOI: 
+          a(
+            :href='reaction.data.provenance.publicationUrl'
+            target="_blank"
+          ) {{reaction.data.provenance.doi}}
         .publication 
           a(
             :href='reaction.data.provenance.publicationUrl'
@@ -166,6 +172,16 @@ export default {
     .reaction-table
       color: black
       overflow-x: wrap
+    .is-mined
+      display: flex
+      flex-direction: row-reverse
+    .is-mined-badge
+      text-align: center
+      border-radius: 5px
+      background-color: #0d6efd
+      color: #fff
+      font-size: 0.8rem
+      width: 60px
     .info
       display: grid
       grid-template-columns: repeat(2, 50%)
