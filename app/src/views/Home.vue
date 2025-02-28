@@ -15,9 +15,12 @@
 -->
 
 <script>
+import DatasetCard from '@/components/DatasetCard'
+
 export default {
   name: 'HomeView',
   components: {
+    DatasetCard
   }
 }
 </script>
@@ -26,15 +29,31 @@ export default {
 .home
   .home-img
     img( alt="Ord logo" src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg")
+  .dataset-showcase
+    DatasetCard(
+      :rank='0'
+    )
+    DatasetCard(
+      :rank='1'
+    )
+    DatasetCard(
+      :rank='2'
+    )
+    DatasetCard(
+      :rank='3'
+    )
 </template>
 
 <style lang="sass" scoped>
 .home
-  margin-top: 20vh
   .home-img
-    width: 90%
-    margin: auto
+    text-align: center
+    width: 100%
+    margin: 1% 20% 1% 20%
     max-width: 800px
     img
-      width: 100%
+      width: 50%
+  .dataset-showcase
+    display: flex
+    flex-direction: row
 </style>
