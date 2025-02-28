@@ -17,11 +17,13 @@
 <script>
 import EntityTable from '@/components/EntityTable'
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import MultiRangeSlider from 'multi-range-slider-vue';
 
 export default {
   components: {
     EntityTable,
     LoadingSpinner,
+    MultiRangeSlider
   },
   data() {
     return {
@@ -42,6 +44,19 @@ export default {
 
 <template lang="pug">
 #browse-main
+  #filters
+    label(for='mined') Hide Mined Datasets?
+    input#mined(
+      type='checkbox'
+      checked=true
+    )
+    label(for='size') Dataset Size (Number of Reactions)
+    MultiRangeSlider(
+      :miin='0'
+      :max='100'
+      :ruler='false'
+      :label='false'
+    )
   EntityTable(
     :tableData='tableData'
     title="",
@@ -73,4 +88,7 @@ export default {
     grid-template-columns: 1fr 1fr 1fr auto
   .loading
     margin-top: 30vh
+#filters
+  padding: 10px
+  width: 200px
 </style>
