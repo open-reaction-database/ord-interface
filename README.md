@@ -23,6 +23,7 @@ Web interface and api for the Open Reaction Database
 - The test database must be running on port 5432.
 - You will need to download the Ketcher interface and extract into appropriate folder (see instructions below) for 
   parts of the interface to work.
+- To run on Windows, you can use WSL (Windows Subsystem for Linux). If using the Docker option, please ensure that Docker is installed and properly enabled for WSL.
 
 ## How to Deploy
 ...COMING SOON
@@ -32,6 +33,7 @@ Web interface and api for the Open Reaction Database
 ### 1. Download and install
 
 ```bash
+# you will need python, pip, and postgres installed on your computer first
 git clone https://github.com/open-reaction-database/ord-interface
 cd ord-interface
 # If you are running on Apple silicon, use `conda install postgresql` instead.
@@ -44,6 +46,7 @@ pip install -e '.[tests]'
 #### Option 1: Docker
 
 ```shell
+# you will need Docker installed on your computer first
 cd ord_interface
 ./build_test_database.sh
 # If you are running on Apple silicon, append `--build-arg="ARCH=aarch_64"` to the next command.
