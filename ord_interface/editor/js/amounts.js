@@ -22,6 +22,7 @@ exports = {
   unload,
 };
 
+const asserts = goog.require('goog.asserts');
 const utils = goog.require('ord.utils');
 
 const Amount = goog.require('proto.ord.Amount');
@@ -31,6 +32,9 @@ const Moles = goog.require('proto.ord.Moles');
 const MolesUnit = goog.require('proto.ord.Moles.MolesUnit');
 const Volume = goog.require('proto.ord.Volume');
 const VolumeUnit = goog.require('proto.ord.Volume.VolumeUnit');
+const UnmeasuredAmount = goog.require('proto.ord.UnmeasuredAmount');
+const UnmeasuredAmountType =
+    goog.require('proto.ord.UnmeasuredAmount.UnmeasuredAmountType');
 
 /**
  * Initializes the selector for an Amount section.
@@ -149,6 +153,10 @@ function load(node, amount) {
                         : null;
     utils.setOptionalBool($('.amount_includes_solutes.optional_bool', node),
                           solutes);
+  } else if (amount.hasUnmeasured()) {
+    const unmeasured = amount.getUnmeasured();
+    utils.setSelector($('.unmeasured_amount_type', node), unmeasured.getType());
+    $('.unmeasured_amount_details', node).text(unmeasured.getDetails());
   }
 }
 
@@ -161,10 +169,13 @@ function unload(node) {
   const amount = new Amount();
   // NOTE(kearnes): Take the closest amount section; there may be others
   // nested deeper (e.g. in ProductMeasurement fields under a ReactionProduct).
-  node = $('.amount', node).first();
+  if (!$(node).hasClass("amount")) {
+    node = $('.amount', node).first();
+  }
   const value = parseFloat($('.amount_value', node).text());
   const precision = parseFloat($('.amount_precision', node).text());
   const units = $('.amount_units', node).val();
+  const unmeasuredDetails = $('.unmeasured_amount_details', node).text();
   if (MassUnit[units]) {
     const message = new Mass();
     if (!isNaN(value)) {
@@ -205,6 +216,15 @@ function unload(node) {
         $('.amount_includes_solutes.optional_bool', node));
     if (solutes !== null) {
       amount.setVolumeIncludesSolutes(solutes);
+    }
+  } else if (unmeasuredDetails) {
+    const unmeasured = new UnmeasuredAmount();
+    const unmeasuredType =
+        utils.getSelectorText($('.unmeasured_amount_type', node)[0]);
+    unmeasured.setType(UnmeasuredAmountType[unmeasuredType]);
+    unmeasured.setDetails(asserts.assertString(unmeasuredDetails));
+    if (!utils.isEmptyMessage(unmeasured)) {
+      amount.setUnmeasured(unmeasured);
     }
   }
   return amount;
