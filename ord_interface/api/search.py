@@ -87,10 +87,11 @@ async def get_redis() -> AsyncIterator[Redis]:
     """Returns a Redis client instance."""
     host = os.environ.get("REDIS_HOST", "localhost")
     port = int(os.environ.get("REDIS_PORT", "6379"))
-    async with Redis(host=host, port=port) as client:
+    ssl = os.environ.get("REDIS_SSL", "0") == "1"
+    async with Redis(host=host, port=port, ssl=ssl) as client:
         if not await client.ping():
-            raise RuntimeError(f"Failed to connect to Redis server {host}:{port}")
-        logger.debug(f"Connected to Redis server {host}:{port}")
+            raise RuntimeError(f"Failed to connect to Redis server {host}:{port} ({ssl=})")
+        logger.debug(f"Connected to Redis server {host}:{port} ({ssl=})")
         yield client
 
 
