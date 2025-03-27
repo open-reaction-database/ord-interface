@@ -104,11 +104,11 @@ export default {
     | .
   .copy
     b NOTE:
-    |  Large dataset enumerations (thousands of reactions) may result in a browser timeout. If this happens, please send an email to 
+    |  Large dataset enumerations (thousands of reactions) may result in a browser timeout. If this happens, please send an email to Ben Deadman, the ORD Reaction Data Evangelist and Program Manager, at
     a(
-      href='mailto:help@open-reaction-database.org'
+      href='mailto:ben@bjdeadman.co.uk'
       target="_blank"
-    ) help@open-reaction-database.org
+    ) ben@bjdeadman.co.uk
     |  and attach your template and spreadsheet files. Alternatively, you may use the 
     a(
       href='https://github.com/Open-Reaction-Database/ord-schema/blob/main/ord_schema/scripts/enumerate_dataset.py'
