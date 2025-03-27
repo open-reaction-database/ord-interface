@@ -52,7 +52,7 @@ def _count_addition_order(inputs: Mapping[str, reaction_pb2.ReactionInput]) -> I
 
 
 def _sort_addition_order(
-    inputs: Mapping[str, reaction_pb2.ReactionInput]
+    inputs: Mapping[str, reaction_pb2.ReactionInput],
 ) -> Iterable[Tuple[str, reaction_pb2.ReactionInput]]:
     """Sorts inputs by addition order, sorting again within stages/steps.
 
@@ -618,7 +618,7 @@ def _datetimeformat(message: reaction_pb2.DateTime, format_string: str = "%Y-%m-
 
 
 def _get_compact_components(
-    inputs: Mapping[str, reaction_pb2.ReactionInput]
+    inputs: Mapping[str, reaction_pb2.ReactionInput],
 ) -> Iterable[Tuple[reaction_pb2.Compound, bool]]:
     """Returns a list of input components for 'compact' visualization.
 
