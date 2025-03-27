@@ -98,17 +98,17 @@ export default {
                   allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
                   allowfullscreen
                 )
-            .copy Please send any questions, comments, or issues to 
+            .copy For any questions, comments, or issues, please join the  
               a(
-                href='https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=help@open-reaction-database.org'
+                href='https://groups.google.com/g/open-reaction-database'
                 target="_blank"
-              ) help@open-reaction-database.org 
-              | or create a new issue on the 
+              ) Open Reaction Database Google Group
+              | and post them publicly there for our community to respond. Alternatively you can create a new issue on the 
               a(
                 href='https://github.com/Open-Reaction-Database/ord-interface/issues'
                 target="_blank"
               ) ord-interface GitHub repository
-              | .
+              | . 
         transition(name="fade")
           Datasets(v-if='activeTab == "Datasets"')
         transition(name="fade")
