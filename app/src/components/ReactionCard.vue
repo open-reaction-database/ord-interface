@@ -111,6 +111,8 @@ export default {
         @change='$emit("clickedSelect", $event)'
       )
       label(:for='"select_"+reaction.reaction_id') Select reaction
+    .is-mined(v-if='reaction.data.provenance.isMined')
+      .is-mined-badge Mined
     .reaction-table(
       v-html='reactionTable'
       v-if='reactionTable'
@@ -166,6 +168,16 @@ export default {
     .reaction-table
       color: black
       overflow-x: wrap
+    .is-mined
+      display: flex
+      flex-direction: row-reverse
+    .is-mined-badge
+      text-align: center
+      border-radius: 5px
+      background-color: #0d6efd
+      color: #fff
+      font-size: 0.8rem
+      width: 60px
     .info
       display: grid
       grid-template-columns: repeat(2, 50%)
