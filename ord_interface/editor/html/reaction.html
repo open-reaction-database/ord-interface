@@ -206,6 +206,18 @@ limitations under the License.
                     <div class="input_flow_rate_units selector" data-proto="FlowRate_FlowRateUnit"></div>
                   </div>
                 </fieldset>
+                <fieldset class="s4">
+                  <legend>
+                    <span class="collapse show"></span>
+                    <span class="h4">Input characteristics</span>
+                  </legend>
+                  <div class="input_isolated_characteristics">
+                    <table class="message">
+                      <tr><td>texture</td><td><div class="input_texture_type selector" data-proto="Texture_TextureType"></div></td></tr>
+                      <tr><td>texture details</td><td><div class="input_texture_details edittext"></div></td></tr>
+                    </table>
+                  </div>
+                </fieldset>
               </fieldset>
             </div>
 
@@ -277,6 +289,18 @@ limitations under the License.
                   </legend>
                   <div class="features"></div>
                   <button type="button" class="add" onclick="ord.compounds.addFeature($(this).closest('.component'));"><span class="fas fa-plus" aria-hidden="true"></span> add feature</button>
+                </fieldset>
+                <fieldset class="s5">
+                  <legend>
+                    <span class="collapse show"></span>
+                    <span class="h5">Component characteristics</span>
+                  </legend>
+                  <div class="component_characteristics">
+                    <table class="message">
+                      <tr><td>texture</td><td><div class="component_texture_type selector" data-proto="Texture_TextureType"></div></td></tr>
+                      <tr><td>texture details</td><td><div class="component_texture_details edittext"></div></td></tr>
+                    </table>
+                  </div>
                 </fieldset>
               </fieldset>
             </div>
