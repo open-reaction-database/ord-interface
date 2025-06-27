@@ -27,8 +27,8 @@ export default {
 
 <template lang="pug">
 .home
-  .home-img
-    img( alt="Ord logo" src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg")
+  h2
+    | Explore the latest datasets
   .dataset-showcase
     DatasetCard(
       :rank='0'
