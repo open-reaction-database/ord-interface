@@ -171,8 +171,8 @@ export default {
     @click='showReagentOptions = !showReagentOptions'
     :class='showReagentOptions ? "" : "closed"'
   ) 
-    span Components
     i.material-icons expand_less
+    span Components
   transition(name="expand")
     #searchByReagent.options-container(
       v-if='showReagentOptions'
@@ -254,8 +254,8 @@ export default {
     @click='showReactionOptions = !showReactionOptions'
     :class='showReactionOptions ? "" : "closed"'
   ) 
-    span Reactions
     i.material-icons expand_less
+    span Reactions
   transition(name="expand")
     #searchByReaction.options-container(
       v-if='showReactionOptions'
@@ -300,8 +300,8 @@ export default {
     @click='showDatasetOptions = !showDatasetOptions'
     :class='showDatasetOptions ? "" : "closed"'
   ) 
-    span Datasets
     i.material-icons expand_less
+    span Datasets
   transition(name="expand")
     #searchByDataset.options-container(
       v-if='showDatasetOptions'
@@ -316,8 +316,9 @@ export default {
       )
   #searchParameters.options-title Search Parameters
   .options-container
-    .section
-      label(for='limit') Result Limit 
+    #resultLimit.section
+      label(for='limit') Result Limit
+      br 
       input#limit(
         type='number'
         min='0' 
@@ -341,25 +342,28 @@ ModalKetcher(
 @import '@/styles/transition'
 @import '@/styles/tabs'
 .search-options
+  border: 1px solid $border1
+  border-radius: 10px
+  width: 312px
   max-height: 90vh
   .options-title
-    font-size: 1.5rem
-    font-weight: 700
+    font-size: 16px
+    line-height: 24px
+    font-weight: 600
     cursor: pointer
     padding: 0.5rem 1rem
     border-top-left-radius: 0.25rem
     border-top-right-radius: 0.25rem
     margin-top: 1rem
-    color: white
-    background-color: $linkblue
+    color: black
+    background-color: $searchoptions
     display: flex
     align-content: center
-    justify-content: space-between
-    width: 100%
+    width: 288px
     box-sizing: border-box
     transition: 0.25s
     i
-      font-size: 2rem
+      font-size: 24px
       transition: 0.25s
     &.closed
       border-radius: 0.25rem
@@ -378,10 +382,25 @@ ModalKetcher(
     display: grid
     row-gap: 1rem
     border: 1px solid $medgrey
+    #resultLimit
+      color: $secondarytext
+      input
+        border: 1px solid $border2
+        border-radius: 8px
+        width: 188px
+        height: 32px
+    .tabs
+      font-weight: 400
+      font-family: 'Roboto'
+      font-size: 0.875rem
+      line-height: 20px
     .subtitle
-      font-size: 1.25rem
+      font-size: 0.875rem
       font-weight: 700
+      line-height: 20px
       margin-bottom: 0.5rem
+    label
+      font-size: 0.875rem
     .options
       margin-left: 1rem
     button
@@ -395,6 +414,7 @@ ModalKetcher(
       grid-column: 1 / 2
       margin-top: 1rem
       button
+        background-color: $primaryblue
         font-size: 1.2rem
         padding: 0.5rem 1rem
   #searchByReagent

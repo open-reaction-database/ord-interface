@@ -185,7 +185,7 @@ export default {
 <template lang="pug">
 #search-main
   .search-options-container(:class='showOptions ? "slide-out" : "hidden"')
-    .title Filters & Options
+    .title Filters
     .options-holder
       SearchOptions(
         @searchOptions='updateSearchOptions'
@@ -217,9 +217,17 @@ export default {
   min-width: 800px
   .search-options-container
     .title
-      font-size: 2rem
-      font-weight: 700
+      width: 312px
+      height: 76px
+      background-color: $white
+      border: 1px solid $border1
+      border-radius: 10px
+      padding: 24px 28px
+      font-size: 24px
+      line-height: 32px
+      font-weight: 600
       margin-bottom: 0.85rem
+      font-family: 'Archivo', sans-serif
     .options-holder
       position: -webkit-sticky
       position: sticky
@@ -227,8 +235,11 @@ export default {
       background-color: white
       padding: 1rem
       box-sizing: border-box
-      border-radius: 0.25rem
+      width: 312px
+      border: 1px solid $border1
+      border-radius: 10px
       overflow-y: auto
+      font-family: 'Archivo', sans-serif
   .no-results
     margin-top: 1rem
     text-align: center

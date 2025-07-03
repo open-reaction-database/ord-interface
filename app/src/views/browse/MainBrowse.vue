@@ -71,6 +71,8 @@ export default {
   padding: 1rem 0
   .table-container
     grid-template-columns: 1fr 1fr 1fr auto
+    .column.label
+      font-size: 1rem
   .loading
     margin-top: 30vh
 </style>

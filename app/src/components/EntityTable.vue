@@ -108,7 +108,7 @@ export default {
       .title-holder
         .title {{ title }}
     .search-area(v-if='displaySearch')
-      label(for="search") Search: 
+      label(for="search") Search: &nbsp;&nbsp;&nbsp;
       input(
         type="text"
         id="search"
@@ -169,7 +169,7 @@ export default {
     .header
       .title-holder
         .title
-          font-size: 2rem
+          font-size: 1rem
           font-weight: 700
           margin-bottom: 1rem
     .search-area
@@ -178,9 +178,13 @@ export default {
       input
         width: 30%
         min-width: 300px
+        border: 1px solid $border2
+        border-radius: 8px
+        height: 2rem
     .content
       width: 100%
       height: fit-content
+      font-size: 0.875rem
       .entities-holder
         // min-height: 14rem
         height: 100%

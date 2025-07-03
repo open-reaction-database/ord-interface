@@ -47,10 +47,12 @@ nav.navbar.navbar-expand-lg.bg-light
 
 nav
   background-color: white !important
+  border-bottom: 1px solid $border1
   .container
     display: flex
     flex-wrap: inherit
     align-items: center
+    height: 40px
     width: 90%
     margin: auto
     padding: 0.5rem 0
