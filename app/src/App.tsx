@@ -22,8 +22,7 @@ import Home from './views/Home';
 import About from './views/About';
 import MainBrowse from './views/browse/MainBrowse';
 import MainSearch from './views/search/MainSearch';
-import './App.css';
-import './styles/vars.sass';
+import './App.scss';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
