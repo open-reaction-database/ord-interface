@@ -14,8 +14,26 @@
  * limitations under the License.
  */
 
-$lightgrey: #f8f9fa
-$medgrey: #e8e9e3
-$darkgrey: #a0a0a0
-$linkblue: #0d6efd
-$hoverblue: #0a58ca
+@import './vars.scss';
+
+.content {
+  .table-container {
+    background-color: white;
+    width: 90%;
+    margin: auto;
+    border-radius: 0.5rem;
+    display: grid;
+    overflow: hidden;
+    
+    .column {
+      border-top: 1px solid $medgrey;
+      padding: 0.5rem;
+      
+      &.label {
+        border-top: none;
+        font-weight: 700;
+        font-size: 1.25rem;
+      }
+    }
+  }
+}
