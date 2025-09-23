@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import './Home.scss';
+@import '../styles/vars.sass';
 
-const Home: React.FC = () => {
-  return (
-    <div className="home">
-      <div className="home__image-container">
-        <img 
-          className="home__logo"
-          alt="ORD logo" 
-          src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg"
-        />
-      </div>
-    </div>
-  );
-};
+.home {
+  margin-top: 20vh;
 
-export default Home;
+  &__image-container {
+    width: 90%;
+    margin: auto;
+    max-width: 800px;
+  }
+
+  &__logo {
+    width: 100%;
+    height: auto;
+  }
+}

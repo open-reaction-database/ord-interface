@@ -1,0 +1,93 @@
+/**
+ * Copyright 2023 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import '../styles/vars.sass';
+
+.about {
+  margin-top: 2rem;
+  background-color: white;
+  padding: 0 2rem;
+  border-radius: 0.5rem;
+
+  &__section {
+    margin-top: 3rem;
+  }
+
+  &__section-header {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+  }
+
+  &__section-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+
+  &__section-content {
+    padding: 1.5rem;
+  }
+
+  &__text {
+    text-align: justify;
+    text-justify: inter-word;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  &__list {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  &__list-item {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+
+  &__subsection-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  &__link {
+    color: $linkblue;
+    text-decoration: none;
+
+    &:hover {
+      color: $hoverblue;
+      text-decoration: underline;
+    }
+  }
+
+  &__leadership-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  &__leadership-column {
+    margin: 0;
+  }
+}
