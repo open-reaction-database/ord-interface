@@ -33,54 +33,76 @@
   margin-bottom: 2rem;
 }
 
-#chartsection {
+.charts-container {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid vars.$lightgrey;
+}
+
+.charts-header {
   display: flex;
-  flex-direction: column;
-  
-  #chartsectioncharts {
-    display: block;
-    
-    .chart-placeholder {
-      background-color: white;
-      border: 1px solid vars.$medgrey;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      
-      h3 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-      }
-      
-      p {
-        margin: 0;
-        color: #666;
-        font-style: italic;
-      }
-    }
-  }
+  justify-content: flex-end;
+  margin-bottom: 1rem;
   
   #expand {
-    display: flex;
-    justify-content: center;
-    margin-top: 1rem;
-    
     button {
-      background-color: vars.$linkblue;
-      color: white;
-      border: none;
+      background: white;
+      border: 1px solid vars.$medgrey;
       border-radius: 0.25rem;
       padding: 0.5rem;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
       
       &:hover {
-        background-color: vars.$hoverblue;
+        background: vars.$lightgrey;
       }
       
-      i {
-        font-size: 1.5rem;
+      .material-icons {
+        font-size: 1.2rem;
+        color: vars.$darkgrey;
       }
+    }
+  }
+}
+
+#chartsection {
+  display: flex;
+  flex-direction: column;
+}
+
+.charts-content {
+  display: block;
+  
+  &.expanded {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+  }
+}
+
+#chartsectioncharts {
+  .chart-placeholder {
+    background-color: white;
+    border: 1px solid vars.$medgrey;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    
+    h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    p {
+      margin: 0;
+      color: #666;
+      font-style: italic;
     }
   }
 }

@@ -130,11 +130,24 @@ const MainDatasetView: React.FC = () => {
       >
         <div 
           id="chartsection" 
-          style={{ width: isCollapsed ? '40%' : '100%' }}
+          className="charts-container"
+          style={{ width: isCollapsed ? '80%' : '100%' }}
         >
+          <div className="charts-header">
+            <div id="expand">
+              <button onClick={expandOrShrink}>
+                <i 
+                  className="material-icons" 
+                  title={isCollapsed ? "Expand" : "Collapse"}
+                >
+                  {isCollapsed ? "keyboard_double_arrow_right" : "keyboard_double_arrow_left"}
+                </i>
+              </button>
+            </div>
+          </div>
           <div 
             id="chartsectioncharts" 
-            style={{ display: isCollapsed ? 'block' : 'flex' }}
+            className={`charts-content ${isCollapsed ? '' : 'expanded'}`}
           >
             <ChartView
               uniqueId="reactantsFrequency"
@@ -151,17 +164,6 @@ const MainDatasetView: React.FC = () => {
               role="product"
               isCollapsed={isCollapsed}
             />
-          </div>
-          <div id="expand">
-            <button onClick={expandOrShrink}>
-              <i 
-                className="material-icons" 
-                style={{ marginTop: '15%' }} 
-                title={isCollapsed ? "Expand" : "Collapse"}
-              >
-                {isCollapsed ? "keyboard_double_arrow_right" : "keyboard_double_arrow_left"}
-              </i>
-            </button>
           </div>
         </div>
         

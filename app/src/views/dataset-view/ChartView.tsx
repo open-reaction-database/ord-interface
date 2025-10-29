@@ -17,10 +17,6 @@ interface ChartViewProps {
   isCollapsed?: boolean;
 }
 
-interface MolHtml {
-  svg: string;
-}
-
 const ChartView: React.FC<ChartViewProps> = ({
   uniqueId,
   title,
@@ -35,12 +31,12 @@ const ChartView: React.FC<ChartViewProps> = ({
   const [tooltipOffsetHorizontal, setTooltipOffsetHorizontal] = useState(0);
   const [tooltipOffsetVertical, setTooltipOffsetVertical] = useState(0);
   const [showSmiles, setShowSmiles] = useState(false);
-  const [molHtml, setMolHtml] = useState<MolHtml | null>(null);
+  const [molHtml, setMolHtml] = useState<string | null>(null);
   const [molLoading, setMolLoading] = useState(true);
   
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const getMolHtml = useCallback(async (smiles: string): Promise<MolHtml> => {
+  const getMolHtml = useCallback(async (smiles: string): Promise<string> => {
     const compound = new reaction_pb.Compound();
     const identifier = compound.addIdentifiers();
     identifier.setValue(smiles);
@@ -110,8 +106,10 @@ const ChartView: React.FC<ChartViewProps> = ({
         getMolHtml(d.smiles).then((result) => {
           setMolLoading(false);
           setMolHtml(result);
-        }).catch(() => {
+        }).catch((error) => {
+          console.error('Error fetching molecule SVG:', error);
           setMolLoading(false);
+          setMolHtml(null);
         });
       })
       .on('mouseout', () => {
@@ -179,20 +177,23 @@ const ChartView: React.FC<ChartViewProps> = ({
 
   return (
     <div className="chart-view">
-      <span 
-        style={isCollapsed 
-          ? { fontSize: '10pt', width: '150px' } 
-          : { fontSize: '14pt' }
-        }
-      >
-        {title}
-      </span>
-      
-      <svg 
-        ref={svgRef}
-        id={uniqueId}
-        style={{ visibility: loading ? 'hidden' : 'visible' }}
-      />
+      <div className="chart-view__title-and-chart">
+        <span 
+          className="chart-view__title"
+          style={isCollapsed 
+            ? { fontSize: '10pt', width: '150px' } 
+            : { fontSize: '14pt' }
+          }
+        >
+          {title}
+        </span>
+        
+        <svg 
+          ref={svgRef}
+          id={uniqueId}
+          style={{ visibility: loading ? 'hidden' : 'visible' }}
+        />
+      </div>
       
       <div 
         className="chart-view__loading" 
@@ -213,7 +214,7 @@ const ChartView: React.FC<ChartViewProps> = ({
           <pre>Count: {currentTimesAppearing}</pre>
           <div 
             className="chart-view__svg"
-            dangerouslySetInnerHTML={{ __html: molHtml?.svg || '' }}
+            dangerouslySetInnerHTML={{ __html: molHtml || '' }}
           />
           <div 
             className="chart-view__molloading"

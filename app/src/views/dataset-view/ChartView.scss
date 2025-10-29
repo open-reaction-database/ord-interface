@@ -2,6 +2,16 @@
 @use "../../styles/vars.scss" as vars;
 
 .chart-view {
+  &__title-and-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__title {
+    margin-bottom: 10px;
+  }
+
   &__loading {
     position: absolute;
     top: 50%;
