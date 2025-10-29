@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import EntityTable from './EntityTable';
-import ReactionCard from './ReactionCard';
-import CopyButton from './CopyButton';
-import DownloadResults from './DownloadResults';
+import EntityTable from '../../components/EntityTable';
+import ReactionCard from '../../components/ReactionCard';
+import CopyButton from '../../components/CopyButton';
+import DownloadResults from '../../components/DownloadResults';
 import './SearchResults.scss';
 
 interface SearchResult {

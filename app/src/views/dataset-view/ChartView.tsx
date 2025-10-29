@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
-import LoadingSpinner from './LoadingSpinner';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import reaction_pb from 'ord-schema';
 import './ChartView.scss';
 

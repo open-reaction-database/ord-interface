@@ -17,8 +17,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import ChartView from '../../components/ChartView';
-import SearchResults from '../../components/SearchResults';
+import ChartView from './ChartView';
+import SearchResults from './SearchResults';
 import { base64ToBytes } from '../../utils/base64';
 import './MainDatasetView.scss';
 
