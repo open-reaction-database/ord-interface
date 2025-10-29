@@ -24,6 +24,7 @@ import MainBrowse from './views/browse/MainBrowse';
 import MainSearch from './views/search/MainSearch';
 import MainDatasetView from './views/dataset-view/MainDatasetView';
 import MainReactionView from './views/reaction-view/MainReactionView';
+import MainKetcher from './views/ketcher-view/MainKetcher';
 import './App.scss';
 
 const AppContent: React.FC = () => {
@@ -42,7 +43,8 @@ const AppContent: React.FC = () => {
         <Route path="/browse" element={<MainBrowse />} />
         <Route path="/search" element={<MainSearch />} />
         <Route path="/dataset/:datasetId" element={<MainDatasetView />} />
-        <Route path="/reaction/:reactionId" element={<MainReactionView />} />
+        <Route path="/id/:reactionId" element={<MainReactionView />} />
+        <Route path="/ketcher" element={<MainKetcher />} />
       </Routes>
       {!noHeaderFooter && <MainFooter />}
     </div>

@@ -17,7 +17,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Range } from 'react-range';
-// import ModalKetcher from '../../components/ModalKetcher';
+import ModalKetcher from '../../components/ModalKetcher';
 import SearchItemList from './SearchItemList';
 import './SearchOptions.scss';
 
@@ -100,9 +100,9 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
     limit: 100,
   });
   
-  // const [showKetcherModal, setShowKetcherModal] = useState(false);
-  // const [ketcherModalSmile, setKetcherModalSmile] = useState(0);
-  // const [ketcherModalSet, setKetcherModalSet] = useState<'reactants' | 'products'>('reactants');
+  const [showKetcherModal, setShowKetcherModal] = useState(false);
+  const [ketcherModalSmile, setKetcherModalSmile] = useState(0);
+  const [ketcherModalSet, setKetcherModalSet] = useState<'reactants' | 'products'>('reactants');
   
   const matchModes = ['exact', 'similar', 'substructure', 'SMARTS'];
 
@@ -131,9 +131,10 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
     return simThresh + trailingZeros;
   }, [reagentOptions.similarityThreshold]);
 
-  const openKetcherModal = (_componentSet: 'reactants' | 'products', _idx: number) => {
-    // TODO: Implement when ModalKetcher component is available
-    console.log('Ketcher modal not yet implemented');
+  const openKetcherModal = (componentSet: 'reactants' | 'products', idx: number) => {
+    setKetcherModalSmile(idx);
+    setKetcherModalSet(componentSet);
+    setShowKetcherModal(true);
   };
 
   const emitSearchOptions = () => {
@@ -266,9 +267,13 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
     }));
   };
 
-  // const updateKetcherSmiles = (newSmiles: string) => {
-  //   // TODO: Implement when ModalKetcher component is available
-  // };
+  const updateKetcherSmiles = (newSmiles: string) => {
+    if (ketcherModalSet === 'reactants') {
+      updateReactantSmiles(ketcherModalSmile, newSmiles);
+    } else {
+      updateProductSmiles(ketcherModalSmile, newSmiles);
+    }
+  };
 
   useEffect(() => {
     setDefaultValues();
@@ -546,7 +551,6 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       </div>
 
       {/* Ketcher Modal */}
-      {/* TODO: Implement ModalKetcher component
       {showKetcherModal && (
         <ModalKetcher
           smiles={reagentOptions[ketcherModalSet][ketcherModalSmile]?.smileSmart || ''}
@@ -554,7 +558,6 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
           onCloseModal={() => setShowKetcherModal(false)}
         />
       )}
-      */}
     </div>
   );
 };
