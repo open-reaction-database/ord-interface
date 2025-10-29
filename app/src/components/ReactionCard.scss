@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@import '../styles/vars.scss';
+@use '../styles/vars' as vars;
 
 .reaction-card {
   background-color: white;
@@ -22,10 +22,10 @@
   padding: 1.5rem;
   margin-bottom: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid $medgrey;
+  border: 1px solid vars.$medgrey;
 
   &--selected {
-    border-color: $linkblue;
+    border-color: vars.$linkblue;
     box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
   }
 

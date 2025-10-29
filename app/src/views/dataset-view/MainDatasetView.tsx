@@ -17,7 +17,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import base64ToBytes from '../../utils/base64';
+import ChartView from '../../components/ChartView';
+import SearchResults from '../../components/SearchResults';
+import { base64ToBytes } from '../../utils/base64';
 import './MainDatasetView.scss';
 
 interface Dataset {
@@ -134,15 +136,37 @@ const MainDatasetView: React.FC = () => {
             id="chartsectioncharts" 
             style={{ display: isCollapsed ? 'block' : 'flex' }}
           >
-            {/* Placeholder for ChartView components */}
-            <div className="chart-placeholder">
-              <h3>Frequency of Reactants</h3>
-              <p>Chart component coming soon...</p>
-            </div>
-            <div className="chart-placeholder">
-              <h3>Frequency of Products</h3>
-              <p>Chart component coming soon...</p>
-            </div>
+            <ChartView
+              uniqueId="reactants"
+              title="Most Common Reactants"
+              apiCall="dataset_histogram"
+              role="reactant"
+              isCollapsed={isCollapsed}
+            />
+            
+            <ChartView
+              uniqueId="reagents"
+              title="Most Common Reagents"
+              apiCall="dataset_histogram"
+              role="reagent"
+              isCollapsed={isCollapsed}
+            />
+            
+            <ChartView
+              uniqueId="products"
+              title="Most Common Products"
+              apiCall="dataset_histogram"
+              role="product"
+              isCollapsed={isCollapsed}
+            />
+            
+            <ChartView
+              uniqueId="solvents"
+              title="Most Common Solvents"
+              apiCall="dataset_histogram"
+              role="solvent"
+              isCollapsed={isCollapsed}
+            />
           </div>
           <div id="expand">
             <button onClick={expandOrShrink}>
@@ -180,24 +204,12 @@ const MainDatasetView: React.FC = () => {
             </tbody>
           </table>
           
-          <div className="search-results">
+          <div className="search-results-section">
             {!loading && searchResults?.length > 0 ? (
-              <div>
-                {/* Placeholder for SearchResults component */}
-                <h3>Search Results ({searchResults.length} reactions)</h3>
-                <div className="results-placeholder">
-                  {searchResults.slice(0, 5).map(result => (
-                    <div key={result.reaction_id} className="result-item">
-                      <strong>Reaction ID:</strong> {result.reaction_id}
-                    </div>
-                  ))}
-                  {searchResults.length > 5 && (
-                    <div className="result-item">
-                      ...and {searchResults.length - 5} more reactions
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SearchResults 
+                searchResults={searchResults}
+                isOverflow={false}
+              />
             ) : !loading && !searchResults?.length ? (
               <div className="no-results">
                 <div className="title">This dataset contains no reactions.</div>

@@ -1,0 +1,72 @@
+// SearchResults component styles
+@use "../styles/vars.scss" as vars;
+
+.search-results {
+  &__action-buttons {
+    margin: -2.5rem 0 1rem;
+    display: flex;
+    justify-content: flex-end;
+    column-gap: 0.5rem;
+
+    button {
+      padding: 0.5rem 1rem;
+      background-color: vars.$linkblue;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: background-color 0.25s;
+
+      &:hover:not(:disabled) {
+        background-color: vars.$hoverblue;
+      }
+
+      &:disabled {
+        background-color: vars.$darkgrey;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__reaction-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__checkbox {
+    margin-top: 1rem;
+    cursor: pointer;
+  }
+
+  &__view-selected {
+    position: fixed;
+    bottom: 2rem;
+    right: 6.5rem;
+    z-index: 1000;
+  }
+
+  &__view-selected-button {
+    padding: 0.5rem 1rem;
+    color: white;
+    background-color: vars.$linkblue;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    box-shadow: 0 0 5px vars.$darkgrey;
+    animation: bounce 5s infinite ease-in-out;
+
+    @keyframes bounce {
+      0%, 20% {
+        transform: translateY(0);
+      }
+      10% {
+        transform: translateY(-10px);
+      }
+    }
+  }
+
+  @media (max-width: 1000px) {
+    margin-top: 2.5rem;
+  }
+}

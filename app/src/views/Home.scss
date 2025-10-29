@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@import '../styles/vars.scss';
+@use '../styles/vars.scss' as vars;
 
 .home {
   margin-top: 20vh;

@@ -1,0 +1,43 @@
+// ChartView component styles
+@use "../styles/vars.scss" as vars;
+
+.chart-view {
+  &__loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &__tooltip {
+    position: fixed;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    pointer-events: none;
+    max-width: 300px;
+    
+    pre {
+      margin: 0 0 8px 0;
+      font-family: monospace;
+      font-size: 12px;
+    }
+  }
+
+  &__svg {
+    svg {
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  &__molloading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}

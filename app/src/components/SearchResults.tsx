@@ -1,0 +1,131 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import EntityTable from './EntityTable';
+import ReactionCard from './ReactionCard';
+import CopyButton from './CopyButton';
+import DownloadResults from './DownloadResults';
+import './SearchResults.scss';
+
+interface SearchResult {
+  reaction_id: string;
+  [key: string]: any;
+}
+
+interface SearchResultsProps {
+  searchResults: SearchResult[];
+  isOverflow: boolean;
+}
+
+const SearchResults: React.FC<SearchResultsProps> = ({
+  searchResults,
+  isOverflow
+}) => {
+  const navigate = useNavigate();
+  const [formattedResults, setFormattedResults] = useState<SearchResult[]>([]);
+  const [selectedReactions, setSelectedReactions] = useState<string[]>([]);
+  const [showDownloadResults, setShowDownloadResults] = useState(false);
+
+  const updateSelectedReactions = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const checked = event.target.checked;
+
+    if (checked) {
+      setSelectedReactions(prev => [...prev, value]);
+    } else {
+      setSelectedReactions(prev => prev.filter(id => id !== value));
+    }
+  };
+
+  const goToViewSelected = () => {
+    // Store selected reactions in sessionStorage for navigation
+    sessionStorage.setItem('selectedReactions', JSON.stringify({
+      query: window.location.search,
+      reactions: selectedReactions
+    }));
+    
+    navigate(`/selected-set?reaction_ids=${selectedReactions.join(',')}`);
+  };
+
+  useEffect(() => {
+    setFormattedResults(searchResults);
+    
+    // Check if there are stored selected reactions for this query
+    const stored = sessionStorage.getItem('selectedReactions');
+    if (stored) {
+      const { query, reactions } = JSON.parse(stored);
+      if (query === window.location.search) {
+        setSelectedReactions(reactions);
+      }
+    }
+  }, [searchResults]);
+
+  const title = isOverflow 
+    ? "100 Reactions From This Dataset (Sample)" 
+    : `Reactions in this Dataset (${formattedResults.length} Reactions)`;
+
+  return (
+    <div className="search-results">
+      {formattedResults.length > 0 && (
+        <EntityTable
+          tableData={formattedResults}
+          title={title}
+          displaySearch={false}
+        >
+          {(entities) => (
+            <>
+              <div className="search-results__action-buttons">
+                <CopyButton
+                  textToCopy={window.location.href}
+                  icon="share"
+                  buttonText="Shareable Link"
+                />
+                <button
+                  disabled={!formattedResults.length}
+                  onClick={() => setShowDownloadResults(true)}
+                >
+                  Download All Search Results
+                </button>
+              </div>
+              
+              {entities.map((row: SearchResult) => (
+                <div key={row.reaction_id} className="search-results__reaction-wrapper">
+                  <input
+                    type="checkbox"
+                    value={row.reaction_id}
+                    checked={selectedReactions.includes(row.reaction_id)}
+                    onChange={updateSelectedReactions}
+                    className="search-results__checkbox"
+                  />
+                  <ReactionCard
+                    reaction={row}
+                    isSelectable={false}
+                    isSelected={selectedReactions.includes(row.reaction_id)}
+                  />
+                </div>
+              ))}
+            </>
+          )}
+        </EntityTable>
+      )}
+
+      {selectedReactions.length > 0 && (
+        <div className="search-results__view-selected">
+          <div 
+            className="search-results__view-selected-button"
+            onClick={goToViewSelected}
+          >
+            View {selectedReactions.length} selected reactions
+          </div>
+        </div>
+      )}
+
+      <DownloadResults
+        reactionIds={formattedResults.map(result => result.reaction_id)}
+        showDownloadResults={showDownloadResults}
+        onHideDownloadResults={() => setShowDownloadResults(false)}
+      />
+    </div>
+  );
+};
+
+export default SearchResults;

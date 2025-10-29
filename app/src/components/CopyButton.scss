@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-@import '../styles/vars.scss';
+@use "../styles/vars.scss" as vars;
 
 .copy-button-main {
   button {
     padding: 0.25rem 0.5rem;
     display: flex;
     column-gap: 0.25rem;
-    background-color: $linkblue;
+    background-color: vars.$linkblue;
     color: white;
     border: none;
     border-radius: 0.25rem;
@@ -30,7 +30,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: $hoverblue;
+      background-color: vars.$hoverblue;
     }
     
     i {
@@ -40,7 +40,7 @@
 
   #copy-notification {
     position: fixed;
-    background-color: $darkgrey;
+    background-color: vars.$darkgrey;
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;

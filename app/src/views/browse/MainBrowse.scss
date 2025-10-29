@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-@import '../../styles/table.scss';
-@import '../../styles/vars.scss';
+@use '../../styles/vars.scss' as vars;
+@use '../../styles/table.scss' as table;
 
 #browse-main {
   padding: 1rem 0;

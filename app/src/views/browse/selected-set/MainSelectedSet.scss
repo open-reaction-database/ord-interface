@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@import '../../../styles/vars.scss';
+@use '../../../styles/vars.scss' as vars;
 
 #selected-set-main {
   padding: 2rem;

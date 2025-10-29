@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+@use './styles/vars.scss' as vars;
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-@import './styles/vars.scss';
 
 body {
   font-family: 'Roboto', sans-serif;
@@ -30,7 +30,7 @@ body {
 #main-container {
   display: grid;
   grid-template-rows: auto 1fr auto;
-  background-color: $lightgrey;
+  background-color: vars.$lightgrey;
   min-width: 800px;
 
   &.full-height {
@@ -39,7 +39,7 @@ body {
 }
 
 button {
-  background-color: $linkblue;
+  background-color: vars.$linkblue;
   border: none;
   color: white;
   border-radius: 0.25rem;
@@ -57,7 +57,7 @@ button {
     width: 18px !important;
     margin: -5px !important;
     box-shadow: none !important;
-    background-color: $linkblue !important;
+    background-color: vars.$linkblue !important;
   }
 
   .bar-left,
@@ -68,6 +68,6 @@ button {
   }
 
   .bar-inner {
-    background-color: $linkblue !important;
+    background-color: vars.$linkblue !important;
   }
 }

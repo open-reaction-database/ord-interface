@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@import '../styles/vars.scss';
+@use "../styles/vars.scss" as vars;
 
 .download-results {
   position: fixed;
@@ -86,7 +86,7 @@
 
     button {
       padding: 0.75rem 1.5rem;
-      background-color: $linkblue;
+      background-color: vars.$linkblue;
       color: white;
       border: none;
       border-radius: 0.25rem;
@@ -94,7 +94,7 @@
       transition: background-color 0.2s ease;
 
       &:hover {
-        background-color: $hoverblue;
+        background-color: vars.$hoverblue;
       }
     }
   }

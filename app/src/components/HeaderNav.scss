@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@import '../styles/vars.scss';
+@use "../styles/vars.scss" as vars;
 
 // BEM Block: header-nav
 .header-nav {
@@ -55,11 +55,11 @@
     padding: 0.5rem;
     text-decoration: none;
     transition: .15s;
-    color: $linkblue;
+    color: vars.$linkblue;
     
     // BEM Modifier: header-nav__link--hover
     &:hover {
-      color: $hoverblue;
+      color: vars.$hoverblue;
     }
   }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@import '../styles/vars.scss';
+@use '../styles/vars' as vars;
 
 .about {
   margin-top: 2rem;
@@ -66,11 +66,11 @@
   }
 
   &__link {
-    color: $linkblue;
+    color: vars.$linkblue;
     text-decoration: none;
 
     &:hover {
-      color: $hoverblue;
+      color: vars.$hoverblue;
       text-decoration: underline;
     }
   }
