@@ -20,6 +20,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import ChartView from './ChartView';
 import SearchResults from './SearchResults';
 import { base64ToBytes } from '../../utils/base64';
+import reaction_pb from 'ord-schema';
 import './MainDatasetView.scss';
 
 interface Dataset {
@@ -70,12 +71,8 @@ const MainDatasetView: React.FC = () => {
         
         // Deserialize the results and unpack protobuf for each reaction
         const processedResults = searchResultsData.map((reaction: SearchResult) => {
-          // Convert base64 to bytes for protobuf parsing
-          base64ToBytes(reaction.proto);
-          // Note: This would require ord-schema package for full protobuf deserialization
-          reaction.data = {
-            identifiersList: [{ value: `Reaction ${reaction.reaction_id}` }]
-          };
+          const bytes = base64ToBytes(reaction.proto);
+          reaction.data = reaction_pb.Reaction.deserializeBinary(new Uint8Array(bytes)).toObject();
           return reaction;
         });
         

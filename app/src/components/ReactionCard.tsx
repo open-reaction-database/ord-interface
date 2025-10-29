@@ -108,7 +108,8 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
   }, [getReactionTable]);
 
   const reactionData = reaction.data;
-  const firstProduct = reactionData?.outcomesList?.[0]?.productsList?.[0];
+  const firstOutcome = reactionData?.outcomesList?.[0];
+  const firstProduct = firstOutcome?.productsList?.[0];
   const firstProductIdentifier = firstProduct?.identifiersList?.[0];
   const provenance = reactionData?.provenance;
 
@@ -151,7 +152,7 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
           
           <div className="col">
             <div className="yield">
-              Yield: {getYield(firstProduct?.measurementsList)}
+              Yield: {getYield(firstProduct?.measurementsList || [])}
             </div>
             <div className="conversion">
               Conversion: {getConversion(reactionData)}
@@ -161,7 +162,7 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
             </div>
             {firstProductIdentifier && (
               <div className="smile">
-                <CopyButton textToCopy={firstProductIdentifier.value} />
+                <CopyButton textToCopy={firstProductIdentifier.value || ''} />
                 <div className="value">
                   Product {productIdentifier(firstProductIdentifier)}
                 </div>
@@ -171,7 +172,7 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
 
           <div className="col">
             <div className="creator">
-              Uploaded by {provenance?.recordCreated?.person?.name}, {provenance?.recordCreated?.person?.organization}
+              Uploaded by {provenance?.recordCreated?.person?.name || 'Unknown'}, {provenance?.recordCreated?.person?.organization || 'Unknown'}
             </div>
             <div className="date">
               Uploaded on {provenance?.recordCreated?.time?.value ? 

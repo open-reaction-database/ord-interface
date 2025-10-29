@@ -82,7 +82,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 <ReactionCard
                   key={row.reaction_id}
                   reaction={row}
-                  isSelectable={true}
+                  isSelectable={false}
                   isSelected={selectedReactions.includes(row.reaction_id)}
                   onSelectionChange={(reactionId, isSelected) => {
                     if (isSelected) {
