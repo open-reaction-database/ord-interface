@@ -51,7 +51,7 @@ const MainReactionView: React.FC = () => {
   const [outcomesTab, setOutcomesTab] = useState(0);
   const [showRawReaction, setShowRawReaction] = useState(false);
   const [navItems, setNavItems] = useState<string[]>([]);
-    const [activeNav] = useState<string>('reaction');
+  const [activeNav, setActiveNav] = useState<string>('summary');
 
   const setupTabs = ['vessel', 'environment', 'automation'];
   const conditionTabs = ['temperature', 'pressure', 'stirring', 'illumination', 'electrochemistry', 'flow', 'other'];
@@ -206,6 +206,36 @@ const MainReactionView: React.FC = () => {
     
     fetchData();
   }, [reactionId, getReactionData, getReactionSummary, setNavItemsFunction]);
+
+  // Scroll listener to highlight active nav item
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 100; // Offset for better UX
+      
+      // Find which section is currently in view
+      for (let i = navItems.length - 1; i >= 0; i--) {
+        const element = document.getElementById(navItems[i]);
+        if (element) {
+          const elementTop = element.offsetTop;
+          if (scrollPosition >= elementTop) {
+            setActiveNav(navItems[i]);
+            break;
+          }
+        }
+      }
+    };
+
+    // Add scroll listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Initial call to set active nav on load
+    handleScroll();
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [navItems]);
 
   if (loading) {
     return (
