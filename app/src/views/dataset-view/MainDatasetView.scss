@@ -1,0 +1,159 @@
+/**
+ * Copyright 2023 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import '../../styles/vars.scss';
+
+#dataset-main {
+  padding: 2rem;
+
+  h1 {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+}
+
+#charts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+#chartsection {
+  display: flex;
+  flex-direction: column;
+  
+  #chartsectioncharts {
+    display: block;
+    
+    .chart-placeholder {
+      background-color: white;
+      border: 1px solid $medgrey;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      
+      h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+      
+      p {
+        margin: 0;
+        color: #666;
+        font-style: italic;
+      }
+    }
+  }
+  
+  #expand {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+    
+    button {
+      background-color: $linkblue;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.5rem;
+      cursor: pointer;
+      
+      &:hover {
+        background-color: $hoverblue;
+      }
+      
+      i {
+        font-size: 1.5rem;
+      }
+    }
+  }
+}
+
+#datasection {
+  .h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  
+  table {
+    width: 100%;
+    background-color: white;
+    border-collapse: collapse;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    
+    tr {
+      &:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+    }
+    
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid $medgrey;
+      
+      &:first-child {
+        font-weight: 600;
+        background-color: $lightgrey;
+        white-space: nowrap;
+      }
+      
+      &:last-child {
+        width: 100%;
+      }
+    }
+  }
+  
+  .search-results {
+    .results-placeholder {
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      
+      .result-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid $medgrey;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+    
+    .no-results {
+      text-align: center;
+      padding: 2rem;
+      
+      .title {
+        font-size: 1.25rem;
+        color: #666;
+      }
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
+    }
+  }
+}

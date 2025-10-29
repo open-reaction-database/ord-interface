@@ -20,35 +20,60 @@ import './CopyButton.scss';
 interface CopyButtonProps {
   textToCopy: string;
   icon?: string;
-  buttonText: string;
+  buttonText?: string;
 }
 
 const CopyButton: React.FC<CopyButtonProps> = ({ 
   textToCopy, 
-  icon = 'copy', 
-  buttonText 
+  icon = 'content_copy', 
+  buttonText = '' 
 }) => {
-  const [copied, setCopied] = useState(false);
+  const [displayNotification, setDisplayNotification] = useState(false);
+  const [notificationStyle, setNotificationStyle] = useState({
+    top: 0,
+    left: 0
+  });
 
-  const handleCopy = async () => {
+  const handleCopy = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    // Move notification block to mouse cursor position
+    const { clientX, clientY } = event;
+    setNotificationStyle({
+      top: clientY,
+      left: clientX
+    });
+
     try {
       await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setDisplayNotification(true);
+
+      setTimeout(() => {
+        setDisplayNotification(false);
+      }, 1500);
     } catch (err) {
       console.error('Failed to copy text:', err);
     }
   };
 
   return (
-    <button className="copy-button" onClick={handleCopy}>
-      <span className={`copy-button__icon copy-button__icon--${icon}`}>
-        {icon === 'share' ? '🔗' : '📋'}
-      </span>
-      <span className="copy-button__text">
-        {copied ? 'Copied!' : buttonText}
-      </span>
-    </button>
+    <div className="copy-button-main">
+      <button onClick={handleCopy}>
+        <i className="material-icons">{icon}</i>
+        {buttonText && <div className="copy">{buttonText}</div>}
+      </button>
+      
+      {displayNotification && (
+        <div 
+          id="copy-notification" 
+          className={`fade-enter ${displayNotification ? 'fade-enter-active' : ''}`}
+          style={{
+            top: `${notificationStyle.top}px`,
+            left: `${notificationStyle.left}px`
+          }}
+        >
+          Copied to clipboard!
+        </div>
+      )}
+    </div>
   );
 };
 

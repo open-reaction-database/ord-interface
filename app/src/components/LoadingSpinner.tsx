@@ -19,8 +19,13 @@ import './LoadingSpinner.scss';
 
 const LoadingSpinner: React.FC = () => {
   return (
-    <div className="loading-spinner">
-      <div className="loading-spinner__circle"></div>
+    <div className="spinner-main">
+      <div className="loader-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
     </div>
   );
 };

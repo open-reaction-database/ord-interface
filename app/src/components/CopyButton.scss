@@ -16,28 +16,46 @@
 
 @import '../styles/vars.scss';
 
-.copy-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: $linkblue;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+.copy-button-main {
+  button {
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    column-gap: 0.25rem;
+    background-color: $linkblue;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    align-items: center;
+    transition: background-color 0.2s ease;
 
-  &:hover {
-    background-color: $hoverblue;
+    &:hover {
+      background-color: $hoverblue;
+    }
+    
+    i {
+      font-size: 1rem;
+    }
   }
 
-  &__icon {
-    font-size: 1rem;
-  }
+  #copy-notification {
+    position: fixed;
+    background-color: $darkgrey;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    z-index: 1000;
+    transform: translate(-50%, -100%);
+    margin-top: -0.5rem;
+    opacity: 1;
+    transition: opacity 0.25s ease;
 
-  &__text {
-    font-size: 0.875rem;
-    font-weight: 500;
+    &.fade-enter {
+      opacity: 0;
+    }
+
+    &.fade-enter-active {
+      opacity: 1;
+    }
   }
 }
