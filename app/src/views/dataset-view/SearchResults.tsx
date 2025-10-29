@@ -25,16 +25,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   const [selectedReactions, setSelectedReactions] = useState<string[]>([]);
   const [showDownloadResults, setShowDownloadResults] = useState(false);
 
-  const updateSelectedReactions = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    const checked = event.target.checked;
 
-    if (checked) {
-      setSelectedReactions(prev => [...prev, value]);
-    } else {
-      setSelectedReactions(prev => prev.filter(id => id !== value));
-    }
-  };
 
   const goToViewSelected = () => {
     // Store selected reactions in sessionStorage for navigation
@@ -88,20 +79,19 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </div>
               
               {entities.map((row: SearchResult) => (
-                <div key={row.reaction_id} className="search-results__reaction-wrapper">
-                  <input
-                    type="checkbox"
-                    value={row.reaction_id}
-                    checked={selectedReactions.includes(row.reaction_id)}
-                    onChange={updateSelectedReactions}
-                    className="search-results__checkbox"
-                  />
-                  <ReactionCard
-                    reaction={row}
-                    isSelectable={false}
-                    isSelected={selectedReactions.includes(row.reaction_id)}
-                  />
-                </div>
+                <ReactionCard
+                  key={row.reaction_id}
+                  reaction={row}
+                  isSelectable={true}
+                  isSelected={selectedReactions.includes(row.reaction_id)}
+                  onSelectionChange={(reactionId, isSelected) => {
+                    if (isSelected) {
+                      setSelectedReactions(prev => [...prev, reactionId]);
+                    } else {
+                      setSelectedReactions(prev => prev.filter(id => id !== reactionId));
+                    }
+                  }}
+                />
               ))}
             </>
           )}

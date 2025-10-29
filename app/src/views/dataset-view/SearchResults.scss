@@ -3,7 +3,7 @@
 
 .search-results {
   &__action-buttons {
-    margin: -2.5rem 0 1rem;
+    margin: -2.5rem 0 1rem; // bring button row inline with title without having to pass too much into EntityTable
     display: flex;
     justify-content: flex-end;
     column-gap: 0.5rem;
@@ -45,6 +45,7 @@
     bottom: 2rem;
     right: 6.5rem;
     z-index: 1000;
+    transition: opacity 0.25s ease-in-out;
   }
 
   &__view-selected-button {
