@@ -34,7 +34,7 @@ const FloatingModal: React.FC<FloatingModalProps> = ({
       <div className="modal-holder">
         <div className="modal-container">
           <div className="header">
-            <div className="title">{title}</div>
+            <div className="modal-title">{title}</div>
             <div className="close" onClick={onCloseModal}>&#10005;</div>
           </div>
           <div className="body">

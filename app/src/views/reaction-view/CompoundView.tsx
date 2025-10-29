@@ -182,7 +182,7 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
         >
           <div className="data">
             {rawData.identifiers?.map((identifier, index) => (
-              <pre key={index}>identifiers: {JSON.stringify(identifier)}</pre>
+              <pre key={index}>{`identifiers: ${JSON.stringify(identifier)}`}</pre>
             ))}
             {rawData.amount && <pre>amount: {JSON.stringify(rawData.amount)}</pre>}
             <pre>reaction_role: {rawData.reaction_role}</pre>
