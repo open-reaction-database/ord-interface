@@ -56,9 +56,15 @@ docker compose up
 
 #### Option 2: Local
 
+In your local conda environment
 ```shell
 cd ord_interface/api
 ORD_INTERFACE_TESTING=TRUE fastapi dev main.py --port=5000
+```
+
+In a separate terminal you will need to run a redis server for search functionality to work
+```shell
+redis-server
 ```
 
 ### 3. Set up and run the Vue SPA
