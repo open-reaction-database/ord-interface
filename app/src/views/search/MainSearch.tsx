@@ -68,16 +68,19 @@ const MainSearch: React.FC = () => {
     const urlQuery = location.search;
     
     try {
+      let currentTaskId = searchTaskId;
+      
       // If this is the first time we are attempting the search, set the search task ID.
-      if (searchTaskId == null) {
+      if (currentTaskId == null) {
         // Submit a search task to the server. This returns a GUID task ID.
         const taskres = await fetch(`/api/submit_query${urlQuery}`, { method: 'GET' });
         const taskId = await taskres.json();
         setSearchTaskId(taskId);
+        currentTaskId = taskId;
       }
       
       // Check the status of the search task.
-      const queryRes = await fetch(`/api/fetch_query_result?task_id=${searchTaskId}`, { method: 'GET' });
+      const queryRes = await fetch(`/api/fetch_query_result?task_id=${currentTaskId}`, { method: 'GET' });
       setSearchLoadStatus(queryRes);
       
       // If one of these codes, search is finished. Return the results or lack of results.
@@ -101,21 +104,19 @@ const MainSearch: React.FC = () => {
         setSearchResults(results);
         setLoading(false);
       } else if (queryRes?.status === 404) {
-        const taskId = searchTaskId;
         setSearchTaskId(null);
         if (searchPollingInterval) {
           clearInterval(searchPollingInterval);
           setSearchPollingInterval(null);
         }
-        throw new Error(`Error - Search task ID ${taskId} does not exist`);
+        throw new Error(`Error - Search task ID ${currentTaskId} does not exist`);
       } else if (queryRes?.status >= 500) {
-        const taskId = searchTaskId;
         setSearchTaskId(null);
         if (searchPollingInterval) {
           clearInterval(searchPollingInterval);
           setSearchPollingInterval(null);
         }
-        throw new Error(`Error - Search task ID ${taskId} failed due to server error`);
+        throw new Error(`Error - Search task ID ${currentTaskId} failed due to server error`);
       }
     } catch (e) {
       console.log(e);
@@ -179,6 +180,14 @@ const MainSearch: React.FC = () => {
   };
 
   useEffect(() => {
+    // Clear any existing task and interval when search parameters change
+    setSearchTaskId(null);
+    setSearchResults([]);
+    if (searchPollingInterval) {
+      clearInterval(searchPollingInterval);
+      setSearchPollingInterval(null);
+    }
+
     const fetchResults = async () => {
       // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
       await getSearchResults();
