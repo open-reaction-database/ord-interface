@@ -14,31 +14,21 @@
  * limitations under the License.
  */
 
-@use "./vars.scss" as vars;
+import React from 'react';
 
-.tabs {
-  display: flex;
-  column-gap: 0.5rem;
-  row-gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  
-  .tab {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    border: 1px solid vars.$medgrey;
-    cursor: pointer;
-    transition: 0.25s;
-    
-    &.selected {
-      background-color: vars.$linkblue;
-      color: white;
-      border-color: vars.$linkblue;
-      cursor: default;
-    }
-    
-    &.capitalize {
-      text-transform: capitalize;
-    }
-  }
+interface ObservationsViewProps {
+  observations: any[];
 }
+
+const ObservationsView: React.FC<ObservationsViewProps> = ({ observations }) => {
+  // TODO: Implement observations logic from Vue component
+  return (
+    <div className="observations-view">
+      <div>Observations View</div>
+      <div>Count: {observations?.length || 0}</div>
+      <div>TODO: Implement observations display</div>
+    </div>
+  );
+};
+
+export default ObservationsView;

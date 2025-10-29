@@ -23,6 +23,7 @@ import About from './views/About';
 import MainBrowse from './views/browse/MainBrowse';
 import MainSearch from './views/search/MainSearch';
 import MainDatasetView from './views/dataset-view/MainDatasetView';
+import MainReactionView from './views/reaction-view/MainReactionView';
 import './App.scss';
 
 const AppContent: React.FC = () => {
@@ -41,6 +42,7 @@ const AppContent: React.FC = () => {
         <Route path="/browse" element={<MainBrowse />} />
         <Route path="/search" element={<MainSearch />} />
         <Route path="/dataset/:datasetId" element={<MainDatasetView />} />
+        <Route path="/reaction/:reactionId" element={<MainReactionView />} />
       </Routes>
       {!noHeaderFooter && <MainFooter />}
     </div>

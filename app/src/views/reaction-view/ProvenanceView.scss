@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-@use "./vars.scss" as vars;
+.provenance-view {
+  .title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
 
-.tabs {
-  display: flex;
-  column-gap: 0.5rem;
-  row-gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  
-  .tab {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    border: 1px solid vars.$medgrey;
-    cursor: pointer;
-    transition: 0.25s;
-    
-    &.selected {
-      background-color: vars.$linkblue;
-      color: white;
-      border-color: vars.$linkblue;
-      cursor: default;
-    }
-    
-    &.capitalize {
-      text-transform: capitalize;
+  .details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 1rem;
+    row-gap: 0.5rem;
+
+    &.experimenter {
+      grid-template-columns: repeat(4, auto) 1fr;
+
+      .label {
+        font-weight: 700;
+      }
     }
   }
 }

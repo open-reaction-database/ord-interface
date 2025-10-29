@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-@use "./vars.scss" as vars;
+import React from 'react';
 
-.tabs {
-  display: flex;
-  column-gap: 0.5rem;
-  row-gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  
-  .tab {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    border: 1px solid vars.$medgrey;
-    cursor: pointer;
-    transition: 0.25s;
-    
-    &.selected {
-      background-color: vars.$linkblue;
-      color: white;
-      border-color: vars.$linkblue;
-      cursor: default;
-    }
-    
-    &.capitalize {
-      text-transform: capitalize;
-    }
-  }
+interface OutcomesViewProps {
+  outcome: any;
 }
+
+const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
+  // TODO: Implement outcomes logic from Vue component
+  return (
+    <div className="outcomes-view">
+      <div>Outcomes View</div>
+      {outcome && (
+        <div>
+          <div>Products: {outcome.productsList?.length || 0}</div>
+          <div>TODO: Implement full outcomes display with measurements, yields, etc.</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default OutcomesView;

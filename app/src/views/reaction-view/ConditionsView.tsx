@@ -14,31 +14,22 @@
  * limitations under the License.
  */
 
-@use "./vars.scss" as vars;
+import React from 'react';
 
-.tabs {
-  display: flex;
-  column-gap: 0.5rem;
-  row-gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  
-  .tab {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    border: 1px solid vars.$medgrey;
-    cursor: pointer;
-    transition: 0.25s;
-    
-    &.selected {
-      background-color: vars.$linkblue;
-      color: white;
-      border-color: vars.$linkblue;
-      cursor: default;
-    }
-    
-    &.capitalize {
-      text-transform: capitalize;
-    }
-  }
+interface ConditionsViewProps {
+  conditions: any;
+  display: string;
 }
+
+const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) => {
+  // TODO: Implement complex conditions logic from Vue component
+  return (
+    <div className="conditions-view">
+      <div>Conditions View - {display}</div>
+      <div>TODO: Implement conditions display for {display}</div>
+      {conditions && <div>Conditions data present</div>}
+    </div>
+  );
+};
+
+export default ConditionsView;
