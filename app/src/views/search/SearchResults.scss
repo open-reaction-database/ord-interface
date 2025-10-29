@@ -1,0 +1,124 @@
+/**
+ * Copyright 2023 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import "../../styles/vars";
+@import "../../styles/transition";
+
+.search-results-main {
+  .action-button-holder {
+    margin: -2.5rem 0 1rem; // bring button row inline with title without having to pass too much into EntityTable
+    display: flex;
+    justify-content: flex-end;
+    column-gap: 0.5rem;
+  }
+
+  .reaction-container {
+    text-decoration: none;
+
+    .row {
+      background-color: white;
+      border-radius: 0.25rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      transition: 0.25s;
+      border: 4px solid white;
+
+      &:hover {
+        box-shadow: 0 0 5px $darkgrey;
+      }
+
+      .select {
+        input, label {
+          cursor: pointer;
+        }
+      }
+
+      .reaction-table {
+        color: black;
+        overflow-x: wrap;
+      }
+
+      .info {
+        display: grid;
+        grid-template-columns: repeat(2, 50%);
+        row-gap: 0.5rem;
+        column-gap: 1rem;
+        margin-top: 1rem;
+
+        .col.full {
+          grid-column: 1/3;
+
+          button {
+            font-size: 1.2rem;
+          }
+        }
+
+        .col {
+          * {
+            margin-top: 0.5rem;
+          }
+        }
+
+        .smile {
+          display: flex;
+          column-gap: 0.5rem;
+          align-items: center;
+          margin-top: 0.25rem;
+
+          .value {
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+      }
+
+      &.selected {
+        border-color: $linkblue;
+      }
+    }
+  }
+
+  .view-selected-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 6.5rem;
+
+    .view-selected-button {
+      padding: 0.5rem 1rem;
+      color: white;
+      background-color: $linkblue;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      box-shadow: 0 0 5px $darkgrey;
+      animation: bounce 5s infinite ease-in-out;
+
+      @keyframes bounce {
+        0%, 20% {
+          transform: translateY(0);
+        }
+        10% {
+          transform: translateY(-10px);
+        }
+      }
+    }
+  }
+
+  @media (max-width: 1000px) {
+    margin-top: 2.5rem;
+  }
+}
