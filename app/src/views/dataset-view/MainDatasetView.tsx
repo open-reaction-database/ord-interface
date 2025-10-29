@@ -137,34 +137,18 @@ const MainDatasetView: React.FC = () => {
             style={{ display: isCollapsed ? 'block' : 'flex' }}
           >
             <ChartView
-              uniqueId="reactants"
-              title="Most Common Reactants"
-              apiCall="dataset_histogram"
+              uniqueId="reactantsFrequency"
+              title="Frequency of Reactants"
+              apiCall="input_stats"
               role="reactant"
               isCollapsed={isCollapsed}
             />
             
             <ChartView
-              uniqueId="reagents"
-              title="Most Common Reagents"
-              apiCall="dataset_histogram"
-              role="reagent"
-              isCollapsed={isCollapsed}
-            />
-            
-            <ChartView
-              uniqueId="products"
-              title="Most Common Products"
-              apiCall="dataset_histogram"
+              uniqueId="productsFrequency"
+              title="Frequency of Products"
+              apiCall="product_stats"
               role="product"
-              isCollapsed={isCollapsed}
-            />
-            
-            <ChartView
-              uniqueId="solvents"
-              title="Most Common Solvents"
-              apiCall="dataset_histogram"
-              role="solvent"
               isCollapsed={isCollapsed}
             />
           </div>
