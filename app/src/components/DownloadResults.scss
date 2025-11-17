@@ -16,86 +16,33 @@
 
 @use "../styles/vars.scss" as vars;
 
-.download-results {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &__overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
-  &__modal {
-    position: relative;
-    background-color: white;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-
-  &__title {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-
-  &__close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &__content {
-    p {
-      margin-bottom: 1.5rem;
-      color: #666;
+.download-results-main {
+  .download-body {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 50% auto 1fr;
+    
+    * {
+      margin: auto;
+      width: fit-content;
     }
-  }
-
-  &__buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-
-    button {
-      padding: 0.75rem 1.5rem;
-      background-color: vars.$linkblue;
-      color: white;
-      border: none;
-      border-radius: 0.25rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-
-      &:hover {
-        background-color: vars.$hoverblue;
+    
+    .title {
+      font-size: 1.5rem;
+    }
+    
+    .options {
+      label {
+        margin-right: 0.5rem;
       }
+      
+      select {
+        min-width: 7rem;
+      }
+    }
+    
+    .download {
+      margin-top: 2rem;
     }
   }
 }
