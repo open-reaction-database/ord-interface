@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SearchOptions from './SearchOptions';
 import SearchResults from './SearchResults';
@@ -57,18 +57,29 @@ const MainSearch: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [searchLoadStatus, setSearchLoadStatus] = useState<Response | null>(null);
   const [searchPollingInterval, setSearchPollingInterval] = useState<number | null>(null);
   const [searchTaskId, setSearchTaskId] = useState<string | null>(null);
+  const searchPollingIntervalRef = useRef<number | null>(null);
+  const searchTaskIdRef = useRef<string | null>(null);
+
+  // Check if there are any search parameters
+  const hasSearchParams = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    // Check for any meaningful search parameters (excluding just 'limit')
+    const meaningfulParams = ['component', 'dataset_id', 'doi', 'reaction_id', 'reaction_smarts', 
+                              'min_yield', 'max_yield', 'min_conversion', 'max_conversion'];
+    return meaningfulParams.some(param => params.has(param));
+  }, [location.search]);
 
   const getSearchResults = useCallback(async () => {
     setLoading(true);
     const urlQuery = location.search;
     
     try {
-      let currentTaskId = searchTaskId;
+      let currentTaskId = searchTaskIdRef.current;
       
       // If this is the first time we are attempting the search, set the search task ID.
       if (currentTaskId == null) {
@@ -76,6 +87,7 @@ const MainSearch: React.FC = () => {
         const taskres = await fetch(`/api/submit_query${urlQuery}`, { method: 'GET' });
         const taskId = await taskres.json();
         setSearchTaskId(taskId);
+        searchTaskIdRef.current = taskId;
         currentTaskId = taskId;
       }
       
@@ -86,9 +98,11 @@ const MainSearch: React.FC = () => {
       // If one of these codes, search is finished. Return the results or lack of results.
       if (queryRes?.status === 200) {
         setSearchTaskId(null);
-        if (searchPollingInterval) {
-          clearInterval(searchPollingInterval);
+        searchTaskIdRef.current = null;
+        if (searchPollingIntervalRef.current) {
+          clearInterval(searchPollingIntervalRef.current);
           setSearchPollingInterval(null);
+          searchPollingIntervalRef.current = null;
         }
         
         const searchResultsData = await queryRes.json();
@@ -103,27 +117,35 @@ const MainSearch: React.FC = () => {
         
         setSearchResults(results);
         setLoading(false);
+        return queryRes.status;
       } else if (queryRes?.status === 404) {
         setSearchTaskId(null);
-        if (searchPollingInterval) {
-          clearInterval(searchPollingInterval);
+        searchTaskIdRef.current = null;
+        if (searchPollingIntervalRef.current) {
+          clearInterval(searchPollingIntervalRef.current);
           setSearchPollingInterval(null);
+          searchPollingIntervalRef.current = null;
         }
         throw new Error(`Error - Search task ID ${currentTaskId} does not exist`);
       } else if (queryRes?.status >= 500) {
         setSearchTaskId(null);
-        if (searchPollingInterval) {
-          clearInterval(searchPollingInterval);
+        searchTaskIdRef.current = null;
+        if (searchPollingIntervalRef.current) {
+          clearInterval(searchPollingIntervalRef.current);
           setSearchPollingInterval(null);
+          searchPollingIntervalRef.current = null;
         }
         throw new Error(`Error - Search task ID ${currentTaskId} failed due to server error`);
       }
+      
+      return queryRes?.status;
     } catch (e) {
       console.log(e);
       setSearchResults([]);
       setLoading(false);
+      return null;
     }
-  }, [searchTaskId, searchPollingInterval, location.search]);
+  }, [location.search]);
 
   const updateSearchOptions = (options: SearchOptionsData) => {
     const searchParams = new URLSearchParams();
@@ -182,42 +204,63 @@ const MainSearch: React.FC = () => {
   useEffect(() => {
     // Clear any existing task and interval when search parameters change
     setSearchTaskId(null);
+    searchTaskIdRef.current = null;
     setSearchResults([]);
-    if (searchPollingInterval) {
-      clearInterval(searchPollingInterval);
+    if (searchPollingIntervalRef.current) {
+      clearInterval(searchPollingIntervalRef.current);
       setSearchPollingInterval(null);
+      searchPollingIntervalRef.current = null;
+    }
+
+    // Only fetch results if there are search parameters
+    if (!hasSearchParams) {
+      setLoading(false);
+      return;
     }
 
     const fetchResults = async () => {
       // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
-      await getSearchResults();
+      const status = await getSearchResults();
       
-      if (searchLoadStatus?.status === 202 && searchPollingInterval === null) {
+      // If status is 202, set up polling
+      if (status === 202) {
+        // Clear any existing interval first
+        if (searchPollingIntervalRef.current) {
+          clearInterval(searchPollingIntervalRef.current);
+        }
+        
         const interval = setInterval(() => {
           getSearchResults();
         }, 1000);
+        
         setSearchPollingInterval(interval);
+        searchPollingIntervalRef.current = interval;
         
         // Set timeout to stop polling after 2 minutes
         setTimeout(() => {
-          clearInterval(interval);
-          setSearchTaskId(null);
-          setLoading(false);
+          if (searchPollingIntervalRef.current === interval) {
+            clearInterval(interval);
+            setSearchTaskId(null);
+            searchTaskIdRef.current = null;
+            setLoading(false);
+            setSearchPollingInterval(null);
+            searchPollingIntervalRef.current = null;
+          }
         }, 120000);
       }
     };
 
     fetchResults();
-  }, [location.search]); // Re-run when search parameters change
+  }, [location.search, getSearchResults, hasSearchParams]); // Re-run when search parameters change
 
   // Cleanup interval on unmount
   useEffect(() => {
     return () => {
-      if (searchPollingInterval) {
-        clearInterval(searchPollingInterval);
+      if (searchPollingIntervalRef.current) {
+        clearInterval(searchPollingIntervalRef.current);
       }
     };
-  }, [searchPollingInterval]);
+  }, []);
 
   return (
     <div id="search-main">
@@ -234,15 +277,20 @@ const MainSearch: React.FC = () => {
       </div>
       
       <div className="search-results">
-        {!loading && searchResults?.length > 0 && (
+        {!hasSearchParams && (
+          <div className="no-results">
+            <div className="title">Enter search criteria using the filters and options panel, then click Search.</div>
+          </div>
+        )}
+        {hasSearchParams && !loading && searchResults?.length > 0 && (
           <SearchResults searchResults={searchResults} />
         )}
-        {!loading && !searchResults?.length && (
+        {hasSearchParams && !loading && !searchResults?.length && (
           <div className="no-results">
             <div className="title">No results. Adjust the filters and options and search again.</div>
           </div>
         )}
-        {loading && (
+        {hasSearchParams && loading && (
           <div className="loading">
             <LoadingSpinner />
           </div>
