@@ -123,41 +123,40 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
     return `1fr repeat(${component?.amount ? 3 : 2}, auto)`;
   }, [component?.amount]);
 
-  const getCompoundSVG = async (component: any) => {
-    if (!component?.identifiersList?.length) return;
-    
-    const smilesIdentifier = component.identifiersList.find((identifier: any) => identifier.type === 2); // type 2 is SMILES
-    if (!smilesIdentifier) return;
-    
-    const compoundStr = smilesIdentifier.value;
+  const smilesValue = useMemo(() => {
+    if (!component?.identifiersList?.length) return null;
+    const smilesIdentifier = component.identifiersList.find((identifier: any) => identifier.type === 2);
+    return smilesIdentifier?.value || null;
+  }, [component?.identifiersList]);
+
+  useEffect(() => {
+    if (!smilesValue) return;
     
     // prep compound
     const compound = new reaction_pb.Compound();
     const identifier = compound.addIdentifiers();
-    identifier.setValue(compoundStr);
+    identifier.setValue(smilesValue);
     identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
     
-    try {
-      const response = await fetch('/api/compound_svg', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-protobuf',
-        },
-        body: compound.serializeBinary() as BodyInit,
-      });
-      
-      const result = await response.json();
-      setCompoundSVG(result);
-    } catch (error) {
-      console.error('Error fetching compound SVG:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (component) {
-      getCompoundSVG(component);
-    }
-  }, [component]);
+    const fetchSVG = async () => {
+      try {
+        const response = await fetch('/api/compound_svg', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-protobuf',
+          },
+          body: compound.serializeBinary() as BodyInit,
+        });
+        
+        const result = await response.json();
+        setCompoundSVG(result);
+      } catch (error) {
+        console.error('Error fetching compound SVG:', error);
+      }
+    };
+    
+    fetchSVG();
+  }, [smilesValue]);
 
   return (
     <div className="compound-view" style={{ gridTemplateColumns: gridColumns }}>

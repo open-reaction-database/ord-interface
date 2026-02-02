@@ -100,7 +100,7 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
   };
 
   const handleViewDetails = () => {
-    navigate(`/reaction/${reaction.reaction_id}`);
+    navigate(`/id/${reaction.reaction_id}`);
   };
 
   useEffect(() => {

@@ -198,14 +198,27 @@ const MainReactionView: React.FC = () => {
       if (reactionData) {
         setReaction(reactionData);
         setReactionSummary(summaryData);
-        setNavItems(setNavItemsFunction());
+        // Calculate nav items directly instead of using the callback
+        let items = ['summary', 'identifiers', 'inputs'];
+        const optionals = ['setup', 'conditions', 'notes', 'observations', 'workups'];
+        
+        optionals.forEach(item => {
+          if (reactionData[item] || reactionData[`${item}List`]?.length) {
+            items.push(item);
+          }
+        });
+        
+        const lastItems = ['outcomes', 'provenance', 'full-record'];
+        items.push(...lastItems);
+        
+        setNavItems(items);
       }
       
       setLoading(false);
     };
     
     fetchData();
-  }, [reactionId, getReactionData, getReactionSummary, setNavItemsFunction]);
+  }, [reactionId, getReactionData, getReactionSummary]);
 
   // Scroll listener to highlight active nav item
   useEffect(() => {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ChartView from './ChartView';
@@ -43,23 +43,27 @@ const MainDatasetView: React.FC = () => {
   const [datasetData, setDatasetData] = useState<Dataset | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [searchTaskId, setSearchTaskId] = useState<string | null>(null);
+  const searchTaskIdRef = useRef<string | null>(null);
+  const pollingTimeoutRef = useRef<number | null>(null);
+  const isPollingRef = useRef<boolean>(false);
 
   const expandOrShrink = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  const getSearchResults = async () => {
+  const getSearchResults = useCallback(async () => {
     if (!datasetId) return;
     
     setLoading(true);
     try {
       // If this is the first time we are attempting the search, set the search task ID.
-      let taskId = searchTaskId;
+      let taskId = searchTaskIdRef.current;
       if (taskId === null) {
         // Submit a search task to the server. This returns a GUID task ID.
         const taskRes = await fetch(`/api/submit_query?dataset_id=${datasetId}&limit=100`, {method: "GET"});
         taskId = await taskRes.json();
         setSearchTaskId(taskId);
+        searchTaskIdRef.current = taskId;
       }
       
       // Check the status of the search task.
@@ -68,6 +72,14 @@ const MainDatasetView: React.FC = () => {
       if (queryRes.status === 200) {
         const searchResultsData = await queryRes.json();
         setSearchTaskId(null);
+        searchTaskIdRef.current = null;
+        isPollingRef.current = false;
+        
+        // Clear any pending polling timeout
+        if (pollingTimeoutRef.current) {
+          clearTimeout(pollingTimeoutRef.current);
+          pollingTimeoutRef.current = null;
+        }
         
         // Deserialize the results and unpack protobuf for each reaction
         const processedResults = searchResultsData.map((reaction: SearchResult) => {
@@ -80,20 +92,43 @@ const MainDatasetView: React.FC = () => {
         setLoading(false);
       } else if (queryRes.status === 400) {
         setSearchTaskId(null);
+        searchTaskIdRef.current = null;
+        isPollingRef.current = false;
+        if (pollingTimeoutRef.current) {
+          clearTimeout(pollingTimeoutRef.current);
+          pollingTimeoutRef.current = null;
+        }
         throw new Error(`Error - Search task ID ${taskId} does not exist`);
       } else if (queryRes.status === 500) {
         setSearchTaskId(null);
+        searchTaskIdRef.current = null;
+        isPollingRef.current = false;
+        if (pollingTimeoutRef.current) {
+          clearTimeout(pollingTimeoutRef.current);
+          pollingTimeoutRef.current = null;
+        }
         throw new Error(`Error - Search task ID ${taskId} failed due to server error`);
       } else if (queryRes.status === 202) {
         // Search is still in progress, we'll poll again
-        setTimeout(() => getSearchResults(), 1000);
+        if (!isPollingRef.current) {
+          isPollingRef.current = true;
+          pollingTimeoutRef.current = window.setTimeout(() => {
+            pollingTimeoutRef.current = null;
+            getSearchResults();
+          }, 1000);
+        }
       }
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
       setLoading(false);
+      isPollingRef.current = false;
+      if (pollingTimeoutRef.current) {
+        clearTimeout(pollingTimeoutRef.current);
+        pollingTimeoutRef.current = null;
+      }
     }
-  };
+  }, [datasetId]);
 
   // Fetch dataset metadata
   useEffect(() => {
@@ -110,10 +145,29 @@ const MainDatasetView: React.FC = () => {
 
   // Initial search results fetch
   useEffect(() => {
+    // Clear any existing polling when datasetId changes
+    if (pollingTimeoutRef.current) {
+      clearTimeout(pollingTimeoutRef.current);
+      pollingTimeoutRef.current = null;
+    }
+    isPollingRef.current = false;
+    setSearchTaskId(null);
+    searchTaskIdRef.current = null;
+    setSearchResults([]);
+    
     if (datasetId) {
       getSearchResults();
     }
-  }, [datasetId]);
+    
+    // Cleanup on unmount or when datasetId changes
+    return () => {
+      if (pollingTimeoutRef.current) {
+        clearTimeout(pollingTimeoutRef.current);
+        pollingTimeoutRef.current = null;
+      }
+      isPollingRef.current = false;
+    };
+  }, [datasetId, getSearchResults]);
 
   return (
     <div id="dataset-main">
