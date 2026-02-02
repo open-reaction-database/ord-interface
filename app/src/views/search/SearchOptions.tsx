@@ -175,19 +175,44 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
   const setDefaultValues = useCallback(() => {
     const q = defaultQuery;
     
+    // Reset reagent options first, then rebuild from URL
+    const initialReagentOptions: ReagentOptions = {
+      reactants: [],
+      products: [],
+      matchMode: 'exact',
+      useStereochemistry: false,
+      similarityThreshold: 0.5,
+    };
+    
     // reagent options
     if (q.component?.length) {
-      if (Array.isArray(q.component)) {
-        q.component.forEach((comp: string) => addCompToOptions(comp));
-      } else {
-        addCompToOptions(q.component);
-      }
-      setReagentOptions(prev => ({
-        ...prev,
-        useStereochemistry: q.use_stereochemistry === 'true' || false,
-        similarityThreshold: Number(q.similarity) || 0.5,
-      }));
+      const components = Array.isArray(q.component) ? q.component : [q.component];
+      
+      components.forEach((comp: string) => {
+        const compArray = comp.split(';');
+        const compType = compArray[1] === 'input' ? 'reactants' : 'products';
+        const matchMode = compArray[2] || 'exact';
+        const component: ReagentComponent = {
+          smileSmart: compArray[0].replaceAll('%3D', '='),
+          source: compArray[1],
+          matchMode,
+        };
+        
+        initialReagentOptions[compType].push(component);
+        // Use the last matchMode found (or first if none specified)
+        if (matchMode) {
+          initialReagentOptions.matchMode = matchMode;
+        }
+      });
+      
+      initialReagentOptions.useStereochemistry = q.use_stereochemistry === 'true' || false;
+      initialReagentOptions.similarityThreshold = Number(q.similarity) || 0.5;
+      
+      setReagentOptions(initialReagentOptions);
       setShowReagentOptions(true);
+    } else {
+      // If no components in URL, reset to defaults
+      setReagentOptions(initialReagentOptions);
     }
 
     // dataset options
