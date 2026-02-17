@@ -80,7 +80,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          dockerfile: ord_interface/Dockerfile
+          file: ord_interface/Dockerfile
           push: true
           tags: docker.pkg.github.com/open-reaction-database/ord-interface/interface-cache
           cache-from: type=gha
