@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Populates a PostgreSQL database containing the ORD (for local testing)."""
+
 import logging
 
 from ord_schema.orm import database
