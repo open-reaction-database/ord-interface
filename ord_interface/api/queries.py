@@ -39,6 +39,7 @@ For example, a reaction query might have the following predicates:
 
 Note that a predicate is matched if it applies to _any_ input/output.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
