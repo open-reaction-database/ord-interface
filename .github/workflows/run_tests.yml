@@ -82,7 +82,7 @@ jobs:
           context: .
           file: ord_interface/Dockerfile
           push: true
-          tags: docker.pkg.github.com/open-reaction-database/ord-interface/interface-cache
+          tags: open-reaction-database/ord-interface
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Install ord-interface
