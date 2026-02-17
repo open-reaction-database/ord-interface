@@ -79,10 +79,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
           file: ord_interface/Dockerfile
           push: true
-          tags: open-reaction-database/ord-interface
+          tags: open-reaction-database/ord-interface:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Install ord-interface
