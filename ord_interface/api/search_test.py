@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Tests for ord_interface.api.search."""
+
 import gzip
 
 import pytest

@@ -74,10 +74,8 @@ jobs:
       - uses: actions/setup-node@v3
       - name: actions-setup-redis
         uses: shogo82148/actions-setup-redis@v1.35.0
-      - name: Setup docker cache
-        run: |
-          docker login docker.pkg.github.com -u "${GITHUB_ACTOR}" --password="${{ secrets.GITHUB_TOKEN }}"
-          docker pull "${CACHE_TARGET}"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Install ord-interface
         run: |
           python -m pip install --upgrade pip
@@ -90,10 +88,4 @@ jobs:
       - name: Run tests
         run: |
           cd "${GITHUB_WORKSPACE}/ord_interface"
-          ./run_tests.sh "--cache-from=${CACHE_TARGET}"
-      - name: Update docker cache
-        run: |
-          docker tag openreactiondatabase/ord-interface "${CACHE_TARGET}"
-          docker push "${CACHE_TARGET}"
-        # NOTE(kearnes): Actions in forks cannot update the cache.
-        if: ${{ ! github.event.pull_request.head.repo.fork }}
+          ./run_tests.sh
