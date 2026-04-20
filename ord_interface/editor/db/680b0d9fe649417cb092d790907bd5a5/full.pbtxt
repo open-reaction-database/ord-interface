@@ -48,6 +48,10 @@ reactions {
             format: "txt"
           }
         }
+          texture {
+          type: POWDER
+          details: "121"
+        }
       }
       crude_components {
         reaction_id: "15.25"
@@ -89,6 +93,10 @@ reactions {
         value: 23.0
         precision: 24.0
         units: FAHRENHEIT
+      }
+      texture {
+        type: POWDER
+        details: "123"
       }
     }
   }

@@ -58,6 +58,8 @@ const Data = goog.require('proto.ord.Data');
 const ProductCompound = goog.require('proto.ord.ProductCompound');
 const ReactionRoleType =
     goog.require('proto.ord.ReactionRole.ReactionRoleType');
+const Texture = goog.require('proto.ord.Texture');
+const TextureType = goog.require('proto.ord.Texture.TextureType');
 
 /**
  * Adds and populates the form's fields describing multiple compounds for a
@@ -119,6 +121,12 @@ function loadIntoCompound(node, compound) {
     const featureNode = addFeature(node);
     loadFeature(featureNode, name, feature);
   });
+
+  const texture = compound.getTexture();
+  if (texture) {
+    utils.setSelector($('.component_texture_type', node), texture.getType());
+    $('.component_texture_details', node).text(texture.getDetails());
+  }
 }
 
 /**
@@ -244,6 +252,16 @@ function unloadCompound(node) {
       unloadFeature(featureNode, featuresMap);
     }
   });
+
+  const texture = new Texture();
+  const textureType =
+      utils.getSelectorText($('.component_texture_type', node)[0]);
+  texture.setType(TextureType[textureType]);
+  texture.setDetails(
+      asserts.assertString($('.component_texture_details', node).text()));
+  if (!utils.isEmptyMessage(texture)) {
+    compound.setTexture(texture);
+  }
 
   return compound;
 }
