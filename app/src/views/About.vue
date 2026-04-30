@@ -27,7 +27,7 @@ export default {
     class="container"
   >
     <div class="row mt-5">
-      <div class="col-3 border-top pt-3">
+      <div class="col-3 pt-3">
         <h3>About</h3>
       </div>
       <div class="col-9 p-3">
@@ -68,7 +68,7 @@ export default {
       <div class="col-3 border-top pt-3">
         <h3>Publications and Media</h3>
       </div>
-      <div class="col-9 p-3">
+      <div class="col-9 border-top p-3">
         <h5>Journal Articles</h5>
         <ul>
           <li>
@@ -119,7 +119,7 @@ export default {
       <div class="col-3 border-top pt-3">
         <h3>Leadership</h3>
       </div>
-      <div class="col-9 p-3">
+      <div class="col-9 border-top p-3">
         <h5>Governing Committee</h5>
         <div class="row">
           <div class="col-6">
@@ -172,7 +172,7 @@ export default {
       <div class="col-3 border-top pt-3">
         <h3>Support</h3>
       </div>
-      <div class="col-9 p-3">
+      <div class="col-9 border-top p-3">
         <p>We gratefully acknowledge support from:</p>
         <ul>
           <li>Google</li>
@@ -186,9 +186,11 @@ export default {
 </template>
 
 <style lang="sass" scoped>
+@import '@/styles/vars'
 #about
   margin-top: 2rem
   background-color: white
   padding: 0 2rem
   border-radius: 0.5rem
+  border: 1px solid $color-border-1
 </style>
