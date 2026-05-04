@@ -55,7 +55,7 @@ jobs:
         shell: bash -l {0}
         run: |
           coverage erase
-          pytest -vv --cov=ord_interface --durations=20 --ignore=ord_interface/editor
+          pytest -vv --cov=ord_interface --durations=20
           coverage xml
       - uses: codecov/codecov-action@v1
 
@@ -64,8 +64,7 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     # NOTE(skearnes): Docker is not supported on macOS GitLab runners.
-    # NOTE(skearnes): ubuntu-latest AppArmor doesn't play nicely with puppeteer.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -81,10 +80,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install wheel
           python -m pip install .[tests]
-      - name: Install non-python test dependencies
-        run: |
-          cd "${GITHUB_WORKSPACE}/ord_interface"
-          npm install puppeteer
       - name: Run tests
         run: |
           cd "${GITHUB_WORKSPACE}/ord_interface"

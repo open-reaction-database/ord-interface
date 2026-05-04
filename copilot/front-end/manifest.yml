@@ -27,7 +27,7 @@ http:
   path: '/'
   # You can specify a custom health check path. The default is "/".
   healthcheck:
-    path: '/editor/healthcheck'
+    path: '/'
     success_codes: '200,302'
 
 # Configuration for your containers and service.
@@ -50,8 +50,6 @@ count:          # Number of tasks that should be running in your service.
   response_time: 2s
 
 secrets:
-  GH_CLIENT_ID: /copilot/ord-editor/secrets/GH_CLIENT_ID
-  GH_CLIENT_SECRET: /copilot/ord-editor/secrets/GH_CLIENT_SECRET
   POSTGRES_HOST: /copilot/ord-interface/secrets/POSTGRES_HOST
   POSTGRES_USER: /copilot/ord-interface/secrets/POSTGRES_USER
   POSTGRES_PASSWORD: /copilot/ord-interface/secrets/POSTGRES_PASSWORD

@@ -17,11 +17,7 @@ set -e
 
 set -x
 ./build_test_database.sh
-ARCH="x86_64"
-if [[ "$(uname -p)" =~ "arm" ]]; then
-  ARCH="aarch_64"
-fi
-docker build -f Dockerfile -t openreactiondatabase/ord-interface .. --build-arg="ARCH=${ARCH}" "$@"
+docker build -f Dockerfile -t openreactiondatabase/ord-interface .. "$@"
 docker compose up --detach
 set +x
 
@@ -41,7 +37,6 @@ status=0
 # Run tests (only the ones that depend on the running app; not those that use testing.postgresql).
 ORD_INTERFACE_POSTGRES='postgresql://postgres:postgres@localhost:5432/ord?client_encoding=utf-8' \
   pytest -vv --ignore=api/queries_test.py || status=1
-node editor/js/test.js || status=1
 
 # Shut down the containers.
 docker compose down
