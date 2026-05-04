@@ -43,3 +43,6 @@ __pycache__
 
 # VSCode.
 .vscode/
+
+# Redis snapshot file.
+dump.rdb
