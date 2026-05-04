@@ -42,7 +42,6 @@ if __name__ == "__main__":
         install_requires=[
             "docopt>=0.6.2",
             "fastapi",
-            "flask>=1.1.2",
             "gunicorn",
             "jinja2>=2.0.0",
             "numpy<2",
@@ -51,7 +50,6 @@ if __name__ == "__main__":
             "protobuf==4.22.3",
             "psycopg[binary,pool]>=3",
             "psycopg2-binary>=2.8.5",
-            "pygithub>=1.51",
             "rdkit>=2021.9.5",
             "redis[hiredis]",
             "requests>=2.24.0",

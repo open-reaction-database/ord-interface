@@ -33,12 +33,6 @@ while [ $? -ne 0 ]; do
 done
 set -e
 
-# Editor.
-cd editor
-psql -p 5432 -h localhost -U postgres -f schema.sql
-python py/migrate.py
-cd ..
-
 # Client.
 psql -p 5432 -h localhost -U postgres -c 'CREATE DATABASE ord;'
 python client/build_database.py

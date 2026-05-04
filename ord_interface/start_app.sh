@@ -20,15 +20,6 @@ set -e
 # Start nginx server.
 nginx
 
-# Start flask app.
-LOG_FORMAT='FLASK %(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
-gunicorn ord_interface.interface:app \
-  --bind unix:/run/flask.sock \
-  --workers 2 \
-  --access-logfile - \
-  --access-logformat "${LOG_FORMAT}" \
-  --daemon
-
 # Start fastapi app.
 LOG_FORMAT='FASTAPI %(t)s %({user-id}o)s %(U)s %(s)s %(L)s %(b)s %(f)s "%(r)s" "%(a)s"'
 gunicorn ord_interface.api.main:app \

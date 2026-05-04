@@ -13,9 +13,8 @@ Web interface and api for the Open Reaction Database
       - **/browse** - Main browse page of the different reaction sets
       - **/reaction-view** - Display of a single reaction from search results
       - **/search** - Search interface and results
-- **/ord_interface** - Contains the Flask app API and legacy interface
-  - **/client** - endpoints for the browse and search functionality
-  - **/editor** - endpoints for the reaction submission functionality
+- **/ord_interface** - Contains the FastAPI server
+  - **/api** - endpoints for the browse and search functionality
   - **/visualization** - helper functions for reaction and molecule visuals
 
 ## Key Caveats / Constraints
@@ -49,7 +48,6 @@ pip install -e '.[tests]'
 # you will need Docker installed on your computer first
 cd ord_interface
 ./build_test_database.sh
-# If you are running on Apple silicon, append `--build-arg="ARCH=aarch_64"` to the next command.
 docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
 docker compose up
 ```
