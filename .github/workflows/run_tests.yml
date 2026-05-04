@@ -64,7 +64,7 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     # NOTE(skearnes): Docker is not supported on macOS GitLab runners.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
