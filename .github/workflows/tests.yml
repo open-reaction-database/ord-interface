@@ -86,4 +86,4 @@ jobs:
       - name: Run tests
         run: |
           cd "${GITHUB_WORKSPACE}/ord_interface"
-          ./run_tests.sh
+          uv run ./run_tests.sh
