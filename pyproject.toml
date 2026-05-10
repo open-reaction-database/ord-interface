@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ord-interface"
 version = "0.1.0"
@@ -51,8 +58,8 @@ dev = [
     "ty>=0.0.28",
 ]
 
-[tool.uv]
-package = false
+[tool.setuptools.packages.find]
+include = ["ord_interface*"]
 
 [tool.ruff]
 line-length = 120
