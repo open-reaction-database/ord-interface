@@ -20,7 +20,7 @@ import gzip
 import json
 import os
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from typing import Any, cast
@@ -91,7 +91,7 @@ async def get_redis() -> AsyncIterator[Redis]:
     ssl = os.environ.get("REDIS_SSL", "0") == "1"
     async with Redis(host=host, port=port, ssl=ssl) as client:
         # redis.asyncio stubs return Awaitable[bool] | bool from ping(); the runtime is always awaitable.
-        if not await client.ping():  # ty: ignore[invalid-await]
+        if not await cast(Awaitable[bool], client.ping()):
             raise RuntimeError(f"Failed to connect to Redis server {host}:{port} ({ssl=})")
         logger.debug(f"Connected to Redis server {host}:{port} ({ssl=})")
         yield client

@@ -41,7 +41,6 @@ dependencies = [
     "rdkit>=2021.9.5",
     "redis[hiredis]",
     "requests>=2.24.0",
-    "testing-postgresql",
     "uvicorn[standard]",
 ]
 
@@ -54,6 +53,7 @@ dev = [
     "pytest-cov>=3.0.0",
     "ruff>=0.9.9",
     "tenacity",
+    "testing-postgresql",
     "testing.redis",
     "ty>=0.0.28",
 ]

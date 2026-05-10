@@ -916,7 +916,6 @@ dependencies = [
     { name = "rdkit" },
     { name = "redis", extra = ["hiredis"] },
     { name = "requests" },
-    { name = "testing-postgresql" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -929,6 +928,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "tenacity" },
+    { name = "testing-postgresql" },
     { name = "testing-redis" },
     { name = "ty" },
 ]
@@ -950,7 +950,6 @@ requires-dist = [
     { name = "rdkit", specifier = ">=2021.9.5" },
     { name = "redis", extras = ["hiredis"] },
     { name = "requests", specifier = ">=2.24.0" },
-    { name = "testing-postgresql" },
     { name = "uvicorn", extras = ["standard"] },
 ]
 
@@ -963,6 +962,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=3.0.0" },
     { name = "ruff", specifier = ">=0.9.9" },
     { name = "tenacity" },
+    { name = "testing-postgresql" },
     { name = "testing-redis" },
     { name = "ty", specifier = ">=0.0.28" },
 ]

@@ -355,7 +355,7 @@ def _compound_svg(compound: reaction_pb2.Compound, bond_length: int = 25) -> str
     """
     try:
         # mol_from_compound's return type widens to include a tuple when return_identifier=True.
-        mol = cast(Chem.Mol, message_helpers.mol_from_compound(compound))
+        mol = cast(Chem.Mol | None, message_helpers.mol_from_compound(compound))
         if mol:
             svg = drawing.mol_to_svg(mol, bond_length=bond_length)
             if svg is None:
@@ -379,7 +379,7 @@ def _compound_png(compound: reaction_pb2.Compound) -> str:
         String PNG or sentinel value.
     """
     try:
-        mol = cast(Chem.Mol, message_helpers.mol_from_compound(compound))
+        mol = cast(Chem.Mol | None, message_helpers.mol_from_compound(compound))
         if mol:
             return drawing.mol_to_png(mol)
     except ValueError:
