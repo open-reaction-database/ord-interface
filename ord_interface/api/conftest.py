@@ -15,8 +15,9 @@
 """Pytest fixtures."""
 
 import os
+from collections.abc import AsyncIterator, Iterator
 from contextlib import ExitStack
-from typing import AsyncIterator, Iterator
+from typing import Any
 from unittest.mock import patch
 
 import psycopg
@@ -43,8 +44,8 @@ def test_postgres_fixture() -> Iterator[Postgresql]:
 
 
 @pytest_asyncio.fixture
-async def test_cursor(test_postgres) -> AsyncIterator[AsyncCursor]:
-    async with await psycopg.AsyncConnection.connect(
+async def test_cursor(test_postgres) -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
+    async with await psycopg.AsyncConnection[dict[str, Any]].connect(
         test_postgres.url(), row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:
         await connection.set_read_only(True)
@@ -54,9 +55,12 @@ async def test_cursor(test_postgres) -> AsyncIterator[AsyncCursor]:
 
 @pytest.fixture(scope="session")
 def test_client(test_postgres) -> Iterator[TestClient]:
-    with TestClient(app) as client, RedisServer() as redis_server, patch.dict(
-        os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}
-    ), ExitStack() as stack:
+    with (
+        TestClient(app) as client,
+        RedisServer() as redis_server,
+        patch.dict(os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}),
+        ExitStack() as stack,
+    ):
         # NOTE(skearnes): Set ORD_INTERFACE_POSTGRES to use that database instead of a testing.postgresql instance.
         # To force the use of testing.postgresl, set ORD_INTERFACE_TESTING=TRUE.
         if os.environ.get("ORD_INTERFACE_TESTING", "FALSE") == "FALSE" and not os.environ.get("ORD_INTERFACE_POSTGRES"):

@@ -1,4 +1,4 @@
-# Copyright 2020 Open Reaction Database Project Authors
+# Copyright 2026 Open Reaction Database Project Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-14"]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     runs-on: ${{ matrix.os }}
     env:
       PGDATA: $GITHUB_WORKSPACE/rdkit-postgres
@@ -41,46 +41,45 @@ jobs:
           # NOTE(skearnes): conda is only used for postgres (not python).
           conda install -c conda-forge rdkit-postgresql
           initdb
-      - uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
           python-version: ${{ matrix.python-version }}
       - name: actions-setup-redis
         uses: shogo82148/actions-setup-redis@v1.35.0
       - name: Install ord_interface
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install wheel
-          python -m pip install .[tests]
+        run: uv sync --frozen
       - name: Run tests
         shell: bash -l {0}
         run: |
-          coverage erase
-          pytest -vv --cov=ord_interface --durations=20 --ignore=ord_interface/editor
-          coverage xml
-      - uses: codecov/codecov-action@v1
+          uv run coverage erase
+          uv run pytest -vv --cov=ord_interface --durations=20 --ignore=ord_interface/editor
+          uv run coverage xml
+      - uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test_app:
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     # NOTE(skearnes): Docker is not supported on macOS GitLab runners.
     # NOTE(skearnes): ubuntu-latest AppArmor doesn't play nicely with puppeteer.
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
           python-version: ${{ matrix.python-version }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
       - name: actions-setup-redis
         uses: shogo82148/actions-setup-redis@v1.35.0
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Install ord-interface
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install wheel
-          python -m pip install .[tests]
+        run: uv sync --frozen
       - name: Install non-python test dependencies
         run: |
           cd "${GITHUB_WORKSPACE}/ord_interface"

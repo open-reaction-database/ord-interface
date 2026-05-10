@@ -30,7 +30,7 @@ async def get_compound(request: Request) -> str:
     data = await request.body()
     compound = reaction_pb2.Compound.FromString(data)
     try:
-        return filters._compound_svg(compound)  # pylint: disable=protected-access
+        return filters._compound_svg(compound)
     except (ValueError, KeyError):
         return "[Compound cannot be displayed]"
 

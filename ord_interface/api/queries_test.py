@@ -13,6 +13,8 @@
 # limitations under the License.
 """Tests for ord_interface.api.queries."""
 
+from typing import Any
+
 import pytest
 
 from ord_interface.api.queries import (
@@ -144,7 +146,7 @@ async def test_smarts_query(test_cursor):
 
 @pytest.mark.asyncio
 async def test_similarity_query(test_cursor):
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "pattern": "CC=O",
         "target": ReactionComponentQuery.Target.INPUT,
         "match_mode": ReactionComponentQuery.MatchMode.SIMILAR,
