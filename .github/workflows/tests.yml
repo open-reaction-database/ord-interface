@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: CI
+name: Tests
 
-on: [ pull_request, push ]
-
-env:
-  # See https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei.
-  CACHE_TARGET: "docker.pkg.github.com/open-reaction-database/ord-interface/interface-cache"
-
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   test_ord_interface:
