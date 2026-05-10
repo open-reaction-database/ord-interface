@@ -84,6 +84,8 @@ jobs:
           cd "${GITHUB_WORKSPACE}/ord_interface"
           npm install puppeteer
       - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd "${GITHUB_WORKSPACE}/ord_interface"
           uv run ./run_tests.sh
