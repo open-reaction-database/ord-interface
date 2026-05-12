@@ -15,88 +15,85 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner'
-import conditionUtil from '@/utils/conditions'
-import outcomesUtil from '@/utils/outcomes'
-import reaction_pb from 'ord-schema'
-import CopyButton from '@/components/CopyButton'
+import LoadingSpinner from '@/components/LoadingSpinner';
+import conditionUtil from '@/utils/conditions';
+import outcomesUtil from '@/utils/outcomes';
+import reaction_pb from 'ord-schema';
+import CopyButton from '@/components/CopyButton';
 
 export default {
   props: {
     reaction: Object,
     isSelected: Boolean,
-    isSelectable: Boolean
+    isSelectable: Boolean,
   },
   components: {
     LoadingSpinner,
-    CopyButton
+    CopyButton,
   },
   data() {
     return {
       formattedResults: [],
       selectedReactions: [],
-      reactionTable: null
-    }
+      reactionTable: null,
+    };
   },
   methods: {
     getReactionTable() {
       fetch(`/api/reaction_summary?reaction_id=${this.reaction.reaction_id}`)
         .then(response => response.text())
         .then(responseData => {
-          this.reactionTable = responseData
-        })
+          this.reactionTable = responseData;
+        });
     },
     getYield(measurements) {
-      const yieldObj = measurements.find(m => m.type == 3) // ord-schema type 3 == "YIELD"
+      const yieldObj = measurements.find(m => m.type == 3); // ord-schema type 3 == "YIELD"
       if (yieldObj?.percentage) {
-        return `${yieldObj.percentage.value}%`
+        return `${yieldObj.percentage.value}%`;
       } else {
-        return "Not listed"
+        return 'Not listed';
       }
     },
     getConversion(reaction) {
-      if (!reaction.outcomesList[0].conversion) return "Not listed"
+      if (!reaction.outcomesList[0].conversion) return 'Not listed';
       // decode conversion
     },
     conditionsAndDuration(reaction) {
-      const details = []
+      const details = [];
       // get temp
-      const tempSetPoint = conditionUtil.tempSetPoint(reaction.conditions.temperature?.setpoint)
-      if (tempSetPoint !== "None")
-        details.push(`at ${tempSetPoint}`)
+      const tempSetPoint = conditionUtil.tempSetPoint(reaction.conditions.temperature?.setpoint);
+      if (tempSetPoint !== 'None') details.push(`at ${tempSetPoint}`);
 
       // get Pressure
-      const pressureSetPoint = conditionUtil.pressureSetPoint(reaction.conditions.pressure?.setpoint)
-      if (pressureSetPoint !== "None")
-        details.push(`under ${pressureSetPoint}`)
+      const pressureSetPoint = conditionUtil.pressureSetPoint(reaction.conditions.pressure?.setpoint);
+      if (pressureSetPoint !== 'None') details.push(`under ${pressureSetPoint}`);
 
       // get duration
-      const formattedTime = outcomesUtil.formattedTime(reaction.outcomesList[0].reactionTime)
-      if (formattedTime)
-        details.push(`for ${formattedTime}`)
+      const formattedTime = outcomesUtil.formattedTime(reaction.outcomesList[0].reactionTime);
+      if (formattedTime) details.push(`for ${formattedTime}`);
 
-      return details
+      return details;
     },
     productIdentifier(identifier) {
-      const identifierTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType
-      const identifierType = Object.keys(identifierTypes).find(key => identifierTypes[key] == identifier.type)
-      return `${identifierType}: ${identifier.value}`
+      const identifierTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType;
+      const identifierType = Object.keys(identifierTypes).find(key => identifierTypes[key] == identifier.type);
+      return `${identifierType}: ${identifier.value}`;
     },
     updateSelectedReactions(event) {
       if (event.target.checked) {
-        this.selectedReactions.push(event.target.value)
+        this.selectedReactions.push(event.target.value);
       } else {
-        let idx = this.selectedReactions.indexOf(event.target.value)
+        let idx = this.selectedReactions.indexOf(event.target.value);
         if (idx !== -1) {
-          this.selectedReactions.splice(idx, 1)
+          this.selectedReactions.splice(idx, 1);
         }
       }
     },
   },
   async mounted() {
-    this.getReactionTable()
+    this.getReactionTable();
   },
-}
+};
 </script>
 
 <template lang="pug">

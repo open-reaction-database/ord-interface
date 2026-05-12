@@ -24,13 +24,12 @@
 </template>
 
 <script>
-
 export default {
   mounted() {
     // import ketcher js in mounted so the dom is ready
-    import("@/ketcher/static/js/main.027562ee.js")
-  }
-}
+    import('@/ketcher/static/js/main.027562ee.js');
+  },
+};
 </script>
 
 <style lang="sass" scoped>

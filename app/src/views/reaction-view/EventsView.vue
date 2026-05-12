@@ -15,17 +15,16 @@
 -->
 
 <script>
-
 export default {
   props: {
     events: Array,
   },
-  data () {
+  data() {
     return {
-      eventIdx: 0
-    }
+      eventIdx: 0,
+    };
   },
-}
+};
 </script>
 
 <template lang="pug">

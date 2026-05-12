@@ -15,7 +15,7 @@
 -->
 
 <script>
-import conditionUtil from "@/utils/conditions"
+import conditionUtil from '@/utils/conditions';
 
 export default {
   props: {
@@ -23,32 +23,32 @@ export default {
     display: String,
   },
   computed: {
-    tempType () {
-      return conditionUtil.tempType(this.conditions.temperature?.control.type)
+    tempType() {
+      return conditionUtil.tempType(this.conditions.temperature?.control.type);
     },
-    tempSetPoint () {
-      return conditionUtil.tempSetPoint(this.conditions.temperature?.setpoint)
+    tempSetPoint() {
+      return conditionUtil.tempSetPoint(this.conditions.temperature?.setpoint);
     },
-    pressureType () {
-      return conditionUtil.pressureType(this.conditions.pressure?.control.type)
+    pressureType() {
+      return conditionUtil.pressureType(this.conditions.pressure?.control.type);
     },
-    pressureSetPoint () {
-      return conditionUtil.pressureSetPoint(this.conditions.pressure?.setpoint)
+    pressureSetPoint() {
+      return conditionUtil.pressureSetPoint(this.conditions.pressure?.setpoint);
     },
-    pressureAtmo () {
-      return conditionUtil.pressureAtmo(this.conditions.pressure?.atmosphere)
+    pressureAtmo() {
+      return conditionUtil.pressureAtmo(this.conditions.pressure?.atmosphere);
     },
-    stirType () {
-      return conditionUtil.stirType(this.conditions.stirring?.type)
+    stirType() {
+      return conditionUtil.stirType(this.conditions.stirring?.type);
     },
-    stirRate () {
-      return conditionUtil.stirRate(this.conditions.stirring?.rate)
+    stirRate() {
+      return conditionUtil.stirRate(this.conditions.stirring?.rate);
     },
-    illumType () {
-      return conditionUtil.illumType(this.conditions.illumination)
-    }
+    illumType() {
+      return conditionUtil.illumType(this.conditions.illumination);
+    },
   },
-}
+};
 </script>
 
 <template lang="pug">

@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import path from 'node:path'
-import {fileURLToPath} from 'node:url'
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import vue from '@vitejs/plugin-vue'
-import {defineConfig} from 'vite'
-import {viteStaticCopy} from 'vite-plugin-static-copy'
+import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [
@@ -56,4 +56,4 @@ export default defineConfig({
       },
     },
   },
-})
+});

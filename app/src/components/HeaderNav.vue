@@ -14,11 +14,8 @@
  limitations under the License.
 -->
 
-
-
 <script>
-export default {
-}
+export default {};
 </script>
 
 <template lang="pug">

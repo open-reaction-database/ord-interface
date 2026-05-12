@@ -15,25 +15,23 @@
 -->
 
 <script>
-
 export default {
   data() {
     return {
-      loading: true, 
+      loading: true,
       newDatasetName: null,
-    }
+    };
   },
   methods: {
     async getDatasets() {
-      const res = await fetch('/editor-api/getDatasetsByUser/ef4a7184f6bf4d2da99d8e08b36882c0')
-      console.log('res.json',res)
+      const res = await fetch('/editor-api/getDatasetsByUser/ef4a7184f6bf4d2da99d8e08b36882c0');
+      console.log('res.json', res);
     },
     createDataset() {
-      if (!this.newDatasetName)
-        return alert("Enter a name for the new dataset.")
+      if (!this.newDatasetName) return alert('Enter a name for the new dataset.');
       // send new dataset name to api
       const xhr = new XMLHttpRequest();
-      xhr.datasetName = this.newDatasetName
+      xhr.datasetName = this.newDatasetName;
       xhr.open('POST', `/editor-api/dataset/${this.newDatasetName}/new`);
       xhr.onload = function () {
         if (xhr.status === 409) {
@@ -41,14 +39,14 @@ export default {
         } else {
           // get list of datasets
         }
-      }
+      };
       xhr.send();
-    }
+    },
   },
   mounted() {
-    this.getDatasets()
-  }
-}
+    this.getDatasets();
+  },
+};
 </script>
 
 <template lang="pug">

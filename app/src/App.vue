@@ -14,10 +14,9 @@
  limitations under the License.
 -->
 
-
 <script>
-import HeaderNav from "./components/HeaderNav"
-import MainFooter from "./components/MainFooter"
+import HeaderNav from './components/HeaderNav';
+import MainFooter from './components/MainFooter';
 
 export default {
   components: {
@@ -26,11 +25,11 @@ export default {
   },
   computed: {
     noHeaderFooter() {
-      const noHeaderRoutes = ['ketcher']
-      return noHeaderRoutes.includes(this.$route.name)
+      const noHeaderRoutes = ['ketcher'];
+      return noHeaderRoutes.includes(this.$route.name);
     },
-  }
-}
+  },
+};
 </script>
 
 <template lang="pug">

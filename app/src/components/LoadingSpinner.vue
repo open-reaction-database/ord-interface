@@ -17,11 +17,10 @@
 <script>
 export default {
   name: 'LoadingSpinner',
-  data () {
-    return {
-    }
+  data() {
+    return {};
   },
-}
+};
 </script>
 
 <template lang="pug">
@@ -49,7 +48,7 @@ export default {
     width: 80px
     height: 80px
     margin: auto
-    div 
+    div
       box-sizing: border-box
       display: block
       position: absolute
@@ -60,16 +59,16 @@ export default {
       border-radius: 50%
       animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite
       border-color: $linkblue transparent transparent transparent
-      &:nth-child(1) 
+      &:nth-child(1)
         animation-delay: -0.45s
-      &:nth-child(2) 
+      &:nth-child(2)
         animation-delay: -0.3s
-      &:nth-child(3) 
+      &:nth-child(3)
         animation-delay: -0.15s
 
-@keyframes lds-ring 
-  0% 
+@keyframes lds-ring
+  0%
     transform: rotate(0deg)
-  100% 
+  100%
     transform: rotate(360deg)
 </style>

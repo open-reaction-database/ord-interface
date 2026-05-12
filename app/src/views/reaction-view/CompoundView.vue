@@ -15,21 +15,21 @@
 -->
 
 <script>
-import reaction_pb from "ord-schema"
-import FloatingModal from "../../components/FloatingModal"
-import { amountObj, amountStr } from "../../utils/amount"
+import reaction_pb from 'ord-schema';
+import FloatingModal from '../../components/FloatingModal';
+import { amountObj, amountStr } from '../../utils/amount';
 
 export default {
   props: {
     component: Object,
   },
   components: {
-    "floating-modal": FloatingModal
+    'floating-modal': FloatingModal,
   },
   watch: {
     component: {
       handler(val) {
-        this.getCompoundSVG(val)
+        this.getCompoundSVG(val);
       },
       deep: true,
       immediate: true,
@@ -39,97 +39,93 @@ export default {
     return {
       compoundSVG: null,
       showRawData: false,
-    }
+    };
   },
   computed: {
-    compoundAmountObj () {
-      return amountObj(this.component.amount)
+    compoundAmountObj() {
+      return amountObj(this.component.amount);
     },
-    compoundAmount () {
-      return amountStr(this.compoundAmountObj)
+    compoundAmount() {
+      return amountStr(this.compoundAmountObj);
     },
-    compoundRole () {
-      const role = this.component.reactionRole
-      const types = reaction_pb.ReactionRole.ReactionRoleType
-      return Object.keys(types).find(key => types[key] == role)
+    compoundRole() {
+      const role = this.component.reactionRole;
+      const types = reaction_pb.ReactionRole.ReactionRoleType;
+      return Object.keys(types).find(key => types[key] == role);
     },
-    rawData () {
-      const returnObj = {}
+    rawData() {
+      const returnObj = {};
       // set identifiers
-      const idTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType
-      returnObj["identifiers"] = this.component?.identifiersList?.map((identifier) => {
+      const idTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType;
+      returnObj['identifiers'] = this.component?.identifiersList?.map(identifier => {
         return {
           type: Object.keys(idTypes).find(key => idTypes[key] == identifier.type),
-          value: identifier.value
-        }
-      })
+          value: identifier.value,
+        };
+      });
       // set amount
       if (this.component?.amount) {
-        returnObj["amount"] = {
+        returnObj['amount'] = {
           [this.compoundAmountObj.unitCategory]: {
             value: this.compoundAmountObj.unitAmount,
             units: this.compoundAmountObj.unitType,
-          }
-        }
+          },
+        };
       }
       // set preparations
       if (this.component?.preparationsList?.length) {
-        const prepTypes = reaction_pb.CompoundPreparation.CompoundPreparationType
-        returnObj["preparations"] = this.component.preparationsList.map(prep => {
+        const prepTypes = reaction_pb.CompoundPreparation.CompoundPreparationType;
+        returnObj['preparations'] = this.component.preparationsList.map(prep => {
           return {
             type: Object.keys(prepTypes).find(key => prepTypes[key] == prep.type),
             details: prep.details,
-          }
-        })
+          };
+        });
       }
       if (this.component?.isDesiredProduct) {
-        returnObj["is_desired_product"] = this.component.isDesiredProduct
+        returnObj['is_desired_product'] = this.component.isDesiredProduct;
       }
       if (this.component?.isolatedColor) {
-        returnObj["isolated_color"] = this.component.isolatedColor
+        returnObj['isolated_color'] = this.component.isolatedColor;
       }
       if (this.component?.texture) {
-        const textureTypes = reaction_pb.ProductCompound.Texture.TextureType
-        const textureType = Object.keys(textureTypes).find(key => textureTypes[key] == this.component.texture.type)
-        const textureObj = {type: textureType}
-        if (this.component.texture.details)
-          textureObj.details = this.component.texture.details
-        returnObj["texture"] = textureObj
+        const textureTypes = reaction_pb.ProductCompound.Texture.TextureType;
+        const textureType = Object.keys(textureTypes).find(key => textureTypes[key] == this.component.texture.type);
+        const textureObj = { type: textureType };
+        if (this.component.texture.details) textureObj.details = this.component.texture.details;
+        returnObj['texture'] = textureObj;
       }
-      returnObj["reaction_role"] = this.compoundRole
-      return returnObj
+      returnObj['reaction_role'] = this.compoundRole;
+      return returnObj;
     },
-    gridColumns () {
-      return `1fr repeat(${this.component?.amount ? 3 : 2}, auto)`
-    }
+    gridColumns() {
+      return `1fr repeat(${this.component?.amount ? 3 : 2}, auto)`;
+    },
   },
   methods: {
-    getCompoundSVG (component) {
-      const compoundStr = component
-                        .identifiersList
-                        .find((identifier) => identifier.type == 2) //type 2 is SMILES
-                        .value
+    getCompoundSVG(component) {
+      const compoundStr = component.identifiersList.find(identifier => identifier.type == 2).value; //type 2 is SMILES
       // prep compound
-      const compound = new reaction_pb.Compound()
-      const identifier = compound.addIdentifiers()
-      identifier.setValue(compoundStr)
-      identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES)
+      const compound = new reaction_pb.Compound();
+      const identifier = compound.addIdentifiers();
+      identifier.setValue(compoundStr);
+      identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
       // send http request
       return new Promise(resolve => {
-        const xhr = new XMLHttpRequest()
-        xhr.open("POST", "/api/compound_svg")
-        const binary = compound.serializeBinary()
-        xhr.responseType = "json"
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/compound_svg');
+        const binary = compound.serializeBinary();
+        xhr.responseType = 'json';
         xhr.onload = function () {
-          resolve(xhr.response)
-        }
-        xhr.send(binary)
+          resolve(xhr.response);
+        };
+        xhr.send(binary);
       }).then(val => {
-        this.compoundSVG = val
-      })
+        this.compoundSVG = val;
+      });
     },
   },
-}
+};
 </script>
 
 <template lang="pug">

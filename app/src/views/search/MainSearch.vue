@@ -15,78 +15,73 @@
 -->
 
 <script>
-import SearchOptions from './SearchOptions'
-import SearchResults from './SearchResults'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import reaction_pb from "ord-schema"
-import base64ToBytes from "@/utils/base64"
+import SearchOptions from './SearchOptions';
+import SearchResults from './SearchResults';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import reaction_pb from 'ord-schema';
+import base64ToBytes from '@/utils/base64';
 
 export default {
   components: {
     SearchOptions,
     SearchResults,
-    LoadingSpinner
+    LoadingSpinner,
   },
   watch: {
     '$route.query': {
       handler() {
-        this.getSearchResults()
+        this.getSearchResults();
       },
       deep: true,
-    }
+    },
   },
   data() {
     return {
       searchResults: [],
-      queryParams: "",
+      queryParams: '',
       searchParams: {},
       loading: true,
-      urlQuery: "",
+      urlQuery: '',
       showOptions: false,
       searchLoadStatus: null,
       searchPollingInterval: null,
-      searchTaskId: null
-    }
+      searchTaskId: null,
+    };
   },
   methods: {
     async getSearchResults() {
-      this.loading = true
+      this.loading = true;
       // get raw url query string
-      this.urlQuery =  window.location.search
+      this.urlQuery = window.location.search;
       try {
         // If this is the first time we are attempting the search, set the search task ID.
         if (this.searchTaskId == null) {
           // Submit a search task to the server. This returns a GUID task ID.
-          const taskres = await fetch(`/api/submit_query${this.urlQuery}`, {method: "GET"})
-          this.searchTaskId = (await taskres.json());
+          const taskres = await fetch(`/api/submit_query${this.urlQuery}`, { method: 'GET' });
+          this.searchTaskId = await taskres.json();
         }
         // Check the status of the search task.
-        const queryRes = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, {method: "GET"})
-        .then(
-          (res) => {
+        const queryRes = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, { method: 'GET' })
+          .then(res => {
             this.searchLoadStatus = res;
             // If one of these codes, search is finished. Return the results or lack of results.
             if (res?.status == 200) {
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
               return res.json();
-            }
-            else if (res?.status == 404) {
+            } else if (res?.status == 404) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
-              throw new Error("Error - Search task ID " + taskId + " does not exist");
-            }
-            else if (res?.status >= 500) {
+              throw new Error('Error - Search task ID ' + taskId + ' does not exist');
+            } else if (res?.status >= 500) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
-              throw new Error("Error - Search task ID " + taskId + " failed due to server error");
+              throw new Error('Error - Search task ID ' + taskId + ' failed due to server error');
             }
-          }
-        )
-        .then(
-          (searchResultsData) => {
+          })
+          .then(searchResultsData => {
             // Only show the results if we have results - or lack of results.
             // this.searchTaskId will be populated only if we're still polling
             // If it is null, we're done polling - either the search ended in results, or an error.
@@ -94,92 +89,85 @@ export default {
               // Deserialize the results.
               this.searchResults = searchResultsData;
               // unpack protobuff for each reaction in results
-              this.searchResults.forEach((reaction) => {
-                  const bytes = base64ToBytes(reaction.proto)
-                  reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
-                })
-              this.loading = false
+              this.searchResults.forEach(reaction => {
+                const bytes = base64ToBytes(reaction.proto);
+                reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+              });
+              this.loading = false;
             }
-          }
-        )
+          });
       } catch (e) {
-        console.log(e)
-        this.searchResults = []
-        this.loading = false
+        console.log(e);
+        this.searchResults = [];
+        this.loading = false;
       }
     },
     updateSearchOptions(options) {
       // reagent options
       if (options.reagent.reagents.length) {
-        this.searchParams["component"] = []
+        this.searchParams['component'] = [];
         options.reagent.reagents.forEach(reagent => {
-          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`)
-        })
+          this.searchParams['component'].push(
+            `${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`,
+          );
+        });
 
-        this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
-        this.searchParams["similarity"] = options.reagent.similarityThreshold
+        this.searchParams['use_stereochemistry'] = options.reagent.useStereochemistry;
+        this.searchParams['similarity'] = options.reagent.similarityThreshold;
       } else {
-        this.searchParams["component"] = []
+        this.searchParams['component'] = [];
       }
 
       // dataset options
-      if (options.dataset.datasetIds.length)
-        this.searchParams["dataset_id"] = options.dataset.datasetIds
-      else
-        delete this.searchParams["dataset_id"]
-      if (options.dataset.DOIs.length)
-        this.searchParams["doi"] = options.dataset.DOIs
-      else
-        delete this.searchParams["doi"]
+      if (options.dataset.datasetIds.length) this.searchParams['dataset_id'] = options.dataset.datasetIds;
+      else delete this.searchParams['dataset_id'];
+      if (options.dataset.DOIs.length) this.searchParams['doi'] = options.dataset.DOIs;
+      else delete this.searchParams['doi'];
 
       // reaction options
-      if (options.reaction.reactionIds.length)
-        this.searchParams["reaction_id"] = options.reaction.reactionIds
-      else
-        delete this.searchParams["reaction_id"]
-      if (options.reaction.reactionSmarts)
-        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts
-      else
-        delete this.searchParams["reaction_smarts"]
+      if (options.reaction.reactionIds.length) this.searchParams['reaction_id'] = options.reaction.reactionIds;
+      else delete this.searchParams['reaction_id'];
+      if (options.reaction.reactionSmarts) this.searchParams['reaction_smarts'] = options.reaction.reactionSmarts;
+      else delete this.searchParams['reaction_smarts'];
       //yield and conversion add if not max values, otherwise remove from query
       if (options.reaction.min_yield !== 0 || options.reaction.max_yield !== 100) {
-        this.searchParams["min_yield"] = options.reaction.min_yield
-        this.searchParams["max_yield"] = options.reaction.max_yield
-      }
-      else {
-        delete this.searchParams["min_yield"]
-        delete this.searchParams["max_yield"]
+        this.searchParams['min_yield'] = options.reaction.min_yield;
+        this.searchParams['max_yield'] = options.reaction.max_yield;
+      } else {
+        delete this.searchParams['min_yield'];
+        delete this.searchParams['max_yield'];
       }
       if (options.reaction.min_conversion !== 0 || options.reaction.max_conversion !== 100) {
-        this.searchParams["min_conversion"] = options.reaction.min_conversion
-        this.searchParams["max_conversion"] = options.reaction.max_conversion
-      }
-      else {
-        delete this.searchParams["min_conversion"]
-        delete this.searchParams["max_conversion"]
+        this.searchParams['min_conversion'] = options.reaction.min_conversion;
+        this.searchParams['max_conversion'] = options.reaction.max_conversion;
+      } else {
+        delete this.searchParams['min_conversion'];
+        delete this.searchParams['max_conversion'];
       }
 
       // general options
-      this.searchParams["limit"] = options.general.limit || 100
+      this.searchParams['limit'] = options.general.limit || 100;
 
       // navigate to search page with new params
-      this.$router.push({ name: 'search', query: this.searchParams})
+      this.$router.push({ name: 'search', query: this.searchParams });
     },
   },
   async mounted() {
     // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
-    await this.getSearchResults().then(() =>{
+    await this.getSearchResults().then(() => {
       if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
-        this.searchPollingInterval = setInterval(() => {this.getSearchResults()}, 1000);
+        this.searchPollingInterval = setInterval(() => {
+          this.getSearchResults();
+        }, 1000);
         setTimeout(() => {
-          clearInterval(this.searchPollingInterval)
-          this.searchTaskId = null
-          this.loading = false
+          clearInterval(this.searchPollingInterval);
+          this.searchTaskId = null;
+          this.loading = false;
         }, 120000);
       }
-    })
+    });
   },
-}
+};
 </script>
 
 <template lang="pug">
@@ -265,5 +253,4 @@ export default {
           height: 2px
           width: 60%
           margin: 0.5rem auto
-
 </style>

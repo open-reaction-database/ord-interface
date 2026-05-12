@@ -15,16 +15,16 @@
 -->
 
 <script>
-import EntityTable from '@/components/EntityTable'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import ReactionCard from '@/components/ReactionCard'
-import CopyButton from '@/components/CopyButton'
-import DownloadResults from '@/components/DownloadResults'
+import EntityTable from '@/components/EntityTable';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ReactionCard from '@/components/ReactionCard';
+import CopyButton from '@/components/CopyButton';
+import DownloadResults from '@/components/DownloadResults';
 
 export default {
   props: {
     searchResults: Array,
-    isOverflow: Boolean
+    isOverflow: Boolean,
   },
   components: {
     EntityTable,
@@ -38,38 +38,38 @@ export default {
       formattedResults: [],
       selectedReactions: [],
       showDownloadResults: false,
-    }
+    };
   },
   computed: {
     fullUrl() {
-      return window.location.href
-    }
+      return window.location.href;
+    },
   },
   methods: {
     updateSelectedReactions(event) {
       if (event.target.checked) {
-        this.selectedReactions.push(event.target.value)
+        this.selectedReactions.push(event.target.value);
       } else {
-        let idx = this.selectedReactions.indexOf(event.target.value)
+        let idx = this.selectedReactions.indexOf(event.target.value);
         if (idx !== -1) {
-          this.selectedReactions.splice(idx, 1)
+          this.selectedReactions.splice(idx, 1);
         }
       }
     },
     goToViewSelected() {
       // store storedSet in vuex so we can retrieve it if user comes back from selected-set
-      this.$store.commit('setStoredSet', { query: window.location.search, reactions: this.selectedReactions})
-      this.$router.push({ name: 'selected-set', query: {reaction_ids: this.selectedReactions}})
-    }
+      this.$store.commit('setStoredSet', { query: window.location.search, reactions: this.selectedReactions });
+      this.$router.push({ name: 'selected-set', query: { reaction_ids: this.selectedReactions } });
+    },
   },
   async mounted() {
-    this.formattedResults = this.searchResults
+    this.formattedResults = this.searchResults;
     // if query matches storedSet, set selectedReactions
     if (window.location.search == this.$store.state.storedSet?.query) {
-      this.selectedReactions = this.$store.state.storedSet.reactions
+      this.selectedReactions = this.$store.state.storedSet.reactions;
     }
   },
-}
+};
 </script>
 
 <template lang="pug">
@@ -181,5 +181,4 @@ export default {
           transform: translateY(-10px)
   @media (max-width: 1000px)
     margin-top: 2.5rem
-
 </style>

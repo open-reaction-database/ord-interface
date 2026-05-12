@@ -15,9 +15,9 @@
 -->
 
 <script>
-import ModalKetcher from '@/components/ModalKetcher'
-import SearchItemList from './SearchItemList'
-import MultiRangeSlider from "multi-range-slider-vue"
+import ModalKetcher from '@/components/ModalKetcher';
+import SearchItemList from './SearchItemList';
+import MultiRangeSlider from 'multi-range-slider-vue';
 
 export default {
   components: {
@@ -25,7 +25,7 @@ export default {
     SearchItemList,
     MultiRangeSlider,
   },
-  emits: ["searchOptions"],
+  emits: ['searchOptions'],
   data() {
     return {
       test: null,
@@ -35,7 +35,7 @@ export default {
       reagentOptions: {
         reactants: [],
         products: [],
-        matchMode: "exact",
+        matchMode: 'exact',
         useStereochemistry: false,
         similarityThreshold: 0.5,
       },
@@ -45,124 +45,124 @@ export default {
         min_yield: 50,
         max_yield: 100,
         min_conversion: 50,
-        max_conversion: 100
+        max_conversion: 100,
       },
       datasetOptions: {
         datasetIds: [],
-        DOIs: []
+        DOIs: [],
       },
       searchParams: {
-        limit: 100
+        limit: 100,
       },
       showKetcherModal: false,
       ketcherModalSmile: 0,
-      ketcherModalSet: "reactants",
-      matchModes: ["exact", "similar", "substructure", "SMARTS"]
-    }
+      ketcherModalSet: 'reactants',
+      matchModes: ['exact', 'similar', 'substructure', 'SMARTS'],
+    };
   },
   computed: {
     defaultQuery() {
-      return this.$route.query
+      return this.$route.query;
     },
     simThresholdDisplay() {
-      let trailingZeros = ""
-      const simThresh = this.reagentOptions.similarityThreshold.toString()
-      if (simThresh?.length < 2)
-        trailingZeros = ".00"
-      else if (simThresh?.length < 4)
-        trailingZeros = "0"
-      return simThresh+trailingZeros
-    }
+      let trailingZeros = '';
+      const simThresh = this.reagentOptions.similarityThreshold.toString();
+      if (simThresh?.length < 2) trailingZeros = '.00';
+      else if (simThresh?.length < 4) trailingZeros = '0';
+      return simThresh + trailingZeros;
+    },
   },
   methods: {
     openKetcherModal(componentSet, idx) {
-      this.ketcherModalSmile = idx
-      this.ketcherModalSet = componentSet
-      this.showKetcherModal = true
+      this.ketcherModalSmile = idx;
+      this.ketcherModalSet = componentSet;
+      this.showKetcherModal = true;
     },
     emitSearchOptions() {
-      const allComponents = [...this.reagentOptions.reactants, ...this.reagentOptions.products]
-                              .map(component => ({...component, matchMode: this.reagentOptions.matchMode}))
+      const allComponents = [...this.reagentOptions.reactants, ...this.reagentOptions.products].map(component => ({
+        ...component,
+        matchMode: this.reagentOptions.matchMode,
+      }));
 
       const searchOptions = {
         reagent: {
           reagents: allComponents,
           useStereochemistry: this.reagentOptions.useStereochemistry,
-          similarityThreshold: this.reagentOptions.similarityThreshold
+          similarityThreshold: this.reagentOptions.similarityThreshold,
         },
         reaction: this.reactionOptions,
         dataset: this.datasetOptions,
-        general: this.searchParams
-      }
-      this.$emit('searchOptions', searchOptions)
+        general: this.searchParams,
+      };
+      this.$emit('searchOptions', searchOptions);
     },
     setDefaultValues() {
-      const q = this.defaultQuery
-      
+      const q = this.defaultQuery;
+
       // reagent options
       if (q.component?.length) {
         if (Array.isArray(q.component))
-          q.component.forEach(comp => { this.addCompToOptions(comp) })
-        else
-          this.addCompToOptions(q.component)
-        this.reagentOptions.useStereochemistry = q.use_stereochemistry || false
-        this.reagentOptions.similarityThreshold = Number(q.similarity) || 0.5
-        this.showReagentOptions = true
+          q.component.forEach(comp => {
+            this.addCompToOptions(comp);
+          });
+        else this.addCompToOptions(q.component);
+        this.reagentOptions.useStereochemistry = q.use_stereochemistry || false;
+        this.reagentOptions.similarityThreshold = Number(q.similarity) || 0.5;
+        this.showReagentOptions = true;
       }
 
       // dataset options
-      if (Array.isArray(q.dataset_id))
-        this.datasetOptions.datasetIds = q.dataset_id
-      else if (q.dataset_id?.length)
-        this.datasetOptions.datasetIds = [q.dataset_id]
-      else
-        this.datasetOptions.datasetIds = []
-      if (Array.isArray(q.doi))
-        this.datasetOptions.DOIs = q.doi
-      else if (q.doi?.length)
-        this.datasetOptions.DOIs = [q.doi]
-      else
-        this.datasetOptions.DOIs = []
-      if (this.datasetOptions.datasetIds?.length || this.datasetOptions.DOIs?.length)
-        this.showDatasetOptions = true
+      if (Array.isArray(q.dataset_id)) this.datasetOptions.datasetIds = q.dataset_id;
+      else if (q.dataset_id?.length) this.datasetOptions.datasetIds = [q.dataset_id];
+      else this.datasetOptions.datasetIds = [];
+      if (Array.isArray(q.doi)) this.datasetOptions.DOIs = q.doi;
+      else if (q.doi?.length) this.datasetOptions.DOIs = [q.doi];
+      else this.datasetOptions.DOIs = [];
+      if (this.datasetOptions.datasetIds?.length || this.datasetOptions.DOIs?.length) this.showDatasetOptions = true;
 
       // reaction options
-      if (Array.isArray(q.reaction_id))
-        this.datasetOptions.reactionIds = q.reaction_id
-      else if (q.reaction_id?.length)
-        this.datasetOptions.reactionIds = [q.reaction_id]
-      else
-        this.datasetOptions.reactionIds = []
-      this.reactionOptions.reactionSmarts = q.reaction_smarts
-      this.reactionOptions.min_yield = Number(q.min_yield) || 0
-      this.reactionOptions.max_yield = Number(q.max_yield) || 100
-      this.reactionOptions.min_conversion = Number(q.min_conversion) || 0
-      this.reactionOptions.max_conversion = Number(q.max_conversion) || 100
-      if (this.reactionOptions.reactionIds?.length || this.reactionOptions.reactionSmarts?.length || this.reactionOptions?.yield !== 50 || this.reactionOptions?.conversion !== 50)
-        this.showReactionOptions = true
+      if (Array.isArray(q.reaction_id)) this.datasetOptions.reactionIds = q.reaction_id;
+      else if (q.reaction_id?.length) this.datasetOptions.reactionIds = [q.reaction_id];
+      else this.datasetOptions.reactionIds = [];
+      this.reactionOptions.reactionSmarts = q.reaction_smarts;
+      this.reactionOptions.min_yield = Number(q.min_yield) || 0;
+      this.reactionOptions.max_yield = Number(q.max_yield) || 100;
+      this.reactionOptions.min_conversion = Number(q.min_conversion) || 0;
+      this.reactionOptions.max_conversion = Number(q.max_conversion) || 100;
+      if (
+        this.reactionOptions.reactionIds?.length ||
+        this.reactionOptions.reactionSmarts?.length ||
+        this.reactionOptions?.yield !== 50 ||
+        this.reactionOptions?.conversion !== 50
+      )
+        this.showReactionOptions = true;
 
       // general search params
-      this.searchParams.limit = q.limit || 100
+      this.searchParams.limit = q.limit || 100;
     },
-    addCompToOptions (comp) {
-      const compArray = comp.split(";")
-      const compType = compArray[1] == "input" ? "reactants" : "products"
-      this.reagentOptions.matchMode = compArray[2]
-      this.reagentOptions[compType].push({smileSmart: compArray[0].replaceAll("%3D","="), source: compArray[1], matchMode: compArray[2]})
+    addCompToOptions(comp) {
+      const compArray = comp.split(';');
+      const compType = compArray[1] == 'input' ? 'reactants' : 'products';
+      this.reagentOptions.matchMode = compArray[2];
+      this.reagentOptions[compType].push({
+        smileSmart: compArray[0].replaceAll('%3D', '='),
+        source: compArray[1],
+        matchMode: compArray[2],
+      });
     },
-    updateYield (e) {
-      this.reactionOptions.min_yield = e.minValue
-      this.reactionOptions.max_yield = e.maxValue
+    updateYield(e) {
+      this.reactionOptions.min_yield = e.minValue;
+      this.reactionOptions.max_yield = e.maxValue;
     },
-    updateConversion (e) {
-      this.reactionOptions.min_conversion = e.minValue
-      this.reactionOptions.max_conversion = e.maxValue
-    }
+    updateConversion(e) {
+      this.reactionOptions.min_conversion = e.minValue;
+      this.reactionOptions.max_conversion = e.maxValue;
+    },
   },
   mounted() {
-    this.setDefaultValues()
-  }
-}
+    this.setDefaultValues();
+  },
+};
 </script>
 
 <template lang="pug">

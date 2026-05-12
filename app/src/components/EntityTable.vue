@@ -19,13 +19,13 @@ export default {
   props: {
     tableData: Array,
     title: String,
-    displaySearch: {type: Boolean, default: true}
+    displaySearch: { type: Boolean, default: true },
   },
   watch: {
     pagination() {
       // set current page to 1 when pagination value changes to currentPage > lastPage
-      this.currentPage = 1
-    }
+      this.currentPage = 1;
+    },
   },
   data() {
     return {
@@ -35,60 +35,59 @@ export default {
       currentPage: 1,
       loading: true,
       pagination: 10,
-      searchString: "",
-    }
+      searchString: '',
+    };
   },
   computed: {
     filteredEntities() {
-      if (!this.entities) return []
-      let entities = this.entities
+      if (!this.entities) return [];
+      let entities = this.entities;
 
       if (this.searchString) {
         entities = entities.filter(entity => {
           // create a bool for each search param
-          let matching = Array.apply(null, Array(this.searchArray.length))
+          let matching = Array.apply(null, Array(this.searchArray.length));
           // check matching for each search param
           this.searchArray.forEach((param, pIdx) => {
             Object.keys(entity).forEach(key => {
-              if (entity[key] == null) entity[key] = "null"
-              if (entity[key].toString().toLowerCase().includes(param.toLowerCase())) matching[pIdx] = true
-            })
-          })
-          console.log('matching',matching.includes(undefined))
-          return !matching.includes(undefined)
-        })
+              if (entity[key] == null) entity[key] = 'null';
+              if (entity[key].toString().toLowerCase().includes(param.toLowerCase())) matching[pIdx] = true;
+            });
+          });
+          console.log('matching', matching.includes(undefined));
+          return !matching.includes(undefined);
+        });
       }
 
-      return entities
+      return entities;
     },
     paginatedEntities() {
-      return this.filteredEntities.slice(this.pagiBottom, this.pagiTop)
+      return this.filteredEntities.slice(this.pagiBottom, this.pagiTop);
     },
     pagiBottom() {
-      return (this.currentPage - 1) * this.pagination
+      return (this.currentPage - 1) * this.pagination;
     },
     pagiTop() {
-      return this.currentPage * this.pagination || 1
+      return this.currentPage * this.pagination || 1;
     },
     lastPage() {
       if (this.pagination && this.filteredEntities)
-        return Math.ceil((this.filteredEntities.length || 1) / this.pagination)
-      else return 1
+        return Math.ceil((this.filteredEntities.length || 1) / this.pagination);
+      else return 1;
     },
     pagiPrev() {
-      return this.currentPage === 1 ? this.lastPage : this.currentPage - 1
+      return this.currentPage === 1 ? this.lastPage : this.currentPage - 1;
     },
     pagiNext() {
-      return this.currentPage === this.lastPage ? 1 : this.currentPage + 1
+      return this.currentPage === this.lastPage ? 1 : this.currentPage + 1;
     },
     searchArray() {
-      return this.searchString.split(" ")
-    }
+      return this.searchString.split(' ');
+    },
   },
-  methods: {
-  },
+  methods: {},
   async mounted() {
-    this.entities = this.tableData
+    this.entities = this.tableData;
     // this.entities = Array.apply(null, Array(500)).map((val,idx) => {
     //   return {
     //     "Dataset ID": `${this.tableData[0]["Dataset ID"]}${Math.floor(Math.random() * idx)}`,
@@ -97,8 +96,8 @@ export default {
     //     Size: this.tableData[0].Size + Math.floor(Math.random() * idx),
     //   }
     // })
-  }
-}
+  },
+};
 </script>
 
 <template lang="pug">

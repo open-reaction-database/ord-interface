@@ -21,41 +21,41 @@ export default {
     textToCopy: String,
     icon: {
       type: String,
-      default: "content_copy"
+      default: 'content_copy',
     },
     buttonText: {
       type: String,
-      default: ""
-    }
+      default: '',
+    },
   },
-  data () {
+  data() {
     return {
       displayNotification: false,
       notificationStyle: {
         top: 0,
-        left: 0
-      }
-    }
+        left: 0,
+      },
+    };
   },
   methods: {
-    copy (event) {
+    copy(event) {
       // move notification block to mouse cursor
-      const { clientX, clientY } = event
+      const { clientX, clientY } = event;
       this.notificationStyle = {
         top: `${clientY}px`,
-        left: `${clientX}px`
-      }
+        left: `${clientX}px`,
+      };
 
       navigator.clipboard.writeText(this.textToCopy).then(() => {
-        this.displayNotification = true
+        this.displayNotification = true;
 
         setTimeout(() => {
-          this.displayNotification = false
-        }, 1500)
-      })
-    }
-  }
-}
+          this.displayNotification = false;
+        }, 1500);
+      });
+    },
+  },
+};
 </script>
 
 <template lang="pug">
@@ -77,7 +77,7 @@ export default {
 @import '@/styles/transition.sass'
 .copy-button-main
   button
-    padding: 0.25rem 0.5rem 
+    padding: 0.25rem 0.5rem
     display: flex
     column-gap: 0.25rem
     i
