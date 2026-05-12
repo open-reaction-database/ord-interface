@@ -63,6 +63,10 @@ npm run serve
 
 Open <http://localhost:8080>. The page hot-reloads on edit.
 
+## Deployment
+
+Production deployment is managed via Pulumi/ECS in the [`ord-infrastructure`](https://github.com/open-reaction-database/ord-infrastructure) repository.
+
 ## Updating ord-schema
 
 ### Minor changes (e.g. enum additions)
