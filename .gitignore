@@ -5,11 +5,11 @@
 # Generated docs output.
 docs/_build/
 # Misc python.
-__pycache__
+__pycache__/
 .coverage
 .coverage.*
-*.egg-info
-.ipynb_checkpoints
+*.egg-info/
+.ipynb_checkpoints/
 .pytest_cache/
 .ruff_cache/
 .venv/
@@ -19,22 +19,22 @@ dump.rdb
 # vim swap files
 *.sw[a-z]
 # build output
-**/build
-/dist
+**/build/
+/dist/
 # Folder tracking files
 .DS_Store
 # Vendored ketcher.
-**/ketcher
-**/standalone
+**/ketcher/
+**/standalone/
 # Node stuff.
-**/node_modules
+**/node_modules/
 
 # React dependencies
 **/.pnp
 **/.pnp.js
 
 # testing
-**/coverage
+**/coverage/
 
 # misc
 **/.DS_Store
