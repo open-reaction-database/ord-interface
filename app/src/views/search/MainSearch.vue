@@ -50,9 +50,17 @@ export default {
   },
   methods: {
     async getSearchResults() {
-      this.loading = true;
       // get raw url query string
       this.urlQuery = window.location.search;
+      // No filters set yet — don't submit an empty query (the backend will reject it
+      // with `ValueError: No query parameters were specified.`). The template renders
+      // a prompt-to-configure message in this case.
+      if (!this.urlQuery) {
+        this.searchResults = [];
+        this.loading = false;
+        return;
+      }
+      this.loading = true;
       try {
         // If this is the first time we are attempting the search, set the search task ID.
         if (this.searchTaskId == null) {
@@ -187,6 +195,8 @@ export default {
       :searchResults='searchResults'
       v-if='!loading && searchResults?.length'
     )
+    .no-results(v-else-if='!loading && !searchResults?.length && !urlQuery')
+      .title Configure the filters on the left to search the database.
     .no-results(v-else-if='!loading && !searchResults?.length')
       .title No results. Adjust the filters and options and search again.
     .loading(v-else)
