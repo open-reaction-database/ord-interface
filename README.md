@@ -78,6 +78,12 @@ ORD_INTERFACE_TESTING=TRUE fastapi dev main.py --port=5000
   - The page will reload when you make changes.
   - You may also see any lint errors in the console.
 
+## Frontend dependencies
+
+`app/package.json` includes an [`overrides`](https://docs.npmjs.com/cli/v10/configuration/package-json#overrides) block that force-patches a handful of transitive packages (`cross-spawn`, `postcss`, `serialize-javascript`, `webpack-dev-server`) to versions that resolve known CVEs. The patches are needed because `@vue/cli-service@5` is in maintenance mode and won't bump those transitives upstream. Before removing or relaxing any override, check the current dependabot alerts and re-run `npm audit` — see #175 for the original reasoning.
+
+Longer term we should migrate the SPA off vue-cli onto Vite (tracked separately); that migration would let us drop the overrides.
+
 ## Updating the Schema
 
 ### Minor changes such as ENUM additions
