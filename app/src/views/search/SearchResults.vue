@@ -118,7 +118,6 @@ export default {
     display: flex
     justify-content: flex-end
     column-gap: 0.5rem
-    button
   .reaction-container
     text-decoration: none
     .row

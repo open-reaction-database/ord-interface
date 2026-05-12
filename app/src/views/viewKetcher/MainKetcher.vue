@@ -32,6 +32,11 @@ export default {
 };
 </script>
 
-<style lang="sass" scoped>
+<!--
+  Ketcher's CSS targets the DOM that Ketcher creates at runtime inside #root,
+  which doesn't carry Vue's scoped data-v-* attribute. The styles MUST be
+  unscoped or none of the ~1300 selectors match anything Ketcher renders.
+-->
+<style lang="sass">
 @import '@/ketcher/static/css/main.8e693d51.css'
 </style>
