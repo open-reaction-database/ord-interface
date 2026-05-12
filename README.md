@@ -33,12 +33,12 @@ Web interface and api for the Open Reaction Database
 ### 1. Download and install
 
 ```bash
-# you will need git, python, pip, and postgres installed on your computer first
+# you will need git, uv, and postgres installed on your computer first
 git clone https://github.com/open-reaction-database/ord-interface
 cd ord-interface
 # If you are running on Apple silicon, use `conda install postgresql` instead.
 conda install -c rdkit rdkit-postgresql
-pip install -e '.[tests]'
+uv sync
 ```
 
 ### 2. Set up and run the API
@@ -82,8 +82,8 @@ ORD_INTERFACE_TESTING=TRUE fastapi dev main.py --port=5000
 
 ### Minor changes such as ENUM additions
   - The Vue app does not require specific modification to show additional ENUM options within existing message fields. We just have to update the package configuration to use the new ord-schema version.
-  - Update the ord-schema version number in the [install_requires configuration in ./setup.py](https://github.com/open-reaction-database/ord-interface/blob/aa37f628b176ca241d0701b4df5f6fd7b3079bef/setup.py#L48)
-  - Update the [code section in ./ord_interface/Dockerfile](https://github.com/open-reaction-database/ord-interface/blob/aa37f628b176ca241d0701b4df5f6fd7b3079bef/ord_interface/Dockerfile#L57C1-L60C38) which handles the ord-schema install
+  - Update the ord-schema version specifier in `pyproject.toml` (under `[project] dependencies`) and run `uv lock` to refresh `uv.lock`.
+  - Update the [code section in ./ord_interface/Dockerfile](./ord_interface/Dockerfile) which handles the ord-schema install
   - Contact the ORD site administrator to request upload of the new ord-interface version to the staging environment for testing.
 
 ### Major changes
