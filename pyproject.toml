@@ -1,4 +1,4 @@
-# Copyright 2025 Open Reaction Database Project Authors
+# Copyright 2026 Open Reaction Database Project Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,90 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[tool.black]
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ord-interface"
+version = "0.1.0"
+description = "Interface for the Open Reaction Database"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "docopt>=0.6.2",
+    "fastapi",
+    "flask>=1.1.2",
+    "gunicorn",
+    "jinja2>=2.0.0",
+    "numpy>=1.26.4",
+    "ord-schema>=0.6",
+    "pandas>=1.0.4",
+    "protobuf>=4.22,<6",
+    "psycopg[binary,pool]>=3",
+    "psycopg2-binary>=2.8.5",
+    "pygithub>=1.51",
+    "rdkit>=2021.9.5",
+    "redis[hiredis]",
+    "requests>=2.24.0",
+    "uvicorn[standard]",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=5.2.1",
+    "httpx",
+    "pytest>=6.2.5",
+    "pytest-asyncio",
+    "pytest-cov>=3.0.0",
+    "ruff>=0.9.9",
+    "tenacity",
+    "testing-postgresql",
+    "testing.redis",
+    "ty>=0.0.28",
+]
+
+[tool.setuptools.packages.find]
+include = ["ord_interface*"]
+
+[tool.ruff]
 line-length = 120
+extend-exclude = [
+    # Generated protobuf files: never touch.
+    "*_pb2.py*",
+    # Editor (and its entrypoint) are slated for removal; don't churn here.
+    "ord_interface/editor",
+    "ord_interface/interface.py",
+]
+target-version = "py311"
 
-[tool.isort]
-skip_glob = ["**/*_pb2.py*"]
-line_length = 120
-profile = "black"
-known_third_party = ["ord_schema"]
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "W",    # pycodestyle warnings
+    "I",    # isort (import sorting)
+    "B",    # flake8-bugbear (likely bugs)
+    "UP",   # pyupgrade (modernize syntax)
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E501",    # Line length is enforced by the formatter, not the linter.
+    "SIM108",  # Ternary expressions are not always clearer than if/else.
+    "B008",    # Function calls in argument defaults are fine for our use cases.
+    # SIM102/SIM105/SIM110 are stylistic rewrites (nested-if flattening,
+    # contextlib.suppress, any()). Pre-existing sites here are out of scope.
+    "SIM102",
+    "SIM105",
+    "SIM110",
+]
 
-[tool.pytype]
-inputs = ["ord_interface"]
-exclude = ["**/*_test.py", "**/test_*.py", "build/", "dist/"]
-keep_going = true
-disable = ["module-attr", "pyi-error"]
-jobs = 0
+[tool.ruff.lint.per-file-ignores]
+# Tests often redefine fixtures and use patterns that bugbear dislikes.
+"**/*_test.py" = ["B011", "B017"]
+
+[tool.ty.src]
+exclude = ["**/*_pb2.py*", "ord_interface/editor/**", "ord_interface/interface.py"]
