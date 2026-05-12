@@ -177,8 +177,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "../../styles/vars"
-@import "../../styles/tabs"
+@use '../../styles/vars' as *
+@use '../../styles/tabs' as *
 .outcomes-view
   .title
     font-weight: 700

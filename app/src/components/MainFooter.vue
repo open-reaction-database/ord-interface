@@ -8,7 +8,7 @@ footer.bg-light.text-center.mt-auto
 </template>
 
 <style lang="sass" scoped>
-@import @/styles/vars
+@use '@/styles/vars' as *
 footer
   background-color: white
   width: 100%

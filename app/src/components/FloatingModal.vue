@@ -44,7 +44,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/transition.sass'
+@use '@/styles/transition' as *
 .modal-main
   position: fixed
   top: 0

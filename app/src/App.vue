@@ -42,8 +42,8 @@ export default {
 </template>
 
 <style lang="sass">
+@use '@/styles/vars' as *
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap')
-@import '@/styles/vars'
 body
   font-family: 'Roboto', sans-serif
   margin: 0

@@ -66,7 +66,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/table'
+@use '@/styles/table' as *
 #browse-main
   padding: 1rem 0
   .table-container

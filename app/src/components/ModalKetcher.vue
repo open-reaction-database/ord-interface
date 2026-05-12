@@ -93,7 +93,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/transition.sass'
+@use '@/styles/transition' as *
 .background
   width: 100%
   height: 100%

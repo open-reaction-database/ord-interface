@@ -343,9 +343,9 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "@/styles/vars"
-@import "@/styles/tabs"
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/tabs' as *
+@use '@/styles/transition' as *
 .main-reaction-view
   min-height: 90vh
   .reaction-transition

@@ -111,8 +111,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/transition' as *
 .search-results-main
   .action-button-holder
     margin: -2.5rem 0 1rem // bring button row inline with title without having to pass too much into EntityTable

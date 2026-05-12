@@ -111,7 +111,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
+@use '@/styles/vars' as *
 #selected-set-main
   padding: 2rem
   .header

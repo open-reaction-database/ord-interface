@@ -73,8 +73,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/transition' as *
 .copy-button-main
   button
     padding: 0.25rem 0.5rem

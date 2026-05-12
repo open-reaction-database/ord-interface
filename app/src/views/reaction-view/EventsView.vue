@@ -58,7 +58,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "../../styles/tabs"
+@use '../../styles/tabs' as *
 .events-view
   .details
     display: grid

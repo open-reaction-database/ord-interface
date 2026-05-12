@@ -36,8 +36,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/transition' as *
 .spinner-main
   width: 100%
   height: 100%

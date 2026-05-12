@@ -87,8 +87,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/transition' as *
 .download-body
   height: 100%
   display: grid

@@ -147,7 +147,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
+@use '@/styles/vars' as *
 .reaction-container
   text-decoration: none
   .row

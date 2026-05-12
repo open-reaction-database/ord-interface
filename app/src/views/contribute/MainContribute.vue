@@ -112,9 +112,9 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "@/styles/vars"
-@import "@/styles/tabs"
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/tabs' as *
+@use '@/styles/transition' as *
 .main-contribute
   margin: 0 5%
   padding: 1rem

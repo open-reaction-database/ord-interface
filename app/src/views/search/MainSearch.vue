@@ -195,7 +195,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
+@use '@/styles/vars' as *
 #search-main
   width: 95%
   margin: 1rem 2.5%

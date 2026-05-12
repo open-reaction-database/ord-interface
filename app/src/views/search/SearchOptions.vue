@@ -337,9 +337,9 @@ ModalKetcher(
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars'
-@import '@/styles/transition'
-@import '@/styles/tabs'
+@use '@/styles/vars' as *
+@use '@/styles/transition' as *
+@use '@/styles/tabs' as *
 .search-options
   max-height: 90vh
   .options-title

@@ -159,7 +159,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars'
+@use '@/styles/vars' as *
 
 .table-main
   width: 100%
