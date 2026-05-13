@@ -55,10 +55,10 @@ export default {
       width: 64px
       height: 64px
       margin: 8px
-      border: 8px solid $linkblue
+      border: 8px solid $color-primary
       border-radius: 50%
       animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite
-      border-color: $linkblue transparent transparent transparent
+      border-color: $color-primary transparent transparent transparent
       &:nth-child(1)
         animation-delay: -0.45s
       &:nth-child(2)

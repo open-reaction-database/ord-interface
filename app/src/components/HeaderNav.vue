@@ -65,7 +65,7 @@ nav
             padding: 0.5rem
             text-decoration: none
             transition: .15s
-            color: $linkblue
+            color: $color-primary
             &:hover
-              color: $hoverblue
+              color: $color-text-hover
 </style>

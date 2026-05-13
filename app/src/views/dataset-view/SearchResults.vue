@@ -160,7 +160,7 @@ export default {
             overflow: hidden
             text-overflow: ellipsis
       &.selected
-        border-color: $linkblue
+        border-color: $color-primary
   .view-selected-container
     position: fixed
     bottom: 2rem
@@ -168,7 +168,7 @@ export default {
     .view-selected-button
       padding: 0.5rem 1rem
       color: white
-      background-color: $linkblue
+      background-color: $color-primary
       border-radius: 0.25rem
       cursor: pointer
       box-shadow: 0 0 5px $darkgrey

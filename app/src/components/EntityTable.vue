@@ -163,7 +163,7 @@ export default {
 
 .table-main
   width: 100%
-  background-color: $lightgrey
+  background-color: $color-background-main
   .table-container
     width: 100%
     .header
@@ -214,7 +214,7 @@ export default {
         column-gap: 2rem
         padding: 1rem
         margin: 0 5%
-        color: $linkblue
+        color: $color-primary
         .select
           color: black
         .paginav
@@ -225,7 +225,7 @@ export default {
           cursor: pointer
           transition: .25s
           &:hover
-            color: $hoverblue
+            color: $color-text-hover
           &.prev, &.next
             grid-template-columns: auto 1fr
           &.first, &.last

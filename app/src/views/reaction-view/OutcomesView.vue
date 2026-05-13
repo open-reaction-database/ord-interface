@@ -194,7 +194,7 @@ export default {
       display: flex
       align-items: center
   .sub-section
-    border: 1px solid $medgrey
+    border: 1px solid $gray-6
     border-radius: 0.25rem
     padding: 1rem
     .compound
