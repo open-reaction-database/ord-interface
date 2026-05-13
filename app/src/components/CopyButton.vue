@@ -84,7 +84,7 @@ export default {
       font-size: 1rem
   #copy-notification
     position: fixed
-    background-color: $darkgrey
+    background-color: $color-shadow-2
     color: white
     padding: 0.5rem 1rem
     border-radius: 0.25rem

@@ -215,7 +215,7 @@ export default {
     .raw
       .button
         padding: 0.5rem
-        background-color: $darkgrey
+        background-color: $color-shadow-2
         color: white
         border-radius: 0.25rem
         cursor: pointer

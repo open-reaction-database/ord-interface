@@ -128,7 +128,7 @@ export default {
       transition: 0.25s
       border: 4px solid white
       &:hover
-        box-shadow: 0 0 5px $darkgrey
+        box-shadow: 0 0 5px $color-shadow-2
       .select
         input, label
           cursor: pointer
@@ -170,7 +170,7 @@ export default {
       background-color: $color-primary
       border-radius: 0.25rem
       cursor: pointer
-      box-shadow: 0 0 5px $darkgrey
+      box-shadow: 0 0 5px $color-shadow-2
       animation: bounce 5s infinite ease-in-out
       @keyframes bounce
         0%, 20%

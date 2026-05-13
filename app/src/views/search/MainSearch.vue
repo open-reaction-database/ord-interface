@@ -270,7 +270,7 @@ export default {
         width: 90%
         height: 100%
         overflow-y: auto
-        box-shadow: 0 0 5px $darkgrey
+        box-shadow: 0 0 5px $color-shadow-2
       .slide-out-tab
         background-color: white
         position: absolute
