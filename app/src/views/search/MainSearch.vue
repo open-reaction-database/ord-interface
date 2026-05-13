@@ -30,7 +30,12 @@ export default {
   watch: {
     '$route.query': {
       handler() {
-        this.getSearchResults();
+        // Submitting a search via the filter panel calls $router.push with new
+        // query params. Vue Router reuses the component, so `mounted` does NOT
+        // re-fire — only this watcher does. We have to kick off `runSearch`
+        // (not `getSearchResults` directly) so polling is wired up for 202
+        // responses; otherwise the spinner hangs until the user refreshes.
+        this.runSearch();
       },
       deep: true,
     },
@@ -75,17 +80,17 @@ export default {
             // If one of these codes, search is finished. Return the results or lack of results.
             if (res?.status == 200) {
               this.searchTaskId = null;
-              clearInterval(this.searchPollingInterval);
+              this.stopPolling();
               return res.json();
             } else if (res?.status == 404) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
-              clearInterval(this.searchPollingInterval);
+              this.stopPolling();
               throw new Error('Error - Search task ID ' + taskId + ' does not exist');
             } else if (res?.status >= 500) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
-              clearInterval(this.searchPollingInterval);
+              this.stopPolling();
               throw new Error('Error - Search task ID ' + taskId + ' failed due to server error');
             }
           })
@@ -108,6 +113,33 @@ export default {
         console.log(e);
         this.searchResults = [];
         this.loading = false;
+      }
+    },
+    stopPolling() {
+      // Idempotent: safe to call even when no interval is active. Keeps
+      // `searchPollingInterval` truthful so the next runSearch() correctly
+      // sees "no polling in progress".
+      if (this.searchPollingInterval !== null) {
+        clearInterval(this.searchPollingInterval);
+        this.searchPollingInterval = null;
+      }
+    },
+    async runSearch() {
+      // Cancel any in-flight polling from a previous query, and discard any
+      // stale task ID so the next getSearchResults() submits a fresh task
+      // against the current URL params (not the previous query's task).
+      this.stopPolling();
+      this.searchTaskId = null;
+      await this.getSearchResults();
+      if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
+        this.searchPollingInterval = setInterval(() => {
+          this.getSearchResults();
+        }, 1000);
+        setTimeout(() => {
+          this.stopPolling();
+          this.searchTaskId = null;
+          this.loading = false;
+        }, 120000);
       }
     },
     updateSearchOptions(options) {
@@ -161,19 +193,7 @@ export default {
     },
   },
   async mounted() {
-    // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
-    await this.getSearchResults().then(() => {
-      if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
-        this.searchPollingInterval = setInterval(() => {
-          this.getSearchResults();
-        }, 1000);
-        setTimeout(() => {
-          clearInterval(this.searchPollingInterval);
-          this.searchTaskId = null;
-          this.loading = false;
-        }, 120000);
-      }
-    });
+    await this.runSearch();
   },
 };
 </script>
