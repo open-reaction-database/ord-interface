@@ -38,7 +38,11 @@ export default {
   },
   computed: {
     reactionIds() {
-      return [this.$route.query.reaction_id];
+      // vue-router gives back a string for a single `?reaction_id=foo`,
+      // an array for repeated `?reaction_id=…&reaction_id=…`, and
+      // undefined when the param is absent. Normalize all three to a flat
+      // array so `.length` reflects the true count.
+      return [this.$route.query.reaction_id ?? []].flat();
     },
     fullUrl() {
       return window.location.href;
