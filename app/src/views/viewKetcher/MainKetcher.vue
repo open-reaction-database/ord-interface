@@ -24,15 +24,19 @@
 </template>
 
 <script>
-
 export default {
   mounted() {
     // import ketcher js in mounted so the dom is ready
-    import("@/ketcher/static/js/main.027562ee.js")
-  }
-}
+    import('@/ketcher/static/js/main.027562ee.js');
+  },
+};
 </script>
 
-<style lang="sass" scoped>
+<!--
+  Ketcher's CSS targets the DOM that Ketcher creates at runtime inside #root,
+  which doesn't carry Vue's scoped data-v-* attribute. The styles MUST be
+  unscoped or none of the ~1300 selectors match anything Ketcher renders.
+-->
+<style lang="sass">
 @import '@/ketcher/static/css/main.8e693d51.css'
 </style>

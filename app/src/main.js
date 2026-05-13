@@ -14,24 +14,28 @@
  * limitations under the License.
  */
 
-import {createApp} from 'vue'
-import {createStore} from 'vuex'
+import { createApp } from 'vue';
+import { createStore } from 'vuex';
 
-import App from './App.vue'
-import router from './router'
+import App from './App.vue';
+import router from './router';
 
 const store = createStore({
   state() {
-    return { storedSet: null, downloadFileType: null, }
+    return { storedSet: null, downloadFileType: null };
   },
-  mutations : {
-    setStoredSet(state, data) { state.storedSet = data },
-    setDownloadFileType(state, data) { state.downloadFileType = data }
+  mutations: {
+    setStoredSet(state, data) {
+      state.storedSet = data;
+    },
+    setDownloadFileType(state, data) {
+      state.downloadFileType = data;
+    },
   },
-  actions : {}
-})
+  actions: {},
+});
 
-const app = createApp(App)
-app.use(router)
-app.use(store)
-app.mount('#app')
+const app = createApp(App);
+app.use(router);
+app.use(store);
+app.mount('#app');

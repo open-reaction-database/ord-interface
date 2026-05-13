@@ -15,7 +15,7 @@
 -->
 
 <script>
-import reaction_pb from "ord-schema"
+import reaction_pb from 'ord-schema';
 
 export default {
   props: {
@@ -23,48 +23,52 @@ export default {
     display: String,
   },
   computed: {
-    vessel () {
-      return this.setup.vessel
+    vessel() {
+      return this.setup.vessel;
     },
-    vesselType () {
-      const vesselTypes = reaction_pb.Vessel.VesselType
-      return Object.keys(vesselTypes).find(key => vesselTypes[key] == this.vessel.type)
+    vesselType() {
+      const vesselTypes = reaction_pb.Vessel.VesselType;
+      return Object.keys(vesselTypes).find(key => vesselTypes[key] == this.vessel.type);
     },
-    vesselVolume () {
-      const unitLabels = reaction_pb.Volume.VolumeUnit
-      const label = Object.keys(unitLabels).find(key => unitLabels[key] == this.vessel.volume.units)
-      return `${this.vessel.volume.value} ${label.toLowerCase()}`
+    vesselVolume() {
+      const unitLabels = reaction_pb.Volume.VolumeUnit;
+      const label = Object.keys(unitLabels).find(key => unitLabels[key] == this.vessel.volume.units);
+      return `${this.vessel.volume.value} ${label.toLowerCase()}`;
     },
-    vesselAttachments () {
-      const attachTypes = reaction_pb.VesselAttachment.VesselAttachmentType
-      return this.vessel.attachmentsList.map(attach => {
-        const type = Object.keys(attachTypes).find(key => attachTypes[key] == attach.type)
-        return `${type}${attach.details ? `: ${attach.details}` : ""}`
-      }).join(", ")
+    vesselAttachments() {
+      const attachTypes = reaction_pb.VesselAttachment.VesselAttachmentType;
+      return this.vessel.attachmentsList
+        .map(attach => {
+          const type = Object.keys(attachTypes).find(key => attachTypes[key] == attach.type);
+          return `${type}${attach.details ? `: ${attach.details}` : ''}`;
+        })
+        .join(', ');
     },
-    vesselPrep () {
-      const prepTypes = reaction_pb.VesselPreparation.VesselPreparationType
-      return this.vessel.preparationsList.map(prep => {
-        const type = Object.keys(prepTypes).find(key => prepTypes[key] == prep.type)
-        return `${type}${prep.details ? `: ${prep.details}` : ""}`
-      }).join(", ")
+    vesselPrep() {
+      const prepTypes = reaction_pb.VesselPreparation.VesselPreparationType;
+      return this.vessel.preparationsList
+        .map(prep => {
+          const type = Object.keys(prepTypes).find(key => prepTypes[key] == prep.type);
+          return `${type}${prep.details ? `: ${prep.details}` : ''}`;
+        })
+        .join(', ');
     },
-    vesselMaterial () {
-      const materialTypes = reaction_pb.VesselMaterial.VesselMaterialType
-      return Object.keys(materialTypes).find(key => materialTypes[key] == this.vessel.material?.type)
+    vesselMaterial() {
+      const materialTypes = reaction_pb.VesselMaterial.VesselMaterialType;
+      return Object.keys(materialTypes).find(key => materialTypes[key] == this.vessel.material?.type);
     },
-    reactionEnv () {
-      const envVal = this.setup.environment?.type
-      if (!envVal) return null
-      const envTypes = reaction_pb.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType
-      return Object.keys(envTypes).find(key => envTypes[key] == envVal)
-    }
+    reactionEnv() {
+      const envVal = this.setup.environment?.type;
+      if (!envVal) return null;
+      const envTypes = reaction_pb.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType;
+      return Object.keys(envTypes).find(key => envTypes[key] == envVal);
+    },
   },
-  mounted () {
-    console.log('pb',reaction_pb)
-    console.log('props',this.setup)
-  }
-}
+  mounted() {
+    console.log('pb', reaction_pb);
+    console.log('props', this.setup);
+  },
+};
 </script>
 
 <template lang="pug">

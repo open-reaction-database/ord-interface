@@ -4,7 +4,7 @@ Web interface and FastAPI server for the [Open Reaction Database](https://open-r
 
 ## Project layout
 
-- **`app/`** — Vue single-page application (frontend)
+- **`app/`** — Vue single-page application (frontend), built with Vite
   - `src/components/` — reusable Vue components
   - `src/views/` — routed pages (browse, search, dataset/reaction views)
   - `src/router/`, `src/styles/`, `src/utils/`, `src/assets/`
@@ -18,7 +18,13 @@ The Vue frontend talks to the FastAPI server, so both processes need to be runni
 
 ## Local development
 
-Prerequisites: [`uv`](https://docs.astral.sh/uv/), Postgres with the [rdkit cartridge](https://www.rdkit.org/docs/Cartridge.html), [`node` + `npm`](https://nodejs.org/). Docker is optional, for the bundled full-stack image.
+Prerequisites:
+
+- [`uv`](https://docs.astral.sh/uv/)
+- Postgres with the [rdkit cartridge](https://www.rdkit.org/docs/Cartridge.html)
+- [`node` + `npm`](https://nodejs.org/)
+- [`redis`](https://redis.io/) — the API uses it for search-task state
+- Docker (optional, for the bundled full-stack image)
 
 ### 1. Install Python dependencies
 
@@ -29,6 +35,11 @@ cd ord-interface
 conda install -c rdkit rdkit-postgresql
 uv sync
 ```
+
+The `Local` option below shells out to `initdb`/`postgres` to bring up an
+in-process test database, so the conda environment that has
+`rdkit-postgresql` needs to stay activated (or its `bin/` on `PATH`) for the
+rest of the steps.
 
 ### 2. Run the API
 
@@ -44,16 +55,27 @@ docker compose up
 
 `docker compose up` binds Postgres on host port `5432` — stop any local Postgres first.
 
-#### Option B: FastAPI dev server (in-process testing database)
+#### Option B: Local (in-process testing database)
 
 ```shell
-cd ord_interface/api
-ORD_INTERFACE_TESTING=TRUE fastapi dev main.py --port=5000
+# Redis (the API uses it for search-task state); leaves it daemonized.
+redis-server --daemonize yes
+
+# Backend. ORD_INTERFACE_TESTING=TRUE spins up an in-process Postgres
+# via testing.postgresql and loads the bundled test datasets.
+ORD_INTERFACE_TESTING=TRUE uv run uvicorn ord_interface.api.main:app --port 5000 --reload
 ```
+
+> **macOS note:** Apple's AirPlay Receiver service also listens on `*:5000`. If
+> requests hit the wrong listener you'll get `HTTP 403` with a `Server:
+> AirTunes` header. Either disable AirPlay Receiver (System Settings → General
+> → AirDrop & Handoff), or bind uvicorn to a different port and update the
+> proxy target in `app/vite.config.js`. Uvicorn binds `127.0.0.1` only, so
+> `http://127.0.0.1:5000/...` will reach uvicorn regardless.
 
 ### 3. Run the Vue SPA
 
-Download [Ketcher v2.5.1](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip) and extract its contents into `./app/src/ketcher`, then:
+Download [Ketcher v2.5.1](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip), extract it, and place the `standalone/` directory's contents inside `./app/src/ketcher/` (so that `app/src/ketcher/static/` and `app/src/ketcher/templates/` exist). Then:
 
 ```shell
 cd app
@@ -61,7 +83,7 @@ npm install
 npm run serve
 ```
 
-Open <http://localhost:8080>. The page hot-reloads on edit.
+Open <http://localhost:8080>. Vite hot-reloads source changes; `npm run dev` and `npm run preview` are also available as aliases for `vite` and `vite preview` respectively.
 
 ## Deployment
 

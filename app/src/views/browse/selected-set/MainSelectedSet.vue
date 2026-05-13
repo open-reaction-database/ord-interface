@@ -15,67 +15,71 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner'
-import reaction_pb from "ord-schema"
-import base64ToBytes from "@/utils/base64"
-import ReactionCard from '@/components/ReactionCard'
-import DownloadResults from '@/components/DownloadResults'
-import CopyButton from '@/components/CopyButton'
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import reaction_pb from 'ord-schema';
+import base64ToBytes from '@/utils/base64';
+import ReactionCard from '@/components/ReactionCard.vue';
+import DownloadResults from '@/components/DownloadResults.vue';
+import CopyButton from '@/components/CopyButton.vue';
 
 export default {
   components: {
     LoadingSpinner,
     ReactionCard,
     DownloadResults,
-    CopyButton
+    CopyButton,
   },
   data() {
     return {
       reactions: [],
       loading: true,
       showDownloadResults: false,
-    }
+    };
   },
   computed: {
     reactionIds() {
-      return [this.$route.query.reaction_id] || []
+      // vue-router gives back a string for a single `?reaction_id=foo`,
+      // an array for repeated `?reaction_id=…&reaction_id=…`, and
+      // undefined when the param is absent. Normalize all three to a flat
+      // array so `.length` reflects the true count.
+      return [this.$route.query.reaction_id ?? []].flat();
     },
     fullUrl() {
-      return window.location.href
-    }
+      return window.location.href;
+    },
   },
   methods: {
     async getSelectedReactions() {
-      this.loading = true
+      this.loading = true;
       try {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/reactions`)
-        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.open('POST', `/api/reactions`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onload = () => {
           // if response is good, deserialize reaction and return object from protobuff
-          let fetchedReactions = null
+          let fetchedReactions = null;
           if (xhr.response !== null) {
-            fetchedReactions = JSON.parse(xhr.response)
+            fetchedReactions = JSON.parse(xhr.response);
             fetchedReactions.forEach(reaction => {
-              const base64string = reaction.proto
-              const bytes = base64ToBytes(base64string)
+              const base64string = reaction.proto;
+              const bytes = base64ToBytes(base64string);
               reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
-            })
+            });
           }
-          this.reactions = fetchedReactions
-          this.loading = false
-        }
-        xhr.send(JSON.stringify({"reaction_ids": this.reactionIds}))
+          this.reactions = fetchedReactions;
+          this.loading = false;
+        };
+        xhr.send(JSON.stringify({ reaction_ids: this.reactionIds }));
       } catch (e) {
-        console.log(e)
-        this.loading = false
+        console.log(e);
+        this.loading = false;
       }
     },
   },
   mounted() {
-    this.getSelectedReactions()
+    this.getSelectedReactions();
   },
-}
+};
 </script>
 
 <template lang="pug">
@@ -111,7 +115,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
+@use '@/styles/vars' as *
 #selected-set-main
   padding: 2rem
   .header

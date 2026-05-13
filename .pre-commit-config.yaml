@@ -37,3 +37,11 @@ repos:
         entry: uv run ty check ord_interface
         language: system
         pass_filenames: false
+      - id: prettier
+        name: prettier --check (app)
+        # Runs the npm-pinned prettier so the hook and CI use identical
+        # versions. Requires `cd app && npm ci` to have been run at least once.
+        entry: bash -c 'cd app && npx --no-install prettier --check .'
+        language: system
+        files: ^app/
+        pass_filenames: false

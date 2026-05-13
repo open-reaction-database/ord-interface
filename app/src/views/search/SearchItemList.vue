@@ -20,27 +20,27 @@ export default {
     title: String,
     itemList: Array,
   },
-  data () {
+  data() {
     return {
       mutatedList: [],
-      itemToAdd: "",
-    }
+      itemToAdd: '',
+    };
   },
   methods: {
     updateList() {
-      this.mutatedList.push(this.itemToAdd)
-      this.itemToAdd = ""
-      this.$emit('update:itemList', this.mutatedList)
+      this.mutatedList.push(this.itemToAdd);
+      this.itemToAdd = '';
+      this.$emit('update:itemList', this.mutatedList);
     },
     deleteItem(idx) {
-      this.mutatedList.splice(idx,1)
-      this.$emit('update:itemList', this.mutatedList)
+      this.mutatedList.splice(idx, 1);
+      this.$emit('update:itemList', this.mutatedList);
     },
   },
   mounted() {
-    this.mutatedList = this.itemList || []
-  }
-}
+    this.mutatedList = this.itemList || [];
+  },
+};
 </script>
 
 <template lang="pug">

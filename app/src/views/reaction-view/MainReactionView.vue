@@ -15,20 +15,20 @@
 -->
 
 <script>
-import reaction_pb from "ord-schema"
-import CompoundView from "./CompoundView"
-import SetupView from "./SetupView"
-import ConditionsView from "./ConditionsView"
-import NotesView from "./NotesView"
-import ObservationsView from "./ObservationsView"
-import WorkupsView from "./WorkupsView"
-import OutcomesView from "./OutcomesView"
-import ProvenanceView from "./ProvenanceView"
-import EventsView from "./EventsView"
-import FloatingModal from "../../components/FloatingModal"
-import LoadingSpinner from '@/components/LoadingSpinner'
-import base64ToBytes from "@/utils/base64"
-import outcomesUtil from '@/utils/outcomes'
+import reaction_pb from 'ord-schema';
+import CompoundView from './CompoundView.vue';
+import SetupView from './SetupView.vue';
+import ConditionsView from './ConditionsView.vue';
+import NotesView from './NotesView.vue';
+import ObservationsView from './ObservationsView.vue';
+import WorkupsView from './WorkupsView.vue';
+import OutcomesView from './OutcomesView.vue';
+import ProvenanceView from './ProvenanceView.vue';
+import EventsView from './EventsView.vue';
+import FloatingModal from '../../components/FloatingModal.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import base64ToBytes from '@/utils/base64';
+import outcomesUtil from '@/utils/outcomes';
 
 export default {
   components: {
@@ -51,162 +51,151 @@ export default {
       reactionBytes: null,
       loading: true,
       inputsIdx: 0,
-      setupTabs: [
-        "vessel",
-        "environment",
-        "automation",
-      ],
-      setupTab: "vessel",
-      conditionTabs: [
-        "temperature",
-        "pressure",
-        "stirring",
-        "illumination",
-        "electrochemistry",
-        "flow",
-        "other",
-      ],
-      conditionTab: "temperature",
+      setupTabs: ['vessel', 'environment', 'automation'],
+      setupTab: 'vessel',
+      conditionTabs: ['temperature', 'pressure', 'stirring', 'illumination', 'electrochemistry', 'flow', 'other'],
+      conditionTab: 'temperature',
       workupsTab: 0,
       outcomesTab: 0,
       showRawReaction: false,
       navItems: [],
-      activeNav: "summary"
-    }
+      activeNav: 'summary',
+    };
   },
   computed: {
     reactionId() {
-      return this.$route.params.reactionId
+      return this.$route.params.reactionId;
     },
     displayDetails() {
-      if (!this.reaction) return {}
-      let returnArr = {...this.reaction.inputsMap[this.inputsIdx][1]}
+      if (!this.reaction) return {};
+      let returnArr = { ...this.reaction.inputsMap[this.inputsIdx][1] };
       // console.log('returnArr',returnArr)
       // filter out null/undefined values and arrays
-      let formattedDetails = Object.fromEntries(Object.entries(returnArr).filter(([_,v]) => v != null && !Array.isArray(v)))
-      
+      let formattedDetails = Object.fromEntries(
+        Object.entries(returnArr).filter(([_, v]) => v != null && !Array.isArray(v)),
+      );
+
       // some details are objects that need to be broken down for display
       if (formattedDetails.additionDevice) {
-        const deviceTypes = reaction_pb.ReactionInput.AdditionDevice.AdditionDeviceType
-        const device = Object.keys(deviceTypes).find(key => deviceTypes[key] == formattedDetails.additionDevice.type)
-        formattedDetails.additionDevice = device.toLowerCase()
+        const deviceTypes = reaction_pb.ReactionInput.AdditionDevice.AdditionDeviceType;
+        const device = Object.keys(deviceTypes).find(key => deviceTypes[key] == formattedDetails.additionDevice.type);
+        formattedDetails.additionDevice = device.toLowerCase();
       }
       if (formattedDetails.additionSpeed) {
-        const speedTypes = reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType
-        const speed = Object.keys(speedTypes).find(key => speedTypes[key] == formattedDetails.additionSpeed.type)
-        formattedDetails.additionSpeed = speed.toLowerCase()
+        const speedTypes = reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType;
+        const speed = Object.keys(speedTypes).find(key => speedTypes[key] == formattedDetails.additionSpeed.type);
+        formattedDetails.additionSpeed = speed.toLowerCase();
       }
       if (formattedDetails.additionDuration) {
-        formattedDetails.additionDuration = outcomesUtil.formattedTime(formattedDetails.additionDuration)
+        formattedDetails.additionDuration = outcomesUtil.formattedTime(formattedDetails.additionDuration);
       }
-      return formattedDetails
+      return formattedDetails;
     },
     displayConditionsOther() {
-      const otherFields = [
-        "reflux",
-        "ph",
-        "conditions_are_dynamic",
-        "details",
-      ]
-      return otherFields.find(key => this.reaction.conditions[key])
+      const otherFields = ['reflux', 'ph', 'conditions_are_dynamic', 'details'];
+      return otherFields.find(key => this.reaction.conditions[key]);
     },
     events() {
-      const eventArray = []
-      if (!this.reaction?.provenance?.recordCreated) return eventArray
+      const eventArray = [];
+      if (!this.reaction?.provenance?.recordCreated) return eventArray;
       // add events to array
-      eventArray.push(this.reaction.provenance.recordCreated)
-      eventArray[0].details = "(record created)"
-      eventArray.push(...this.reaction.provenance.recordModifiedList)
+      eventArray.push(this.reaction.provenance.recordCreated);
+      eventArray[0].details = '(record created)';
+      eventArray.push(...this.reaction.provenance.recordModifiedList);
       // sort by date to be safe
-      eventArray.sort((a,b) => {
-        const dateA = new Date(a.time.value)
-        const dateB = new Date(b.time.value)
-        return dateA - dateB
-      })
-      return eventArray
+      eventArray.sort((a, b) => {
+        const dateA = new Date(a.time.value);
+        const dateB = new Date(b.time.value);
+        return dateA - dateB;
+      });
+      return eventArray;
     },
     positions() {
       // get positions of each div
-      if (!this.navItems.length) return null
+      if (!this.navItems.length) return null;
       return this.navItems
         .filter(id => {
-          return document.getElementById(id)
-        }).map(id => {
-          const element = document.getElementById(id)
-          const rect = element.getBoundingClientRect()
+          return document.getElementById(id);
+        })
+        .map(id => {
+          const element = document.getElementById(id);
+          const rect = element.getBoundingClientRect();
           return {
             id,
             top: rect.top + window.pageYOffset,
-            bottom: rect.bottom + window.pageYOffset
-          }
-      })
-    }
+            bottom: rect.bottom + window.pageYOffset,
+          };
+        });
+    },
   },
   methods: {
-    getReactionData () {
+    getReactionData() {
       return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/reactions`)
-        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.open('POST', `/api/reactions`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
         // xhr.responseType = "arraybuffer";
         xhr.onload = () => {
           // if response is good, deserialize reaction and return object from protobuff
-          let reaction = null
+          let reaction = null;
           if (xhr.response !== null) {
-            const base64string = JSON.parse(xhr.response)[0].proto
-            const bytes = base64ToBytes(base64string)
+            const base64string = JSON.parse(xhr.response)[0].proto;
+            const bytes = base64ToBytes(base64string);
             reaction = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
             // sort inputs by addition order
-            reaction.inputsMap.sort((a,b) => a[1].additionOrder - b[1].additionOrder)
+            reaction.inputsMap.sort((a, b) => a[1].additionOrder - b[1].additionOrder);
           }
           resolve(reaction);
-        }
-        xhr.send(JSON.stringify({"reaction_ids": [this.reactionId]}))
-      })
+        };
+        xhr.send(JSON.stringify({ reaction_ids: [this.reactionId] }));
+      });
     },
-    async getReactionSummary () {
-      const res = await fetch(`/api/reaction_summary?reaction_id=${this.reactionId}&compact=false`)
-      return await res.text()
+    async getReactionSummary() {
+      const res = await fetch(`/api/reaction_summary?reaction_id=${this.reactionId}&compact=false`);
+      return await res.text();
     },
-    getReactionType (id) {
-      const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType
-      return Object.keys(identifiers).find(key => identifiers[key] == id)
+    getReactionType(id) {
+      const identifiers = reaction_pb.ReactionIdentifier.ReactionIdentifierType;
+      return Object.keys(identifiers).find(key => identifiers[key] == id);
     },
-    getWorkupLabel (type) {
-      const workupTypes = reaction_pb.ReactionWorkup.ReactionWorkupType
-      return Object.keys(workupTypes).find(key => workupTypes[key] == type).toLowerCase().replaceAll("_"," ")
+    getWorkupLabel(type) {
+      const workupTypes = reaction_pb.ReactionWorkup.ReactionWorkupType;
+      return Object.keys(workupTypes)
+        .find(key => workupTypes[key] == type)
+        .toLowerCase()
+        .replaceAll('_', ' ');
     },
-    setNavItems () {
-      let items = ["summary", "identifiers", "inputs"]
-      const optionals = ["setup", "conditions", "notes", "observations", "workups"]
+    setNavItems() {
+      let items = ['summary', 'identifiers', 'inputs'];
+      const optionals = ['setup', 'conditions', 'notes', 'observations', 'workups'];
       optionals.forEach(item => {
-        if (this.reaction[item] || this.reaction[`${item}List`]?.length) items.push(item)
-      })
-      const lastItems = ["outcomes", "provenance", "full-record"]
-      items.push(...lastItems)
-      return items
+        if (this.reaction[item] || this.reaction[`${item}List`]?.length) items.push(item);
+      });
+      const lastItems = ['outcomes', 'provenance', 'full-record'];
+      items.push(...lastItems);
+      return items;
     },
-    scrollTo (id) {
-      document.getElementById(id).scrollIntoView({behavior: 'smooth'})
+    scrollTo(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
     },
-    onScroll () {
-      const active = this.positions.find((pos) => {
+    onScroll() {
+      const active = this.positions.find(pos => {
         return pos.top <= window.pageYOffset && pos.bottom > window.pageYOffset;
       });
-      if (active) this.activeNav = active.id
-    }
+      if (active) this.activeNav = active.id;
+    },
   },
   async mounted() {
-    this.reaction = await this.getReactionData()
-    this.reactionSummary = await this.getReactionSummary()
-    this.navItems = this.setNavItems()
-    this.loading = false
-    window.addEventListener('scroll',this.onScroll)
+    this.reaction = await this.getReactionData();
+    this.reactionSummary = await this.getReactionSummary();
+    this.navItems = this.setNavItems();
+    this.loading = false;
+    window.addEventListener('scroll', this.onScroll);
   },
   beforeUnmount() {
-    window.removeEventListener('scroll', this.onScroll)
-  }
-}
+    window.removeEventListener('scroll', this.onScroll);
+  },
+};
 </script>
 
 <template lang="pug">
@@ -354,9 +343,9 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "@/styles/vars"
-@import "@/styles/tabs"
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/tabs' as *
+@use '@/styles/transition' as *
 .main-reaction-view
   min-height: 90vh
   .reaction-transition
@@ -434,5 +423,4 @@ export default {
     width: fit-content
     color: white
     cursor: pointer
-
 </style>

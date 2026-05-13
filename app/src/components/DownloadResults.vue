@@ -15,7 +15,7 @@
 -->
 
 <script>
-import FloatingModal from "@/components/FloatingModal"
+import FloatingModal from '@/components/FloatingModal.vue';
 
 export default {
   name: 'DownloadResults',
@@ -24,31 +24,31 @@ export default {
     showDownloadResults: Boolean,
   },
   components: {
-    "floating-modal": FloatingModal
+    'floating-modal': FloatingModal,
   },
   watch: {
     fileType(val) {
       // store selected file type in vue session
-      this.$store.commit('setDownloadFileType', val)
-    }
+      this.$store.commit('setDownloadFileType', val);
+    },
   },
-  data () {
+  data() {
     return {
-      fileType: "pb.gz"
-    }
+      fileType: 'pb.gz',
+    };
   },
   methods: {
-    downloadResults () {
+    downloadResults() {
       // create .pb download of search results
       const xhr = new XMLHttpRequest();
       xhr.open('POST', '/api/download_search_results');
-      xhr.responseType = "blob";
+      xhr.responseType = 'blob';
       xhr.onload = () => {
         if (xhr.status === 200) {
           const url = URL.createObjectURL(xhr.response);
           const link = document.createElement('a');
           link.href = url;
-          link.download = "ord_search_results.pb.gz"
+          link.download = 'ord_search_results.pb.gz';
           link.click();
           // https://stackoverflow.com/a/56547307.
           setTimeout(() => {
@@ -58,13 +58,13 @@ export default {
         }
       };
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.send(JSON.stringify({"reaction_ids": this.reactionIds}));
-    }
+      xhr.send(JSON.stringify({ reaction_ids: this.reactionIds }));
+    },
   },
   mounted() {
-    this.fileType = this.$store.state.downloadFileType || "pb.gz"
-  }
-}
+    this.fileType = this.$store.state.downloadFileType || 'pb.gz';
+  },
+};
 </script>
 
 <template lang="pug">
@@ -87,8 +87,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/transition' as *
 .download-body
   height: 100%
   display: grid

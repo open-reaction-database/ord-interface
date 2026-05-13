@@ -15,17 +15,16 @@
 -->
 
 <script>
-
 export default {
   props: {
     events: Array,
   },
-  data () {
+  data() {
     return {
-      eventIdx: 0
-    }
+      eventIdx: 0,
+    };
   },
-}
+};
 </script>
 
 <template lang="pug">
@@ -59,7 +58,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "../../styles/tabs"
+@use '../../styles/tabs' as *
 .events-view
   .details
     display: grid

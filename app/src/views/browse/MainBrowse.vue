@@ -15,8 +15,8 @@
 -->
 
 <script>
-import EntityTable from '@/components/EntityTable'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import EntityTable from '@/components/EntityTable.vue';
+import LoadingSpinner from '../../components/LoadingSpinner.vue';
 
 export default {
   components: {
@@ -26,18 +26,18 @@ export default {
   data() {
     return {
       loading: true,
-      tableData: []
-    }
+      tableData: [],
+    };
   },
   mounted() {
-    fetch("/api/datasets", {method: "GET"})
+    fetch('/api/datasets', { method: 'GET' })
       .then(response => response.json())
       .then(data => {
-        this.tableData = data
-        this.loading = false
-      })
-  }
-}
+        this.tableData = data;
+        this.loading = false;
+      });
+  },
+};
 </script>
 
 <template lang="pug">
@@ -66,7 +66,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/table'
+@use '@/styles/table' as *
 #browse-main
   padding: 1rem 0
   .table-container

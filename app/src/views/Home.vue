@@ -17,9 +17,8 @@
 <script>
 export default {
   name: 'HomeView',
-  components: {
-  }
-}
+  components: {},
+};
 </script>
 
 <template lang="pug">
