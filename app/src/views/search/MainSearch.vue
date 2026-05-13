@@ -15,9 +15,9 @@
 -->
 
 <script>
-import SearchOptions from './SearchOptions';
-import SearchResults from './SearchResults';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import SearchOptions from './SearchOptions.vue';
+import SearchResults from './SearchResults.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import reaction_pb from 'ord-schema';
 import base64ToBytes from '@/utils/base64';
 

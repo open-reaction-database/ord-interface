@@ -16,17 +16,17 @@
 
 <script>
 import reaction_pb from 'ord-schema';
-import CompoundView from './CompoundView';
-import SetupView from './SetupView';
-import ConditionsView from './ConditionsView';
-import NotesView from './NotesView';
-import ObservationsView from './ObservationsView';
-import WorkupsView from './WorkupsView';
-import OutcomesView from './OutcomesView';
-import ProvenanceView from './ProvenanceView';
-import EventsView from './EventsView';
-import FloatingModal from '../../components/FloatingModal';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import CompoundView from './CompoundView.vue';
+import SetupView from './SetupView.vue';
+import ConditionsView from './ConditionsView.vue';
+import NotesView from './NotesView.vue';
+import ObservationsView from './ObservationsView.vue';
+import WorkupsView from './WorkupsView.vue';
+import OutcomesView from './OutcomesView.vue';
+import ProvenanceView from './ProvenanceView.vue';
+import EventsView from './EventsView.vue';
+import FloatingModal from '../../components/FloatingModal.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import base64ToBytes from '@/utils/base64';
 import outcomesUtil from '@/utils/outcomes';
 

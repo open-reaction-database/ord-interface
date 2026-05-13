@@ -16,7 +16,7 @@
 
 <script>
 import reaction_pb from 'ord-schema';
-import FloatingModal from '../../components/FloatingModal';
+import FloatingModal from '../../components/FloatingModal.vue';
 import { amountObj, amountStr } from '../../utils/amount';
 
 export default {

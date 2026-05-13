@@ -15,8 +15,8 @@
 -->
 
 <script>
-import ModalKetcher from '@/components/ModalKetcher';
-import SearchItemList from './SearchItemList';
+import ModalKetcher from '@/components/ModalKetcher.vue';
+import SearchItemList from './SearchItemList.vue';
 import MultiRangeSlider from 'multi-range-slider-vue';
 
 export default {

@@ -31,8 +31,8 @@
 }
 </style>
 <script>
-import FloatingModal from '../../components/FloatingModal';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import FloatingModal from '../../components/FloatingModal.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import reaction_pb from 'ord-schema';
 import * as d3 from 'd3';
 

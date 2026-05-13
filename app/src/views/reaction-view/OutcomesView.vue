@@ -16,8 +16,8 @@
 
 <script>
 import reaction_pb from 'ord-schema';
-import CompoundView from './CompoundView';
-import FloatingModal from '../../components/FloatingModal';
+import CompoundView from './CompoundView.vue';
+import FloatingModal from '../../components/FloatingModal.vue';
 import { amountObj, amountStr } from '@/utils/amount';
 import outcomesUtil from '@/utils/outcomes';
 

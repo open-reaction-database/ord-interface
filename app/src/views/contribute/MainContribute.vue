@@ -15,10 +15,10 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner';
-import Enumerate from './EnumerateView';
-import Upload from './UploadView';
-import Datasets from './DatasetsView';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import Enumerate from './EnumerateView.vue';
+import Upload from './UploadView.vue';
+import Datasets from './DatasetsView.vue';
 
 export default {
   components: {

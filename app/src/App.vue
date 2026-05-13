@@ -15,8 +15,8 @@
 -->
 
 <script>
-import HeaderNav from './components/HeaderNav';
-import MainFooter from './components/MainFooter';
+import HeaderNav from './components/HeaderNav.vue';
+import MainFooter from './components/MainFooter.vue';
 
 export default {
   components: {

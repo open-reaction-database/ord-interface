@@ -15,11 +15,11 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import conditionUtil from '@/utils/conditions';
 import outcomesUtil from '@/utils/outcomes';
 import reaction_pb from 'ord-schema';
-import CopyButton from '@/components/CopyButton';
+import CopyButton from '@/components/CopyButton.vue';
 
 export default {
   props: {

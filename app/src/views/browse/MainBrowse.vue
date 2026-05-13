@@ -15,7 +15,7 @@
 -->
 
 <script>
-import EntityTable from '@/components/EntityTable';
+import EntityTable from '@/components/EntityTable.vue';
 import LoadingSpinner from '../../components/LoadingSpinner.vue';
 
 export default {

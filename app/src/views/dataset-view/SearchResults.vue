@@ -15,11 +15,11 @@
 -->
 
 <script>
-import EntityTable from '@/components/EntityTable';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import ReactionCard from '@/components/ReactionCard';
-import CopyButton from '@/components/CopyButton';
-import DownloadResults from '@/components/DownloadResults';
+import EntityTable from '@/components/EntityTable.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import ReactionCard from '@/components/ReactionCard.vue';
+import CopyButton from '@/components/CopyButton.vue';
+import DownloadResults from '@/components/DownloadResults.vue';
 
 export default {
   props: {

@@ -34,8 +34,11 @@ export default [
       },
     },
     rules: {
-      'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-      'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      // GitHub Actions sets CI=true; ESLint itself never sets NODE_ENV, so the
+      // CI variable is the reliable way to make these noisy in CI and quiet
+      // during local iteration.
+      'no-console': process.env.CI ? 'warn' : 'off',
+      'no-debugger': process.env.CI ? 'warn' : 'off',
       'no-unused-vars': 'warn',
     },
   },

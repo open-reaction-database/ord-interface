@@ -15,7 +15,7 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 
 export default {
   components: {

@@ -26,9 +26,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   plugins: [
     vue(),
-    // Mirror the chainWebpack copy step from the old vue-cli config: ketcher's
-    // chemical templates ship inside src/ketcher/templates and must end up at
-    // /templates in the build output.
+    // Ketcher's chemical templates ship inside src/ketcher/templates and must
+    // end up at /templates in the build output (the Ketcher JS bundle fetches
+    // them at runtime). Ketcher v2.5.1 is otherwise self-contained — its main
+    // JS bundles all assets except an `overlay.svg` referenced via a relative
+    // url() that Vite resolves at build time. If Ketcher is ever updated to a
+    // chunked build, the copy targets here will need to grow.
     viteStaticCopy({
       targets: [
         {
@@ -42,16 +45,15 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
-    // The codebase predates Vite and routinely omits `.vue` (and other) file
-    // extensions in imports. webpack's default resolver allowed this; Vite
-    // requires it to be opted into explicitly.
-    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.vue'],
   },
   server: {
     port: 8080,
     proxy: {
+      // 127.0.0.1 (not localhost / 0.0.0.0): on macOS, localhost resolves to
+      // ::1 first, and AirPlay Receiver also listens on *:5000. uvicorn binds
+      // 127.0.0.1 only, so the explicit IPv4 address dodges the collision.
       '^/api': {
-        target: 'http://0.0.0.0:5000',
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
     },

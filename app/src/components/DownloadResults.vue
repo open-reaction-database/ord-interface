@@ -15,7 +15,7 @@
 -->
 
 <script>
-import FloatingModal from '@/components/FloatingModal';
+import FloatingModal from '@/components/FloatingModal.vue';
 
 export default {
   name: 'DownloadResults',

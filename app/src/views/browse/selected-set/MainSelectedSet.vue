@@ -15,12 +15,12 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import reaction_pb from 'ord-schema';
 import base64ToBytes from '@/utils/base64';
-import ReactionCard from '@/components/ReactionCard';
-import DownloadResults from '@/components/DownloadResults';
-import CopyButton from '@/components/CopyButton';
+import ReactionCard from '@/components/ReactionCard.vue';
+import DownloadResults from '@/components/DownloadResults.vue';
+import CopyButton from '@/components/CopyButton.vue';
 
 export default {
   components: {
