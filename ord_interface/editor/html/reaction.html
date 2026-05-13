@@ -220,7 +220,8 @@ limitations under the License.
                 <table class="component_role_limiting">
                   <tr><td>reaction role</td><td><div class="component_reaction_role selector" data-proto="ReactionRole_ReactionRoleType"></div></td></tr>
                   <tr class="limiting_reactant"><td>limiting reactant</td><td><div class="component_limiting optional_bool"></div></td></tr>
-                  <tr class="amount">
+                  <tbody class="amount">
+                  <tr>
                     <td>amount</td>
                     <td>
                       <div class="amount_value edittext shorttext floattext"></div>
@@ -230,6 +231,12 @@ limitations under the License.
                     <td class="amount_includes_solutes_label">includes solutes</td>
                     <td><div class="amount_includes_solutes optional_bool"></div></td>
                   </tr>
+                  <tr class="unmeasured_amount">
+                    <td>unmeasured?</td>
+                    <td><div class="unmeasured_amount_type selector" data-proto="UnmeasuredAmount_UnmeasuredAmountType"></div></td>
+                    <td>details</td><td><div class="unmeasured_amount_details edittext"></div></td>
+                  </tr>
+                  </tbody>
                 </table>
                 <fieldset class="s5">
                   <legend>
@@ -340,7 +347,8 @@ limitations under the License.
                   <tr><td>reaction ID</td><td><div class="crude_reaction edittext"></div></td></tr>
                   <tr><td>includes workup</td><td><div class="crude_includes_workup optional_bool"></div></td></tr>
                   <tr><td>has derived amount</td><td><div class="crude_has_derived optional_bool"></div></td></tr>
-                  <tr class="amount">
+                  <tbody class="amount">
+                  <tr>
                     <td>amount</td>
                     <td>
                       <div class="amount_value edittext shorttext floattext"></div>
@@ -348,6 +356,12 @@ limitations under the License.
                       <select class="amount_units mass volume"></select>
                     </td>
                   </tr>
+                  <tr class="unmeasured_amount">
+                    <td>unmeasured?</td>
+                    <td><div class="unmeasured_amount_type selector" data-proto="UnmeasuredAmount_UnmeasuredAmountType"></div></td>
+                    <td>details</td><td><div class="unmeasured_amount_details edittext"></div></td>
+                  </tr>
+                  </tbody>
                 </table>
               </fieldset>
             </div>
@@ -723,14 +737,21 @@ limitations under the License.
                                                      </td></tr>
               <tr><td>automated</td><td><div class="workup_automated optional_bool"></div></td></tr>
               <tr><td>details</td><td><div class="workup_details edittext paratext"></div></td></tr>
-              <tr class="workup_amount">
+              <tbody class="workup_amount amount">
+              <tr>
                 <td>aliquot amount</td>
-                <td class="amount">
+                <td>
                   <div class="amount_value edittext shorttext floattext"></div>
                   ± <div class="amount_precision edittext shorttext floattext"></div>
                   <select class="amount_units mass volume"></select>
                 </td>
               </tr>
+              <tr class="unmeasured_amount">
+                <td>unmeasured?</td>
+                <td><div class="unmeasured_amount_type selector" data-proto="UnmeasuredAmount_UnmeasuredAmountType"></div></td>
+                <td>details</td><td><div class="unmeasured_amount_details edittext"></div></td>
+              </tr>
+              </tbody>
             </table>
             <div class="workup_input">
               <!-- Shares ".input_template" with "#inputs" above. -->
@@ -885,6 +906,11 @@ limitations under the License.
                       <div class="product_measurement_precision amount_precision edittext shorttext floattext"></div>
                       <select class="amount_units mass" style="display: none;"></select>
                     </td>
+                  </tr>
+                  <tr class="unmeasured_amount">
+                    <td>unmeasured?</td>
+                    <td><div class="unmeasured_amount_type selector" data-proto="UnmeasuredAmount_UnmeasuredAmountType"></div></td>
+                    <td>details</td><td><div class="unmeasured_amount_details edittext"></div></td>
                   </tr>
                   <tr>
                     <td></td>

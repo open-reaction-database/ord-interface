@@ -533,8 +533,8 @@ def compare(name):
     local_ascii = text_format.MessageToString(local)
     if remote_ascii != local_ascii:
         diff = difflib.context_diff(local_ascii.splitlines(), remote_ascii.splitlines(), n=10)
-        print(f"Datasets differ:\n{pprint.pformat(list(diff))}")
-        return "differs", 409  # "Conflict"
+        diff_text = pprint.pformat(list(diff))
+        return diff_text, 409  # "Conflict"
     return "equals"
 
 
