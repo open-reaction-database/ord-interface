@@ -212,14 +212,15 @@ export default {
   width: 95%
   margin: 1rem 2.5%
   display: grid
-  grid-template-columns: auto 1fr
+  grid-template-columns: 400px 1fr
   column-gap: 1rem
   min-width: 800px
   .search-options-container
     .title
-      font-size: 2rem
-      font-weight: 700
+      font-size: 13px
+      font-weight: 500
       margin-bottom: 0.85rem
+      font-family: 'Roboto', Helvetica, Arial, sans-serif
     .options-holder
       position: -webkit-sticky
       position: sticky
@@ -228,6 +229,7 @@ export default {
       padding: 1rem
       box-sizing: border-box
       border-radius: 0.25rem
+      border: 1px solid $color-border-1
       overflow-y: auto
   .no-results
     margin-top: 1rem

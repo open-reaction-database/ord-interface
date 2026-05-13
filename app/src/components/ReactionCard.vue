@@ -174,8 +174,8 @@ export default {
     .is-mined-badge
       text-align: center
       border-radius: 5px
-      background-color: #0d6efd
-      color: #fff
+      background-color: $color-primary
+      color: $color-background-white
       font-size: 0.8rem
       width: 60px
     .info

@@ -29,9 +29,9 @@ export default {
   data() {
     return {
       test: null,
-      showReagentOptions: false,
-      showReactionOptions: false,
-      showDatasetOptions: false,
+      showReagentOptions: true,
+      showReactionOptions: true,
+      showDatasetOptions: true,
       reagentOptions: {
         reactants: [],
         products: [],
@@ -172,7 +172,7 @@ export default {
     :class='showReagentOptions ? "" : "closed"'
   ) 
     span Components
-    i.material-icons expand_less
+    //- i.material-icons expand_less
   transition(name="expand")
     #searchByReagent.options-container(
       v-if='showReagentOptions'
@@ -255,7 +255,7 @@ export default {
     :class='showReactionOptions ? "" : "closed"'
   ) 
     span Reactions
-    i.material-icons expand_less
+    //- i.material-icons expand_less
   transition(name="expand")
     #searchByReaction.options-container(
       v-if='showReactionOptions'
@@ -301,7 +301,7 @@ export default {
     :class='showDatasetOptions ? "" : "closed"'
   ) 
     span Datasets
-    i.material-icons expand_less
+    //- i.material-icons expand_less
   transition(name="expand")
     #searchByDataset.options-container(
       v-if='showDatasetOptions'
@@ -341,14 +341,14 @@ ModalKetcher(
 @import '@/styles/transition'
 @import '@/styles/tabs'
 .search-options
-  max-height: 90vh
+  max-height: 900vh
   .options-title
-    font-size: 1.5rem
-    font-weight: 700
+    font-size: 1 rem
+    font-family: 'Roboto', Helvetica, Arial, sans-serif
+    font-weight: 500
     cursor: pointer
     padding: 0.5rem 1rem
-    border-top-left-radius: 0.25rem
-    border-top-right-radius: 0.25rem
+    border-radius: 0.25rem
     margin-top: 1rem
     color: white
     background-color: $linkblue
@@ -371,13 +371,11 @@ ModalKetcher(
       cursor: default
   .options-container
     background-color: white
-    border-bottom-left-radius: 0.25rem
-    border-bottom-right-radius: 0.25rem
+    border-radius: 0.25rem
     padding: 1rem
     margin-bottom: 1rem
     display: grid
     row-gap: 1rem
-    border: 1px solid $medgrey
     .subtitle
       font-size: 1.25rem
       font-weight: 700

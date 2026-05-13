@@ -36,8 +36,9 @@ nav.navbar.navbar-expand-lg.bg-light
           router-link.nav-link(:to='{name: "browse"}') Browse
           router-link.nav-link(:to='{name: "search"}') Search
         .nav-item
-          a.nav-link(href="https://app.open-reaction-database.org") Contribute
-          a.nav-link(href="https://docs.open-reaction-database.org") Docs
+          .nav-item
+            a.nav-link(href="https://app.open-reaction-database.org/datasets" target="_blank") Contribute
+            a.nav-link(href="https://docs.open-reaction-database.org" target="_blank") Docs
         .nav-item
           router-link.nav-link(:to='{name: "about"}') About
 </template>
@@ -47,6 +48,7 @@ nav.navbar.navbar-expand-lg.bg-light
 
 nav
   background-color: white !important
+  border-bottom: 1px solid $color-border-1
   .container
     display: flex
     flex-wrap: inherit

@@ -164,6 +164,7 @@ export default {
 
 .table-main
   width: 100%
+  background-color: $lightgrey
   .table-container
     width: 100%
     .header
@@ -175,9 +176,16 @@ export default {
     .search-area
       padding: 1rem
       margin: 0 5%
+      background-color: white
+      border-radius: .5rem
+      border: 1px solid $color-border-1
+      margin-bottom: .5rem
       input
         width: 30%
         min-width: 300px
+        border: 1px solid $color-border-1
+        border-radius: 0.25rem
+        margin-left: 0.5rem
     .content
       width: 100%
       height: fit-content

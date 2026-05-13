@@ -46,25 +46,27 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap')
 @import '@/styles/vars'
 body
-  font-family: 'Roboto', sans-serif
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif
   margin: 0
 #app, #main-container
   min-height: 100vh
 #main-container
   display: grid
   grid-template-rows: auto 1fr auto
-  background-color: $lightgrey
+  background-color: $color-background-main
   min-width: 800px
   &.full-height
     grid-template-rows: 1fr
 
 button
-  background-color: $linkblue
+  background-color: $color-primary
   border: none
   color: white
   border-radius: 0.25rem
   cursor: pointer
   padding: 0.25rem 0.5rem
+  &:hover
+    background-color: $color-text-hover
 
 // multi-value-slider styles
 .multi-range-slider
@@ -75,10 +77,10 @@ button
     width: 18px !important
     margin: -5px !important
     box-shadow: none !important
-    background-color: #0d6efd !important
+    background-color: $color-primary !important
   .bar-left, .bar-inner, .bar-right
     box-shadow: none !important
     border: grey 1px solid
   .bar-inner
-    background-color: #0d6efd !important
+    background-color: $color-primary !important
 </style>
