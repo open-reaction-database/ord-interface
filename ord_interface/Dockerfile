@@ -82,7 +82,7 @@ WORKDIR /app/ord-interface/app
 # captured on macOS (or any non-Linux dev box) won't include
 # @rollup/rollup-linux-x64-gnu and vite build fails with MODULE_NOT_FOUND.
 # See https://github.com/npm/cli/issues/4828.
-RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/src/ketcher \
+RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/public/ketcher \
    && rm -f package-lock.json \
    && npm install \
    && npm run build \

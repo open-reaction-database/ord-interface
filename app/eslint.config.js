@@ -22,7 +22,7 @@ import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist/', 'node_modules/', 'src/ketcher/']),
+  globalIgnores(['dist/', 'node_modules/', 'public/ketcher/']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

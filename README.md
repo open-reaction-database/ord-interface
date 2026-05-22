@@ -76,7 +76,7 @@ ORD_INTERFACE_TESTING=TRUE uv run uvicorn ord_interface.api.main:app --port 5000
 
 ### 3. Run the React SPA
 
-Download [Ketcher v2.5.1](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip), extract it, and place the `standalone/` directory's contents inside `./app/src/ketcher/` (so that `app/src/ketcher/static/` and `app/src/ketcher/templates/` exist). Then:
+Download [Ketcher v2.5.1](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip), extract it, and place the `standalone/` directory's contents inside `./app/public/ketcher/` (so that `app/public/ketcher/static/` and `app/public/ketcher/asset-manifest.json` exist). Then:
 
 ```shell
 cd app

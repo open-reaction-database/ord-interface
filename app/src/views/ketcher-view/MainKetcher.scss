@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-/* Import Ketcher CSS */
-@import '../../ketcher/static/css/main.8e693d51.css';
-
+/* Ketcher's standalone bundle loads its own CSS from `public/ketcher/static/css/`
+ * when its `main.<hash>.js` boots inside the iframe, so don't import it here.
+ * Pinning the hash also rotted on every Ketcher upgrade. */
 #ketcher {
   width: 100%;
   height: 100vh;

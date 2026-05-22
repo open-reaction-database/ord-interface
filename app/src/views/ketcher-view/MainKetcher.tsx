@@ -18,12 +18,16 @@ import React, { useEffect, useState } from 'react';
 import './MainKetcher.scss';
 
 /**
- * Loads the standalone Ketcher bundle (extracted under app/src/ketcher/ per the
- * project README) into the document. The bundle's main.<hash>.js entry name
- * changes between releases, so resolve it at runtime instead of pinning the
- * hash in the import.
+ * Loads the standalone Ketcher bundle (extracted under app/public/ketcher/ per
+ * the project README) into the document. The bundle has to live in `public/`
+ * rather than `src/` because Vite only copies `public/` verbatim into `dist/`
+ * during production builds; an asset under `src/` that no TypeScript file
+ * imports never lands in the bundle and would 404 in the Docker image.
+ *
+ * The bundle's main.<hash>.js entry name changes between releases, so resolve
+ * it at runtime instead of pinning the hash in the import.
  */
-const KETCHER_BASE = '/src/ketcher';
+const KETCHER_BASE = '/ketcher';
 
 const MainKetcher: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
