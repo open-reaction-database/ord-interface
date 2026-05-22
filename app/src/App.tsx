@@ -22,6 +22,7 @@ import MainFooter from './components/MainFooter';
 import Home from './views/Home';
 import About from './views/About';
 import MainBrowse from './views/browse/MainBrowse';
+import MainSelectedSet from './views/browse/selected-set/MainSelectedSet';
 import MainSearch from './views/search/MainSearch';
 import MainDatasetView from './views/dataset-view/MainDatasetView';
 import MainReactionView from './views/reaction-view/MainReactionView';
@@ -53,6 +54,10 @@ const AppContent: React.FC = () => {
         <Route
           path="/browse"
           element={<MainBrowse />}
+        />
+        <Route
+          path="/selected-set"
+          element={<MainSelectedSet />}
         />
         <Route
           path="/search"
