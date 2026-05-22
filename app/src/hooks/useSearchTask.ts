@@ -56,6 +56,9 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
       if (taskIdRef.current === null) {
         startTimeRef.current = Date.now();
         const submitRes = await fetch(`/api/submit_query${queryString}`);
+        if (!submitRes.ok) {
+          throw new Error(`submit_query failed (HTTP ${submitRes.status})`);
+        }
         taskIdRef.current = (await submitRes.json()) as string;
       }
 

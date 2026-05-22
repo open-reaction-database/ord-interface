@@ -55,15 +55,21 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
     }
   }, [mutatedSmiles, contWin]);
 
-  const getKetcher = useCallback(() => {
-    const getKetcherInterval = setInterval(() => {
+  /**
+   * Poll the Ketcher iframe until its window exposes `ketcher`, then capture
+   * the contentWindow so the rest of the modal can drive it. Returns a
+   * cancel handle the caller is expected to invoke on unmount so the
+   * interval / timeout don't keep firing against a stale component.
+   */
+  const getKetcher = useCallback((): (() => void) => {
+    const intervalId = window.setInterval(() => {
       const iframe = document.getElementById('ketcher-iframe') as HTMLIFrameElement | null;
       if (!contWin && iframe?.contentWindow) {
         try {
           const win = iframe.contentWindow as KetcherWindow;
           if (win.ketcher) {
             setContWin(win);
-            clearInterval(getKetcherInterval);
+            window.clearInterval(intervalId);
             drawSmiles();
             setLoading(false);
           }
@@ -73,13 +79,18 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
       }
     }, 1000);
 
-    setTimeout(() => {
-      clearInterval(getKetcherInterval);
+    const timeoutId = window.setTimeout(() => {
+      window.clearInterval(intervalId);
       if (loading) {
         setLoading(false);
         console.warn('Ketcher failed to load within 30 seconds');
       }
     }, 30000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(timeoutId);
+    };
   }, [contWin, loading, drawSmiles]);
 
   const saveSmiles = useCallback(async () => {
@@ -117,7 +128,8 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
   }, [smiles]);
 
   useEffect(() => {
-    getKetcher();
+    const cancel = getKetcher();
+    return cancel;
   }, [getKetcher]);
 
   useEffect(() => {
