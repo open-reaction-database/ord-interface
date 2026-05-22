@@ -16,7 +16,7 @@
 
 <script>
 export default {
-  name: "FloatingModal",
+  name: 'FloatingModal',
   props: {
     title: String,
   },
@@ -25,7 +25,7 @@ export default {
   },
   methods: {
     closeModal() {
-      this.$emit("closeModal");
+      this.$emit('closeModal');
     },
   },
 };
@@ -44,7 +44,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/transition.sass'
+@use '@/styles/transition' as *
 .modal-main
   position: fixed
   top: 0

@@ -19,7 +19,6 @@ import re
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from testing.postgresql import Postgresql
 
 from ord_interface.api import search, view
 from ord_interface.api.testing import setup_test_postgres
@@ -30,6 +29,9 @@ async def lifespan(*args, **kwargs):
     """FastAPI lifespan setup; see https://fastapi.tiangolo.com/advanced/events/#lifespan."""
     del args, kwargs  # Unused.
     if os.getenv("ORD_INTERFACE_TESTING", "FALSE") == "TRUE":
+        # testing-postgresql is a dev dep; only required when ORD_INTERFACE_TESTING=TRUE.
+        from testing.postgresql import Postgresql
+
         with Postgresql() as postgres:
             url = re.sub("postgresql://", "postgresql+psycopg://", postgres.url())
             setup_test_postgres(url)

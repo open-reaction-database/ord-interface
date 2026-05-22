@@ -46,8 +46,34 @@ limitations under the License.
     #button:hover {
       border-color: black;
     }
+    #deactivation-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #f8d7da;
+      border-bottom: 2px solid #dc3545;
+      color: #842029;
+      padding: 16px 24px;
+      font-family: Roboto, sans-serif;
+      font-size: 14pt;
+      text-align: center;
+      z-index: 1000;
+    }
+    #deactivation-banner strong {
+      font-size: 16pt;
+    }
   </style>
   <body>
+    <div id="deactivation-banner">
+      <strong>Notice:</strong> The ORD editor will be deactivated after <strong>July 31, 2026</strong>.
+      Please download any datasets you wish to keep before that date.
+      <br>
+      The new editor is available at <a href="https://app.open-reaction-database.org/">https://app.open-reaction-database.org/</a>
+      (<a href="https://www.linkedin.com/pulse/next-generation-reaction-editor-here-open-reaction-database-tfste/">learn more</a>).
+      <br>
+      Questions? Contact <a href="mailto:help@open-reaction-database.org">help@open-reaction-database.org</a>.
+    </div>
     <div id="container">
       <div id="button">
         <img src="https://github.githubassets.com/images/modules/logos_page/Octocat.png">

@@ -15,44 +15,37 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner'
-import Enumerate from "./EnumerateView"
-import Upload from "./UploadView"
-import Datasets from "./DatasetsView"
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import Enumerate from './EnumerateView.vue';
+import Upload from './UploadView.vue';
+import Datasets from './DatasetsView.vue';
 
 export default {
   components: {
     LoadingSpinner,
     Enumerate,
     Upload,
-    Datasets
+    Datasets,
   },
   data() {
     return {
       loading: true,
-      tabs: [
-        "Get Started",
-        "Datasets",
-        "Upload",
-        "Enumerate"
-      ],
-      activeTab: "Datasets",
-    }
+      tabs: ['Get Started', 'Datasets', 'Upload', 'Enumerate'],
+      activeTab: 'Datasets',
+    };
   },
-  computed: {
-  },
-  methods: {
-  },
+  computed: {},
+  methods: {},
   async mounted() {
     // if this is user's first time, default page is get started
-    const notFirstTime = localStorage.getItem('notFirstTime')
+    const notFirstTime = localStorage.getItem('notFirstTime');
     if (!notFirstTime) {
-      localStorage.setItem("notFirstTime", "false")
-      this.activeTab = "Get Started"
+      localStorage.setItem('notFirstTime', 'false');
+      this.activeTab = 'Get Started';
     }
-    this.loading = false
+    this.loading = false;
   },
-}
+};
 </script>
 
 <template lang="pug">
@@ -119,9 +112,9 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "@/styles/vars"
-@import "@/styles/tabs"
-@import '@/styles/transition.sass'
+@use '@/styles/vars' as *
+@use '@/styles/tabs' as *
+@use '@/styles/transition' as *
 .main-contribute
   margin: 0 5%
   padding: 1rem

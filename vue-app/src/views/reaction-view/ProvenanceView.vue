@@ -15,12 +15,11 @@
 -->
 
 <script>
-
 export default {
   props: {
     provenance: Object,
   },
-}
+};
 </script>
 
 <template lang="pug">

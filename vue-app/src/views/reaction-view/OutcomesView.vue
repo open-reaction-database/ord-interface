@@ -15,11 +15,11 @@
 -->
 
 <script>
-import reaction_pb from "ord-schema"
-import CompoundView from "./CompoundView"
-import FloatingModal from "../../components/FloatingModal"
-import { amountObj, amountStr } from "@/utils/amount"
-import outcomesUtil from "@/utils/outcomes"
+import reaction_pb from 'ord-schema';
+import CompoundView from './CompoundView.vue';
+import FloatingModal from '../../components/FloatingModal.vue';
+import { amountObj, amountStr } from '@/utils/amount';
+import outcomesUtil from '@/utils/outcomes';
 
 export default {
   props: {
@@ -27,9 +27,9 @@ export default {
   },
   components: {
     CompoundView,
-    FloatingModal
+    FloatingModal,
   },
-  data () {
+  data() {
     return {
       productsIdx: 0,
       showRawMeasurement: false,
@@ -37,58 +37,60 @@ export default {
       analysesIdx: 0,
       showRawAnalysis: false,
       rawAnalysis: {},
-      customMeasurementDetails: "",
-      showCustomMeasurementDetails: false
-    }
+      customMeasurementDetails: '',
+      showCustomMeasurementDetails: false,
+    };
   },
   computed: {
-    reactionTime () {
-      return outcomesUtil.formattedTime(this.outcome.reactionTime)
-    }
+    reactionTime() {
+      return outcomesUtil.formattedTime(this.outcome.reactionTime);
+    },
   },
   methods: {
-    getMeasurementType (type) {
-      const measurementTypes = reaction_pb.ProductMeasurement.ProductMeasurementType
-      return Object.keys(measurementTypes).find(key => measurementTypes[key] == type)
+    getMeasurementType(type) {
+      const measurementTypes = reaction_pb.ProductMeasurement.ProductMeasurementType;
+      return Object.keys(measurementTypes).find(key => measurementTypes[key] == type);
     },
-    getMeasurementValue (measurement) {
-      if (measurement.percentage) 
-        return `${Math.round(measurement.percentage.value * 10)/10}%`
+    getMeasurementValue(measurement) {
+      if (measurement.percentage) return `${Math.round(measurement.percentage.value * 10) / 10}%`;
       if (measurement.amount) {
-        return amountStr(amountObj(measurement.amount))
+        return amountStr(amountObj(measurement.amount));
       }
-      return ""
+      return '';
     },
-    setRawMeasurement (measurement) {
-      // make a deep copy of measurement and generate raw object 
-      const raw = JSON.parse(JSON.stringify(measurement))
-      raw.type = this.getMeasurementType(raw.type)
+    setRawMeasurement(measurement) {
+      // make a deep copy of measurement and generate raw object
+      const raw = JSON.parse(JSON.stringify(measurement));
+      raw.type = this.getMeasurementType(raw.type);
       if (raw.amount) {
         Object.keys(raw.amount).forEach(key => {
           if (raw.amount[key]) {
-            raw.amount[key].units = amountObj(raw.amount).unitType
+            raw.amount[key].units = amountObj(raw.amount).unitType;
           }
-        })
+        });
       }
-      this.rawMeasurement = raw
-      this.showRawMeasurement = true
+      this.rawMeasurement = raw;
+      this.showRawMeasurement = true;
     },
-    setCustomMeasurementDetails (measurement) {
-      this.customMeasurementDetails = measurement.details == "" ? "Please contact the author for details on this custom measurement." : measurement.details;
-      this.showCustomMeasurementDetails = true
+    setCustomMeasurementDetails(measurement) {
+      this.customMeasurementDetails =
+        measurement.details == ''
+          ? 'Please contact the author for details on this custom measurement.'
+          : measurement.details;
+      this.showCustomMeasurementDetails = true;
     },
-    getAnalysisType (type) {
-      const analysisTypes = reaction_pb.Analysis.AnalysisType
-      return Object.keys(analysisTypes).find(key => analysisTypes[key] == type)
+    getAnalysisType(type) {
+      const analysisTypes = reaction_pb.Analysis.AnalysisType;
+      return Object.keys(analysisTypes).find(key => analysisTypes[key] == type);
     },
-    setRawAnalysis (analysis) {
-      const raw = JSON.parse(JSON.stringify(analysis))
-      raw.type = this.getAnalysisType(raw.type)
-      this.rawAnalysis = raw
-      this.showRawAnalysis = true
+    setRawAnalysis(analysis) {
+      const raw = JSON.parse(JSON.stringify(analysis));
+      raw.type = this.getAnalysisType(raw.type);
+      this.rawAnalysis = raw;
+      this.showRawAnalysis = true;
     },
-  }
-}
+  },
+};
 </script>
 
 <template lang="pug">
@@ -175,8 +177,8 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import "../../styles/vars"
-@import "../../styles/tabs"
+@use '../../styles/vars' as *
+@use '../../styles/tabs' as *
 .outcomes-view
   .title
     font-weight: 700

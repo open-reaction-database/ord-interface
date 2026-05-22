@@ -14,11 +14,8 @@
  limitations under the License.
 -->
 
-
-
 <script>
-export default {
-}
+export default {};
 </script>
 
 <template lang="pug">
@@ -43,7 +40,7 @@ nav.navbar.navbar-expand-lg.bg-light
 </template>
 
 <style lang="sass" scoped>
-@import @/styles/vars
+@use '@/styles/vars' as *
 
 nav
   background-color: white !important

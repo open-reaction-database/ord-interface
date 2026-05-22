@@ -15,11 +15,11 @@
 -->
 
 <script>
-import LoadingSpinner from '@/components/LoadingSpinner'
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 
 export default {
   components: {
-    'LoadingSpinner': LoadingSpinner,
+    LoadingSpinner: LoadingSpinner,
   },
   props: {
     smiles: String,
@@ -27,9 +27,9 @@ export default {
   data() {
     return {
       contWin: null, //content window of iframe
-      mutatedSmiles: "",
+      mutatedSmiles: '',
       loading: true,
-    }
+    };
   },
   methods: {
     getKetcher() {
@@ -39,35 +39,35 @@ export default {
           if (document.getElementById('ketcher-iframe').contentWindow.ketcher) {
             // assigning contentWindow.ketcher doesn't seem to persist as expected
             // so we just assign the contentWindow and reference .ketcher
-            this.contWin = document.getElementById('ketcher-iframe').contentWindow
-            clearInterval(getKetcherInterval)
-            this.drawSmiles()
-            this.loading = false
+            this.contWin = document.getElementById('ketcher-iframe').contentWindow;
+            clearInterval(getKetcherInterval);
+            this.drawSmiles();
+            this.loading = false;
           }
         }
-      }, 1000)
+      }, 1000);
     },
     drawSmiles() {
       if (this.mutatedSmiles) {
         // get molblock if we already have SMILES
         fetch(`/api/molfile?smiles=${this.mutatedSmiles}`)
-            .then(response => response.json())
-            .then(responseData => {
-              document.getElementById('ketcher-iframe').contentWindow.ketcher.setMolecule(responseData);
-            })
+          .then(response => response.json())
+          .then(responseData => {
+            document.getElementById('ketcher-iframe').contentWindow.ketcher.setMolecule(responseData);
+          });
       }
     },
     async saveSmiles() {
       this.mutatedSmiles = await this.contWin.ketcher.getSmiles();
-      this.$emit('updateSmiles', this.mutatedSmiles)
-      this.$emit('closeModal')
+      this.$emit('updateSmiles', this.mutatedSmiles);
+      this.$emit('closeModal');
     },
   },
   mounted() {
-    this.mutatedSmiles = this.smiles
-    this.getKetcher()
-  }
-}
+    this.mutatedSmiles = this.smiles;
+    this.getKetcher();
+  },
+};
 </script>
 
 <template lang="pug">
@@ -93,7 +93,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/transition.sass'
+@use '@/styles/transition' as *
 .background
   width: 100%
   height: 100%

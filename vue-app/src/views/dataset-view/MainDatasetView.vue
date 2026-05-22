@@ -15,99 +15,93 @@
 -->
 
 <script>
-import SearchOptions from '../search/SearchOptions'
-import SearchResults from './SearchResults'
-import ChartView from './ChartView'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import reaction_pb from "ord-schema"
-import base64ToBytes from "@/utils/base64"
+import SearchOptions from '../search/SearchOptions.vue';
+import SearchResults from './SearchResults.vue';
+import ChartView from './ChartView.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import reaction_pb from 'ord-schema';
+import base64ToBytes from '@/utils/base64';
 
 export default {
   components: {
     ChartView,
     SearchOptions,
     SearchResults,
-    LoadingSpinner
+    LoadingSpinner,
   },
   watch: {
     '$route.query': {
       handler() {
-        this.getSearchResults()
+        this.getSearchResults();
       },
       deep: true,
-    }
+    },
   },
   data() {
     return {
       searchResults: [],
-      queryParams: "",
+      queryParams: '',
       searchParams: {},
       loading: true,
-      urlQuery: "",
+      urlQuery: '',
       showOptions: false,
-      datasetId: "",
+      datasetId: '',
       datasetLoading: true,
       datasetData: [],
       isCollapsed: true,
-      searchTaskId: null
-    }
+      searchTaskId: null,
+    };
   },
   methods: {
-    expandOrShrink (e) {
+    expandOrShrink(e) {
       this.isCollapsed = !this.isCollapsed;
     },
     async getSearchResults() {
-      this.loading = true
+      this.loading = true;
       // get raw url query string
-      this.datasetId =  window.location.pathname.split("/")[2]
+      this.datasetId = window.location.pathname.split('/')[2];
       try {
         // If this is the first time we are attempting the search, set the search task ID.
         if (this.searchTaskId == null) {
           // Submit a search task to the server. This returns a GUID task ID.
-          const taskres = await fetch(`/api/submit_query?dataset_id=${this.datasetId}&limit=100`, {method: "GET"})
-          this.searchTaskId = (await taskres.json());
+          const taskres = await fetch(`/api/submit_query?dataset_id=${this.datasetId}&limit=100`, { method: 'GET' });
+          this.searchTaskId = await taskres.json();
         }
         // Check the status of the search task.
-        const queryRes = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, {method: "GET"})
-        .then(
-          (res) => {
+        const queryRes = await fetch(`/api/fetch_query_result?task_id=${this.searchTaskId}`, { method: 'GET' })
+          .then(res => {
             this.searchLoadStatus = res;
             // If one of these codes, search is finished. Return the results or lack of results.
             if (res?.status == 200) {
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
               return res.json();
-            }
-            else if (res?.status == 400) {
+            } else if (res?.status == 400) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
-              throw new Error("Error - Search task ID " + taskId + " does not exist");
-            }
-            else if (res?.status == 500) {
+              throw new Error('Error - Search task ID ' + taskId + ' does not exist');
+            } else if (res?.status == 500) {
               let taskId = this.searchTaskId;
               this.searchTaskId = null;
               clearInterval(this.searchPollingInterval);
-              throw new Error("Error - Search task ID " + taskId + " failed due to server error");
+              throw new Error('Error - Search task ID ' + taskId + ' failed due to server error');
             }
-          }
-        )
-        .then(
-          (searchResultsData) => {
+          })
+          .then(searchResultsData => {
             // Deserialize the results.
             this.searchResults = searchResultsData;
             // unpack protobuff for each reaction in results
-            this.searchResults.forEach((reaction) => {
-                const bytes = base64ToBytes(reaction.proto)
-                reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
-              })
-            this.loading = false
-          }
-        )
+            this.searchResults.forEach(reaction => {
+              const bytes = base64ToBytes(reaction.proto);
+              reaction.data = reaction_pb.Reaction.deserializeBinary(bytes).toObject();
+            });
+            this.loading = false;
+          });
       } catch (e) {
-        console.log(e)
-        this.searchResults = []
-        this.loading = false
+        console.log(e);
+        this.searchResults = [];
+        this.loading = false;
       }
     },
 
@@ -115,82 +109,76 @@ export default {
     updateSearchOptions(options) {
       // reagent options
       if (options.reagent.reagents.length) {
-        this.searchParams["component"] = []
+        this.searchParams['component'] = [];
         options.reagent.reagents.forEach(reagent => {
-          this.searchParams["component"].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode}`)
-        })
+          this.searchParams['component'].push(`${reagent.smileSmart};${reagent.source};${reagent.matchMode}`);
+        });
 
-        this.searchParams["use_stereochemistry"] = options.reagent.useStereochemistry
-        this.searchParams["similarity"] = options.reagent.similarityThreshold
+        this.searchParams['use_stereochemistry'] = options.reagent.useStereochemistry;
+        this.searchParams['similarity'] = options.reagent.similarityThreshold;
       } else {
-        this.searchParams["component"] = []
+        this.searchParams['component'] = [];
       }
 
       // dataset options
-      if (options.dataset.datasetIds.length)
-        this.searchParams["dataset_ids"] = options.dataset.datasetIds.join(",")
-      else
-        delete this.searchParams["dataset_ids"]
-      if (options.dataset.DOIs.length)
-        this.searchParams["dois"] = options.dataset.DOIs.join(",")
-      else
-        delete this.searchParams["dois"]
+      if (options.dataset.datasetIds.length) this.searchParams['dataset_ids'] = options.dataset.datasetIds.join(',');
+      else delete this.searchParams['dataset_ids'];
+      if (options.dataset.DOIs.length) this.searchParams['dois'] = options.dataset.DOIs.join(',');
+      else delete this.searchParams['dois'];
 
       // reaction options
       if (options.reaction.reactionIds.length)
-        this.searchParams["reaction_ids"] = options.reaction.reactionIds.join(",")
-      else
-        delete this.searchParams["reaction_ids"]
+        this.searchParams['reaction_ids'] = options.reaction.reactionIds.join(',');
+      else delete this.searchParams['reaction_ids'];
       if (options.reaction.reactionSmarts.length)
-        this.searchParams["reaction_smarts"] = options.reaction.reactionSmarts.join(",")
-      else
-        delete this.searchParams["reaction_smarts"]
+        this.searchParams['reaction_smarts'] = options.reaction.reactionSmarts.join(',');
+      else delete this.searchParams['reaction_smarts'];
       //yield and conversion add if not max values, otherwise remove from query
       if (options.reaction.min_yield !== 0 || options.reaction.max_yield !== 100) {
-        this.searchParams["min_yield"] = options.reaction.min_yield
-        this.searchParams["max_yield"] = options.reaction.max_yield
-      }
-      else {
-        delete this.searchParams["min_yield"]
-        delete this.searchParams["max_yield"]
+        this.searchParams['min_yield'] = options.reaction.min_yield;
+        this.searchParams['max_yield'] = options.reaction.max_yield;
+      } else {
+        delete this.searchParams['min_yield'];
+        delete this.searchParams['max_yield'];
       }
       if (options.reaction.min_conversion !== 0 || options.reaction.max_conversion !== 100) {
-        this.searchParams["min_conversion"] = options.reaction.min_conversion
-        this.searchParams["max_conversion"] = options.reaction.max_conversion
-      }
-      else {
-        delete this.searchParams["min_conversion"]
-        delete this.searchParams["max_conversion"]
+        this.searchParams['min_conversion'] = options.reaction.min_conversion;
+        this.searchParams['max_conversion'] = options.reaction.max_conversion;
+      } else {
+        delete this.searchParams['min_conversion'];
+        delete this.searchParams['max_conversion'];
       }
 
       // general options
-      this.searchParams["limit"] = options.general.limit || 100
+      this.searchParams['limit'] = options.general.limit || 100;
 
       // navigate to search page with new params
-      this.$router.push({ name: 'search', query: this.searchParams})
+      this.$router.push({ name: 'search', query: this.searchParams });
     },
   },
   async mounted() {
-    this.datasetId =  window.location.pathname.split("/")[2]
-    fetch("/api/datasets", {method: "GET"})
+    this.datasetId = window.location.pathname.split('/')[2];
+    fetch('/api/datasets', { method: 'GET' })
       .then(response => response.json())
       .then(data => {
-        this.datasetData = data.filter((dataset) => dataset.dataset_id == this.datasetId)[0]
-        this.datasetLoading = false
-    })
-   // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
-    await this.getSearchResults().then(() =>{
+        this.datasetData = data.filter(dataset => dataset.dataset_id == this.datasetId)[0];
+        this.datasetLoading = false;
+      });
+    // Fetch results. If server returns a 202, set up a poll to keep checking back until we have results.
+    await this.getSearchResults().then(() => {
       if (this.searchLoadStatus?.status == 202 && this.searchPollingInterval == null) {
-        this.searchPollingInterval = setInterval(() => {this.getSearchResults()}, 1000);
+        this.searchPollingInterval = setInterval(() => {
+          this.getSearchResults();
+        }, 1000);
         setTimeout(() => {
-          clearInterval(this.searchPollingInterval)
-          this.searchTaskId = null
-          this.loading = false
+          clearInterval(this.searchPollingInterval);
+          this.searchTaskId = null;
+          this.loading = false;
         }, 120000);
       }
-    })
+    });
   },
-}
+};
 </script>
 
 <template lang="pug">
@@ -244,7 +232,7 @@ export default {
 </template>
 
 <style lang="sass" scoped>
-@import '@/styles/vars.sass'
+@use '@/styles/vars' as *
 #charts
   display: grid
   grid-template-columns: auto 1fr
@@ -309,5 +297,4 @@ export default {
           height: 2px
           width: 60%
           margin: 0.5rem auto
-
 </style>

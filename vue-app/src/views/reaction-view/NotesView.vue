@@ -15,34 +15,34 @@
 -->
 
 <script>
-
 export default {
   props: {
     notes: Object,
   },
   computed: {
-    notesToDisplay () {
+    notesToDisplay() {
       // grab fields with value and that aren't false for display
       return Object.keys(this.notes)
-              .filter(key => this.notes[key])
-              .map(key => {
-                return {
-                  val: this.notes[key],
-                  label: this.camelToSpaces(key)
-                }
-              })
-    }
+        .filter(key => this.notes[key])
+        .map(key => {
+          return {
+            val: this.notes[key],
+            label: this.camelToSpaces(key),
+          };
+        });
+    },
   },
   methods: {
-    camelToSpaces (str) {
+    camelToSpaces(str) {
       // convert camel case strings to string with spaces
       // also remove leading "is " where needed
-      return str.replace(/([a-z])([A-Z])/g, '$1 $2')
-              .replace("is ", "")
-              .toLowerCase()
-    }
-  }
-}
+      return str
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace('is ', '')
+        .toLowerCase();
+    },
+  },
+};
 </script>
 
 <template lang="pug">

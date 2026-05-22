@@ -15,28 +15,28 @@
 -->
 
 <script>
-import reaction_pb from "ord-schema"
-import { amountObj, amountStr } from "../../utils/amount"
+import reaction_pb from 'ord-schema';
+import { amountObj, amountStr } from '../../utils/amount';
 
 export default {
   props: {
     workup: Object,
   },
   computed: {
-    workupType () {
-      const workupTypes = reaction_pb.ReactionWorkup.ReactionWorkupType
-      return Object.keys(workupTypes).find(key => workupTypes[key] == this.workup?.type)
+    workupType() {
+      const workupTypes = reaction_pb.ReactionWorkup.ReactionWorkupType;
+      return Object.keys(workupTypes).find(key => workupTypes[key] == this.workup?.type);
     },
   },
   methods: {
-    getIdentifier (identifiersList) {
-      return identifiersList.find(identifier => identifier.type == 6).value
+    getIdentifier(identifiersList) {
+      return identifiersList.find(identifier => identifier.type == 6).value;
     },
-    getAmount (amount) {
-      return amountStr(amountObj(amount))
-    }
+    getAmount(amount) {
+      return amountStr(amountObj(amount));
+    },
   },
-}
+};
 </script>
 
 <template lang="pug">

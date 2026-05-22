@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-import reaction_pb from "ord-schema"
+import reaction_pb from 'ord-schema';
 
 export default {
   formattedTime(timeData) {
-    if (!timeData)
-      return null;
-    const timeUnits = reaction_pb.Time.TimeUnit
-    const type =
-        Object.keys(timeUnits).find(key => timeUnits[key] == timeData.units)
-    return `${timeData.value} ${type.toLowerCase()}${
-        timeData.units !== 0 ? "(s)" : ""}`
-  }
-}
+    if (!timeData) return null;
+    const timeUnits = reaction_pb.Time.TimeUnit;
+    const type = Object.keys(timeUnits).find(key => timeUnits[key] == timeData.units);
+    return `${timeData.value} ${type.toLowerCase()}${timeData.units !== 0 ? '(s)' : ''}`;
+  },
+};

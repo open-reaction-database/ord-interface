@@ -14,10 +14,9 @@
  limitations under the License.
 -->
 
-
 <script>
-import HeaderNav from "./components/HeaderNav"
-import MainFooter from "./components/MainFooter"
+import HeaderNav from './components/HeaderNav.vue';
+import MainFooter from './components/MainFooter.vue';
 
 export default {
   components: {
@@ -26,11 +25,11 @@ export default {
   },
   computed: {
     noHeaderFooter() {
-      const noHeaderRoutes = ['ketcher']
-      return noHeaderRoutes.includes(this.$route.name)
+      const noHeaderRoutes = ['ketcher'];
+      return noHeaderRoutes.includes(this.$route.name);
     },
-  }
-}
+  },
+};
 </script>
 
 <template lang="pug">
@@ -43,8 +42,8 @@ export default {
 </template>
 
 <style lang="sass">
+@use '@/styles/vars' as *
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap')
-@import '@/styles/vars'
 body
   font-family: 'Roboto', sans-serif
   margin: 0

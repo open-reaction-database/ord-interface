@@ -15,7 +15,7 @@
 -->
 
 <script>
-import outcomesUtil from "../../utils/outcomes"
+import outcomesUtil from '../../utils/outcomes';
 
 export default {
   props: {
@@ -23,10 +23,10 @@ export default {
   },
   methods: {
     getTime(element) {
-      return outcomesUtil.formattedTime(element)
-    }
+      return outcomesUtil.formattedTime(element);
+    },
   },
-}
+};
 </script>
 
 <template lang="pug">

@@ -15,7 +15,6 @@
 -->
 
 <script>
-
 export default {
   data() {
     return {
@@ -29,32 +28,30 @@ export default {
           name: null,
           loading: false,
           value: null,
-        }
-      }
-    }
+        },
+      },
+    };
   },
   methods: {
     async setFile(e, fileType) {
       // converts uploaded file into useable string
-      const files = e.target.files || e.dataTransfer.files
-      if (!files.length) return console.error('No file')
-      this.enumerateFiles[fileType].loading = true
-      this.enumerateFiles[fileType].name = files[0].name
-      const fileReader = new FileReader()
+      const files = e.target.files || e.dataTransfer.files;
+      if (!files.length) return console.error('No file');
+      this.enumerateFiles[fileType].loading = true;
+      this.enumerateFiles[fileType].name = files[0].name;
+      const fileReader = new FileReader();
       fileReader.onload = readerEvent => {
-        this.enumerateFiles[fileType].value = readerEvent.target.result
-        this.enumerateFiles[fileType].loading = false
-      }
-      if (fileType == "template")
-        fileReader.readAsText(files[0])
-      else if (fileType == "spreadsheet")
-        fileReader.readAsDataURL(files[0])
+        this.enumerateFiles[fileType].value = readerEvent.target.result;
+        this.enumerateFiles[fileType].loading = false;
+      };
+      if (fileType == 'template') fileReader.readAsText(files[0]);
+      else if (fileType == 'spreadsheet') fileReader.readAsDataURL(files[0]);
     },
     submitEnumerate() {
       if (this.enumerateFiles.template.loading || this.enumerateFiles.spreadsheet.loading)
-        return alert("Files are still processing. Please try again in a moment.")
+        return alert('Files are still processing. Please try again in a moment.');
       else if (!this.enumerateFiles.template.value || !this.enumerateFiles.spreadsheet.value)
-        return alert("You must upload a file for the template and spreadsheet before submitting.")
+        return alert('You must upload a file for the template and spreadsheet before submitting.');
       // send enumerated files to api for upload
       const xhr = new XMLHttpRequest();
       xhr.open('POST', '/editor-api/dataset/enumerate');
@@ -62,18 +59,20 @@ export default {
         if (xhr.status === 200) {
           location.reload();
         } else {
-          alert(`Error: ${xhr.response}`)
-          console.error(xhr.response)
+          alert(`Error: ${xhr.response}`);
+          console.error(xhr.response);
         }
-      }
-      xhr.send(JSON.stringify({
-        'template_string': this.enumerateFiles.template.value,
-        'spreadsheet_data': this.enumerateFiles.spreadsheet.value,
-        'spreadsheet_name': this.enumerateFiles.spreadsheet.name
-      }));
-    }
+      };
+      xhr.send(
+        JSON.stringify({
+          template_string: this.enumerateFiles.template.value,
+          spreadsheet_data: this.enumerateFiles.spreadsheet.value,
+          spreadsheet_name: this.enumerateFiles.spreadsheet.name,
+        }),
+      );
+    },
   },
-}
+};
 </script>
 
 <template lang="pug">
