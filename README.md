@@ -31,8 +31,7 @@ Prerequisites:
 ```bash
 git clone https://github.com/open-reaction-database/ord-interface
 cd ord-interface
-# Apple silicon: use `conda install postgresql` instead of the rdkit channel.
-conda install -c rdkit rdkit-postgresql
+conda install -c conda-forge rdkit-postgresql
 uv sync
 ```
 

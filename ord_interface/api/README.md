@@ -6,8 +6,7 @@ Set up your environment by installing postgres with the RDKit cartridge:
 
 ```shell
 conda install postgresql python=3.10
-# Note that rdkit-postgresql is currently only available on x86_64.
-conda install -c rdkit rdkit-postgresql
+conda install -c conda-forge rdkit-postgresql
 cd ord-interface
 pip install -e ".[tests]"
 ```
