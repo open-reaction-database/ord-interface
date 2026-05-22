@@ -21,6 +21,7 @@ import type { CompoundIdentifier, ProductMeasurement } from 'ord-schema/proto/re
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
 import { enumName } from '../utils/enum';
+import { formatPercentage } from '../utils/outcomes';
 import type { SearchResult, ReactionData } from '../types/search';
 import './ReactionCard.scss';
 
@@ -54,19 +55,13 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
 
   const getYield = (measurements: ProductMeasurement.AsObject[] = []): string => {
     const yieldObj = measurements.find(m => m.type === YIELD_MEASUREMENT_TYPE);
-    if (yieldObj?.percentage) {
-      return `${yieldObj.percentage.value}%`;
-    }
-    return 'Not listed';
+    return yieldObj?.percentage ? formatPercentage(yieldObj.percentage) : 'Not listed';
   };
 
   const getConversion = (data: ReactionData | undefined): string => {
     const conversion = data?.outcomesList?.[0]?.conversion;
     if (!conversion) return 'Not listed';
-    const rounded = Math.round(conversion.value * 10) / 10;
-    const precision =
-      Number.isFinite(conversion.precision) && conversion.precision !== 0 ? ` ± ${conversion.precision}` : '';
-    return `${rounded}%${precision}`;
+    return formatPercentage(conversion);
   };
 
   const conditionsAndDuration = (data: ReactionData | undefined): string[] => {

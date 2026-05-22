@@ -16,6 +16,8 @@
 
 import reaction_pb from 'ord-schema';
 import type {
+  ElectrochemistryConditions,
+  FlowConditions,
   IlluminationConditions,
   Length,
   PressureConditions,
@@ -75,3 +77,9 @@ export const lengthStr = (length: Length.AsObject | undefined): string | undefin
   const unit = enumName(reaction_pb.Length.LengthUnit, length.units);
   return `${length.value}${unit ? ` ${unit.toLowerCase()}` : ''}`;
 };
+
+export const electrochemType = (type: ElectrochemistryConditions.AsObject['type'] | undefined): string =>
+  enumName(reaction_pb.ElectrochemistryConditions.ElectrochemistryType, type) ?? '';
+
+export const flowType = (type: FlowConditions.AsObject['type'] | undefined): string =>
+  enumName(reaction_pb.FlowConditions.FlowType, type) ?? '';

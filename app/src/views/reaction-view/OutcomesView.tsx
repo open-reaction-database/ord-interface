@@ -21,7 +21,7 @@ import CompoundView from './CompoundView';
 import FloatingModal from '../../components/FloatingModal';
 import { amountObj, amountStr } from '../../utils/amount';
 import { enumName } from '../../utils/enum';
-import { formattedTime } from '../../utils/outcomes';
+import { formatPercentage, formattedTime } from '../../utils/outcomes';
 import type { ReactionOutcomeData } from '../../types/search';
 import './OutcomesView.scss';
 
@@ -35,18 +35,10 @@ const measurementType = (type: number | undefined): string =>
 const analysisType = (type: number | undefined): string => enumName(reaction_pb.Analysis.AnalysisType, type) ?? '';
 
 const measurementValue = (measurement: ProductMeasurement.AsObject): string => {
-  if (measurement.percentage) {
-    return `${Math.round(measurement.percentage.value * 10) / 10}%`;
-  }
-  if (measurement.amount) {
-    return amountStr(amountObj(measurement.amount));
-  }
-  if (measurement.floatValue) {
-    return String(measurement.floatValue.value);
-  }
-  if (measurement.stringValue) {
-    return measurement.stringValue;
-  }
+  if (measurement.percentage) return formatPercentage(measurement.percentage);
+  if (measurement.amount) return amountStr(amountObj(measurement.amount));
+  if (measurement.floatValue) return String(measurement.floatValue.value);
+  if (measurement.stringValue) return measurement.stringValue;
   return '';
 };
 
@@ -91,12 +83,7 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
             {conversion && (
               <>
                 <div className="label">Conversion</div>
-                <div className="value">
-                  {conversion.value}
-                  {Number.isFinite(conversion.precision) && conversion.precision !== 0
-                    ? ` ± ${conversion.precision}`
-                    : ''}
-                </div>
+                <div className="value">{formatPercentage(conversion)}</div>
               </>
             )}
           </div>
@@ -118,55 +105,58 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
         </div>
 
         {currentProduct && (
-          <div className="compound">
-            <CompoundView component={currentProduct} />
-          </div>
-        )}
+          <>
+            <div className="compound">
+              <CompoundView component={currentProduct} />
+            </div>
 
-        <div className="sub-title">Measurements</div>
-        <div className="measurements">
-          <div className="label">Type</div>
-          <div className="label" />
-          <div className="label">Value</div>
-          <div className="label">Analysis</div>
-          <div className="label">Raw</div>
-          {currentProduct?.measurementsList.map((measurement, idx) => {
-            const typeName = measurementType(measurement.type);
-            return (
-              <React.Fragment key={idx}>
-                {typeName === 'CUSTOM' ? (
-                  <div className="value">
-                    <div
-                      className="button"
-                      onClick={() =>
-                        setCustomDetails(
-                          measurement.details || 'Please contact the author for details on this custom measurement.',
-                        )
-                      }
-                    >
-                      <u>CUSTOM</u>
+            <div className="sub-title">Measurements</div>
+            <div className="measurements">
+              <div className="label">Type</div>
+              <div className="label" />
+              <div className="label">Value</div>
+              <div className="label">Analysis</div>
+              <div className="label">Raw</div>
+              {currentProduct.measurementsList.map((measurement, idx) => {
+                const typeName = measurementType(measurement.type);
+                return (
+                  <React.Fragment key={idx}>
+                    {typeName === 'CUSTOM' ? (
+                      <div className="value">
+                        <div
+                          className="button"
+                          onClick={() =>
+                            setCustomDetails(
+                              measurement.details ||
+                                'Please contact the author for details on this custom measurement.',
+                            )
+                          }
+                        >
+                          <u>CUSTOM</u>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="value">{typeName}</div>
+                    )}
+                    <div className="value" />
+                    <div className="value">{measurementValue(measurement)}</div>
+                    <div className="value">{measurement.analysisKey}</div>
+                    <div className="value">
+                      <div className="raw">
+                        <div
+                          className="button"
+                          onClick={() => setRawMeasurement(measurementWithNamedType(measurement))}
+                        >
+                          &lt;&gt;
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="value">{typeName}</div>
-                )}
-                <div className="value" />
-                <div className="value">{measurementValue(measurement)}</div>
-                <div className="value">{measurement.analysisKey}</div>
-                <div className="value">
-                  <div className="raw">
-                    <div
-                      className="button"
-                      onClick={() => setRawMeasurement(measurementWithNamedType(measurement))}
-                    >
-                      &lt;&gt;
-                    </div>
-                  </div>
-                </div>
-              </React.Fragment>
-            );
-          })}
-        </div>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         {rawMeasurement && (
           <FloatingModal

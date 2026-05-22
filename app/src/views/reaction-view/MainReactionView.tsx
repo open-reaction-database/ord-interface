@@ -434,7 +434,11 @@ const MainReactionView: React.FC = () => {
                   ))}
                 </div>
                 <div className="details">
-                  <OutcomesView outcome={reaction.outcomesList[outcomesTab]} />
+                  {/* key=outcomesTab so the inner tab/modal state resets when the user switches outcomes. */}
+                  <OutcomesView
+                    key={outcomesTab}
+                    outcome={reaction.outcomesList[outcomesTab]}
+                  />
                 </div>
               </div>
             </div>

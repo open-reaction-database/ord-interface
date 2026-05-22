@@ -16,6 +16,8 @@
 
 import React from 'react';
 import {
+  electrochemType,
+  flowType,
   illumType,
   lengthStr,
   pressureAtmo,
@@ -148,7 +150,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
       <div className="conditions-view">
         <div className="electro details">
           <div className="label">Type</div>
-          <div className="value">{String(e?.type ?? '')}</div>
+          <div className="value">{electrochemType(e?.type)}</div>
           {e?.details && (
             <>
               <div className="label">Details</div>
@@ -179,7 +181,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
       <div className="conditions-view">
         <div className="electro details">
           <div className="label">Type</div>
-          <div className="value">{String(f?.type ?? '')}</div>
+          <div className="value">{flowType(f?.type)}</div>
           {f?.details && (
             <>
               <div className="label">Details</div>
@@ -208,6 +210,9 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
               <div className="value">yes</div>
             </>
           )}
+          {/* See WorkupsView for the proto3 zero-default tradeoff: 0 means
+              "default unset" *or* a real, strongly-acidic pH. Match the Vue
+              v-if='conditions.ph' behavior and hide on 0. */}
           {conditions.ph !== undefined && conditions.ph !== 0 && (
             <>
               <div className="label">pH</div>

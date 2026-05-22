@@ -27,10 +27,12 @@ interface WorkupsViewProps {
   workup: ReactionWorkupData | undefined;
 }
 
+const NAME_IDENTIFIER_TYPE = reaction_pb.CompoundIdentifier.CompoundIdentifierType.NAME;
+
 const getNameIdentifier = (identifiers: CompoundIdentifier.AsObject[]): string => {
-  // Type 6 is NAME in CompoundIdentifierTypeMap; falls back to whatever
-  // identifier is first if the compound wasn't given a name.
-  const nameIdentifier = identifiers.find(identifier => identifier.type === 6);
+  // Falls back to the first identifier when the compound has no NAME entry,
+  // rather than throwing the way the Vue source did.
+  const nameIdentifier = identifiers.find(identifier => identifier.type === NAME_IDENTIFIER_TYPE);
   return nameIdentifier?.value ?? identifiers[0]?.value ?? '';
 };
 
@@ -75,6 +77,10 @@ const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
           </>
         )}
 
+        {/* proto3 defaults targetPh to 0 when unset, so 0 is ambiguous (default
+            vs. "actually strongly acidic"). Match the Vue v-if='workup.targetPh'
+            behavior and hide on 0; if a record ever sets it to 0 explicitly,
+            we'll need a `has*` helper from the schema to disambiguate. */}
         {workup.targetPh !== undefined && workup.targetPh !== 0 && (
           <>
             <div className="label">Target pH</div>
