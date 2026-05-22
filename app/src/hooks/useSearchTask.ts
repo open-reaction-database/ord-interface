@@ -28,6 +28,12 @@ type TaskState = { status: 'success'; results: SearchResult[] } | { status: 'pen
 interface TaskRef {
   queryString: string | null;
   taskId: string | null;
+  // In-flight submit_query promise. Two queryFn invocations can overlap
+  // (StrictMode dev double-invoke, react-query refetch racing a polling
+  // refetch, etc.); holding the in-flight promise on the ref lets the second
+  // caller await the first one's result instead of firing a duplicate
+  // submit_query that leaves an orphaned task on the backend.
+  submitPromise: Promise<string> | null;
   startTime: number;
 }
 
@@ -46,7 +52,7 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
   // <StrictMode> dev the effect was re-running after queryFn had already set
   // startTime, leaving it at 0 — and "Date.now() - 0 > 120s" tripped the
   // timeout on the very first poll iteration.
-  const taskRef = useRef<TaskRef>({ queryString: null, taskId: null, startTime: 0 });
+  const taskRef = useRef<TaskRef>({ queryString: null, taskId: null, submitPromise: null, startTime: 0 });
 
   return useQuery<TaskState>({
     queryKey: ['search-task', queryString],
@@ -60,16 +66,25 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
 
       // queryString changed since the last call — start fresh.
       if (taskRef.current.queryString !== queryString) {
-        taskRef.current = { queryString, taskId: null, startTime: 0 };
+        taskRef.current = { queryString, taskId: null, submitPromise: null, startTime: 0 };
       }
 
       if (taskRef.current.taskId === null) {
-        taskRef.current.startTime = Date.now();
-        const submitRes = await fetch(`/api/submit_query${queryString}`);
-        if (!submitRes.ok) {
-          throw new Error(`submit_query failed (HTTP ${submitRes.status})`);
+        if (!taskRef.current.submitPromise) {
+          taskRef.current.startTime = Date.now();
+          taskRef.current.submitPromise = (async () => {
+            const submitRes = await fetch(`/api/submit_query${queryString}`);
+            if (!submitRes.ok) {
+              throw new Error(`submit_query failed (HTTP ${submitRes.status})`);
+            }
+            return (await submitRes.json()) as string;
+          })();
         }
-        taskRef.current.taskId = (await submitRes.json()) as string;
+        try {
+          taskRef.current.taskId = await taskRef.current.submitPromise;
+        } finally {
+          taskRef.current.submitPromise = null;
+        }
       }
 
       if (Date.now() - taskRef.current.startTime > POLL_TIMEOUT_MS) {

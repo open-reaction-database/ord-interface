@@ -36,6 +36,9 @@ export type ReactionWorkupData = ReactionWorkup.AsObject;
 
 export interface SearchResult {
   reaction_id: string;
+  // The backend tags each result with the parent dataset id; ReactionCard
+  // renders a dataset link from it.
+  dataset_id?: string;
   proto: string;
   data: ReactionData;
 }

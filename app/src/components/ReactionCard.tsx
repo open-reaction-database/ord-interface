@@ -26,7 +26,7 @@ import type { SearchResult, ReactionData } from '../types/search';
 import './ReactionCard.scss';
 
 interface ReactionCardProps {
-  reaction: SearchResult & { dataset_id?: string };
+  reaction: SearchResult;
   isSelectable?: boolean;
   isSelected?: boolean;
   onSelectionChange?: (reactionId: string, isSelected: boolean) => void;
