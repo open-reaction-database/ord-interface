@@ -33,7 +33,8 @@ export const tempType = (type: number | undefined): string =>
 export const tempSetPoint = (setpoint: Temperature.AsObject | undefined): string => {
   if (!setpoint) return 'None';
   const unit = enumName(reaction_pb.Temperature.TemperatureUnit, setpoint.units);
-  return `${setpoint.value} (± ${setpoint.precision}) °${unit ? unit.charAt(0) : ''}`;
+  const precision = setpoint.precision ? ` (± ${setpoint.precision})` : '';
+  return `${setpoint.value}${precision} °${unit ? unit.charAt(0) : ''}`;
 };
 
 export const pressureType = (type: number | undefined): string =>
@@ -42,7 +43,8 @@ export const pressureType = (type: number | undefined): string =>
 export const pressureSetPoint = (setpoint: Pressure.AsObject | undefined): string => {
   if (!setpoint) return 'None';
   const unit = enumName(reaction_pb.Pressure.PressureUnit, setpoint.units);
-  return `${setpoint.value} (± ${setpoint.precision}) ${unit ? unit.toLowerCase() : ''}`;
+  const precision = setpoint.precision ? ` (± ${setpoint.precision})` : '';
+  return `${setpoint.value}${precision} ${unit ? unit.toLowerCase() : ''}`;
 };
 
 export const pressureAtmo = (atmo: PressureConditions.Atmosphere.AsObject | undefined): string => {

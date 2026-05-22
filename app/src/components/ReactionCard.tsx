@@ -32,7 +32,7 @@ interface ReactionCardProps {
   onSelectionChange?: (reactionId: string, isSelected: boolean) => void;
 }
 
-const YIELD_MEASUREMENT_TYPE = 3; // ord-schema ProductMeasurementType.YIELD
+const YIELD_MEASUREMENT_TYPE = reaction_pb.ProductMeasurement.ProductMeasurementType.YIELD;
 
 const ReactionCard: React.FC<ReactionCardProps> = ({
   reaction,
