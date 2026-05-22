@@ -17,7 +17,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import reaction_pb from 'ord-schema';
-import type { ReactionInput, Time, RecordEvent } from 'ord-schema/proto/reaction_pb';
+import type { ReactionInput, RecordEvent } from 'ord-schema/proto/reaction_pb';
 import CompoundView from './CompoundView';
 import SetupView from './SetupView';
 import ConditionsView from './ConditionsView';
@@ -31,14 +31,9 @@ import FloatingModal from '../../components/FloatingModal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { base64ToBytes } from '../../utils/base64';
 import { enumName } from '../../utils/enum';
+import { formattedTime } from '../../utils/outcomes';
 import type { ReactionData } from '../../types/search';
 import './MainReactionView.scss';
-
-const formatDuration = (duration: Time.AsObject | undefined): string => {
-  if (!duration?.value) return '';
-  const units = enumName(reaction_pb.Time.TimeUnit, duration.units);
-  return `${duration.value} ${units ? String(units).toLowerCase() : 'seconds'}`;
-};
 
 const MainReactionView: React.FC = () => {
   const { reactionId } = useParams<{ reactionId: string }>();
@@ -124,7 +119,7 @@ const MainReactionView: React.FC = () => {
     }
 
     if (input.additionDuration) {
-      formatted.additionDuration = formatDuration(input.additionDuration);
+      formatted.additionDuration = formattedTime(input.additionDuration) ?? '';
     }
 
     return formatted;

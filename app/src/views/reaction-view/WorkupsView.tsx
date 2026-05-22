@@ -15,19 +15,94 @@
  */
 
 import React from 'react';
+import reaction_pb from 'ord-schema';
+import type { CompoundIdentifier } from 'ord-schema/proto/reaction_pb';
+import { amountObj, amountStr } from '../../utils/amount';
+import { enumName } from '../../utils/enum';
+import { formattedTime } from '../../utils/outcomes';
 import type { ReactionWorkupData } from '../../types/search';
+import './WorkupsView.scss';
 
 interface WorkupsViewProps {
   workup: ReactionWorkupData | undefined;
 }
 
+const getNameIdentifier = (identifiers: CompoundIdentifier.AsObject[]): string => {
+  // Type 6 is NAME in CompoundIdentifierTypeMap; falls back to whatever
+  // identifier is first if the compound wasn't given a name.
+  const nameIdentifier = identifiers.find(identifier => identifier.type === 6);
+  return nameIdentifier?.value ?? identifiers[0]?.value ?? '';
+};
+
 const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
-  // TODO: render workup details (currently a stub).
+  if (!workup) return null;
+
+  const workupType = enumName(reaction_pb.ReactionWorkup.ReactionWorkupType, workup.type) ?? '';
+  const duration = formattedTime(workup.duration);
+  const aliquotAmount = workup.amount ? amountStr(amountObj(workup.amount)) : '';
+
   return (
     <div className="workups-view">
-      <div>Workups View</div>
-      {workup && <div>Workup type: {workup.type}</div>}
-      <div>TODO: Implement workup display</div>
+      <div className="details">
+        <div className="label">Type</div>
+        <div className="value">{workupType}</div>
+
+        {workup.details && (
+          <>
+            <div className="label">Details</div>
+            <div className="value">{workup.details}</div>
+          </>
+        )}
+
+        {duration && (
+          <>
+            <div className="label">Duration</div>
+            <div className="value">{duration}</div>
+          </>
+        )}
+
+        {aliquotAmount && (
+          <>
+            <div className="label">Aliquot amount</div>
+            <div className="value">{aliquotAmount}</div>
+          </>
+        )}
+
+        {workup.keepPhase && (
+          <>
+            <div className="label">Phase kept</div>
+            <div className="value">{workup.keepPhase}</div>
+          </>
+        )}
+
+        {workup.targetPh !== undefined && workup.targetPh !== 0 && (
+          <>
+            <div className="label">Target pH</div>
+            <div className="value">{workup.targetPh}</div>
+          </>
+        )}
+
+        {workup.isAutomated && (
+          <>
+            <div className="label">Automated</div>
+            <div className="value">yes</div>
+          </>
+        )}
+      </div>
+
+      {workup.input && workup.input.componentsList.length > 0 && (
+        <div className="inputs">
+          <div className="title">Inputs</div>
+          <div className="components">
+            {workup.input.componentsList.map((component, idx) => (
+              <React.Fragment key={idx}>
+                <div className="identifier">{getNameIdentifier(component.identifiersList)}</div>
+                <div className="amount">{amountStr(amountObj(component.amount))}</div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

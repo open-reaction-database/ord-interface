@@ -15,19 +15,29 @@
  */
 
 import React from 'react';
+import { formattedTime } from '../../utils/outcomes';
 import type { ReactionObservationData } from '../../types/search';
+import './ObservationsView.scss';
 
 interface ObservationsViewProps {
   observations: ReactionObservationData[];
 }
 
 const ObservationsView: React.FC<ObservationsViewProps> = ({ observations }) => {
-  // TODO: render observations details (currently a stub).
+  if (!observations.length) return null;
+
   return (
     <div className="observations-view">
-      <div>Observations View</div>
-      <div>Count: {observations?.length || 0}</div>
-      <div>TODO: Implement observations display</div>
+      <div className="details">
+        <div className="label">Time</div>
+        <div className="label">Comment</div>
+        {observations.map((obs, idx) => (
+          <React.Fragment key={idx}>
+            <div className="value">{formattedTime(obs.time) ?? ''}</div>
+            <div className="value">{obs.comment}</div>
+          </React.Fragment>
+        ))}
+      </div>
     </div>
   );
 };

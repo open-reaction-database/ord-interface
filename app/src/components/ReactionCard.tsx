@@ -61,10 +61,12 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
   };
 
   const getConversion = (data: ReactionData | undefined): string => {
-    if (!data?.outcomesList?.[0]?.conversion) return 'Not listed';
-    // TODO: render conversion percentage / precision once the schema field's
-    // unit handling is ported from the Vue utils.
-    return 'Not listed';
+    const conversion = data?.outcomesList?.[0]?.conversion;
+    if (!conversion) return 'Not listed';
+    const rounded = Math.round(conversion.value * 10) / 10;
+    const precision =
+      Number.isFinite(conversion.precision) && conversion.precision !== 0 ? ` ± ${conversion.precision}` : '';
+    return `${rounded}%${precision}`;
   };
 
   const conditionsAndDuration = (data: ReactionData | undefined): string[] => {

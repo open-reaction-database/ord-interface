@@ -18,39 +18,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import reaction_pb from 'ord-schema';
 import type { Compound, ProductCompound } from 'ord-schema/proto/reaction_pb';
 import FloatingModal from '../../components/FloatingModal';
+import { amountObj, amountStr } from '../../utils/amount';
 import { enumName } from '../../utils/enum';
 import './CompoundView.scss';
 
-// TODO: port the full unit-formatting logic from the Vue utils/amount.js.
-type AmountSummary = { unitCategory: string; unitAmount: string; unitType: string };
-
-const summarizeAmount = (amount: Compound.AsObject['amount']): AmountSummary => {
-  if (!amount) return { unitCategory: '', unitAmount: '', unitType: '' };
-  if (amount.mass)
-    return {
-      unitCategory: 'mass',
-      unitAmount: String(amount.mass.value ?? ''),
-      unitType: String(amount.mass.units ?? ''),
-    };
-  if (amount.moles)
-    return {
-      unitCategory: 'moles',
-      unitAmount: String(amount.moles.value ?? ''),
-      unitType: String(amount.moles.units ?? ''),
-    };
-  if (amount.volume)
-    return {
-      unitCategory: 'volume',
-      unitAmount: String(amount.volume.value ?? ''),
-      unitType: String(amount.volume.units ?? ''),
-    };
-  return { unitCategory: '', unitAmount: '', unitType: '' };
-};
-
-const formatAmount = (summary: AmountSummary): string =>
-  summary.unitAmount ? `${summary.unitAmount} ${summary.unitType}` : '';
-
-type ComponentLike = Compound.AsObject & Partial<ProductCompound.AsObject>;
+// CompoundView is invoked with both reaction inputs (Compound) and outcome
+// products (ProductCompound); the two protobuf messages share most rendered
+// fields but each carries a few of its own (Compound: reactionRole / preparationsList,
+// ProductCompound: isDesiredProduct / isolatedColor / texture).
+type ComponentLike = Partial<Compound.AsObject> & Partial<ProductCompound.AsObject>;
 
 interface CompoundViewProps {
   component: ComponentLike | undefined;
@@ -58,7 +34,7 @@ interface CompoundViewProps {
 
 interface RawData {
   identifiers?: Array<{ type: string; value: string }>;
-  amount?: Record<string, { value: string; units: string }>;
+  amount?: Record<string, { value: number | undefined; units: string }>;
   preparations?: Array<{ type: string; details: string }>;
   is_desired_product?: boolean;
   isolated_color?: string;
@@ -70,8 +46,8 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
   const [compoundSVG, setCompoundSVG] = useState<string | null>(null);
   const [showRawData, setShowRawData] = useState(false);
 
-  const compoundAmountObj = useMemo(() => summarizeAmount(component?.amount), [component?.amount]);
-  const compoundAmount = useMemo(() => formatAmount(compoundAmountObj), [compoundAmountObj]);
+  const compoundAmountObj = useMemo(() => amountObj(component?.amount), [component?.amount]);
+  const compoundAmount = useMemo(() => amountStr(compoundAmountObj), [compoundAmountObj]);
 
   const compoundRole = useMemo(() => {
     if (!component?.reactionRole) return '';
@@ -88,11 +64,11 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
       }));
     }
 
-    if (component?.amount) {
+    if (component?.amount && compoundAmountObj.unitCategory) {
       returnObj.amount = {
         [compoundAmountObj.unitCategory]: {
           value: compoundAmountObj.unitAmount,
-          units: compoundAmountObj.unitType,
+          units: compoundAmountObj.unitType ?? '',
         },
       };
     }
