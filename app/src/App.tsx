@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HeaderNav from './components/HeaderNav';
 import MainFooter from './components/MainFooter';
@@ -26,22 +26,14 @@ import MainSelectedSet from './views/browse/selected-set/MainSelectedSet';
 import MainSearch from './views/search/MainSearch';
 import MainDatasetView from './views/dataset-view/MainDatasetView';
 import MainReactionView from './views/reaction-view/MainReactionView';
-import MainKetcher from './views/ketcher-view/MainKetcher';
 import './App.scss';
 
 const queryClient = new QueryClient();
 
 const AppContent: React.FC = () => {
-  const location = useLocation();
-  // Ketcher renders full-bleed without the site chrome.
-  const noHeaderFooter = location.pathname.startsWith('/ketcher');
-
   return (
-    <div
-      id="main-container"
-      className={noHeaderFooter ? 'full-height' : ''}
-    >
-      {!noHeaderFooter && <HeaderNav />}
+    <div id="main-container">
+      <HeaderNav />
       <Routes>
         <Route
           path="/"
@@ -71,12 +63,8 @@ const AppContent: React.FC = () => {
           path="/id/:reactionId"
           element={<MainReactionView />}
         />
-        <Route
-          path="/ketcher"
-          element={<MainKetcher />}
-        />
       </Routes>
-      {!noHeaderFooter && <MainFooter />}
+      <MainFooter />
     </div>
   );
 };

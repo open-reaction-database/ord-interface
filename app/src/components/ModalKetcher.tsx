@@ -150,9 +150,16 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
       >
         <div className="modal-content">
           <div className="modal-body">
+            {/* Point at Ketcher's own index.html (shipped in the standalone
+                bundle under app/public/ketcher/). All of Ketcher's bundled
+                asset paths are relative — sourcing from `/ketcher/index.html`
+                lets the iframe's document resolve them against
+                `/ketcher/static/...` correctly. Pointing the iframe at our
+                React Router route instead (the previous design) loaded our
+                shell HTML, which broke Ketcher's relative asset resolution. */}
             <iframe
               id="ketcher-iframe"
-              src="/ketcher"
+              src="/ketcher/index.html"
               title="Ketcher Molecular Editor"
             />
           </div>
