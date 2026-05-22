@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import reaction_pb from 'ord-schema';
 import { base64ToBytes } from '../utils/base64';
@@ -25,6 +25,12 @@ const POLL_TIMEOUT_MS = 120_000;
 
 type TaskState = { status: 'success'; results: SearchResult[] } | { status: 'pending'; taskId: string };
 
+interface TaskRef {
+  queryString: string | null;
+  taskId: string | null;
+  startTime: number;
+}
+
 /**
  * Runs the API's submit-query / poll-result protocol against the given query
  * string, returning the materialized search results once the task completes.
@@ -34,14 +40,13 @@ type TaskState = { status: 'success'; results: SearchResult[] } | { status: 'pen
  * server returns 200. Gives up after `POLL_TIMEOUT_MS` to bound user wait.
  */
 export function useSearchTask(queryString: string | null, enabled: boolean) {
-  const taskIdRef = useRef<string | null>(null);
-  const startTimeRef = useRef<number>(0);
-
-  // Reset task state whenever the query changes.
-  useEffect(() => {
-    taskIdRef.current = null;
-    startTimeRef.current = 0;
-  }, [queryString]);
+  // All polling state lives on this single ref, keyed by the queryString that
+  // owns it, so a queryString change is the *only* reset signal. An earlier
+  // version reset taskId / startTime from a separate useEffect; under
+  // <StrictMode> dev the effect was re-running after queryFn had already set
+  // startTime, leaving it at 0 — and "Date.now() - 0 > 120s" tripped the
+  // timeout on the very first poll iteration.
+  const taskRef = useRef<TaskRef>({ queryString: null, taskId: null, startTime: 0 });
 
   return useQuery<TaskState>({
     queryKey: ['search-task', queryString],
@@ -53,22 +58,27 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
     queryFn: async (): Promise<TaskState> => {
       if (!queryString) return { status: 'success', results: [] };
 
-      if (taskIdRef.current === null) {
-        startTimeRef.current = Date.now();
+      // queryString changed since the last call — start fresh.
+      if (taskRef.current.queryString !== queryString) {
+        taskRef.current = { queryString, taskId: null, startTime: 0 };
+      }
+
+      if (taskRef.current.taskId === null) {
+        taskRef.current.startTime = Date.now();
         const submitRes = await fetch(`/api/submit_query${queryString}`);
         if (!submitRes.ok) {
           throw new Error(`submit_query failed (HTTP ${submitRes.status})`);
         }
-        taskIdRef.current = (await submitRes.json()) as string;
+        taskRef.current.taskId = (await submitRes.json()) as string;
       }
 
-      if (Date.now() - startTimeRef.current > POLL_TIMEOUT_MS) {
-        const id = taskIdRef.current;
-        taskIdRef.current = null;
+      if (Date.now() - taskRef.current.startTime > POLL_TIMEOUT_MS) {
+        const id = taskRef.current.taskId;
+        taskRef.current.taskId = null;
         throw new Error(`Search task ${id} timed out after ${POLL_TIMEOUT_MS / 1000}s`);
       }
 
-      const res = await fetch(`/api/fetch_query_result?task_id=${taskIdRef.current}`);
+      const res = await fetch(`/api/fetch_query_result?task_id=${taskRef.current.taskId}`);
 
       if (res.status === 200) {
         const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
@@ -76,16 +86,16 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
           ...r,
           data: reaction_pb.Reaction.deserializeBinary(new Uint8Array(base64ToBytes(r.proto))).toObject(),
         }));
-        taskIdRef.current = null;
+        taskRef.current.taskId = null;
         return { status: 'success', results };
       }
 
       if (res.status === 202) {
-        return { status: 'pending', taskId: taskIdRef.current };
+        return { status: 'pending', taskId: taskRef.current.taskId };
       }
 
-      const id = taskIdRef.current;
-      taskIdRef.current = null;
+      const id = taskRef.current.taskId;
+      taskRef.current.taskId = null;
       throw new Error(`Search task ${id} failed (HTTP ${res.status})`);
     },
   });
