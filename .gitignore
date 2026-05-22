@@ -15,7 +15,7 @@ __pycache__/
 .venv/
 
 # Redis dumps.
-dump.rdb
+**/dump.rdb
 # vim swap files
 *.sw[a-z]
 # build output

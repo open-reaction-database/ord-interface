@@ -29,13 +29,11 @@ import './App.scss';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  
-  // Routes that should not show header/footer
-  const noHeaderFooterRoutes = ['ketcher'];
-  const noHeaderFooter = noHeaderFooterRoutes.includes(location.pathname.slice(1));
+  // Ketcher renders full-bleed without the site chrome.
+  const noHeaderFooter = location.pathname.startsWith('/ketcher');
 
   return (
-    <div id="main-container" className={noHeaderFooter ? "full-height" : ""}>
+    <div id="main-container" className={noHeaderFooter ? 'full-height' : ''}>
       {!noHeaderFooter && <HeaderNav />}
       <Routes>
         <Route path="/" element={<Home />} />
