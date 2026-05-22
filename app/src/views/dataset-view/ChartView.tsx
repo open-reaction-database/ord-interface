@@ -62,6 +62,11 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, i
       body: binary as BodyInit,
     });
 
+    // Throw on non-2xx so the caller's .catch sets molHtml to null instead
+    // of feeding an HTML error page to dangerouslySetInnerHTML.
+    if (!response.ok) {
+      throw new Error(`compound_svg failed (HTTP ${response.status})`);
+    }
     return response.json();
   }, []);
 
@@ -188,7 +193,9 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, i
     createChart(inputsData, width, height);
   }, [inputsData, isCollapsed, createChart]);
 
-  // Fetch data on mount
+  // Fetch data on mount. The resize effect below renders the chart once
+  // inputsData populates, so isCollapsed/createChart are intentionally not
+  // deps here — including them would re-fire the fetch every collapse toggle.
   useEffect(() => {
     const datasetId = window.location.pathname.split('/')[2];
 
@@ -197,15 +204,11 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, i
       .then((data: ChartData[]) => {
         setLoading(false);
         setInputsData(data);
-
-        const width = isCollapsed ? 180 : 400;
-        const height = isCollapsed ? 180 : 400;
-        createChart(data, width, height);
       })
       .catch(() => {
         setLoading(false);
       });
-  }, [apiCall, isCollapsed, createChart]);
+  }, [apiCall]);
 
   // Resize chart when isCollapsed changes
   useEffect(() => {

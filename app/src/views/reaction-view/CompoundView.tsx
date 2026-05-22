@@ -129,6 +129,12 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
           body: compound.serializeBinary() as BodyInit,
         });
 
+        // Skip the 4xx/5xx body — it's an HTML error page that
+        // dangerouslySetInnerHTML would render verbatim in the SVG slot.
+        if (!response.ok) {
+          console.error(`compound_svg failed (HTTP ${response.status})`);
+          return;
+        }
         const result = await response.json();
         setCompoundSVG(result);
       } catch (error) {

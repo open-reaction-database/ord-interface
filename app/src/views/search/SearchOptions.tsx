@@ -226,7 +226,17 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       max_conversion: Number(q.max_conversion) || 100,
     }));
 
-    if (reactionIds.length || reactionSmarts.length || Number(q.min_yield) || Number(q.max_yield) !== 100) {
+    // Number(q.max_yield) !== 100 used to trip on every page load because
+    // Number(undefined) is NaN and NaN !== 100 is true; gate each bound on
+    // its URL param being present before comparing.
+    if (
+      reactionIds.length ||
+      reactionSmarts.length ||
+      q.min_yield !== undefined ||
+      (q.max_yield !== undefined && Number(q.max_yield) !== 100) ||
+      q.min_conversion !== undefined ||
+      (q.max_conversion !== undefined && Number(q.max_conversion) !== 100)
+    ) {
       setShowReactionOptions(true);
     }
 
