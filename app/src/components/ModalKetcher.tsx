@@ -55,44 +55,6 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
     }
   }, [mutatedSmiles, contWin]);
 
-  /**
-   * Poll the Ketcher iframe until its window exposes `ketcher`, then capture
-   * the contentWindow so the rest of the modal can drive it. Returns a
-   * cancel handle the caller is expected to invoke on unmount so the
-   * interval / timeout don't keep firing against a stale component.
-   */
-  const getKetcher = useCallback((): (() => void) => {
-    const intervalId = window.setInterval(() => {
-      const iframe = document.getElementById('ketcher-iframe') as HTMLIFrameElement | null;
-      if (!contWin && iframe?.contentWindow) {
-        try {
-          const win = iframe.contentWindow as KetcherWindow;
-          if (win.ketcher) {
-            setContWin(win);
-            window.clearInterval(intervalId);
-            drawSmiles();
-            setLoading(false);
-          }
-        } catch {
-          // Cross-origin or other access issues — keep polling.
-        }
-      }
-    }, 1000);
-
-    const timeoutId = window.setTimeout(() => {
-      window.clearInterval(intervalId);
-      if (loading) {
-        setLoading(false);
-        console.warn('Ketcher failed to load within 30 seconds');
-      }
-    }, 30000);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.clearTimeout(timeoutId);
-    };
-  }, [contWin, loading, drawSmiles]);
-
   const saveSmiles = useCallback(async () => {
     if (contWin?.ketcher) {
       try {
@@ -127,10 +89,40 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
     setMutatedSmiles(smiles);
   }, [smiles]);
 
+  // Poll the iframe's contentWindow once per second until it exposes
+  // `ketcher`. Runs once on mount with no React state in the deps array so
+  // success doesn't kick off a fresh 30-second idle interval (the previous
+  // useCallback-based version re-fired on every relevant state change).
   useEffect(() => {
-    const cancel = getKetcher();
-    return cancel;
-  }, [getKetcher]);
+    const intervalId = window.setInterval(() => {
+      const iframe = document.getElementById('ketcher-iframe') as HTMLIFrameElement | null;
+      if (!iframe?.contentWindow) return;
+      try {
+        const win = iframe.contentWindow as KetcherWindow;
+        if (win.ketcher) {
+          window.clearInterval(intervalId);
+          window.clearTimeout(timeoutId);
+          setContWin(win);
+          setLoading(false);
+        }
+      } catch {
+        // Cross-origin or other access issues — keep polling.
+      }
+    }, 1000);
+
+    const timeoutId = window.setTimeout(() => {
+      window.clearInterval(intervalId);
+      setLoading(prev => {
+        if (prev) console.warn('Ketcher failed to load within 30 seconds');
+        return false;
+      });
+    }, 30000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   useEffect(() => {
     // Add keyboard event listener

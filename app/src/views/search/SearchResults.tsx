@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import EntityTable from '../../components/EntityTable';
 import ReactionCard from '../../components/ReactionCard';
@@ -30,13 +30,8 @@ interface SearchResultsProps {
 const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [formattedResults, setFormattedResults] = useState<SearchResult[]>([]);
   const [selectedReactions, setSelectedReactions] = useState<string[]>([]);
   const [showDownloadResults, setShowDownloadResults] = useState(false);
-
-  const fullUrl = useMemo(() => {
-    return window.location.href;
-  }, []);
 
   const updateSelectedReactions = (reactionId: string, isSelected: boolean) => {
     if (isSelected) {
@@ -61,28 +56,27 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
     navigate(`/selected-set?${params.toString()}`);
   };
 
+  // Restore the prior selection when the user returns from /selected-set to the
+  // same search URL. Driven by location.search only; results render directly
+  // from the prop to avoid a one-frame empty flash on mount.
   useEffect(() => {
-    setFormattedResults(searchResults);
-
-    // If query matches storedSet, set selectedReactions
     const storedSetStr = localStorage.getItem('storedSet');
-    if (storedSetStr) {
-      try {
-        const storedSet = JSON.parse(storedSetStr);
-        if (location.search === storedSet.query) {
-          setSelectedReactions(storedSet.reactions || []);
-        }
-      } catch (error) {
-        console.error('Error parsing stored set:', error);
+    if (!storedSetStr) return;
+    try {
+      const storedSet = JSON.parse(storedSetStr);
+      if (location.search === storedSet.query) {
+        setSelectedReactions(storedSet.reactions || []);
       }
+    } catch (error) {
+      console.error('Error parsing stored set:', error);
     }
-  }, [searchResults, location.search]);
+  }, [location.search]);
 
   return (
     <div className="search-results-main">
-      {formattedResults.length > 0 && (
+      {searchResults.length > 0 && (
         <EntityTable
-          tableData={formattedResults}
+          tableData={searchResults}
           title="Search Results"
           displaySearch={false}
         >
@@ -90,12 +84,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
             <>
               <div className="action-button-holder">
                 <CopyButton
-                  textToCopy={fullUrl}
+                  textToCopy={window.location.href}
                   icon="share"
                   buttonText="Shareable Link"
                 />
                 <button
-                  disabled={!formattedResults.length}
+                  disabled={!searchResults.length}
                   onClick={() => setShowDownloadResults(true)}
                 >
                   Download All Search Results
@@ -127,7 +121,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
       )}
 
       <DownloadResults
-        reactionIds={formattedResults.map(result => result.reaction_id)}
+        reactionIds={searchResults.map(result => result.reaction_id)}
         showDownloadResults={showDownloadResults}
         onHideDownloadResults={() => setShowDownloadResults(false)}
       />
