@@ -8,7 +8,6 @@ Web interface and FastAPI server for the [Open Reaction Database](https://open-r
   - `src/components/` — reusable React components
   - `src/views/` — routed pages (browse, search, dataset/reaction views)
   - `src/router/`, `src/styles/`, `src/utils/`, `src/assets/`
-- **`vue-app/`** — previous Vue SPA, preserved as reference during the React migration
 - **`ord_interface/`** — Python backend
   - `api/` — FastAPI server (search, view, queries)
   - `client/` — utilities for building the Postgres + rdkit-cartridge database
