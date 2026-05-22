@@ -166,22 +166,6 @@ const MainReactionView: React.FC = () => {
     return Object.keys(workupTypes).find(key => (workupTypes as any)[key] === type)?.toLowerCase().replace(/_/g, ' ') || '';
   };
 
-  const setNavItemsFunction = useCallback(() => {
-    let items = ['summary', 'identifiers', 'inputs'];
-    const optionals = ['setup', 'conditions', 'notes', 'observations', 'workups'];
-    
-    optionals.forEach(item => {
-      if (reaction[item] || reaction[`${item}List`]?.length) {
-        items.push(item);
-      }
-    });
-    
-    const lastItems = ['outcomes', 'provenance', 'full-record'];
-    items.push(...lastItems);
-    
-    return items;
-  }, [reaction]);
-
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };

@@ -21,7 +21,7 @@ interface OutcomesViewProps {
 }
 
 const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
-  // TODO: Implement outcomes logic from Vue component
+  // TODO: render outcomes details (currently a stub).
   return (
     <div className="outcomes-view">
       <div>Outcomes View</div>

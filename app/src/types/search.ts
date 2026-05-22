@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Open Reaction Database Project Authors
+ * Copyright 2026 Open Reaction Database Project Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import type { Reaction } from 'ord-schema/proto/reaction_pb';
 
-interface ConditionsViewProps {
-  conditions: any;
-  display: string;
+export type ReactionData = Reaction.AsObject;
+
+export interface SearchResult {
+  reaction_id: string;
+  proto: string;
+  data: ReactionData;
 }
 
-const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) => {
-  // TODO: render conditions details (currently a stub).
-  return (
-    <div className="conditions-view">
-      <div>Conditions View - {display}</div>
-      <div>TODO: Implement conditions display for {display}</div>
-      {conditions && <div>Conditions data present</div>}
-    </div>
-  );
-};
-
-export default ConditionsView;
+export interface Dataset {
+  dataset_id: string;
+  name?: string;
+  description?: string;
+  num_reactions: number;
+}

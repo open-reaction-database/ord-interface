@@ -32,7 +32,6 @@ const DownloadResults: React.FC<DownloadResultsProps> = ({
   const [fileType, setFileType] = useState<string>('pb.gz');
 
   useEffect(() => {
-    // Get stored file type from localStorage (similar to Vue's $store)
     const storedFileType = localStorage.getItem('downloadFileType') || 'pb.gz';
     setFileType(storedFileType);
   }, []);

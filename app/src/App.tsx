@@ -16,6 +16,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HeaderNav from './components/HeaderNav';
 import MainFooter from './components/MainFooter';
 import Home from './views/Home';
@@ -26,6 +27,8 @@ import MainDatasetView from './views/dataset-view/MainDatasetView';
 import MainReactionView from './views/reaction-view/MainReactionView';
 import MainKetcher from './views/ketcher-view/MainKetcher';
 import './App.scss';
+
+const queryClient = new QueryClient();
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -51,9 +54,11 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AppContent />
+      </Router>
+    </QueryClientProvider>
   );
 }
 

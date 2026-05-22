@@ -4,12 +4,8 @@ import EntityTable from '../../components/EntityTable';
 import ReactionCard from '../../components/ReactionCard';
 import CopyButton from '../../components/CopyButton';
 import DownloadResults from '../../components/DownloadResults';
+import type { SearchResult } from '../../types/search';
 import './SearchResults.scss';
-
-interface SearchResult {
-  reaction_id: string;
-  [key: string]: any;
-}
 
 interface SearchResultsProps {
   searchResults: SearchResult[];
@@ -78,7 +74,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 </button>
               </div>
               
-              {entities.map((row: SearchResult) => (
+              {entities.map(row => (
                 <ReactionCard
                   key={row.reaction_id}
                   reaction={row}

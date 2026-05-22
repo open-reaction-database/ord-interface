@@ -21,7 +21,7 @@ interface ObservationsViewProps {
 }
 
 const ObservationsView: React.FC<ObservationsViewProps> = ({ observations }) => {
-  // TODO: Implement observations logic from Vue component
+  // TODO: render observations details (currently a stub).
   return (
     <div className="observations-view">
       <div>Observations View</div>

@@ -14,190 +14,64 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ChartView from './ChartView';
 import SearchResults from './SearchResults';
-import { base64ToBytes } from '../../utils/base64';
-import reaction_pb from 'ord-schema';
+import { useSearchTask } from '../../hooks/useSearchTask';
+import type { Dataset } from '../../types/search';
 import './MainDatasetView.scss';
-
-interface Dataset {
-  dataset_id: string;
-  name?: string;
-  description?: string;
-  num_reactions: number;
-}
-
-interface SearchResult {
-  reaction_id: string;
-  proto: string;
-  data?: any;
-}
 
 const MainDatasetView: React.FC = () => {
   const { datasetId } = useParams<{ datasetId: string }>();
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [datasetData, setDatasetData] = useState<Dataset | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [searchTaskId, setSearchTaskId] = useState<string | null>(null);
-  const searchTaskIdRef = useRef<string | null>(null);
-  const pollingTimeoutRef = useRef<number | null>(null);
-  const isPollingRef = useRef<boolean>(false);
 
-  const expandOrShrink = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const datasetQuery = `?dataset_id=${datasetId}&limit=100`;
+  const { data: searchData, isFetching, error } = useSearchTask(datasetId ? datasetQuery : null, !!datasetId);
+  const searchResults = searchData?.status === 'success' ? searchData.results : [];
+  const loading = !!datasetId && (isFetching || searchData?.status === 'pending');
 
-  const getSearchResults = useCallback(async () => {
-    if (!datasetId) return;
-    
-    setLoading(true);
-    try {
-      // If this is the first time we are attempting the search, set the search task ID.
-      let taskId = searchTaskIdRef.current;
-      if (taskId === null) {
-        // Submit a search task to the server. This returns a GUID task ID.
-        const taskRes = await fetch(`/api/submit_query?dataset_id=${datasetId}&limit=100`, {method: "GET"});
-        taskId = await taskRes.json();
-        setSearchTaskId(taskId);
-        searchTaskIdRef.current = taskId;
-      }
-      
-      // Check the status of the search task.
-      const queryRes = await fetch(`/api/fetch_query_result?task_id=${taskId}`, {method: "GET"});
-      
-      if (queryRes.status === 200) {
-        const searchResultsData = await queryRes.json();
-        setSearchTaskId(null);
-        searchTaskIdRef.current = null;
-        isPollingRef.current = false;
-        
-        // Clear any pending polling timeout
-        if (pollingTimeoutRef.current) {
-          clearTimeout(pollingTimeoutRef.current);
-          pollingTimeoutRef.current = null;
-        }
-        
-        // Deserialize the results and unpack protobuf for each reaction
-        const processedResults = searchResultsData.map((reaction: SearchResult) => {
-          const bytes = base64ToBytes(reaction.proto);
-          reaction.data = reaction_pb.Reaction.deserializeBinary(new Uint8Array(bytes)).toObject();
-          return reaction;
-        });
-        
-        setSearchResults(processedResults);
-        setLoading(false);
-      } else if (queryRes.status === 400) {
-        setSearchTaskId(null);
-        searchTaskIdRef.current = null;
-        isPollingRef.current = false;
-        if (pollingTimeoutRef.current) {
-          clearTimeout(pollingTimeoutRef.current);
-          pollingTimeoutRef.current = null;
-        }
-        throw new Error(`Error - Search task ID ${taskId} does not exist`);
-      } else if (queryRes.status === 500) {
-        setSearchTaskId(null);
-        searchTaskIdRef.current = null;
-        isPollingRef.current = false;
-        if (pollingTimeoutRef.current) {
-          clearTimeout(pollingTimeoutRef.current);
-          pollingTimeoutRef.current = null;
-        }
-        throw new Error(`Error - Search task ID ${taskId} failed due to server error`);
-      } else if (queryRes.status === 202) {
-        // Search is still in progress, we'll poll again
-        if (!isPollingRef.current) {
-          isPollingRef.current = true;
-          pollingTimeoutRef.current = window.setTimeout(() => {
-            pollingTimeoutRef.current = null;
-            getSearchResults();
-          }, 1000);
-        }
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
-      setLoading(false);
-      isPollingRef.current = false;
-      if (pollingTimeoutRef.current) {
-        clearTimeout(pollingTimeoutRef.current);
-        pollingTimeoutRef.current = null;
-      }
-    }
-  }, [datasetId]);
-
-  // Fetch dataset metadata
-  useEffect(() => {
-    if (!datasetId) return;
-    
-    fetch(`/api/datasets`)
-      .then(response => response.json())
-      .then((datasets: Dataset[]) => {
-        const dataset = datasets.find(d => d.dataset_id === datasetId);
-        setDatasetData(dataset || null);
-      })
-      .catch(error => console.error('Error fetching dataset metadata:', error));
-  }, [datasetId]);
-
-  // Initial search results fetch
-  useEffect(() => {
-    // Clear any existing polling when datasetId changes
-    if (pollingTimeoutRef.current) {
-      clearTimeout(pollingTimeoutRef.current);
-      pollingTimeoutRef.current = null;
-    }
-    isPollingRef.current = false;
-    setSearchTaskId(null);
-    searchTaskIdRef.current = null;
-    setSearchResults([]);
-    
-    if (datasetId) {
-      getSearchResults();
-    }
-    
-    // Cleanup on unmount or when datasetId changes
-    return () => {
-      if (pollingTimeoutRef.current) {
-        clearTimeout(pollingTimeoutRef.current);
-        pollingTimeoutRef.current = null;
-      }
-      isPollingRef.current = false;
-    };
-  }, [datasetId, getSearchResults]);
+  const { data: datasetData } = useQuery<Dataset | null>({
+    queryKey: ['dataset-metadata', datasetId],
+    enabled: !!datasetId,
+    queryFn: async () => {
+      const res = await fetch('/api/datasets');
+      const datasets = (await res.json()) as Dataset[];
+      return datasets.find(d => d.dataset_id === datasetId) ?? null;
+    },
+  });
 
   return (
     <div id="dataset-main">
       <h1>Dataset View</h1>
-      <div 
-        id="charts" 
+      <div
+        id="charts"
         style={{
           display: isCollapsed ? 'grid' : 'flex',
-          flexDirection: isCollapsed ? undefined : 'column'
+          flexDirection: isCollapsed ? undefined : 'column',
         }}
       >
-        <div 
-          id="chartsection" 
+        <div
+          id="chartsection"
           className="charts-container"
           style={{ width: isCollapsed ? '80%' : '100%' }}
         >
           <div className="charts-header">
             <div id="expand">
-              <button onClick={expandOrShrink}>
-                <i 
-                  className="material-icons" 
-                  title={isCollapsed ? "Expand" : "Collapse"}
+              <button onClick={() => setIsCollapsed(c => !c)}>
+                <i
+                  className="material-icons"
+                  title={isCollapsed ? 'Expand' : 'Collapse'}
                 >
-                  {isCollapsed ? "keyboard_double_arrow_right" : "keyboard_double_arrow_left"}
+                  {isCollapsed ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left'}
                 </i>
               </button>
             </div>
           </div>
-          <div 
-            id="chartsectioncharts" 
+          <div
+            id="chartsectioncharts"
             className={`charts-content ${isCollapsed ? '' : 'expanded'}`}
           >
             <ChartView
@@ -207,7 +81,6 @@ const MainDatasetView: React.FC = () => {
               role="reactant"
               isCollapsed={isCollapsed}
             />
-            
             <ChartView
               uniqueId="productsFrequency"
               title="Frequency of Products"
@@ -217,7 +90,7 @@ const MainDatasetView: React.FC = () => {
             />
           </div>
         </div>
-        
+
         <div id="datasection">
           <div className="h4">Dataset Metadata</div>
           <table>
@@ -240,20 +113,24 @@ const MainDatasetView: React.FC = () => {
               </tr>
             </tbody>
           </table>
-          
+
           <div className="search-results-section">
-            {!loading && searchResults?.length > 0 ? (
-              <SearchResults 
+            {error ? (
+              <div className="no-results">
+                <div className="title">Failed to load reactions: {error.message}</div>
+              </div>
+            ) : loading ? (
+              <div className="loading">
+                <LoadingSpinner />
+              </div>
+            ) : searchResults.length > 0 ? (
+              <SearchResults
                 searchResults={searchResults}
                 isOverflow={false}
               />
-            ) : !loading && !searchResults?.length ? (
+            ) : (
               <div className="no-results">
                 <div className="title">This dataset contains no reactions.</div>
-              </div>
-            ) : (
-              <div className="loading">
-                <LoadingSpinner />
               </div>
             )}
           </div>

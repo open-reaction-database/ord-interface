@@ -473,30 +473,23 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                   min_yield: values[0], 
                   max_yield: values[1] 
                 }))}
-                renderTrack={({ props, children }) => {
-                  const { key, ...restProps } = props;
-                  return (
-                    <div
-                      key={key}
-                      {...restProps}
-                      className="range-track"
-                      style={props.style}
-                    >
-                      {children}
-                    </div>
-                  );
-                }}
-                renderThumb={({ props }) => {
-                  const { key, ...restProps } = props;
-                  return (
-                    <div
-                      key={key}
-                      {...restProps}
-                      className="range-thumb"
-                      style={props.style}
-                    />
-                  );
-                }}
+                renderTrack={({ props, children }) => (
+                  <div
+                    {...props}
+                    className="range-track"
+                    style={props.style}
+                  >
+                    {children}
+                  </div>
+                )}
+                renderThumb={({ props }) => (
+                  <div
+                    {...props}
+                    key={props.key}
+                    className="range-thumb"
+                    style={props.style}
+                  />
+                )}
               />
             </div>
           </div>
@@ -515,30 +508,23 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                   min_conversion: values[0], 
                   max_conversion: values[1] 
                 }))}
-                renderTrack={({ props, children }) => {
-                  const { key, ...restProps } = props;
-                  return (
-                    <div
-                      key={key}
-                      {...restProps}
-                      className="range-track"
-                      style={props.style}
-                    >
-                      {children}
-                    </div>
-                  );
-                }}
-                renderThumb={({ props }) => {
-                  const { key, ...restProps } = props;
-                  return (
-                    <div
-                      key={key}
-                      {...restProps}
-                      className="range-thumb"
-                      style={props.style}
-                    />
-                  );
-                }}
+                renderTrack={({ props, children }) => (
+                  <div
+                    {...props}
+                    className="range-track"
+                    style={props.style}
+                  >
+                    {children}
+                  </div>
+                )}
+                renderThumb={({ props }) => (
+                  <div
+                    {...props}
+                    key={props.key}
+                    className="range-thumb"
+                    style={props.style}
+                  />
+                )}
               />
             </div>
           </div>

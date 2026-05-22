@@ -21,7 +21,7 @@ interface WorkupsViewProps {
 }
 
 const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
-  // TODO: Implement workups logic from Vue component
+  // TODO: render workup details (currently a stub).
   return (
     <div className="workups-view">
       <div>Workups View</div>

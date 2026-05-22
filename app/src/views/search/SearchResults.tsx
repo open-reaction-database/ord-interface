@@ -20,14 +20,8 @@ import EntityTable from '../../components/EntityTable';
 import ReactionCard from '../../components/ReactionCard';
 import CopyButton from '../../components/CopyButton';
 import DownloadResults from '../../components/DownloadResults';
+import type { SearchResult } from '../../types/search';
 import './SearchResults.scss';
-
-interface SearchResult {
-  reaction_id: string;
-  proto: string;
-  data: any;
-  [key: string]: any;
-}
 
 interface SearchResultsProps {
   searchResults: SearchResult[];
@@ -53,13 +47,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
   };
 
   const goToViewSelected = () => {
-    // TODO: Implement Vuex store equivalent or local storage for storedSet
-    // Store storedSet so we can retrieve it if user comes back from selected-set
-    localStorage.setItem('storedSet', JSON.stringify({
-      query: location.search,
-      reactions: selectedReactions
-    }));
-    
+    // Persist selection so it survives navigating back from the selected-set page.
+    localStorage.setItem(
+      'storedSet',
+      JSON.stringify({
+        query: location.search,
+        reactions: selectedReactions,
+      }),
+    );
+
     const params = new URLSearchParams();
     selectedReactions.forEach(id => params.append('reaction_id', id));
     navigate(`/selected-set?${params.toString()}`);
@@ -90,7 +86,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
           title="Search Results"
           displaySearch={false}
         >
-          {(entities: any[]) => (
+          {entities => (
             <>
               <div className="action-button-holder">
                 <CopyButton
@@ -105,7 +101,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
                   Download All Search Results
                 </button>
               </div>
-              {entities.map((row: any) => (
+              {entities.map(row => (
                 <ReactionCard
                   key={row.reaction_id}
                   reaction={row}

@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import './EntityTable.scss';
 
-interface EntityTableProps {
-  tableData: any[];
+interface EntityTableProps<T> {
+  tableData: T[];
   title?: string;
   displaySearch?: boolean;
-  children: (entities: any[]) => ReactNode;
+  children: (entities: T[]) => ReactNode;
 }
 
-const EntityTable: React.FC<EntityTableProps> = ({ 
-  tableData, 
-  title = '', 
-  displaySearch = true,
-  children 
-}) => {
-  const [entities, setEntities] = useState<any[]>([]);
+function EntityTable<T>({ tableData, title = '', displaySearch = true, children }: EntityTableProps<T>) {
+  const [entities, setEntities] = useState<T[]>([]);
   const [searchString, setSearchString] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(10);
@@ -54,21 +49,19 @@ const EntityTable: React.FC<EntityTableProps> = ({
 
     if (searchString && searchArray.length > 0) {
       filtered = entities.filter(entity => {
-        // Create a boolean array for each search term
         const matching = Array(searchArray.length).fill(false);
-        
-        // Check if each search term matches any property in the entity
+        const fields = entity as Record<string, unknown>;
+
         searchArray.forEach((param, pIdx) => {
-          Object.keys(entity).forEach(key => {
-            let value = entity[key];
-            if (value == null) value = "null";
-            if (value.toString().toLowerCase().includes(param.toLowerCase())) {
+          Object.keys(fields).forEach(key => {
+            const value = fields[key];
+            const stringified = value == null ? 'null' : String(value);
+            if (stringified.toLowerCase().includes(param.toLowerCase())) {
               matching[pIdx] = true;
             }
           });
         });
-        
-        // All search terms must match
+
         return !matching.includes(false);
       });
     }
@@ -202,6 +195,6 @@ const EntityTable: React.FC<EntityTableProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default EntityTable;
