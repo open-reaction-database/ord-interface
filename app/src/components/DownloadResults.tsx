@@ -24,10 +24,10 @@ interface DownloadResultsProps {
   onHideDownloadResults: () => void;
 }
 
-const DownloadResults: React.FC<DownloadResultsProps> = ({ 
-  reactionIds, 
-  showDownloadResults, 
-  onHideDownloadResults 
+const DownloadResults: React.FC<DownloadResultsProps> = ({
+  reactionIds,
+  showDownloadResults,
+  onHideDownloadResults,
 }) => {
   const [fileType, setFileType] = useState<string>('pb.gz');
 
@@ -80,11 +80,21 @@ const DownloadResults: React.FC<DownloadResultsProps> = ({
             <select
               id="file-type-select"
               value={fileType}
-              onChange={(e) => handleFileTypeChange(e.target.value)}
+              onChange={e => handleFileTypeChange(e.target.value)}
             >
               <option value="pb.gz">pb.gz</option>
-              <option value="csv" disabled>csv (coming soon)</option>
-              <option value="pbtxt" disabled>pbtxt (coming soon)</option>
+              <option
+                value="csv"
+                disabled
+              >
+                csv (coming soon)
+              </option>
+              <option
+                value="pbtxt"
+                disabled
+              >
+                pbtxt (coming soon)
+              </option>
             </select>
           </div>
           <div className="download">

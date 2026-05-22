@@ -15,9 +15,10 @@
  */
 
 import React from 'react';
+import type { ReactionWorkupData } from '../../types/search';
 
 interface WorkupsViewProps {
-  workup: any;
+  workup: ReactionWorkupData | undefined;
 }
 
 const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {

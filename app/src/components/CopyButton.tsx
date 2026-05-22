@@ -23,15 +23,11 @@ interface CopyButtonProps {
   buttonText?: string;
 }
 
-const CopyButton: React.FC<CopyButtonProps> = ({ 
-  textToCopy, 
-  icon = 'content_copy', 
-  buttonText = '' 
-}) => {
+const CopyButton: React.FC<CopyButtonProps> = ({ textToCopy, icon = 'content_copy', buttonText = '' }) => {
   const [displayNotification, setDisplayNotification] = useState(false);
   const [notificationStyle, setNotificationStyle] = useState({
     top: 0,
-    left: 0
+    left: 0,
   });
 
   const handleCopy = async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -39,7 +35,7 @@ const CopyButton: React.FC<CopyButtonProps> = ({
     const { clientX, clientY } = event;
     setNotificationStyle({
       top: clientY,
-      left: clientX
+      left: clientX,
     });
 
     try {
@@ -60,14 +56,14 @@ const CopyButton: React.FC<CopyButtonProps> = ({
         <i className="material-icons">{icon}</i>
         {buttonText && <div className="copy">{buttonText}</div>}
       </button>
-      
+
       {displayNotification && (
-        <div 
-          id="copy-notification" 
+        <div
+          id="copy-notification"
           className={`fade-enter ${displayNotification ? 'fade-enter-active' : ''}`}
           style={{
             top: `${notificationStyle.top}px`,
-            left: `${notificationStyle.left}px`
+            left: `${notificationStyle.left}px`,
           }}
         >
           Copied to clipboard!

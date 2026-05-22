@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-@use "../styles/vars.scss" as vars;
+@use '../styles/vars.scss' as vars;
 
 .main-footer {
   background-color: vars.$lightgrey;
   padding: 2rem 0;
   margin-top: 4rem;
-  
+
   &__container {
     max-width: 1200px;
     margin: 0 auto;

@@ -23,9 +23,7 @@ import type { SearchResult } from '../types/search';
 const POLL_INTERVAL_MS = 1000;
 const POLL_TIMEOUT_MS = 120_000;
 
-type TaskState =
-  | { status: 'success'; results: SearchResult[] }
-  | { status: 'pending'; taskId: string };
+type TaskState = { status: 'success'; results: SearchResult[] } | { status: 'pending'; taskId: string };
 
 /**
  * Runs the API's submit-query / poll-result protocol against the given query

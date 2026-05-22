@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-@use "../styles/vars.scss" as vars;
+@use '../styles/vars.scss' as vars;
 
 // BEM Block: header-nav
 .header-nav {
   background-color: white !important;
-  
+
   // BEM Element: header-nav__container
   &__container {
     display: flex;
@@ -29,34 +29,34 @@
     margin: auto;
     padding: 0.5rem 0;
   }
-  
+
   // BEM Element: header-nav__brand
   &__brand {
     padding: 0.5rem 0;
   }
-  
+
   // BEM Element: header-nav__nav
   &__nav {
     flex-direction: row;
   }
-  
+
   // BEM Element: header-nav__nav-list
   &__nav-list {
     margin-left: 1rem;
   }
-  
+
   // BEM Element: header-nav__nav-item
   &__nav-item {
     display: flex;
   }
-  
+
   // BEM Element: header-nav__link
   &__link {
     padding: 0.5rem;
     text-decoration: none;
-    transition: .15s;
+    transition: 0.15s;
     color: vars.$linkblue;
-    
+
     // BEM Modifier: header-nav__link--hover
     &:hover {
       color: vars.$hoverblue;

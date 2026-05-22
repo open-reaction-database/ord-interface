@@ -15,36 +15,37 @@
  */
 
 import React, { useMemo } from 'react';
+import type { ReactionNotesData } from '../../types/search';
 import './NotesView.scss';
 
 interface NotesViewProps {
-  notes: Record<string, any>;
+  notes: ReactionNotesData | undefined;
 }
 
 interface NoteToDisplay {
-  val: any;
+  val: string;
   label: string;
 }
 
 const NotesView: React.FC<NotesViewProps> = ({ notes }) => {
-  const camelToSpaces = (str: string): string => {
-    // convert camel case strings to string with spaces
-    // also remove leading "is " where needed
-    return str.replace(/([a-z])([A-Z])/g, '$1 $2')
-             .replace("is ", "")
-             .toLowerCase();
-  };
+  // Render camelCase field names as space-separated lowercase phrases,
+  // stripping the "is" prefix on boolean flags like `isHeterogeneous`.
+  const camelToSpaces = (str: string): string =>
+    str
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/^is /, '')
+      .toLowerCase();
 
   const notesToDisplay = useMemo((): NoteToDisplay[] => {
     if (!notes) return [];
-    
-    // grab fields with value and that aren't false for display
-    return Object.keys(notes)
-            .filter(key => notes[key])
-            .map(key => ({
-              val: notes[key],
-              label: camelToSpaces(key)
-            }));
+
+    const fields = notes as Record<string, unknown>;
+    return Object.keys(fields)
+      .filter(key => Boolean(fields[key]))
+      .map(key => ({
+        val: String(fields[key]),
+        label: camelToSpaces(key),
+      }));
   }, [notes]);
 
   return (

@@ -15,9 +15,10 @@
  */
 
 import React from 'react';
+import type { ReactionOutcomeData } from '../../types/search';
 
 interface OutcomesViewProps {
-  outcome: any;
+  outcome: ReactionOutcomeData | undefined;
 }
 
 const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {

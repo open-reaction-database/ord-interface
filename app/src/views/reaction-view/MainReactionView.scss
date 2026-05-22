@@ -14,9 +14,9 @@
  limitations under the License.
 */
 
-@use "../../styles/vars.scss" as vars;
-@use "../../styles/tabs.scss" as tabs;
-@use "../../styles/transition.scss" as transition;
+@use '../../styles/vars.scss' as vars;
+@use '../../styles/tabs.scss' as tabs;
+@use '../../styles/transition.scss' as transition;
 
 .main-reaction-view {
   min-height: 90vh;
@@ -73,7 +73,8 @@
     margin-bottom: 0.5rem;
   }
 
-  .section, .title {
+  .section,
+  .title {
     width: calc(85vw - 3rem);
     min-width: calc(800px - 11rem); // (min main width) - (nav width plus gutters)
     margin: 0;

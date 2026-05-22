@@ -14,73 +14,52 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import reaction_pb from 'ord-schema';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import ReactionCard from '../../../components/ReactionCard';
 import DownloadResults from '../../../components/DownloadResults';
 import CopyButton from '../../../components/CopyButton';
-import base64ToBytes from '../../../utils/base64';
+import { base64ToBytes } from '../../../utils/base64';
+import type { SearchResult } from '../../../types/search';
 import './MainSelectedSet.scss';
-
-interface ReactionData {
-  reaction_id: string;
-  proto: string;
-  data?: any;
-}
 
 const MainSelectedSet: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [reactions, setReactions] = useState<ReactionData[]>([]);
+  const [reactions, setReactions] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDownloadResults, setShowDownloadResults] = useState(false);
 
-  // Get reaction IDs from URL parameters
-  const reactionIds = searchParams.get('reaction_id') ? [searchParams.get('reaction_id')!] : [];
+  const reactionIds = useMemo(() => searchParams.getAll('reaction_id'), [searchParams]);
+  const reactionIdsKey = reactionIds.join(',');
   const fullUrl = window.location.href;
 
-  const getSelectedReactions = async () => {
+  const getSelectedReactions = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/reactions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reaction_ids: reactionIds })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reaction_ids: reactionIds }),
       });
 
-      if (response.ok) {
-        const fetchedReactions: ReactionData[] = await response.json();
-        
-        // Process reactions with protobuf data
-        fetchedReactions.forEach(reaction => {
-          if (reaction.proto) {
-            try {
-              // Convert base64 to bytes for protobuf parsing
-              base64ToBytes(reaction.proto);
-              // Note: This would require ord-schema package for full protobuf deserization
-              // For now, we'll store the raw data
-              reaction.data = { 
-                identifiersList: [{ value: `Reaction ${reaction.reaction_id}` }] 
-              };
-            } catch (error) {
-              console.error('Error deserializing reaction data:', error);
-            }
-          }
-        });
+      if (!response.ok) throw new Error('Failed to fetch reactions');
+      const fetched = (await response.json()) as Array<Omit<SearchResult, 'data'>>;
 
-        setReactions(fetchedReactions);
-      } else {
-        throw new Error('Failed to fetch reactions');
-      }
+      const decoded: SearchResult[] = fetched.map(r => ({
+        ...r,
+        data: reaction_pb.Reaction.deserializeBinary(new Uint8Array(base64ToBytes(r.proto))).toObject(),
+      }));
+
+      setReactions(decoded);
     } catch (error) {
       console.error('Error fetching reactions:', error);
       setReactions([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [reactionIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (reactionIds.length > 0) {
@@ -88,7 +67,7 @@ const MainSelectedSet: React.FC = () => {
     } else {
       setLoading(false);
     }
-  }, [reactionIds.join(',')]); // Dependency on reaction IDs
+  }, [reactionIdsKey, getSelectedReactions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -131,9 +110,9 @@ const MainSelectedSet: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       <div className="selected-set">
-        {reactions.map((reaction) => (
+        {reactions.map(reaction => (
           <ReactionCard
             key={reaction.reaction_id}
             reaction={reaction}

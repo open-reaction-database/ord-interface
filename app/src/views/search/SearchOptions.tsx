@@ -73,7 +73,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
   const [showReagentOptions, setShowReagentOptions] = useState(false);
   const [showReactionOptions, setShowReactionOptions] = useState(false);
   const [showDatasetOptions, setShowDatasetOptions] = useState(false);
-  
+
   const [reagentOptions, setReagentOptions] = useState<ReagentOptions>({
     reactants: [],
     products: [],
@@ -81,7 +81,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
     useStereochemistry: false,
     similarityThreshold: 0.5,
   });
-  
+
   const [reactionOptions, setReactionOptions] = useState<ReactionOptions>({
     reactionIds: [],
     reactionSmarts: [],
@@ -90,34 +90,33 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
     min_conversion: 50,
     max_conversion: 100,
   });
-  
+
   const [datasetOptions, setDatasetOptions] = useState<DatasetOptions>({
     datasetIds: [],
     DOIs: [],
   });
-  
+
   const [searchParams, setSearchParams] = useState<SearchParams>({
     limit: 100,
   });
-  
+
   const [showKetcherModal, setShowKetcherModal] = useState(false);
   const [ketcherModalSmile, setKetcherModalSmile] = useState(0);
   const [ketcherModalSet, setKetcherModalSet] = useState<'reactants' | 'products'>('reactants');
-  
+
   const matchModes = ['exact', 'similar', 'substructure', 'SMARTS'];
 
-  const defaultQuery = useMemo(() => {
+  const defaultQuery = useMemo<Record<string, string | string[]>>(() => {
     const params = new URLSearchParams(location.search);
-    const query: any = {};
+    const query: Record<string, string | string[]> = {};
     for (const [key, value] of params.entries()) {
-      if (query[key]) {
-        if (Array.isArray(query[key])) {
-          query[key].push(value);
-        } else {
-          query[key] = [query[key], value];
-        }
-      } else {
+      const existing = query[key];
+      if (existing === undefined) {
         query[key] = value;
+      } else if (Array.isArray(existing)) {
+        existing.push(value);
+      } else {
+        query[key] = [existing, value];
       }
     }
     return query;
@@ -138,8 +137,10 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
   };
 
   const emitSearchOptions = () => {
-    const allComponents = [...reagentOptions.reactants, ...reagentOptions.products]
-      .map(component => ({ ...component, matchMode: reagentOptions.matchMode }));
+    const allComponents = [...reagentOptions.reactants, ...reagentOptions.products].map(component => ({
+      ...component,
+      matchMode: reagentOptions.matchMode,
+    }));
 
     const searchOptions: SearchOptionsData = {
       reagent: {
@@ -151,30 +152,13 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       dataset: datasetOptions,
       general: searchParams,
     };
-    
+
     onSearchOptions(searchOptions);
   };
 
-  const addCompToOptions = useCallback((comp: string) => {
-    const compArray = comp.split(';');
-    const compType = compArray[1] === 'input' ? 'reactants' : 'products';
-    const matchMode = compArray[2];
-    const component: ReagentComponent = {
-      smileSmart: compArray[0].replaceAll('%3D', '='),
-      source: compArray[1],
-      matchMode,
-    };
-    
-    setReagentOptions(prev => ({
-      ...prev,
-      matchMode,
-      [compType]: [...prev[compType], component],
-    }));
-  }, []);
-
   const setDefaultValues = useCallback(() => {
     const q = defaultQuery;
-    
+
     // Reset reagent options first, then rebuild from URL
     const initialReagentOptions: ReagentOptions = {
       reactants: [],
@@ -183,11 +167,11 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       useStereochemistry: false,
       similarityThreshold: 0.5,
     };
-    
+
     // reagent options
     if (q.component?.length) {
       const components = Array.isArray(q.component) ? q.component : [q.component];
-      
+
       components.forEach((comp: string) => {
         const compArray = comp.split(';');
         const compType = compArray[1] === 'input' ? 'reactants' : 'products';
@@ -197,17 +181,17 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
           source: compArray[1],
           matchMode,
         };
-        
+
         initialReagentOptions[compType].push(component);
         // Use the last matchMode found (or first if none specified)
         if (matchMode) {
           initialReagentOptions.matchMode = matchMode;
         }
       });
-      
+
       initialReagentOptions.useStereochemistry = q.use_stereochemistry === 'true' || false;
       initialReagentOptions.similarityThreshold = Number(q.similarity) || 0.5;
-      
+
       setReagentOptions(initialReagentOptions);
       setShowReagentOptions(true);
     } else {
@@ -218,7 +202,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
     // dataset options
     const datasetIds = Array.isArray(q.dataset_id) ? q.dataset_id : q.dataset_id?.length ? [q.dataset_id] : [];
     const DOIs = Array.isArray(q.doi) ? q.doi : q.doi?.length ? [q.doi] : [];
-    
+
     setDatasetOptions({ datasetIds, DOIs });
     if (datasetIds.length || DOIs.length) {
       setShowDatasetOptions(true);
@@ -226,8 +210,12 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
 
     // reaction options
     const reactionIds = Array.isArray(q.reaction_id) ? q.reaction_id : q.reaction_id?.length ? [q.reaction_id] : [];
-    const reactionSmarts = Array.isArray(q.reaction_smarts) ? q.reaction_smarts : q.reaction_smarts?.length ? [q.reaction_smarts] : [];
-    
+    const reactionSmarts = Array.isArray(q.reaction_smarts)
+      ? q.reaction_smarts
+      : q.reaction_smarts?.length
+        ? [q.reaction_smarts]
+        : [];
+
     setReactionOptions(prev => ({
       ...prev,
       reactionIds,
@@ -237,14 +225,14 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       min_conversion: Number(q.min_conversion) || 0,
       max_conversion: Number(q.max_conversion) || 100,
     }));
-    
+
     if (reactionIds.length || reactionSmarts.length || Number(q.min_yield) || Number(q.max_yield) !== 100) {
       setShowReactionOptions(true);
     }
 
     // general search params
     setSearchParams({ limit: Number(q.limit) || 100 });
-  }, [defaultQuery, addCompToOptions]);
+  }, [defaultQuery]);
 
   const addReactant = () => {
     setReagentOptions(prev => ({
@@ -277,8 +265,8 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
   const updateReactantSmiles = (idx: number, smiles: string) => {
     setReagentOptions(prev => ({
       ...prev,
-      reactants: prev.reactants.map((reactant, index) => 
-        index === idx ? { ...reactant, smileSmart: smiles } : reactant
+      reactants: prev.reactants.map((reactant, index) =>
+        index === idx ? { ...reactant, smileSmart: smiles } : reactant,
       ),
     }));
   };
@@ -286,9 +274,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
   const updateProductSmiles = (idx: number, smiles: string) => {
     setReagentOptions(prev => ({
       ...prev,
-      products: prev.products.map((product, index) => 
-        index === idx ? { ...product, smileSmart: smiles } : product
-      ),
+      products: prev.products.map((product, index) => (index === idx ? { ...product, smileSmart: smiles } : product)),
     }));
   };
 
@@ -307,16 +293,19 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
   return (
     <div className="search-options">
       {/* Components Section */}
-      <div 
+      <div
         className={`options-title ${showReagentOptions ? '' : 'closed'}`}
         onClick={() => setShowReagentOptions(!showReagentOptions)}
       >
         <span>Components</span>
         <i className="material-icons">expand_less</i>
       </div>
-      
+
       {showReagentOptions && (
-        <div id="searchByReagent" className="options-container">
+        <div
+          id="searchByReagent"
+          className="options-container"
+        >
           <div className="section">
             <div className="subtitle">
               <div className="tabs">
@@ -332,7 +321,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="section">
             <div className="subtitle">General Options</div>
             <div className="general options">
@@ -341,7 +330,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                 id="stereo"
                 type="checkbox"
                 checked={reagentOptions.useStereochemistry}
-                onChange={(e) => setReagentOptions(prev => ({ ...prev, useStereochemistry: e.target.checked }))}
+                onChange={e => setReagentOptions(prev => ({ ...prev, useStereochemistry: e.target.checked }))}
               />
               {reagentOptions.matchMode === 'similar' && (
                 <>
@@ -355,14 +344,16 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                       max="1.0"
                       step="0.01"
                       value={reagentOptions.similarityThreshold}
-                      onChange={(e) => setReagentOptions(prev => ({ ...prev, similarityThreshold: Number(e.target.value) }))}
+                      onChange={e =>
+                        setReagentOptions(prev => ({ ...prev, similarityThreshold: Number(e.target.value) }))
+                      }
                     />
                   </div>
                 </>
               )}
             </div>
           </div>
-          
+
           <div className="section">
             <div className="subtitle">Reactants & Reagents</div>
             <div className="reagent options">
@@ -377,7 +368,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                     <input
                       type="text"
                       value={reactant.smileSmart}
-                      onChange={(e) => updateReactantSmiles(idx, e.target.value)}
+                      onChange={e => updateReactantSmiles(idx, e.target.value)}
                     />
                   </div>
                   <div className="delete">
@@ -387,18 +378,19 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                   </div>
                 </React.Fragment>
               ))}
-              {!reagentOptions.reactants?.length && (
-                <div className="copy">No components</div>
-              )}
+              {!reagentOptions.reactants?.length && <div className="copy">No components</div>}
               <div id="add-component">
-                <button type="button" onClick={addReactant}>
+                <button
+                  type="button"
+                  onClick={addReactant}
+                >
                   <i className="material-icons">add</i>
                   Add Component
                 </button>
               </div>
             </div>
           </div>
-          
+
           <div className="section">
             <div className="subtitle">Products</div>
             <div className="reagent options">
@@ -413,7 +405,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                     <input
                       type="text"
                       value={product.smileSmart}
-                      onChange={(e) => updateProductSmiles(idx, e.target.value)}
+                      onChange={e => updateProductSmiles(idx, e.target.value)}
                     />
                   </div>
                   <div className="delete">
@@ -423,11 +415,12 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
                   </div>
                 </React.Fragment>
               ))}
-              {!reagentOptions.products?.length && (
-                <div className="copy">No components</div>
-              )}
+              {!reagentOptions.products?.length && <div className="copy">No components</div>}
               <div id="add-component">
-                <button type="button" onClick={addProduct}>
+                <button
+                  type="button"
+                  onClick={addProduct}
+                >
                   <i className="material-icons">add</i>
                   Add Component
                 </button>
@@ -438,41 +431,48 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       )}
 
       {/* Reactions Section */}
-      <div 
+      <div
         className={`options-title ${showReactionOptions ? '' : 'closed'}`}
         onClick={() => setShowReactionOptions(!showReactionOptions)}
       >
         <span>Reactions</span>
         <i className="material-icons">expand_less</i>
       </div>
-      
+
       {showReactionOptions && (
-        <div id="searchByReaction" className="options-container">
+        <div
+          id="searchByReaction"
+          className="options-container"
+        >
           <SearchItemList
             title="Reaction IDs"
             itemList={reactionOptions.reactionIds}
-            onUpdateItemList={(newList) => setReactionOptions(prev => ({ ...prev, reactionIds: newList }))}
+            onUpdateItemList={newList => setReactionOptions(prev => ({ ...prev, reactionIds: newList }))}
           />
           <SearchItemList
             title="Reaction SMARTS"
             itemList={reactionOptions.reactionSmarts}
-            onUpdateItemList={(newList) => setReactionOptions(prev => ({ ...prev, reactionSmarts: newList }))}
+            onUpdateItemList={newList => setReactionOptions(prev => ({ ...prev, reactionSmarts: newList }))}
           />
-          
+
           <div className="slider-input multi">
             <label htmlFor="yield">Yield</label>
-            <div className="value">{reactionOptions.min_yield}% - {reactionOptions.max_yield}%</div>
+            <div className="value">
+              {reactionOptions.min_yield}% - {reactionOptions.max_yield}%
+            </div>
             <div className="range-container">
               <Range
                 step={1}
                 min={0}
                 max={100}
                 values={[reactionOptions.min_yield, reactionOptions.max_yield]}
-                onChange={(values) => setReactionOptions(prev => ({ 
-                  ...prev, 
-                  min_yield: values[0], 
-                  max_yield: values[1] 
-                }))}
+                onChange={values =>
+                  setReactionOptions(prev => ({
+                    ...prev,
+                    min_yield: values[0],
+                    max_yield: values[1],
+                  }))
+                }
                 renderTrack={({ props, children }) => (
                   <div
                     {...props}
@@ -493,21 +493,25 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
               />
             </div>
           </div>
-          
+
           <div className="slider-input multi">
             <label htmlFor="conversion">Conversion</label>
-            <div className="value">{reactionOptions.min_conversion}% - {reactionOptions.max_conversion}%</div>
+            <div className="value">
+              {reactionOptions.min_conversion}% - {reactionOptions.max_conversion}%
+            </div>
             <div className="range-container">
               <Range
                 step={1}
                 min={0}
                 max={100}
                 values={[reactionOptions.min_conversion, reactionOptions.max_conversion]}
-                onChange={(values) => setReactionOptions(prev => ({ 
-                  ...prev, 
-                  min_conversion: values[0], 
-                  max_conversion: values[1] 
-                }))}
+                onChange={values =>
+                  setReactionOptions(prev => ({
+                    ...prev,
+                    min_conversion: values[0],
+                    max_conversion: values[1],
+                  }))
+                }
                 renderTrack={({ props, children }) => (
                   <div
                     {...props}
@@ -532,31 +536,37 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       )}
 
       {/* Datasets Section */}
-      <div 
+      <div
         className={`options-title ${showDatasetOptions ? '' : 'closed'}`}
         onClick={() => setShowDatasetOptions(!showDatasetOptions)}
       >
         <span>Datasets</span>
         <i className="material-icons">expand_less</i>
       </div>
-      
+
       {showDatasetOptions && (
-        <div id="searchByDataset" className="options-container">
+        <div
+          id="searchByDataset"
+          className="options-container"
+        >
           <SearchItemList
             title="Dataset IDs"
             itemList={datasetOptions.datasetIds}
-            onUpdateItemList={(newList) => setDatasetOptions(prev => ({ ...prev, datasetIds: newList }))}
+            onUpdateItemList={newList => setDatasetOptions(prev => ({ ...prev, datasetIds: newList }))}
           />
           <SearchItemList
             title="DOIs"
             itemList={datasetOptions.DOIs}
-            onUpdateItemList={(newList) => setDatasetOptions(prev => ({ ...prev, DOIs: newList }))}
+            onUpdateItemList={newList => setDatasetOptions(prev => ({ ...prev, DOIs: newList }))}
           />
         </div>
       )}
 
       {/* Search Parameters Section */}
-      <div id="searchParameters" className="options-title">
+      <div
+        id="searchParameters"
+        className="options-title"
+      >
         Search Parameters
       </div>
       <div className="options-container">
@@ -567,7 +577,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
             type="number"
             min="0"
             value={searchParams.limit}
-            onChange={(e) => setSearchParams(prev => ({ ...prev, limit: Number(e.target.value) }))}
+            onChange={e => setSearchParams(prev => ({ ...prev, limit: Number(e.target.value) }))}
           />
         </div>
         <div className="search-button">

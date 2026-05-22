@@ -1,5 +1,5 @@
 // SearchResults component styles
-@use "../../styles/vars.scss" as vars;
+@use '../../styles/vars.scss' as vars;
 
 .search-results {
   &__action-buttons {
@@ -58,7 +58,8 @@
     animation: bounce 5s infinite ease-in-out;
 
     @keyframes bounce {
-      0%, 20% {
+      0%,
+      20% {
         transform: translateY(0);
       }
       10% {

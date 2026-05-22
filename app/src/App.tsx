@@ -36,16 +36,40 @@ const AppContent: React.FC = () => {
   const noHeaderFooter = location.pathname.startsWith('/ketcher');
 
   return (
-    <div id="main-container" className={noHeaderFooter ? 'full-height' : ''}>
+    <div
+      id="main-container"
+      className={noHeaderFooter ? 'full-height' : ''}
+    >
       {!noHeaderFooter && <HeaderNav />}
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/browse" element={<MainBrowse />} />
-        <Route path="/search" element={<MainSearch />} />
-        <Route path="/dataset/:datasetId" element={<MainDatasetView />} />
-        <Route path="/id/:reactionId" element={<MainReactionView />} />
-        <Route path="/ketcher" element={<MainKetcher />} />
+        <Route
+          path="/"
+          element={<Home />}
+        />
+        <Route
+          path="/about"
+          element={<About />}
+        />
+        <Route
+          path="/browse"
+          element={<MainBrowse />}
+        />
+        <Route
+          path="/search"
+          element={<MainSearch />}
+        />
+        <Route
+          path="/dataset/:datasetId"
+          element={<MainDatasetView />}
+        />
+        <Route
+          path="/id/:reactionId"
+          element={<MainReactionView />}
+        />
+        <Route
+          path="/ketcher"
+          element={<MainKetcher />}
+        />
       </Routes>
       {!noHeaderFooter && <MainFooter />}
     </div>

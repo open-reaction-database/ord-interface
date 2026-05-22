@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-@import "../../styles/vars";
-@import "../../styles/transition";
+@import '../../styles/vars';
+@import '../../styles/transition';
 
 .search-results-main {
   .action-button-holder {
@@ -41,7 +41,8 @@
       }
 
       .select {
-        input, label {
+        input,
+        label {
           cursor: pointer;
         }
       }
@@ -108,7 +109,8 @@
       animation: bounce 5s infinite ease-in-out;
 
       @keyframes bounce {
-        0%, 20% {
+        0%,
+        20% {
           transform: translateY(0);
         }
         10% {

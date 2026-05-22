@@ -15,9 +15,10 @@
  */
 
 import React from 'react';
+import type { ReactionObservationData } from '../../types/search';
 
 interface ObservationsViewProps {
-  observations: any[];
+  observations: ReactionObservationData[];
 }
 
 const ObservationsView: React.FC<ObservationsViewProps> = ({ observations }) => {

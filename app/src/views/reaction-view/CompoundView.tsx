@@ -16,28 +16,49 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import reaction_pb from 'ord-schema';
+import type { Compound, ProductCompound } from 'ord-schema/proto/reaction_pb';
 import FloatingModal from '../../components/FloatingModal';
+import { enumName } from '../../utils/enum';
 import './CompoundView.scss';
 
-// Inline utility functions for now
-const amountObj = (amount: any) => {
+// TODO: port the full unit-formatting logic from the Vue utils/amount.js.
+type AmountSummary = { unitCategory: string; unitAmount: string; unitType: string };
+
+const summarizeAmount = (amount: Compound.AsObject['amount']): AmountSummary => {
   if (!amount) return { unitCategory: '', unitAmount: '', unitType: '' };
-  // Simplified implementation - would need full logic from utils/amount.js
-  return { unitCategory: 'mass', unitAmount: amount.value || '', unitType: amount.units || '' };
+  if (amount.mass)
+    return {
+      unitCategory: 'mass',
+      unitAmount: String(amount.mass.value ?? ''),
+      unitType: String(amount.mass.units ?? ''),
+    };
+  if (amount.moles)
+    return {
+      unitCategory: 'moles',
+      unitAmount: String(amount.moles.value ?? ''),
+      unitType: String(amount.moles.units ?? ''),
+    };
+  if (amount.volume)
+    return {
+      unitCategory: 'volume',
+      unitAmount: String(amount.volume.value ?? ''),
+      unitType: String(amount.volume.units ?? ''),
+    };
+  return { unitCategory: '', unitAmount: '', unitType: '' };
 };
 
-const amountStr = (amountObj: any) => {
-  if (!amountObj.unitAmount) return '';
-  return `${amountObj.unitAmount} ${amountObj.unitType}`;
-};
+const formatAmount = (summary: AmountSummary): string =>
+  summary.unitAmount ? `${summary.unitAmount} ${summary.unitType}` : '';
+
+type ComponentLike = Compound.AsObject & Partial<ProductCompound.AsObject>;
 
 interface CompoundViewProps {
-  component: any;
+  component: ComponentLike | undefined;
 }
 
 interface RawData {
   identifiers?: Array<{ type: string; value: string }>;
-  amount?: any;
+  amount?: Record<string, { value: string; units: string }>;
   preparations?: Array<{ type: string; details: string }>;
   is_desired_product?: boolean;
   isolated_color?: string;
@@ -49,95 +70,79 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
   const [compoundSVG, setCompoundSVG] = useState<string | null>(null);
   const [showRawData, setShowRawData] = useState(false);
 
-  const compoundAmountObj = useMemo(() => {
-    return amountObj(component?.amount);
-  }, [component?.amount]);
-
-  const compoundAmount = useMemo(() => {
-    return amountStr(compoundAmountObj);
-  }, [compoundAmountObj]);
+  const compoundAmountObj = useMemo(() => summarizeAmount(component?.amount), [component?.amount]);
+  const compoundAmount = useMemo(() => formatAmount(compoundAmountObj), [compoundAmountObj]);
 
   const compoundRole = useMemo(() => {
     if (!component?.reactionRole) return '';
-    const role = component.reactionRole;
-    const types = reaction_pb.ReactionRole.ReactionRoleType;
-    return Object.keys(types).find(key => (types as any)[key] === role) || '';
+    return String(enumName(reaction_pb.ReactionRole.ReactionRoleType, component.reactionRole) ?? '');
   }, [component?.reactionRole]);
 
   const rawData: RawData = useMemo(() => {
-    const returnObj: RawData = {
-      reaction_role: compoundRole
-    };
-    
-    // set identifiers
+    const returnObj: RawData = { reaction_role: compoundRole };
+
     if (component?.identifiersList?.length) {
-      const idTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType;
-      returnObj.identifiers = component.identifiersList.map((identifier: any) => ({
-        type: Object.keys(idTypes).find(key => (idTypes as any)[key] === identifier.type) || '',
-        value: identifier.value
+      returnObj.identifiers = component.identifiersList.map(identifier => ({
+        type: String(enumName(reaction_pb.CompoundIdentifier.CompoundIdentifierType, identifier.type) ?? ''),
+        value: identifier.value,
       }));
     }
-    
-    // set amount
+
     if (component?.amount) {
       returnObj.amount = {
         [compoundAmountObj.unitCategory]: {
           value: compoundAmountObj.unitAmount,
           units: compoundAmountObj.unitType,
-        }
+        },
       };
     }
-    
-    // set preparations
+
     if (component?.preparationsList?.length) {
-      const prepTypes = reaction_pb.CompoundPreparation.CompoundPreparationType;
-      returnObj.preparations = component.preparationsList.map((prep: any) => ({
-        type: Object.keys(prepTypes).find(key => (prepTypes as any)[key] === prep.type) || '',
+      returnObj.preparations = component.preparationsList.map(prep => ({
+        type: String(enumName(reaction_pb.CompoundPreparation.CompoundPreparationType, prep.type) ?? ''),
         details: prep.details,
       }));
     }
-    
+
     if (component?.isDesiredProduct) {
       returnObj.is_desired_product = component.isDesiredProduct;
     }
-    
+
     if (component?.isolatedColor) {
       returnObj.isolated_color = component.isolatedColor;
     }
-    
+
     if (component?.texture) {
-      // Simplified texture handling - would need proper enum mapping
-      const textureObj: { type: string; details?: string } = { 
-        type: component.texture.type?.toString() || '' 
+      const textureObj: { type: string; details?: string } = {
+        type: component.texture.type !== undefined ? String(component.texture.type) : '',
       };
       if (component.texture.details) {
         textureObj.details = component.texture.details;
       }
       returnObj.texture = textureObj;
     }
-    
+
     return returnObj;
   }, [component, compoundRole, compoundAmountObj]);
 
-  const gridColumns = useMemo(() => {
-    return `1fr repeat(${component?.amount ? 3 : 2}, auto)`;
-  }, [component?.amount]);
+  const gridColumns = useMemo(() => `1fr repeat(${component?.amount ? 3 : 2}, auto)`, [component?.amount]);
 
   const smilesValue = useMemo(() => {
     if (!component?.identifiersList?.length) return null;
-    const smilesIdentifier = component.identifiersList.find((identifier: any) => identifier.type === 2);
-    return smilesIdentifier?.value || null;
+    const smilesType = reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES;
+    const smilesIdentifier = component.identifiersList.find(identifier => identifier.type === smilesType);
+    return smilesIdentifier?.value ?? null;
   }, [component?.identifiersList]);
 
   useEffect(() => {
     if (!smilesValue) return;
-    
+
     // prep compound
     const compound = new reaction_pb.Compound();
     const identifier = compound.addIdentifiers();
     identifier.setValue(smilesValue);
     identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
-    
+
     const fetchSVG = async () => {
       try {
         const response = await fetch('/api/compound_svg', {
@@ -147,33 +152,42 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
           },
           body: compound.serializeBinary() as BodyInit,
         });
-        
+
         const result = await response.json();
         setCompoundSVG(result);
       } catch (error) {
         console.error('Error fetching compound SVG:', error);
       }
     };
-    
+
     fetchSVG();
   }, [smilesValue]);
 
   return (
-    <div className="compound-view" style={{ gridTemplateColumns: gridColumns }}>
+    <div
+      className="compound-view"
+      style={{ gridTemplateColumns: gridColumns }}
+    >
       <div className="label">Compound</div>
       {component?.amount && <div className="label">Amount</div>}
       <div className="label">Role</div>
       <div className="label">Raw</div>
-      
-      <div className="svg" dangerouslySetInnerHTML={{ __html: compoundSVG || '' }} />
+
+      <div
+        className="svg"
+        dangerouslySetInnerHTML={{ __html: compoundSVG || '' }}
+      />
       {component?.amount && <div className="amount">{compoundAmount}</div>}
       <div className="role">{compoundRole.toLowerCase()}</div>
       <div className="raw">
-        <div className="button" onClick={() => setShowRawData(true)}>
+        <div
+          className="button"
+          onClick={() => setShowRawData(true)}
+        >
           &lt;&gt;
         </div>
       </div>
-      
+
       {showRawData && (
         <FloatingModal
           title="Raw Data"

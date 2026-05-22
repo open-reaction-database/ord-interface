@@ -24,51 +24,28 @@ interface ModalKetcherProps {
   onCloseModal: () => void;
 }
 
+// Subset of the Ketcher API surface we actually invoke.
+interface KetcherApi {
+  setMolecule(molfile: string): void;
+  getSmiles(): Promise<string>;
+}
+
+interface KetcherWindow extends Window {
+  ketcher?: KetcherApi;
+}
+
 const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onCloseModal }) => {
-  const [contWin, setContWin] = useState<Window | null>(null);
+  const [contWin, setContWin] = useState<KetcherWindow | null>(null);
   const [mutatedSmiles, setMutatedSmiles] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
 
-  const getKetcher = useCallback(() => {
-    const getKetcherInterval = setInterval(() => {
-      // attempt to get Ketcher from the iframe once it's loaded
-      const iframe = document.getElementById('ketcher-iframe') as HTMLIFrameElement;
-      if (!contWin && iframe?.contentWindow) {
-        // Check if ketcher is available in the iframe
-        try {
-          if ((iframe.contentWindow as any).ketcher) {
-            // assigning contentWindow.ketcher doesn't seem to persist as expected
-            // so we just assign the contentWindow and reference .ketcher
-            setContWin(iframe.contentWindow);
-            clearInterval(getKetcherInterval);
-            drawSmiles();
-            setLoading(false);
-          }
-        } catch (error) {
-          // Cross-origin or other access issues - continue trying
-          console.log('Waiting for Ketcher to load...');
-        }
-      }
-    }, 1000);
-
-    // Cleanup interval after 30 seconds to avoid infinite polling
-    setTimeout(() => {
-      clearInterval(getKetcherInterval);
-      if (loading) {
-        setLoading(false);
-        console.warn('Ketcher failed to load within 30 seconds');
-      }
-    }, 30000);
-  }, [contWin, loading]);
-
   const drawSmiles = useCallback(async () => {
-    if (mutatedSmiles && contWin) {
+    if (mutatedSmiles && contWin?.ketcher) {
       try {
-        // get molblock if we already have SMILES
         const response = await fetch(`/api/molfile?smiles=${encodeURIComponent(mutatedSmiles)}`);
         if (response.ok) {
-          const responseData = await response.json();
-          (contWin as any).ketcher.setMolecule(responseData);
+          const molfile = (await response.json()) as string;
+          contWin.ketcher.setMolecule(molfile);
         } else {
           console.warn('Failed to get molfile for SMILES:', mutatedSmiles);
         }
@@ -78,10 +55,37 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
     }
   }, [mutatedSmiles, contWin]);
 
+  const getKetcher = useCallback(() => {
+    const getKetcherInterval = setInterval(() => {
+      const iframe = document.getElementById('ketcher-iframe') as HTMLIFrameElement | null;
+      if (!contWin && iframe?.contentWindow) {
+        try {
+          const win = iframe.contentWindow as KetcherWindow;
+          if (win.ketcher) {
+            setContWin(win);
+            clearInterval(getKetcherInterval);
+            drawSmiles();
+            setLoading(false);
+          }
+        } catch {
+          // Cross-origin or other access issues — keep polling.
+        }
+      }
+    }, 1000);
+
+    setTimeout(() => {
+      clearInterval(getKetcherInterval);
+      if (loading) {
+        setLoading(false);
+        console.warn('Ketcher failed to load within 30 seconds');
+      }
+    }, 30000);
+  }, [contWin, loading, drawSmiles]);
+
   const saveSmiles = useCallback(async () => {
-    if (contWin) {
+    if (contWin?.ketcher) {
       try {
-        const newSmiles = await (contWin as any).ketcher.getSmiles();
+        const newSmiles = await contWin.ketcher.getSmiles();
         setMutatedSmiles(newSmiles);
         onUpdateSmiles(newSmiles);
         onCloseModal();
@@ -98,12 +102,15 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
     }
   };
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Close modal on Escape key
-    if (e.key === 'Escape') {
-      onCloseModal();
-    }
-  }, [onCloseModal]);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Close modal on Escape key
+      if (e.key === 'Escape') {
+        onCloseModal();
+      }
+    },
+    [onCloseModal],
+  );
 
   useEffect(() => {
     setMutatedSmiles(smiles);
@@ -129,8 +136,14 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
   }, [contWin, drawSmiles, mutatedSmiles]);
 
   return (
-    <div className="background" onClick={handleBackgroundClick}>
-      <div id="ketcher_modal" className="modal">
+    <div
+      className="background"
+      onClick={handleBackgroundClick}
+    >
+      <div
+        id="ketcher_modal"
+        className="modal"
+      >
         <div className="modal-content">
           <div className="modal-body">
             <iframe
@@ -140,10 +153,17 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
             />
           </div>
           <div className="modal-footer">
-            <button type="button" onClick={onCloseModal}>
+            <button
+              type="button"
+              onClick={onCloseModal}
+            >
               Cancel
             </button>
-            <button type="button" onClick={saveSmiles} disabled={loading}>
+            <button
+              type="button"
+              onClick={saveSmiles}
+              disabled={loading}
+            >
               Save
             </button>
           </div>

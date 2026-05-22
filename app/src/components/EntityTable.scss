@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-@use "../styles/vars.scss" as vars;
+@use '../styles/vars.scss' as vars;
 
 .table-main {
   width: 100%;
-  
+
   .table-container {
     width: 100%;
-    
+
     .header {
       .title-holder {
         .title {
@@ -31,11 +31,11 @@
         }
       }
     }
-    
+
     .search-area {
       padding: 1rem;
       margin: 0 5%;
-      
+
       input {
         width: 30%;
         min-width: 300px;
@@ -45,21 +45,21 @@
         margin-left: 0.5rem;
       }
     }
-    
+
     .content {
       width: 100%;
       height: fit-content;
-      
+
       .entities-holder {
         height: 100%;
         display: block;
         width: 100%;
-        
+
         > * {
           padding-left: 1rem;
           padding-right: 1rem;
         }
-        
+
         .entity.no-interact {
           display: grid;
           cursor: default;
@@ -67,13 +67,13 @@
           column-gap: 1rem;
           align-items: center;
           padding: 1rem;
-          
+
           &:hover {
             background-color: transparent;
           }
         }
       }
-      
+
       .pagination {
         display: grid;
         grid-template-columns: 1fr repeat(7, auto);
@@ -83,10 +83,10 @@
         padding: 1rem;
         margin: 0 5%;
         color: vars.$linkblue;
-        
+
         .select {
           color: black;
-          
+
           select {
             margin: 0 0.5rem;
             padding: 0.25rem;
@@ -94,7 +94,7 @@
             border-radius: 0.25rem;
           }
         }
-        
+
         .paginav {
           font-weight: 600;
           display: inline-grid;
@@ -102,37 +102,39 @@
           align-items: center;
           cursor: pointer;
           transition: 0.25s;
-          
+
           &:hover {
             color: vars.$hoverblue;
           }
-          
-          &.prev, &.next {
+
+          &.prev,
+          &.next {
             grid-template-columns: auto 1fr;
           }
-          
-          &.first, &.last {
+
+          &.first,
+          &.last {
             grid-template-columns: auto auto 1fr;
           }
-          
+
           &.no-click {
             cursor: auto;
-            
+
             &:hover {
               color: vars.$linkblue;
             }
           }
-          
+
           .chevron {
             height: 0.75rem;
           }
         }
-        
+
         @media (max-width: 1000px) {
           grid-template-columns: repeat(7, auto);
           row-gap: 1rem;
           column-gap: 1rem;
-          
+
           .select {
             grid-column: 1 / span 7;
           }

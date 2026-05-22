@@ -69,10 +69,13 @@ const SearchItemList: React.FC<SearchItemListProps> = ({ title, itemList, onUpda
         <input
           type="text"
           value={itemToAdd}
-          onChange={(e) => setItemToAdd(e.target.value)}
+          onChange={e => setItemToAdd(e.target.value)}
           onKeyPress={handleKeyPress}
         />
-        <button onClick={updateList} disabled={!itemToAdd.trim()}>
+        <button
+          onClick={updateList}
+          disabled={!itemToAdd.trim()}
+        >
           <i className="material-icons">add</i>
           <span>Add</span>
         </button>

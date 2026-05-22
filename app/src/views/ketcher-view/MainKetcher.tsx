@@ -14,27 +14,59 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './MainKetcher.scss';
 
+/**
+ * Loads the standalone Ketcher bundle (extracted under app/src/ketcher/ per the
+ * project README) into the document. The bundle's main.<hash>.js entry name
+ * changes between releases, so resolve it at runtime instead of pinning the
+ * hash in the import.
+ */
+const KETCHER_BASE = '/src/ketcher';
+
 const MainKetcher: React.FC = () => {
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    // Import ketcher js in useEffect so the DOM is ready
-    // Using dynamic import to load the Ketcher JavaScript
+    let cancelled = false;
+
     const loadKetcher = async () => {
       try {
-        await import('../../ketcher/static/js/main.027562ee.js' as any);
-      } catch (error) {
-        console.error('Failed to load Ketcher:', error);
+        const manifestRes = await fetch(`${KETCHER_BASE}/asset-manifest.json`);
+        if (!manifestRes.ok) throw new Error(`asset-manifest.json: HTTP ${manifestRes.status}`);
+        const manifest = (await manifestRes.json()) as { files?: Record<string, string> };
+        const mainJs = manifest.files?.['main.js'];
+        if (!mainJs) throw new Error('asset-manifest.json missing files["main.js"]');
+
+        if (cancelled) return;
+
+        const script = document.createElement('script');
+        script.src = `${KETCHER_BASE}/${mainJs.replace(/^\.?\//, '')}`;
+        script.async = true;
+        script.onerror = () => setError(`Failed to load Ketcher bundle at ${script.src}`);
+        document.body.appendChild(script);
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to load Ketcher:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load Ketcher');
+        }
       }
     };
 
     loadKetcher();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
     <div id="ketcher">
       <noscript>You need to enable JavaScript to run this app.</noscript>
+      {error && <div className="ketcher-load-error">{error}</div>}
+      {/* Ketcher's standalone bundle looks up #root to mount itself.
+          This route is loaded inside an <iframe> from ModalKetcher, so taking
+          over the iframe's React root is intentional. */}
       <div id="root"></div>
     </div>
   );

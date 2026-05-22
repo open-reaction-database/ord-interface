@@ -15,9 +15,10 @@
  */
 
 import React from 'react';
+import type { ReactionConditionsData } from '../../types/search';
 
 interface ConditionsViewProps {
-  conditions: any;
+  conditions: ReactionConditionsData | undefined;
   display: string;
 }
 

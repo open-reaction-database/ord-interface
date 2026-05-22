@@ -32,7 +32,7 @@ const MainBrowse: React.FC = () => {
   const [tableData, setTableData] = useState<Dataset[]>([]);
 
   useEffect(() => {
-    fetch("/api/datasets", { method: "GET" })
+    fetch('/api/datasets', { method: 'GET' })
       .then(response => response.json())
       .then((data: Dataset[]) => {
         setTableData(data);
@@ -46,7 +46,7 @@ const MainBrowse: React.FC = () => {
 
   const truncateDescription = (description?: string) => {
     if (!description) return '';
-    return description.length > 75 ? description.substr(0, 75) + "..." : description;
+    return description.length > 75 ? description.substr(0, 75) + '...' : description;
   };
 
   if (loading) {
@@ -71,19 +71,20 @@ const MainBrowse: React.FC = () => {
 
   return (
     <div id="browse-main">
-      <EntityTable tableData={tableData} title="">
+      <EntityTable
+        tableData={tableData}
+        title=""
+      >
         {(entities: Dataset[]) => (
           <div className="table-container">
             <div className="column label">Dataset ID</div>
             <div className="column label">Name</div>
             <div className="column label">Description</div>
             <div className="column label">Size</div>
-            {entities.map((row) => (
+            {entities.map(row => (
               <React.Fragment key={row.dataset_id}>
                 <div className="column">
-                  <Link to={`/dataset/${row.dataset_id}`}>
-                    {row.dataset_id}
-                  </Link>
+                  <Link to={`/dataset/${row.dataset_id}`}>{row.dataset_id}</Link>
                 </div>
                 <div className="column">{row.name}</div>
                 <div className="column">{truncateDescription(row.description)}</div>

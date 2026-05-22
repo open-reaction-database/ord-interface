@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
-import type { Reaction } from 'ord-schema/proto/reaction_pb';
+import type {
+  Reaction,
+  ReactionConditions,
+  ReactionNotes,
+  ReactionObservation,
+  ReactionOutcome,
+  ReactionProvenance,
+  ReactionSetup,
+  ReactionWorkup,
+} from 'ord-schema/proto/reaction_pb';
 
 export type ReactionData = Reaction.AsObject;
+export type ReactionConditionsData = ReactionConditions.AsObject;
+export type ReactionNotesData = ReactionNotes.AsObject;
+export type ReactionObservationData = ReactionObservation.AsObject;
+export type ReactionOutcomeData = ReactionOutcome.AsObject;
+export type ReactionProvenanceData = ReactionProvenance.AsObject;
+export type ReactionSetupData = ReactionSetup.AsObject;
+export type ReactionWorkupData = ReactionWorkup.AsObject;
 
 export interface SearchResult {
   reaction_id: string;

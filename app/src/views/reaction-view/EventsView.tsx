@@ -15,10 +15,11 @@
  */
 
 import React, { useState } from 'react';
+import type { RecordEvent } from 'ord-schema/proto/reaction_pb';
 import './EventsView.scss';
 
 interface EventsViewProps {
-  events: any[];
+  events: RecordEvent.AsObject[];
 }
 
 const EventsView: React.FC<EventsViewProps> = ({ events }) => {
@@ -37,11 +38,11 @@ const EventsView: React.FC<EventsViewProps> = ({ events }) => {
             className={`tab ${eventIdx === idx ? 'selected' : ''}`}
             onClick={() => setEventIdx(idx)}
           >
-            {new Date(event.time?.value).toLocaleString()}
+            {event.time?.value ? new Date(event.time.value).toLocaleString() : ''}
           </div>
         ))}
       </div>
-      
+
       <div className="details">
         {currentEvent?.details && (
           <>
@@ -49,35 +50,35 @@ const EventsView: React.FC<EventsViewProps> = ({ events }) => {
             <div className="value">{currentEvent.details}</div>
           </>
         )}
-        
+
         {currentEvent?.person?.username && (
           <>
             <div className="label">Username</div>
             <div className="value">{currentEvent.person.username}</div>
           </>
         )}
-        
+
         {currentEvent?.person?.name && (
           <>
             <div className="label">Name</div>
             <div className="value">{currentEvent.person.name}</div>
           </>
         )}
-        
+
         {currentEvent?.person?.orcid && (
           <>
             <div className="label">ORCID</div>
             <div className="value">{currentEvent.person.orcid}</div>
           </>
         )}
-        
+
         {currentEvent?.person?.organization && (
           <>
             <div className="label">Organization</div>
             <div className="value">{currentEvent.person.organization}</div>
           </>
         )}
-        
+
         {currentEvent?.person?.email && (
           <>
             <div className="label">Email</div>

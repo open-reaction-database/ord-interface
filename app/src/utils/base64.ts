@@ -21,11 +21,11 @@ export const base64ToBytes = (base64String: string): ArrayBuffer => {
   const length = binaryString.length;
   const arrayBuffer = new ArrayBuffer(length);
   const view = new Uint8Array(arrayBuffer);
-  
+
   for (let i = 0; i < length; i++) {
     view[i] = binaryString.charCodeAt(i);
   }
-  
+
   return arrayBuffer;
 };
 

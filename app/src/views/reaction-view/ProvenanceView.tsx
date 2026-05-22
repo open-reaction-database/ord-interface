@@ -15,10 +15,11 @@
  */
 
 import React from 'react';
+import type { ReactionProvenanceData } from '../../types/search';
 import './ProvenanceView.scss';
 
 interface ProvenanceViewProps {
-  provenance: any;
+  provenance: ReactionProvenanceData | undefined;
 }
 
 const ProvenanceView: React.FC<ProvenanceViewProps> = ({ provenance }) => {
@@ -41,7 +42,7 @@ const ProvenanceView: React.FC<ProvenanceViewProps> = ({ provenance }) => {
           </div>
         </>
       )}
-      
+
       <div className="details">
         {provenance?.city && (
           <>
@@ -49,33 +50,37 @@ const ProvenanceView: React.FC<ProvenanceViewProps> = ({ provenance }) => {
             <div className="value">{provenance.city}</div>
           </>
         )}
-        
-        {provenance?.experimentStart && (
+
+        {provenance?.experimentStart?.value && (
           <>
             <div className="label">Experiment Start</div>
-            <div className="value">{new Date(provenance.experimentStart).toLocaleDateString()}</div>
+            <div className="value">{new Date(provenance.experimentStart.value).toLocaleDateString()}</div>
           </>
         )}
-        
+
         {provenance?.doi && (
           <>
             <div className="label">DOI</div>
             <div className="value">{provenance.doi}</div>
           </>
         )}
-        
+
         {provenance?.patent && (
           <>
             <div className="label">Patent</div>
             <div className="value">{provenance.patent}</div>
           </>
         )}
-        
+
         {provenance?.publicationUrl && (
           <>
             <div className="label">Publication URL</div>
             <div className="value">
-              <a href={provenance.publicationUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={provenance.publicationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {provenance.publicationUrl}
               </a>
             </div>

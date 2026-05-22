@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-@use "../styles/vars.scss" as vars;
+@use '../styles/vars.scss' as vars;
 
 .download-results-main {
   .download-body {
     height: 100%;
     display: grid;
     grid-template-rows: 50% auto 1fr;
-    
+
     * {
       margin: auto;
       width: fit-content;
     }
-    
+
     .title {
       font-size: 1.5rem;
     }
-    
+
     .options {
       label {
         margin-right: 0.5rem;
       }
-      
+
       select {
         min-width: 7rem;
       }
     }
-    
+
     .download {
       margin-top: 2rem;
     }

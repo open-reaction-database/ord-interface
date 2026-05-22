@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@use "../styles/vars.scss" as vars;
+@use '../styles/vars.scss' as vars;
 
 .copy-button-main {
   button {
@@ -32,7 +32,7 @@
     &:hover {
       background-color: vars.$hoverblue;
     }
-    
+
     i {
       font-size: 1rem;
     }

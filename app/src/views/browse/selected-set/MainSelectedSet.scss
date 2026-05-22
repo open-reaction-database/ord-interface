@@ -18,17 +18,17 @@
 
 #selected-set-main {
   padding: 2rem;
-  
+
   .header {
     display: grid;
     grid-template-columns: 1fr auto;
     margin-bottom: 1rem;
-    
+
     .title {
       font-size: 2rem;
       font-weight: 700;
     }
-    
+
     .action-button-holder {
       display: flex;
       align-items: end;
@@ -39,7 +39,7 @@
   .no-results {
     text-align: center;
     padding: 4rem 2rem;
-    
+
     .title {
       font-size: 1.5rem;
       color: #666;

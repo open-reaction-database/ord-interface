@@ -16,23 +16,28 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import reaction_pb from 'ord-schema';
+import type { CompoundIdentifier, ProductMeasurement } from 'ord-schema/proto/reaction_pb';
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
-import reaction_pb from 'ord-schema';
+import { enumName } from '../utils/enum';
+import type { SearchResult, ReactionData } from '../types/search';
 import './ReactionCard.scss';
 
 interface ReactionCardProps {
-  reaction: any;
+  reaction: SearchResult & { dataset_id?: string };
   isSelectable?: boolean;
   isSelected?: boolean;
   onSelectionChange?: (reactionId: string, isSelected: boolean) => void;
 }
 
-const ReactionCard: React.FC<ReactionCardProps> = ({ 
-  reaction, 
-  isSelectable = true, 
+const YIELD_MEASUREMENT_TYPE = 3; // ord-schema ProductMeasurementType.YIELD
+
+const ReactionCard: React.FC<ReactionCardProps> = ({
+  reaction,
+  isSelectable = true,
   isSelected = false,
-  onSelectionChange
+  onSelectionChange,
 }) => {
   const navigate = useNavigate();
   const [reactionTable, setReactionTable] = useState<string | null>(null);
@@ -47,50 +52,49 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
     }
   }, [reaction.reaction_id]);
 
-  const getYield = (measurements: any[] = []) => {
-    const yieldObj = measurements.find(m => m.type === 3); // ord-schema type 3 == "YIELD"
+  const getYield = (measurements: ProductMeasurement.AsObject[] = []): string => {
+    const yieldObj = measurements.find(m => m.type === YIELD_MEASUREMENT_TYPE);
     if (yieldObj?.percentage) {
       return `${yieldObj.percentage.value}%`;
     }
-    return "Not listed";
+    return 'Not listed';
   };
 
-  const getConversion = (reactionData: any) => {
-    if (!reactionData.outcomesList?.[0]?.conversion) return "Not listed";
-    // TODO: decode conversion properly
-    return "Not listed";
+  const getConversion = (data: ReactionData | undefined): string => {
+    if (!data?.outcomesList?.[0]?.conversion) return 'Not listed';
+    // TODO: render conversion percentage / precision once the schema field's
+    // unit handling is ported from the Vue utils.
+    return 'Not listed';
   };
 
-  const conditionsAndDuration = (reactionData: any) => {
+  const conditionsAndDuration = (data: ReactionData | undefined): string[] => {
     const details: string[] = [];
-    
-    // get temp - simplified for now
-    const temp = reactionData.conditions?.temperature?.setpoint;
+    if (!data) return details;
+
+    const temp = data.conditions?.temperature?.setpoint;
     if (temp) {
-      details.push(`at ${temp.value}${temp.units || '°C'}`);
+      const units = enumName(reaction_pb.Temperature.TemperatureUnit, temp.units);
+      details.push(`at ${temp.value}${units ? ` ${units.toLowerCase()}` : '°C'}`);
     }
 
-    // get Pressure - simplified for now
-    const pressure = reactionData.conditions?.pressure?.setpoint;
+    const pressure = data.conditions?.pressure?.setpoint;
     if (pressure) {
-      details.push(`under ${pressure.value}${pressure.units || ' atm'}`);
+      const units = enumName(reaction_pb.Pressure.PressureUnit, pressure.units);
+      details.push(`under ${pressure.value}${units ? ` ${units.toLowerCase()}` : ' atm'}`);
     }
 
-    // get duration - simplified for now
-    const reactionTime = reactionData.outcomesList?.[0]?.reactionTime;
+    const reactionTime = data.outcomesList?.[0]?.reactionTime;
     if (reactionTime?.value) {
-      details.push(`for ${reactionTime.value}${reactionTime.units || 's'}`);
+      const units = enumName(reaction_pb.Time.TimeUnit, reactionTime.units);
+      details.push(`for ${reactionTime.value}${units ? ` ${units.toLowerCase()}` : 's'}`);
     }
 
     return details;
   };
 
-  const productIdentifier = (identifier: any) => {
-    const identifierTypes = reaction_pb.CompoundIdentifier.CompoundIdentifierType;
-    const identifierType = Object.keys(identifierTypes).find(
-      key => (identifierTypes as any)[key] === identifier.type
-    );
-    return `${identifierType}: ${identifier.value}`;
+  const productIdentifier = (identifier: CompoundIdentifier.AsObject): string => {
+    const type = enumName(reaction_pb.CompoundIdentifier.CompoundIdentifierType, identifier.type);
+    return `${type ?? ''}: ${identifier.value}`;
   };
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,7 +132,7 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
             <label htmlFor={`select_${reaction.reaction_id}`}>Select reaction</label>
           </div>
         )}
-        
+
         {provenance?.isMined && (
           <div className="is-mined">
             <div className="is-mined-badge">Mined</div>
@@ -136,63 +140,56 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
         )}
 
         <div className="reaction-table">
-          {reactionTable ? (
-            <div dangerouslySetInnerHTML={{ __html: reactionTable }} />
-          ) : (
-            <LoadingSpinner />
-          )}
+          {reactionTable ? <div dangerouslySetInnerHTML={{ __html: reactionTable }} /> : <LoadingSpinner />}
         </div>
 
         <div className="info">
           <div className="col full">
-            <button onClick={handleViewDetails}>
-              View Full Details
-            </button>
+            <button onClick={handleViewDetails}>View Full Details</button>
           </div>
-          
+
           <div className="col">
-            <div className="yield">
-              Yield: {getYield(firstProduct?.measurementsList || [])}
-            </div>
-            <div className="conversion">
-              Conversion: {getConversion(reactionData)}
-            </div>
+            <div className="yield">Yield: {getYield(firstProduct?.measurementsList || [])}</div>
+            <div className="conversion">Conversion: {getConversion(reactionData)}</div>
             <div className="conditions">
-              Conditions: {conditionsAndDuration(reactionData).join("; ") || "Not Listed"}
+              Conditions: {conditionsAndDuration(reactionData).join('; ') || 'Not Listed'}
             </div>
             {firstProductIdentifier && (
               <div className="smile">
                 <CopyButton textToCopy={firstProductIdentifier.value || ''} />
-                <div className="value">
-                  Product {productIdentifier(firstProductIdentifier)}
-                </div>
+                <div className="value">Product {productIdentifier(firstProductIdentifier)}</div>
               </div>
             )}
           </div>
 
           <div className="col">
             <div className="creator">
-              Uploaded by {provenance?.recordCreated?.person?.name || 'Unknown'}, {provenance?.recordCreated?.person?.organization || 'Unknown'}
+              Uploaded by {provenance?.recordCreated?.person?.name || 'Unknown'},{' '}
+              {provenance?.recordCreated?.person?.organization || 'Unknown'}
             </div>
             <div className="date">
-              Uploaded on {provenance?.recordCreated?.time?.value ? 
-                new Date(provenance.recordCreated.time.value).toLocaleDateString() : 'Unknown'}
+              Uploaded on{' '}
+              {provenance?.recordCreated?.time?.value
+                ? new Date(provenance.recordCreated.time.value).toLocaleDateString()
+                : 'Unknown'}
             </div>
-            <div className="doi">
-              DOI: {provenance?.doi || 'Not available'}
-            </div>
+            <div className="doi">DOI: {provenance?.doi || 'Not available'}</div>
             {provenance?.publicationUrl && (
               <div className="publication">
-                <a href={provenance.publicationUrl} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={provenance.publicationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Publication URL
                 </a>
               </div>
             )}
             <div className="dataset">
-              Dataset: {' '}
-              <a 
+              Dataset:{' '}
+              <a
                 href={`/search?dataset_id=${reaction.dataset_id}&limit=100`}
-                target="_blank" 
+                target="_blank"
                 rel="noopener noreferrer"
               >
                 {reaction.dataset_id}

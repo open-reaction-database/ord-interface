@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-@import "../../styles/vars";
-@import "../../styles/transition";
-@import "../../styles/tabs";
+@import '../../styles/vars';
+@import '../../styles/transition';
+@import '../../styles/tabs';
 
 .search-options {
   max-height: 90vh;
@@ -89,7 +89,8 @@
       }
     }
 
-    input, select {
+    input,
+    select {
       font-size: 1rem;
     }
 
@@ -116,7 +117,8 @@
         font-size: 1.1rem;
       }
 
-      #add-component, .copy {
+      #add-component,
+      .copy {
         grid-column: 1 / 4;
       }
 
@@ -135,7 +137,7 @@
       column-gap: 1rem;
       row-gap: 0.5rem;
 
-      input[type="checkbox"] {
+      input[type='checkbox'] {
         max-width: 15px;
         text-align: center;
       }
@@ -169,7 +171,7 @@
           display: flex;
           align-items: center;
           padding: 10px 0;
-          
+
           /* Ensure the range slider takes full width */
           > div {
             width: 100%;

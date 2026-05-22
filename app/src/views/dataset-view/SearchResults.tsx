@@ -12,30 +12,28 @@ interface SearchResultsProps {
   isOverflow: boolean;
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({
-  searchResults,
-  isOverflow
-}) => {
+const SearchResults: React.FC<SearchResultsProps> = ({ searchResults, isOverflow }) => {
   const navigate = useNavigate();
   const [formattedResults, setFormattedResults] = useState<SearchResult[]>([]);
   const [selectedReactions, setSelectedReactions] = useState<string[]>([]);
   const [showDownloadResults, setShowDownloadResults] = useState(false);
 
-
-
   const goToViewSelected = () => {
     // Store selected reactions in sessionStorage for navigation
-    sessionStorage.setItem('selectedReactions', JSON.stringify({
-      query: window.location.search,
-      reactions: selectedReactions
-    }));
-    
+    sessionStorage.setItem(
+      'selectedReactions',
+      JSON.stringify({
+        query: window.location.search,
+        reactions: selectedReactions,
+      }),
+    );
+
     navigate(`/selected-set?reaction_ids=${selectedReactions.join(',')}`);
   };
 
   useEffect(() => {
     setFormattedResults(searchResults);
-    
+
     // Check if there are stored selected reactions for this query
     const stored = sessionStorage.getItem('selectedReactions');
     if (stored) {
@@ -46,8 +44,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     }
   }, [searchResults]);
 
-  const title = isOverflow 
-    ? "100 Reactions From This Dataset (Sample)" 
+  const title = isOverflow
+    ? '100 Reactions From This Dataset (Sample)'
     : `Reactions in this Dataset (${formattedResults.length} Reactions)`;
 
   return (
@@ -58,7 +56,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           title={title}
           displaySearch={false}
         >
-          {(entities) => (
+          {entities => (
             <>
               <div className="search-results__action-buttons">
                 <CopyButton
@@ -73,7 +71,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   Download All Search Results
                 </button>
               </div>
-              
+
               {entities.map(row => (
                 <ReactionCard
                   key={row.reaction_id}
@@ -96,7 +94,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {selectedReactions.length > 0 && (
         <div className="search-results__view-selected">
-          <div 
+          <div
             className="search-results__view-selected-button"
             onClick={goToViewSelected}
           >

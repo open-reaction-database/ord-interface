@@ -21,9 +21,9 @@ const Home: React.FC = () => {
   return (
     <div className="home">
       <div className="home__image-container">
-        <img 
+        <img
           className="home__logo"
-          alt="ORD logo" 
+          alt="ORD logo"
           src="https://raw.githubusercontent.com/Open-Reaction-Database/ord-schema/main/logos/logo.svg"
         />
       </div>

@@ -63,7 +63,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
 
   useEffect(() => {
     setFormattedResults(searchResults);
-    
+
     // If query matches storedSet, set selectedReactions
     const storedSetStr = localStorage.getItem('storedSet');
     if (storedSetStr) {
@@ -114,15 +114,18 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
           )}
         </EntityTable>
       )}
-      
+
       {selectedReactions.length > 0 && (
         <div className="view-selected-container">
-          <div className="view-selected-button" onClick={goToViewSelected}>
+          <div
+            className="view-selected-button"
+            onClick={goToViewSelected}
+          >
             View {selectedReactions.length} selected reactions
           </div>
         </div>
       )}
-      
+
       <DownloadResults
         reactionIds={formattedResults.map(result => result.reaction_id)}
         showDownloadResults={showDownloadResults}
