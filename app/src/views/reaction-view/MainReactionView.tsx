@@ -84,6 +84,12 @@ const MainReactionView: React.FC = () => {
 
     try {
       const response = await fetch(`/api/reaction_summary?reaction_id=${reactionId}&compact=false`);
+      // Don't pipe a 4xx/5xx HTML error body into the summary panel via
+      // dangerouslySetInnerHTML; return empty so the section stays blank.
+      if (!response.ok) {
+        console.error(`reaction_summary failed (HTTP ${response.status}) for ${reactionId}`);
+        return '';
+      }
       return await response.text();
     } catch (error) {
       console.error('Error fetching reaction summary:', error);

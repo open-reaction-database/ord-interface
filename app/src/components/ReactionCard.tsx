@@ -46,8 +46,13 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
   const getReactionTable = useCallback(async () => {
     try {
       const response = await fetch(`/api/reaction_summary?reaction_id=${reaction.reaction_id}`);
-      const responseData = await response.text();
-      setReactionTable(responseData);
+      // Skip the 4xx/5xx body — it's an HTML error page that
+      // dangerouslySetInnerHTML would render verbatim in every card.
+      if (!response.ok) {
+        console.error(`reaction_summary failed (HTTP ${response.status}) for ${reaction.reaction_id}`);
+        return;
+      }
+      setReactionTable(await response.text());
     } catch (error) {
       console.error('Error fetching reaction table:', error);
     }
