@@ -126,7 +126,7 @@ const MainDatasetView: React.FC = () => {
             ) : searchResults.length > 0 ? (
               <SearchResults
                 searchResults={searchResults}
-                isOverflow={false}
+                isOverflow={(datasetData?.num_reactions ?? 0) > searchResults.length}
               />
             ) : (
               <div className="no-results">
