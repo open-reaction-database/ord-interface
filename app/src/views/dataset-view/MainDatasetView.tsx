@@ -33,13 +33,15 @@ const MainDatasetView: React.FC = () => {
   const searchResults = searchData?.status === 'success' ? searchData.results : [];
   const loading = !!datasetId && (isFetching || searchData?.status === 'pending');
 
-  const { data: datasetData } = useQuery<Dataset | null>({
+  const { data: datasetData, error: datasetError } = useQuery<Dataset>({
     queryKey: ['dataset-metadata', datasetId],
     enabled: !!datasetId,
     queryFn: async () => {
-      const res = await fetch('/api/datasets');
-      const datasets = (await res.json()) as Dataset[];
-      return datasets.find(d => d.dataset_id === datasetId) ?? null;
+      const res = await fetch(`/api/dataset?dataset_id=${encodeURIComponent(datasetId!)}`);
+      if (!res.ok) {
+        throw new Error(`Failed to load dataset metadata (HTTP ${res.status})`);
+      }
+      return (await res.json()) as Dataset;
     },
   });
 
@@ -93,26 +95,32 @@ const MainDatasetView: React.FC = () => {
 
         <div id="datasection">
           <div className="h4">Dataset Metadata</div>
-          <table>
-            <tbody>
-              <tr>
-                <td>Dataset ID:</td>
-                <td>{datasetData?.dataset_id ?? '(no id)'}</td>
-              </tr>
-              <tr>
-                <td>Dataset Name:</td>
-                <td>{datasetData?.name ?? '(no name)'}</td>
-              </tr>
-              <tr>
-                <td>Dataset Description:</td>
-                <td>{datasetData?.description ?? '(no description)'}</td>
-              </tr>
-              <tr>
-                <td>Number of Reactions in Dataset:</td>
-                <td>{datasetData?.num_reactions}</td>
-              </tr>
-            </tbody>
-          </table>
+          {datasetError ? (
+            <div className="no-results">
+              <div className="title">Failed to load dataset metadata: {datasetError.message}</div>
+            </div>
+          ) : (
+            <table>
+              <tbody>
+                <tr>
+                  <td>Dataset ID:</td>
+                  <td>{datasetData?.dataset_id ?? '(no id)'}</td>
+                </tr>
+                <tr>
+                  <td>Dataset Name:</td>
+                  <td>{datasetData?.name ?? '(no name)'}</td>
+                </tr>
+                <tr>
+                  <td>Dataset Description:</td>
+                  <td>{datasetData?.description ?? '(no description)'}</td>
+                </tr>
+                <tr>
+                  <td>Number of Reactions in Dataset:</td>
+                  <td>{datasetData?.num_reactions}</td>
+                </tr>
+              </tbody>
+            </table>
+          )}
 
           <div className="search-results-section">
             {error ? (

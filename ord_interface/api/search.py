@@ -27,7 +27,7 @@ from typing import Any, cast
 from uuid import uuid4
 
 import psycopg
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from ord_schema.logging import get_logger
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
@@ -203,6 +203,20 @@ async def get_datasets() -> list[DatasetInfo]:
     async with get_cursor() as cursor:
         await cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
         return [DatasetInfo(**row) async for row in cursor]
+
+
+@router.get("/dataset")
+async def get_dataset(dataset_id: str) -> DatasetInfo:
+    """Returns info about a single dataset."""
+    async with get_cursor() as cursor:
+        await cursor.execute(
+            "SELECT dataset_id, name, description, num_reactions FROM dataset WHERE dataset_id = %s",
+            (dataset_id,),
+        )
+        row = await cursor.fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail=f"dataset not found: {dataset_id}")
+        return DatasetInfo(**row)
 
 
 @router.get("/molfile")
