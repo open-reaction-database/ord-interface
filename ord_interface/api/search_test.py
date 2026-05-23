@@ -79,6 +79,19 @@ def test_get_datasets(test_client):
     assert len(dataset_info) == 3
 
 
+def test_get_dataset(test_client):
+    dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
+    response = test_client.get("/api/dataset", params={"dataset_id": dataset_id})
+    response.raise_for_status()
+    dataset_info = response.json()
+    assert dataset_info["dataset_id"] == dataset_id
+
+
+def test_get_dataset_not_found(test_client):
+    response = test_client.get("/api/dataset", params={"dataset_id": "ord_dataset-does-not-exist"})
+    assert response.status_code == 404
+
+
 def test_get_molfile(test_client):
     response = test_client.get("/api/molfile", params={"smiles": "C(=O)N"})
     response.raise_for_status()

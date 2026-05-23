@@ -4,8 +4,8 @@ Web interface and FastAPI server for the [Open Reaction Database](https://open-r
 
 ## Project layout
 
-- **`app/`** — Vue single-page application (frontend), built with Vite
-  - `src/components/` — reusable Vue components
+- **`app/`** — React single-page application (frontend), built with Vite
+  - `src/components/` — reusable React components
   - `src/views/` — routed pages (browse, search, dataset/reaction views)
   - `src/router/`, `src/styles/`, `src/utils/`, `src/assets/`
 - **`ord_interface/`** — Python backend
@@ -14,7 +14,7 @@ Web interface and FastAPI server for the [Open Reaction Database](https://open-r
   - `visualization/` — Jinja filters and helpers for rendering reactions and molecules
   - `editor/` — legacy reaction-submission UI (being removed)
 
-The Vue frontend talks to the FastAPI server, so both processes need to be running for the UI to work. On Windows, use WSL.
+The React frontend talks to the FastAPI server, so both processes need to be running for the UI to work. On Windows, use WSL.
 
 ## Local development
 
@@ -57,6 +57,7 @@ docker compose up
 
 #### Option B: Local (in-process testing database)
 
+In your local conda environment
 ```shell
 # Redis (the API uses it for search-task state); leaves it daemonized.
 redis-server --daemonize yes
@@ -73,9 +74,9 @@ ORD_INTERFACE_TESTING=TRUE uv run uvicorn ord_interface.api.main:app --port 5000
 > proxy target in `app/vite.config.js`. Uvicorn binds `127.0.0.1` only, so
 > `http://127.0.0.1:5000/...` will reach uvicorn regardless.
 
-### 3. Run the Vue SPA
+### 3. Run the React SPA
 
-Download [Ketcher v2.5.1](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip), extract it, and place the `standalone/` directory's contents inside `./app/src/ketcher/` (so that `app/src/ketcher/static/` and `app/src/ketcher/templates/` exist). Then:
+Download [Ketcher v2.5.1](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip), extract it, and place the `standalone/` directory's contents inside `./app/public/ketcher/` (so that `app/public/ketcher/static/` and `app/public/ketcher/asset-manifest.json` exist). Then:
 
 ```shell
 cd app
@@ -99,4 +100,4 @@ Production deployment is managed via Pulumi/ECS in the [`ord-infrastructure`](ht
 
 ### Major changes (new message types, etc.)
 
-The Vue app needs to be updated to surface new fields. Please discuss any such proposals with the ORD team before opening a PR.
+The React app needs to be updated to surface new fields. Please discuss any such proposals with the ORD team before opening a PR.
