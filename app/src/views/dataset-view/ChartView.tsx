@@ -30,10 +30,11 @@ interface ChartViewProps {
   title: string;
   apiCall: string;
   role: string;
+  datasetId: string;
   isCollapsed?: boolean;
 }
 
-const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, isCollapsed = false }) => {
+const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, datasetId, isCollapsed = false }) => {
   const [loading, setLoading] = useState(true);
   const [inputsData, setInputsData] = useState<ChartData[]>([]);
   const [showTooltip, setShowTooltip] = useState<'visible' | 'hidden'>('hidden');
@@ -197,18 +198,24 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, i
   // inputsData populates, so isCollapsed/createChart are intentionally not
   // deps here — including them would re-fire the fetch every collapse toggle.
   useEffect(() => {
-    const datasetId = window.location.pathname.split('/')[2];
-
     fetch(`/api/${apiCall}?dataset_id=${datasetId}`, { method: 'GET' })
-      .then(response => response.json())
+      .then(response => {
+        // Throw on non-2xx so the catch branch flips loading off instead of
+        // feeding the HTML error body into setInputsData / createChart.
+        if (!response.ok) {
+          throw new Error(`${apiCall} failed (HTTP ${response.status})`);
+        }
+        return response.json();
+      })
       .then((data: ChartData[]) => {
         setLoading(false);
         setInputsData(data);
       })
-      .catch(() => {
+      .catch(error => {
+        console.error(`Error fetching ${apiCall}:`, error);
         setLoading(false);
       });
-  }, [apiCall]);
+  }, [apiCall, datasetId]);
 
   // Resize chart when isCollapsed changes
   useEffect(() => {
