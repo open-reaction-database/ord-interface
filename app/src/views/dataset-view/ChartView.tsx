@@ -36,6 +36,7 @@ interface ChartViewProps {
 
 const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, datasetId, isCollapsed = false }) => {
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [inputsData, setInputsData] = useState<ChartData[]>([]);
   const [showTooltip, setShowTooltip] = useState<'visible' | 'hidden'>('hidden');
   const [currentTimesAppearing, setCurrentTimesAppearing] = useState(0);
@@ -194,14 +195,16 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
     createChart(inputsData, width, height);
   }, [inputsData, isCollapsed, createChart]);
 
-  // Fetch data on mount. The resize effect below renders the chart once
-  // inputsData populates, so isCollapsed/createChart are intentionally not
-  // deps here — including them would re-fire the fetch every collapse toggle.
+  // Fetch chart data when the endpoint or dataset changes. The resize effect
+  // below redraws on isCollapsed change once inputsData is populated, so
+  // isCollapsed/createChart are intentionally not deps here.
   useEffect(() => {
+    setLoading(true);
+    setFetchError(null);
     fetch(`/api/${apiCall}?dataset_id=${datasetId}`, { method: 'GET' })
       .then(response => {
-        // Throw on non-2xx so the catch branch flips loading off instead of
-        // feeding the HTML error body into setInputsData / createChart.
+        // Throw on non-2xx so the catch branch surfaces the failure instead
+        // of feeding the HTML error body into setInputsData / createChart.
         if (!response.ok) {
           throw new Error(`${apiCall} failed (HTTP ${response.status})`);
         }
@@ -211,9 +214,10 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
         setLoading(false);
         setInputsData(data);
       })
-      .catch(error => {
+      .catch((error: Error) => {
         console.error(`Error fetching ${apiCall}:`, error);
         setLoading(false);
+        setFetchError(error.message);
       });
   }, [apiCall, datasetId]);
 
@@ -237,16 +241,20 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
         <svg
           ref={svgRef}
           id={uniqueId}
-          style={{ visibility: loading ? 'hidden' : 'visible' }}
+          style={{ visibility: loading || fetchError ? 'hidden' : 'visible' }}
         />
       </div>
 
-      <div
-        className="chart-view__loading"
-        style={{ visibility: loading ? 'visible' : 'hidden' }}
-      >
-        <LoadingSpinner />
-      </div>
+      {fetchError ? (
+        <div className="chart-view__error">Failed to load chart: {fetchError}</div>
+      ) : (
+        <div
+          className="chart-view__loading"
+          style={{ visibility: loading ? 'visible' : 'hidden' }}
+        >
+          <LoadingSpinner />
+        </div>
+      )}
 
       {showSmiles && (
         <div
