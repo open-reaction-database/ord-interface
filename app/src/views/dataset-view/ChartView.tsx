@@ -197,14 +197,18 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
 
   // Fetch chart data when the endpoint or dataset changes. The resize effect
   // below redraws on isCollapsed change once inputsData is populated, so
-  // isCollapsed/createChart are intentionally not deps here.
+  // isCollapsed/createChart are intentionally not deps here. The
+  // AbortController guards against a stale response from the previous
+  // datasetId racing in after the new fetch has started.
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setFetchError(null);
-    fetch(`/api/${apiCall}?dataset_id=${encodeURIComponent(datasetId)}`, { method: 'GET' })
+    fetch(`/api/${apiCall}?dataset_id=${encodeURIComponent(datasetId)}`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
       .then(response => {
-        // Throw on non-2xx so the catch branch surfaces the failure instead
-        // of feeding the HTML error body into setInputsData / createChart.
         if (!response.ok) {
           throw new Error(`${apiCall} failed (HTTP ${response.status})`);
         }
@@ -215,10 +219,12 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
         setInputsData(data);
       })
       .catch((error: Error) => {
+        if (error.name === 'AbortError') return;
         console.error(`Error fetching ${apiCall}:`, error);
         setLoading(false);
         setFetchError(error.message);
       });
+    return () => controller.abort();
   }, [apiCall, datasetId]);
 
   // Resize chart when isCollapsed changes
