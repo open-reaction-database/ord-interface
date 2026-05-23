@@ -201,7 +201,7 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
   useEffect(() => {
     setLoading(true);
     setFetchError(null);
-    fetch(`/api/${apiCall}?dataset_id=${datasetId}`, { method: 'GET' })
+    fetch(`/api/${apiCall}?dataset_id=${encodeURIComponent(datasetId)}`, { method: 'GET' })
       .then(response => {
         // Throw on non-2xx so the catch branch surfaces the failure instead
         // of feeding the HTML error body into setInputsData / createChart.
