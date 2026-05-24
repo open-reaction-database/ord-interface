@@ -74,13 +74,19 @@ COPY ord_interface/editor/build.sh ord_interface/editor
 WORKDIR /app/ord-interface/ord_interface/editor
 RUN ./build.sh
 WORKDIR /app/ord-interface
-# Build the Vue app.
+# Build the SPA (React + TypeScript + Vite).
 COPY app/ app/
 WORKDIR /app/ord-interface/app
-RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/src/ketcher \
+# NOTE(skearnes): package-lock.json is regenerated inside the image because npm
+# stores rollup's platform-specific optional binaries by host OS, so a lockfile
+# captured on macOS (or any non-Linux dev box) won't include
+# @rollup/rollup-linux-x64-gnu and vite build fails with MODULE_NOT_FOUND.
+# See https://github.com/npm/cli/issues/4828.
+RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/public/ketcher \
+   && rm -f package-lock.json \
    && npm install \
    && npm run build \
-   && mv dist/ /app/ord-interface/vue
+   && mv dist/ /app/ord-interface/spa
 WORKDIR /app/ord-interface
 # Copy the rest of the editor files.
 COPY ord_interface/editor/ ord_interface/editor/

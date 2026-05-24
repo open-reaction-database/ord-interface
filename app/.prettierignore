@@ -1,5 +1,4 @@
 dist/
 node_modules/
 public/
-src/ketcher/
 package-lock.json
