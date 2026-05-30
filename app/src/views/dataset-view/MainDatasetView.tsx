@@ -76,20 +76,26 @@ const MainDatasetView: React.FC = () => {
             id="chartsectioncharts"
             className={`charts-content ${isCollapsed ? '' : 'expanded'}`}
           >
-            <ChartView
-              uniqueId="reactantsFrequency"
-              title="Frequency of Reactants"
-              apiCall="input_stats"
-              role="reactant"
-              isCollapsed={isCollapsed}
-            />
-            <ChartView
-              uniqueId="productsFrequency"
-              title="Frequency of Products"
-              apiCall="product_stats"
-              role="product"
-              isCollapsed={isCollapsed}
-            />
+            {datasetId && (
+              <>
+                <ChartView
+                  uniqueId="reactantsFrequency"
+                  title="Frequency of Reactants"
+                  apiCall="input_stats"
+                  role="reactant"
+                  datasetId={datasetId}
+                  isCollapsed={isCollapsed}
+                />
+                <ChartView
+                  uniqueId="productsFrequency"
+                  title="Frequency of Products"
+                  apiCall="product_stats"
+                  role="product"
+                  datasetId={datasetId}
+                  isCollapsed={isCollapsed}
+                />
+              </>
+            )}
           </div>
         </div>
 

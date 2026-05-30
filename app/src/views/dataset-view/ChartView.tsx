@@ -30,11 +30,13 @@ interface ChartViewProps {
   title: string;
   apiCall: string;
   role: string;
+  datasetId: string;
   isCollapsed?: boolean;
 }
 
-const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, isCollapsed = false }) => {
+const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, datasetId, isCollapsed = false }) => {
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [inputsData, setInputsData] = useState<ChartData[]>([]);
   const [showTooltip, setShowTooltip] = useState<'visible' | 'hidden'>('hidden');
   const [currentTimesAppearing, setCurrentTimesAppearing] = useState(0);
@@ -193,22 +195,37 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, i
     createChart(inputsData, width, height);
   }, [inputsData, isCollapsed, createChart]);
 
-  // Fetch data on mount. The resize effect below renders the chart once
-  // inputsData populates, so isCollapsed/createChart are intentionally not
-  // deps here — including them would re-fire the fetch every collapse toggle.
+  // Fetch chart data when the endpoint or dataset changes. The resize effect
+  // below redraws on isCollapsed change once inputsData is populated, so
+  // isCollapsed/createChart are intentionally not deps here. The
+  // AbortController guards against a stale response from the previous
+  // datasetId racing in after the new fetch has started.
   useEffect(() => {
-    const datasetId = window.location.pathname.split('/')[2];
-
-    fetch(`/api/${apiCall}?dataset_id=${datasetId}`, { method: 'GET' })
-      .then(response => response.json())
+    const controller = new AbortController();
+    setLoading(true);
+    setFetchError(null);
+    fetch(`/api/${apiCall}?dataset_id=${encodeURIComponent(datasetId)}`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`${apiCall} failed (HTTP ${response.status})`);
+        }
+        return response.json();
+      })
       .then((data: ChartData[]) => {
         setLoading(false);
         setInputsData(data);
       })
-      .catch(() => {
+      .catch((error: Error) => {
+        if (error.name === 'AbortError') return;
+        console.error(`Error fetching ${apiCall}:`, error);
         setLoading(false);
+        setFetchError(error.message);
       });
-  }, [apiCall]);
+    return () => controller.abort();
+  }, [apiCall, datasetId]);
 
   // Resize chart when isCollapsed changes
   useEffect(() => {
@@ -230,16 +247,20 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, i
         <svg
           ref={svgRef}
           id={uniqueId}
-          style={{ visibility: loading ? 'hidden' : 'visible' }}
+          style={{ visibility: loading || fetchError ? 'hidden' : 'visible' }}
         />
       </div>
 
-      <div
-        className="chart-view__loading"
-        style={{ visibility: loading ? 'visible' : 'hidden' }}
-      >
-        <LoadingSpinner />
-      </div>
+      {fetchError ? (
+        <div className="chart-view__error">Failed to load chart: {fetchError}</div>
+      ) : (
+        <div
+          className="chart-view__loading"
+          style={{ visibility: loading ? 'visible' : 'hidden' }}
+        >
+          <LoadingSpinner />
+        </div>
+      )}
 
       {showSmiles && (
         <div
