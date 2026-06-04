@@ -39,11 +39,13 @@ For example, a reaction query might have the following predicates:
 
 Note that a predicate is matched if it applies to _any_ input/output.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from base64 import b64decode, b64encode
 from enum import Enum, auto
+from typing import Any
 
 from ord_schema import message_helpers, validations
 from ord_schema.logging import get_logger
@@ -52,6 +54,8 @@ from psycopg import AsyncCursor
 from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
+
+DictCursor = AsyncCursor[dict[str, Any]]
 
 logger = get_logger(__name__)
 
@@ -265,7 +269,7 @@ class ReactionComponentQuery(ReactionQuery):
         SUBSTRUCTURE = auto()
         SMARTS = auto()
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         pattern: str,
         target: Target,
@@ -338,7 +342,7 @@ class ReactionComponentQuery(ReactionQuery):
         return query, params
 
 
-async def fetch_results(cursor: AsyncCursor) -> list[str]:
+async def fetch_results(cursor: DictCursor) -> list[str]:
     """Fetches query results.
 
     Args:
@@ -355,7 +359,7 @@ async def fetch_results(cursor: AsyncCursor) -> list[str]:
 
 
 async def run_queries(
-    cursor: AsyncCursor,
+    cursor: DictCursor,
     reaction_queries: list[ReactionQuery] | ReactionQuery,
     limit: int | None = None,
 ) -> list[str]:
@@ -369,10 +373,11 @@ async def run_queries(
     Returns:
         List of reaction IDs.
     """
-    if not isinstance(reaction_queries, list):
-        reaction_queries = [reaction_queries]
+    queries_list: list[ReactionQuery] = (
+        [reaction_queries] if isinstance(reaction_queries, ReactionQuery) else reaction_queries
+    )
     queries, combined_params = [], []
-    for reaction_query in reaction_queries:
+    for reaction_query in queries_list:
         query, params = reaction_query.query_and_parameters
         queries.append(query)
         combined_params.extend(params)
@@ -398,11 +403,13 @@ class QueryResult(BaseModel):
     def reaction(self) -> reaction_pb2.Reaction:
         return reaction_pb2.Reaction.FromString(b64decode(self.proto))
 
-    def __eq__(self, other: QueryResult) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, QueryResult):
+            return NotImplemented
         return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
 
 
-async def fetch_reactions(cursor: AsyncCursor, reaction_ids: list[str]) -> list[QueryResult]:
+async def fetch_reactions(cursor: DictCursor, reaction_ids: list[str]) -> list[QueryResult]:
     """Fetches dataset and proto information for a list of reaction IDs."""
     query = """
         SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
@@ -429,7 +436,7 @@ class StatsResult(BaseModel):
 
 
 async def fetch_dataset_most_used_smiles_for_inputs(
-    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+    cursor: DictCursor, dataset_id: str, limit: int = 30
 ) -> list[StatsResult]:
     """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
     query = """
@@ -452,7 +459,7 @@ async def fetch_dataset_most_used_smiles_for_inputs(
 
 
 async def fetch_dataset_most_used_smiles_for_products(
-    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+    cursor: DictCursor, dataset_id: str, limit: int = 30
 ) -> list[StatsResult]:
     """Fetches the top K most used SMILES molecules in terms of reaction products for a given dataset."""
     query = """

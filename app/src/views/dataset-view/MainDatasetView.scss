@@ -1,0 +1,182 @@
+/**
+ * Copyright 2023 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@use '../../styles/vars.scss' as vars;
+
+#dataset-main {
+  padding: 2rem;
+
+  h1 {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+}
+
+#charts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.charts-container {
+  height: fit-content;
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid vars.$lightgrey;
+}
+
+.charts-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+
+  #expand {
+    button {
+      background: white;
+      border: 1px solid vars.$medgrey;
+      border-radius: 0.25rem;
+      padding: 0.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: vars.$lightgrey;
+      }
+
+      .material-icons {
+        font-size: 1.2rem;
+        color: vars.$darkgrey;
+      }
+    }
+  }
+}
+
+#chartsection {
+  display: flex;
+  flex-direction: column;
+}
+
+.charts-content {
+  display: block;
+
+  &.expanded {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+  }
+}
+
+#chartsectioncharts {
+  .chart-placeholder {
+    background-color: white;
+    border: 1px solid vars.$medgrey;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+
+    h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      font-style: italic;
+    }
+  }
+}
+
+#datasection {
+  .h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  > table {
+    width: 100%;
+    background-color: white;
+    border-collapse: collapse;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+
+    tr {
+      &:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid vars.$medgrey;
+
+      &:first-child {
+        font-weight: 600;
+        background-color: vars.$lightgrey;
+        white-space: nowrap;
+      }
+
+      &:last-child {
+        width: 100%;
+      }
+    }
+  }
+
+  .search-results {
+    .results-placeholder {
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      .result-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid vars.$medgrey;
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 2rem;
+
+      .title {
+        font-size: 1.25rem;
+        color: #666;
+      }
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
+    }
+  }
+}
