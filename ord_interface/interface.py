@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Entrypoint for the web interface."""
+
 import flask
 
 from ord_interface.editor.py import serve  # pytype: disable=import-error

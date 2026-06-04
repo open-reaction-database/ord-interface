@@ -20,13 +20,14 @@ import gzip
 import json
 import os
 import re
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
-from typing import AsyncIterator, cast
+from typing import Any, cast
 from uuid import uuid4
 
 import psycopg
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from ord_schema.logging import get_logger
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
@@ -60,7 +61,7 @@ MAX_RESULTS = 1000
 
 
 @asynccontextmanager
-async def get_cursor() -> AsyncIterator[AsyncCursor]:
+async def get_cursor() -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
     """Returns a psycopg cursor."""
     dsn = os.getenv("ORD_INTERFACE_POSTGRES")
     if dsn is None:
@@ -74,7 +75,7 @@ async def get_cursor() -> AsyncIterator[AsyncCursor]:
                 host=os.environ["POSTGRES_HOST"],
             ),
         )
-    async with await psycopg.AsyncConnection.connect(
+    async with await psycopg.AsyncConnection[dict[str, Any]].connect(
         dsn, row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:
         await connection.set_read_only(True)
@@ -87,15 +88,17 @@ async def get_redis() -> AsyncIterator[Redis]:
     """Returns a Redis client instance."""
     host = os.environ.get("REDIS_HOST", "localhost")
     port = int(os.environ.get("REDIS_PORT", "6379"))
-    async with Redis(host=host, port=port) as client:
-        if not await client.ping():
-            raise RuntimeError(f"Failed to connect to Redis server {host}:{port}")
-        logger.debug(f"Connected to Redis server {host}:{port}")
+    ssl = os.environ.get("REDIS_SSL", "0") == "1"
+    async with Redis(host=host, port=port, ssl=ssl) as client:
+        # redis.asyncio stubs return Awaitable[bool] | bool from ping(); the runtime is always awaitable.
+        if not await cast(Awaitable[bool], client.ping()):
+            raise RuntimeError(f"Failed to connect to Redis server {host}:{port} ({ssl=})")
+        logger.debug(f"Connected to Redis server {host}:{port} ({ssl=})")
         yield client
 
 
 @dataclass
-class QueryParams:  # pylint: disable=too-many-instance-attributes
+class QueryParams:
     """Query parameters."""
 
     # NOTE(skearnes): BaseModel does not work here; see https://github.com/fastapi/fastapi/discussions/10556.
@@ -116,7 +119,6 @@ class QueryParams:  # pylint: disable=too-many-instance-attributes
 
 async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] | list[str]:
     """Runs a query and returns a list of matched reactions."""
-    # pylint: disable=too-many-arguments,too-many-branches,too-many-locals
     queries = []
     if params.dataset_id and isinstance(params.dataset_id, list):
         queries.append(DatasetIdQuery(params.dataset_id))
@@ -201,6 +203,20 @@ async def get_datasets() -> list[DatasetInfo]:
     async with get_cursor() as cursor:
         await cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
         return [DatasetInfo(**row) async for row in cursor]
+
+
+@router.get("/dataset")
+async def get_dataset(dataset_id: str) -> DatasetInfo:
+    """Returns info about a single dataset."""
+    async with get_cursor() as cursor:
+        await cursor.execute(
+            "SELECT dataset_id, name, description, num_reactions FROM dataset WHERE dataset_id = %s",
+            (dataset_id,),
+        )
+        row = await cursor.fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail=f"dataset not found: {dataset_id}")
+        return DatasetInfo(**row)
 
 
 @router.get("/molfile")

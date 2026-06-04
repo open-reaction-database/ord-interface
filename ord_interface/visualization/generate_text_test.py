@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for ord_interface.visualization.generate_text."""
+
+from collections.abc import Iterator
+
 import pytest
 from ord_schema import message_helpers, units
 from ord_schema.proto import reaction_pb2
@@ -20,7 +23,7 @@ from ord_interface.visualization import generate_text
 
 
 @pytest.fixture
-def reaction() -> reaction_pb2.Reaction:
+def reaction() -> Iterator[reaction_pb2.Reaction]:
     resolver = units.UnitResolver()
     reaction = reaction_pb2.Reaction()
     reaction.setup.is_automated = True

@@ -153,7 +153,7 @@ def download_dataset(name, kind="pb"):
     if kind == "pb":
         data = io.BytesIO(dataset.SerializeToString(deterministic=True))
     elif kind == "pbtxt":
-        data = io.BytesIO(text_format.MessageToBytes(dataset))
+        data = io.BytesIO(text_format.MessageToBytes(dataset, as_utf8=True))
     else:
         flask.abort(flask.make_response(f"unsupported format: {kind}", 406))
     return flask.send_file(data, mimetype="application/protobuf", as_attachment=True, download_name=f"{name}.{kind}")
@@ -288,7 +288,7 @@ def download_reaction():
     """Returns a pbtxt file parsed from POST data as an attachment."""
     reaction = reaction_pb2.Reaction()
     reaction.ParseFromString(flask.request.get_data())
-    data = io.BytesIO(text_format.MessageToBytes(reaction))
+    data = io.BytesIO(text_format.MessageToBytes(reaction, as_utf8=True))
     return flask.send_file(data, mimetype="application/protobuf", as_attachment=True, download_name="reaction.pbtxt")
 
 

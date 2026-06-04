@@ -61,13 +61,12 @@ RUN wget https://github.com/open-reaction-database/ord-schema/archive/refs/tags/
 
 # Install dependencies.
 WORKDIR /app/ord-interface
-COPY setup.py README.md ./
-RUN pip install --upgrade pip \
-   && pip install gunicorn wheel
-# https://stackoverflow.com/a/60511098.
-RUN python setup.py egg_info \
-   && pip install $(grep -v '^\[' *.egg-info/requires.txt) \
-   && rm -rf *.egg-info/
+RUN pip install --no-cache-dir uv
+ENV UV_PROJECT_ENVIRONMENT=/usr/local \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy the local state.
 COPY ord_interface/editor/js/ ord_interface/editor/js/
@@ -75,13 +74,19 @@ COPY ord_interface/editor/build.sh ord_interface/editor
 WORKDIR /app/ord-interface/ord_interface/editor
 RUN ./build.sh
 WORKDIR /app/ord-interface
-# Build the Vue app.
+# Build the SPA (React + TypeScript + Vite).
 COPY app/ app/
 WORKDIR /app/ord-interface/app
-RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/src/ketcher \
+# NOTE(skearnes): package-lock.json is regenerated inside the image because npm
+# stores rollup's platform-specific optional binaries by host OS, so a lockfile
+# captured on macOS (or any non-Linux dev box) won't include
+# @rollup/rollup-linux-x64-gnu and vite build fails with MODULE_NOT_FOUND.
+# See https://github.com/npm/cli/issues/4828.
+RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/public/ketcher \
+   && rm -f package-lock.json \
    && npm install \
    && npm run build \
-   && mv dist/ /app/ord-interface/vue
+   && mv dist/ /app/ord-interface/spa
 WORKDIR /app/ord-interface
 # Copy the rest of the editor files.
 COPY ord_interface/editor/ ord_interface/editor/
@@ -90,7 +95,7 @@ COPY ord_interface/about.html ord_interface/
 COPY ord_interface/interface.py ord_interface/
 COPY ord_interface/api/ ord_interface/api/
 COPY ord_interface/visualization/ ord_interface/visualization/
-RUN pip install .
+RUN uv sync --frozen --no-dev
 
 # Build and launch the interface.
 COPY ord_interface/start_app.sh .
