@@ -27,3 +27,8 @@ def test_get_compound_svg(test_client):
 def test_get_reaction_summary(test_client):
     response = test_client.get("/api/reaction_summary", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"})
     response.raise_for_status()
+
+
+def test_get_reaction_summary_not_found(test_client):
+    response = test_client.get("/api/reaction_summary", params={"reaction_id": "ord-does-not-exist"})
+    assert response.status_code == 404
