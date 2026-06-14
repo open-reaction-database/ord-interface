@@ -94,3 +94,13 @@ def test_reaction_smiles_html():
     reaction.identifiers.add(value="C>C>C", type="REACTION_SMILES")
     html = generate_text.generate_html(reaction)
     assert html is not None
+
+
+def test_pressure_setpoint_without_atmosphere_html(reaction):
+    """A pressure setpoint must render even when the atmosphere is unspecified."""
+    reaction.conditions.pressure.ClearField("atmosphere")
+    reaction.conditions.pressure.setpoint.CopyFrom(
+        reaction_pb2.Pressure(value=2, units=reaction_pb2.Pressure.ATMOSPHERE)
+    )
+    html = generate_text.generate_html(reaction)
+    assert "2 atm" in html

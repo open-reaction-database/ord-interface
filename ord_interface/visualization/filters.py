@@ -217,11 +217,10 @@ def _pressure_conditions_html(pressure: reaction_pb2.PressureConditions) -> str:
             pressure.atmosphere.OXYGEN: "under oxygen",
             pressure.atmosphere.HYDROGEN: "under hydrogen",
         }[pressure.atmosphere.type]
-    if pressure.atmosphere.type != pressure.atmosphere.UNSPECIFIED:
-        setpoint = units.format_message(pressure.setpoint)
-        if setpoint:
-            txt += f" ({setpoint})"
-    return txt
+    setpoint = units.format_message(pressure.setpoint)
+    if setpoint:
+        txt += f" ({setpoint})"
+    return txt.strip()
 
 
 def _temperature_conditions(temperature: reaction_pb2.TemperatureConditions) -> str:
