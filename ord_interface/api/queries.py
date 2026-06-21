@@ -89,7 +89,7 @@ class DatasetIdQuery(ReactionQuery):
         query = """
             SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN dataset ON dataset.id = reaction.dataset_id
+            JOIN ord.dataset ON dataset.id = reaction.dataset_id
             WHERE dataset.dataset_id = ANY (%s)
         """
         return query, [self._dataset_ids]
@@ -139,7 +139,7 @@ class ReactionSmartsQuery(ReactionQuery):
         """Returns the query and any query parameters."""
         query = """
             SELECT DISTINCT reaction.reaction_id
-            FROM reaction
+            FROM ord.reaction
             JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
             WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s)
         """
@@ -172,7 +172,7 @@ class ReactionConversionQuery(ReactionQuery):
             SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
-            JOIN percentage on percentage.reaction_outcome_id = reaction_outcome.id
+            JOIN ord.percentage on percentage.reaction_outcome_id = reaction_outcome.id
         """
         if self._min_conversion is not None and self._max_conversion is not None:
             query += "WHERE percentage.value >= %s AND percentage.value <= %s\n"
@@ -210,7 +210,7 @@ class ReactionYieldQuery(ReactionQuery):
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
             JOIN ord.product_compound on product_compound.reaction_outcome_id = reaction_outcome.id
             JOIN ord.product_measurement on product_measurement.product_compound_id = product_compound.id
-            JOIN percentage on percentage.product_measurement_id = product_measurement.id
+            JOIN ord.percentage on percentage.product_measurement_id = product_measurement.id
             WHERE product_measurement.type = 'YIELD'
         """
         params = []
@@ -250,7 +250,7 @@ class DoiQuery(ReactionQuery):
         query = """
             SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
+            JOIN ord.reaction_provenance ON reaction_provenance.reaction_id = reaction.id
             WHERE reaction_provenance.doi = ANY (%s)
         """
         return query, [self._dois]
@@ -307,14 +307,14 @@ class ReactionComponentQuery(ReactionQuery):
         """Returns the query and any query parameters."""
         if self._target == ReactionComponentQuery.Target.INPUT:
             mols_sql = """
-            JOIN reaction_input ON reaction_input.reaction_id = reaction.id
-            JOIN compound ON compound.reaction_input_id = reaction_input.id
+            JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
+            JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
             JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
             """
         else:
             mols_sql = """
-            JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
-            JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+            JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
+            JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
             JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
             """
         if self._match_mode == ReactionComponentQuery.MatchMode.EXACT:
