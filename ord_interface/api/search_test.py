@@ -114,6 +114,11 @@ def test_get_molfile(test_client):
     assert Chem.MolToSmiles(Chem.MolFromMolBlock(response.json())) == "NC=O"
 
 
+def test_get_molfile_invalid_smiles(test_client):
+    response = test_client.get("/api/molfile", params={"smiles": "not-a-smiles"})
+    assert response.status_code == 400
+
+
 def test_get_search_results(test_client):
     response = test_client.post(
         "/api/download_search_results",

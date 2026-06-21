@@ -50,7 +50,7 @@ from typing import Any
 from ord_schema import message_helpers, validations
 from ord_schema.logging import get_logger
 from ord_schema.proto import reaction_pb2
-from psycopg import AsyncCursor
+from psycopg import AsyncCursor, sql
 from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
@@ -450,15 +450,38 @@ class StatsResult(BaseModel):
     times_appearing: int
 
 
-async def fetch_dataset_most_used_smiles_for_inputs(
-    cursor: DictCursor, dataset_id: str, limit: int = 30
+async def _fetch_dataset_most_used_smiles(
+    cursor: DictCursor,
+    dataset_id: str,
+    *,
+    compound_table: str,
+    join_table: str,
+    foreign_key: str,
+    limit: int,
 ) -> list[StatsResult]:
-    """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
-    query = """
-            SELECT smiles, COUNT(*) as times_appearing
-            FROM ord.compound
-            JOIN ord.reaction_input ON ord.compound.reaction_input_id = ord.reaction_input.id
-            JOIN ord.reaction ON ord.reaction_input.reaction_id = ord.reaction.id
+    """Fetches the top K most used SMILES for a dataset, joined through the given tables.
+
+    Args:
+        cursor: Database cursor.
+        dataset_id: Dataset to aggregate over.
+        compound_table: Table holding SMILES, e.g. "compound" or "product_compound".
+        join_table: Table linking compounds to reactions, e.g. "reaction_input".
+        foreign_key: Column on ``compound_table`` referencing ``join_table``.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        Most frequently appearing SMILES, in descending order of frequency.
+    """
+    # Compose schema-qualified identifiers safely rather than interpolating raw
+    # strings into the SQL text.
+    compound = sql.Identifier("ord", compound_table)
+    join = sql.Identifier("ord", join_table)
+    query = sql.SQL(
+        """
+            SELECT smiles, COUNT(*) AS times_appearing
+            FROM {compound}
+            JOIN {join} ON {compound}.{foreign_key} = {join}.id
+            JOIN ord.reaction ON {join}.reaction_id = ord.reaction.id
             JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
             WHERE ord.dataset.dataset_id = %s
             AND smiles IS NOT NULL
@@ -466,31 +489,37 @@ async def fetch_dataset_most_used_smiles_for_inputs(
             ORDER BY times_appearing DESC
             LIMIT %s
         """
+    ).format(compound=compound, join=join, foreign_key=sql.Identifier(foreign_key))
     await cursor.execute(query, (dataset_id, limit))
     results = []
     async for row in cursor:
         results.append(StatsResult(**row))
     return results
+
+
+async def fetch_dataset_most_used_smiles_for_inputs(
+    cursor: DictCursor, dataset_id: str, limit: int = 30
+) -> list[StatsResult]:
+    """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
+    return await _fetch_dataset_most_used_smiles(
+        cursor,
+        dataset_id,
+        compound_table="compound",
+        join_table="reaction_input",
+        foreign_key="reaction_input_id",
+        limit=limit,
+    )
 
 
 async def fetch_dataset_most_used_smiles_for_products(
     cursor: DictCursor, dataset_id: str, limit: int = 30
 ) -> list[StatsResult]:
     """Fetches the top K most used SMILES molecules in terms of reaction products for a given dataset."""
-    query = """
-            SELECT smiles, COUNT(*) as times_appearing
-            FROM ord.product_compound
-            JOIN ord.reaction_outcome ON ord.product_compound.reaction_outcome_id = ord.reaction_outcome.id
-            JOIN ord.reaction ON ord.reaction_outcome.reaction_id = ord.reaction.id
-            JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
-            WHERE ord.dataset.dataset_id = %s
-            AND smiles IS NOT NULL
-            GROUP BY smiles
-            ORDER BY times_appearing DESC
-            LIMIT %s
-        """
-    await cursor.execute(query, (dataset_id, limit))
-    results = []
-    async for row in cursor:
-        results.append(StatsResult(**row))
-    return results
+    return await _fetch_dataset_most_used_smiles(
+        cursor,
+        dataset_id,
+        compound_table="product_compound",
+        join_table="reaction_outcome",
+        foreign_key="reaction_outcome_id",
+        limit=limit,
+    )

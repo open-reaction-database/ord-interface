@@ -242,7 +242,7 @@ async def get_molfile(smiles: str) -> str:
     """Returns a molblock for the given SMILES."""
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
-        raise ValueError(smiles)
+        raise HTTPException(status_code=400, detail=f"invalid SMILES: {smiles}")
     return Chem.MolToMolBlock(mol)
 
 

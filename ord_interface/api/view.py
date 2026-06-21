@@ -14,7 +14,7 @@
 
 """View API."""
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from ord_schema.proto import reaction_pb2
 
@@ -39,8 +39,10 @@ async def get_compound(request: Request) -> str:
 async def get_reaction_summary(reaction_id: str, compact: bool = True) -> str:
     """Renders a reaction as an HTML table with images and text."""
     results = await get_reactions(ReactionIdList(reaction_ids=[reaction_id]))
-    if len(results) == 0 or len(results) > 1:
-        raise ValueError(reaction_id)
+    if len(results) == 0:
+        raise HTTPException(status_code=404, detail=f"reaction not found: {reaction_id}")
+    if len(results) > 1:
+        raise HTTPException(status_code=500, detail=f"multiple reactions found: {reaction_id}")
     try:
         return generate_text.generate_html(
             reaction=results[0].reaction, compact=compact
