@@ -219,10 +219,12 @@ def _pressure_conditions_html(pressure: reaction_pb2.PressureConditions) -> str:
             pressure.atmosphere.OXYGEN: "under oxygen",
             pressure.atmosphere.HYDROGEN: "under hydrogen",
         }[pressure.atmosphere.type]
-    if pressure.atmosphere.type != pressure.atmosphere.UNSPECIFIED:
-        setpoint = units.format_message(pressure.setpoint)
-        if setpoint:
-            txt += f" ({setpoint})"
+    setpoint = units.format_message(pressure.setpoint)
+    if setpoint:
+        # Show the setpoint whenever one is present; it is independent of the
+        # atmosphere. Append it parenthetically to any atmosphere text, or show
+        # it bare when there is no atmosphere (mirroring the temperature filter).
+        txt += f" ({setpoint})" if txt else setpoint
     return txt
 
 

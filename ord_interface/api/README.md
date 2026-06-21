@@ -25,7 +25,7 @@ This does a few things:
 
 To view the API docs, navigate to http://localhost:8000/docs.
 
-To test with the Vue interface:
+To test with the React frontend:
 
 ```shell
 # In one terminal session:
@@ -35,7 +35,7 @@ ORD_INTERFACE_TESTING=TRUE fastapi dev main --port=5000
 cd ord-interface/app
 wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip
 unzip ketcher-standalone-2.5.1.zip
-mv standalone src/ketcher
+mv standalone public/ketcher
 npm install
 npm run serve
 ```
