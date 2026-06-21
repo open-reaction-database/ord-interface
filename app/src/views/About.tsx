@@ -26,36 +26,44 @@ const About: React.FC = () => {
         </div>
         <div className="col-9 about__section-content">
           <p className="about__text">
-            The Open Reaction Database (ORD) is an open-access schema and infrastructure for structuring and sharing
-            organic reaction data, including a centralized data repository. The ORD schema supports conventional and
-            emerging technologies, from benchtop reactions to automated high-throughput experiments and flow chemistry.
-            Our vision is that a consistent data representation and infrastructure to support data sharing will enable
-            downstream applications that will greatly improve the state of the art with respect to computer-aided
-            synthesis planning, reaction prediction, and other predictive chemistry tasks.
+            The Open Reaction Database (ORD) is an open-access schema and infrastructure
+            for structuring and sharing organic reaction data, including a centralized
+            data repository. The ORD schema supports conventional and emerging
+            technologies, from benchtop reactions to automated high-throughput
+            experiments and flow chemistry. Our vision is that a consistent data
+            representation and infrastructure to support data sharing will enable
+            downstream applications that will greatly improve the state of the art with
+            respect to computer-aided synthesis planning, reaction prediction, and other
+            predictive chemistry tasks.
           </p>
           <p className="about__text">
-            Since our initial meeting in October 2019, the database has grown to include more than 2M reactions
-            (including a large dataset of reactions extracted from USPTO sources) and received contributions from
-            academic and industrial users, both from published and unpublished work. Some of our current efforts
+            Since our initial meeting in October 2019, the database has grown to include
+            more than 2M reactions (including a large dataset of reactions extracted
+            from USPTO sources) and received contributions from academic and industrial
+            users, both from published and unpublished work. Some of our current efforts
             include:
           </p>
           <ul className="about__list">
             <li className="about__list-item">
-              Improving user interfaces and providing support to contributors on GitHub and via email.
+              Improving user interfaces and providing support to contributors on GitHub
+              and via email.
             </li>
             <li className="about__list-item">
-              Working with companies to incorporate the ORD schema into their reaction informatics infrastructure,
-              including the development of "translators" between the ORD schema and electronic lab notebooks (ELNs).
+              Working with companies to incorporate the ORD schema into their reaction
+              informatics infrastructure, including the development of "translators"
+              between the ORD schema and electronic lab notebooks (ELNs).
             </li>
             <li className="about__list-item">
-              Engaging with journals and other stakeholders to drive adoption of the ORD schema as a{' '}
+              Engaging with journals and other stakeholders to drive adoption of the ORD
+              schema as a{' '}
               <a
                 href="https://en.wikipedia.org/wiki/FAIR_data"
                 className="about__link"
               >
                 FAIR
               </a>{' '}
-              data structure for sharing reaction data across academia, government, and industry.
+              data structure for sharing reaction data across academia, government, and
+              industry.
             </li>
           </ul>
           <p className="about__text">
@@ -65,14 +73,16 @@ const About: React.FC = () => {
             >
               Ben Deadman
             </a>{' '}
-            is our Reaction Data Evangelist and ORD Program Manager. Please reach out to him at{' '}
+            is our Reaction Data Evangelist and ORD Program Manager. Please reach out to
+            him at{' '}
             <a
               href="mailto:help@open-reaction-database.org"
               className="about__link"
             >
               help@open‑reaction‑database.org
             </a>{' '}
-            for help preparing a contribution or to discuss using the ORD in your company or lab.
+            for help preparing a contribution or to discuss using the ORD in your
+            company or lab.
           </p>
         </div>
       </div>
@@ -85,8 +95,9 @@ const About: React.FC = () => {
           <h5 className="about__subsection-title">Journal Articles</h5>
           <ul className="about__list">
             <li className="about__list-item">
-              Kearnes SM, Maser MR, Wleklinski M, Kast A, Doyle AG, Dreher SD, Hawkins JM, Jensen KF, Coley CW. The Open
-              Reaction Database. <em>J Am Chem Soc</em> 2021, 143(45), 18820-18826. (
+              Kearnes SM, Maser MR, Wleklinski M, Kast A, Doyle AG, Dreher SD, Hawkins
+              JM, Jensen KF, Coley CW. The Open Reaction Database.{' '}
+              <em>J Am Chem Soc</em> 2021, 143(45), 18820-18826. (
               <a
                 href="https://doi.org/10.1021/jacs.1c09820"
                 className="about__link"
@@ -96,8 +107,9 @@ const About: React.FC = () => {
               )
             </li>
             <li className="about__list-item">
-              Mercado R, Kearnes SM, Coley C. Data Sharing in Chemistry: Lessons Learned and a Case for Mandating
-              Structured Reaction Data. <em>J Chem Inf Model</em> 2023, 63(14), 4253-4265. (
+              Mercado R, Kearnes SM, Coley C. Data Sharing in Chemistry: Lessons Learned
+              and a Case for Mandating Structured Reaction Data.{' '}
+              <em>J Chem Inf Model</em> 2023, 63(14), 4253-4265. (
               <a
                 href="https://doi.org/10.1021/acs.jcim.3c00607"
                 className="about__link"
@@ -130,7 +142,8 @@ const About: React.FC = () => {
               , 12 May 2022)
             </li>
             <li className="about__list-item">
-              Chemists debate machine learning's future in synthesis planning and ask for open data (
+              Chemists debate machine learning's future in synthesis planning and ask
+              for open data (
               <a
                 href="https://cen.acs.org/physical-chemistry/computational-chemistry/Chemists-debate-machine-learnings-future/100/i18"
                 className="about__link"
@@ -176,7 +189,9 @@ const About: React.FC = () => {
             <ul className="about__leadership-column">
               <li className="about__list-item">Alán Aspuru-Guzik (Toronto, MADNESS)</li>
               <li className="about__list-item">Timothy Cernak (Michigan, Entos)</li>
-              <li className="about__list-item">Lucy Colwell (Cambridge, SynTech, Google)</li>
+              <li className="about__list-item">
+                Lucy Colwell (Cambridge, SynTech, Google)
+              </li>
               <li className="about__list-item">Werngard Czechtizky (AstraZeneca)</li>
               <li className="about__list-item">JW Feng</li>
               <li className="about__list-item">Matthew Gaunt (Cambridge, SynTech)</li>

@@ -33,7 +33,13 @@ QUERY_PARAMS = [
     ({"doi": ["10.1126/science.1255525"]}, 24),
     ({"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]}, 10),
     ({"component": ["C;input;substructure"]}, 144),
-    ({"component": ["O[C@@H]1C[C@H](O)C1;input;substructure"], "use_stereochemistry": True}, 20),
+    (
+        {
+            "component": ["O[C@@H]1C[C@H](O)C1;input;substructure"],
+            "use_stereochemistry": True,
+        },
+        20,
+    ),
     ({"component": ["[#6];input;smarts"]}, 144),
     ({"component": ["CC=O;input;similar"], "similarity": 0.5}, 0),
     ({"component": ["CC=O;input;similar"], "similarity": 0.05}, 120),
@@ -42,7 +48,10 @@ QUERY_PARAMS = [
         {
             "min_yield": 50,
             "max_yield": 90,
-            "component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact", "CC(C)(C)OC(=O)NC;input;substructure"],
+            "component": [
+                "[Br]C1=CC=C(C(C)=O)C=C1;input;exact",
+                "CC(C)(C)OC(=O)NC;input;substructure",
+            ],
         },
         7,
     ),
@@ -57,7 +66,9 @@ def test_query(test_client, params, num_expected):
 
 
 def test_get_reaction(test_client):
-    response = test_client.get("/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"})
+    response = test_client.get(
+        "/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"}
+    )
     response.raise_for_status()
     result = QueryResult(**response.json())
     assert result.dataset_id == "ord_dataset-89b083710e2d441aa0040c361d63359f"
@@ -65,7 +76,10 @@ def test_get_reaction(test_client):
 
 
 def test_get_reactions(test_client):
-    response = test_client.post("/api/reactions", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]})
+    response = test_client.post(
+        "/api/reactions",
+        json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]},
+    )
     response.raise_for_status()
     reactions = response.json()
     assert len(reactions) == 1
@@ -88,7 +102,9 @@ def test_get_dataset(test_client):
 
 
 def test_get_dataset_not_found(test_client):
-    response = test_client.get("/api/dataset", params={"dataset_id": "ord_dataset-does-not-exist"})
+    response = test_client.get(
+        "/api/dataset", params={"dataset_id": "ord_dataset-does-not-exist"}
+    )
     assert response.status_code == 404
 
 
@@ -100,7 +116,8 @@ def test_get_molfile(test_client):
 
 def test_get_search_results(test_client):
     response = test_client.post(
-        "/api/download_search_results", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]}
+        "/api/download_search_results",
+        json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]},
     )
     response.raise_for_status()
     dataset = dataset_pb2.Dataset.FromString(gzip.decompress(response.read()))
@@ -126,7 +143,11 @@ def test_query_async(test_client, params, num_expected):
 
 def test_get_input_stats(test_client):
     response = test_client.get(
-        "/api/input_stats", params={"dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f", "limit": 10}
+        "/api/input_stats",
+        params={
+            "dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f",
+            "limit": 10,
+        },
     )
     response.raise_for_status()
     input_stats = response.json()
@@ -135,7 +156,11 @@ def test_get_input_stats(test_client):
 
 def test_get_product_stats(test_client):
     response = test_client.get(
-        "/api/product_stats", params={"dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f", "limit": 10}
+        "/api/product_stats",
+        params={
+            "dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f",
+            "limit": 10,
+        },
     )
     response.raise_for_status()
     product_stats = response.json()

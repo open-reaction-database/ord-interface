@@ -37,7 +37,9 @@ def _is_true(boolean: Any) -> bool:
     return bool(boolean)
 
 
-def _count_addition_order(inputs: Mapping[str, reaction_pb2.ReactionInput]) -> Iterable[tuple[int, int]]:
+def _count_addition_order(
+    inputs: Mapping[str, reaction_pb2.ReactionInput],
+) -> Iterable[tuple[int, int]]:
     """Returns the number of inputs for each addition_order value.
 
     Args:
@@ -614,7 +616,9 @@ def _round(value: float, places=2) -> str:
     return f"{value:.{places}g}"
 
 
-def _datetimeformat(message: reaction_pb2.DateTime, format_string: str = "%Y-%m-%d / %H:%M") -> str:
+def _datetimeformat(
+    message: reaction_pb2.DateTime, format_string: str = "%Y-%m-%d / %H:%M"
+) -> str:
     """Formats a date/time string."""
     value = parser.parse(message.value)
     return value.strftime(format_string)
@@ -656,7 +660,9 @@ def _get_compact_products(
         reaction_pb2.ReactionRole.PRODUCT,
         reaction_pb2.ReactionRole.UNSPECIFIED,
     ]
-    return [compound for compound in products if compound.reaction_role in roles_to_keep]
+    return [
+        compound for compound in products if compound.reaction_role in roles_to_keep
+    ]
 
 
 def _value_and_precision(message) -> str:

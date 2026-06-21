@@ -49,7 +49,9 @@ const MainSelectedSet: React.FC = () => {
 
       const decoded: SearchResult[] = fetched.map(r => ({
         ...r,
-        data: reaction_pb.Reaction.deserializeBinary(new Uint8Array(base64ToBytes(r.proto))).toObject(),
+        data: reaction_pb.Reaction.deserializeBinary(
+          new Uint8Array(base64ToBytes(r.proto)),
+        ).toObject(),
       }));
 
       setReactions(decoded);
@@ -86,7 +88,9 @@ const MainSelectedSet: React.FC = () => {
           <div className="title">Reaction Set</div>
         </div>
         <div className="no-results">
-          <div className="title">There was an issue fetching your selected reactions.</div>
+          <div className="title">
+            There was an issue fetching your selected reactions.
+          </div>
         </div>
       </div>
     );

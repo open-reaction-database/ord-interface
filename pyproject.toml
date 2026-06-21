@@ -62,7 +62,7 @@ dev = [
 include = ["ord_interface*"]
 
 [tool.ruff]
-line-length = 120
+line-length = 88
 extend-exclude = [
     # Generated protobuf files: never touch.
     "*_pb2.py*",

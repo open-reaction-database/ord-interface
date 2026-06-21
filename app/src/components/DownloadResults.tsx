@@ -74,7 +74,9 @@ const DownloadResults: React.FC<DownloadResultsProps> = ({
         onCloseModal={onHideDownloadResults}
       >
         <div className="download-body">
-          <div className="title">Select your desired file type and then click download.</div>
+          <div className="title">
+            Select your desired file type and then click download.
+          </div>
           <div className="options">
             <label htmlFor="file-type-select">File type:</label>
             <select

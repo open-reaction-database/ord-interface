@@ -63,7 +63,11 @@ def test_client(test_postgres) -> Iterator[TestClient]:
     ):
         # NOTE(skearnes): Set ORD_INTERFACE_POSTGRES to use that database instead of a testing.postgresql instance.
         # To force the use of testing.postgresl, set ORD_INTERFACE_TESTING=TRUE.
-        if os.environ.get("ORD_INTERFACE_TESTING", "FALSE") == "FALSE" and not os.environ.get("ORD_INTERFACE_POSTGRES"):
-            stack.enter_context(patch.dict(os.environ, {"ORD_INTERFACE_POSTGRES": test_postgres.url()}))
+        if os.environ.get(
+            "ORD_INTERFACE_TESTING", "FALSE"
+        ) == "FALSE" and not os.environ.get("ORD_INTERFACE_POSTGRES"):
+            stack.enter_context(
+                patch.dict(os.environ, {"ORD_INTERFACE_POSTGRES": test_postgres.url()})
+            )
         logger.debug(f"ORD_INTERFACE_POSTGRES={os.environ['ORD_INTERFACE_POSTGRES']}")
         yield client

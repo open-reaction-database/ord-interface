@@ -17,7 +17,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import reaction_pb from 'ord-schema';
-import type { CompoundIdentifier, ProductMeasurement } from 'ord-schema/proto/reaction_pb';
+import type {
+  CompoundIdentifier,
+  ProductMeasurement,
+} from 'ord-schema/proto/reaction_pb';
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
 import { enumName } from '../utils/enum';
@@ -32,7 +35,8 @@ interface ReactionCardProps {
   onSelectionChange?: (reactionId: string, isSelected: boolean) => void;
 }
 
-const YIELD_MEASUREMENT_TYPE = reaction_pb.ProductMeasurement.ProductMeasurementType.YIELD;
+const YIELD_MEASUREMENT_TYPE =
+  reaction_pb.ProductMeasurement.ProductMeasurementType.YIELD;
 
 const ReactionCard: React.FC<ReactionCardProps> = ({
   reaction,
@@ -45,11 +49,15 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
 
   const getReactionTable = useCallback(async () => {
     try {
-      const response = await fetch(`/api/reaction_summary?reaction_id=${reaction.reaction_id}`);
+      const response = await fetch(
+        `/api/reaction_summary?reaction_id=${reaction.reaction_id}`,
+      );
       // Skip the 4xx/5xx body — it's an HTML error page that
       // dangerouslySetInnerHTML would render verbatim in every card.
       if (!response.ok) {
-        console.error(`reaction_summary failed (HTTP ${response.status}) for ${reaction.reaction_id}`);
+        console.error(
+          `reaction_summary failed (HTTP ${response.status}) for ${reaction.reaction_id}`,
+        );
         return;
       }
       setReactionTable(await response.text());
@@ -82,20 +90,27 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
     const pressure = data.conditions?.pressure?.setpoint;
     if (pressure) {
       const units = enumName(reaction_pb.Pressure.PressureUnit, pressure.units);
-      details.push(`under ${pressure.value}${units ? ` ${units.toLowerCase()}` : ' atm'}`);
+      details.push(
+        `under ${pressure.value}${units ? ` ${units.toLowerCase()}` : ' atm'}`,
+      );
     }
 
     const reactionTime = data.outcomesList?.[0]?.reactionTime;
     if (reactionTime?.value) {
       const units = enumName(reaction_pb.Time.TimeUnit, reactionTime.units);
-      details.push(`for ${reactionTime.value}${units ? ` ${units.toLowerCase()}` : 's'}`);
+      details.push(
+        `for ${reactionTime.value}${units ? ` ${units.toLowerCase()}` : 's'}`,
+      );
     }
 
     return details;
   };
 
   const productIdentifier = (identifier: CompoundIdentifier.AsObject): string => {
-    const type = enumName(reaction_pb.CompoundIdentifier.CompoundIdentifierType, identifier.type);
+    const type = enumName(
+      reaction_pb.CompoundIdentifier.CompoundIdentifierType,
+      identifier.type,
+    );
     return `${type ?? ''}: ${identifier.value}`;
   };
 
@@ -142,7 +157,11 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
         )}
 
         <div className="reaction-table">
-          {reactionTable ? <div dangerouslySetInnerHTML={{ __html: reactionTable }} /> : <LoadingSpinner />}
+          {reactionTable ? (
+            <div dangerouslySetInnerHTML={{ __html: reactionTable }} />
+          ) : (
+            <LoadingSpinner />
+          )}
         </div>
 
         <div className="info">
@@ -151,15 +170,20 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
           </div>
 
           <div className="col">
-            <div className="yield">Yield: {getYield(firstProduct?.measurementsList || [])}</div>
+            <div className="yield">
+              Yield: {getYield(firstProduct?.measurementsList || [])}
+            </div>
             <div className="conversion">Conversion: {getConversion(reactionData)}</div>
             <div className="conditions">
-              Conditions: {conditionsAndDuration(reactionData).join('; ') || 'Not Listed'}
+              Conditions:{' '}
+              {conditionsAndDuration(reactionData).join('; ') || 'Not Listed'}
             </div>
             {firstProductIdentifier && (
               <div className="smile">
                 <CopyButton textToCopy={firstProductIdentifier.value || ''} />
-                <div className="value">Product {productIdentifier(firstProductIdentifier)}</div>
+                <div className="value">
+                  Product {productIdentifier(firstProductIdentifier)}
+                </div>
               </div>
             )}
           </div>

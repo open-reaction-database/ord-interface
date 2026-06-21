@@ -54,7 +54,9 @@ const ProvenanceView: React.FC<ProvenanceViewProps> = ({ provenance }) => {
         {provenance?.experimentStart?.value && (
           <>
             <div className="label">Experiment Start</div>
-            <div className="value">{new Date(provenance.experimentStart.value).toLocaleDateString()}</div>
+            <div className="value">
+              {new Date(provenance.experimentStart.value).toLocaleDateString()}
+            </div>
           </>
         )}
 

@@ -32,7 +32,8 @@ interface OutcomesViewProps {
 const measurementType = (type: number | undefined): string =>
   enumName(reaction_pb.ProductMeasurement.ProductMeasurementType, type) ?? '';
 
-const analysisType = (type: number | undefined): string => enumName(reaction_pb.Analysis.AnalysisType, type) ?? '';
+const analysisType = (type: number | undefined): string =>
+  enumName(reaction_pb.Analysis.AnalysisType, type) ?? '';
 
 const measurementValue = (measurement: ProductMeasurement.AsObject): string => {
   if (measurement.percentage) return formatPercentage(measurement.percentage);
@@ -55,8 +56,12 @@ const analysisWithNamedType = (analysis: Analysis.AsObject) => ({
 const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
   const [productsIdx, setProductsIdx] = useState(0);
   const [analysesIdx, setAnalysesIdx] = useState(0);
-  const [rawMeasurement, setRawMeasurement] = useState<ReturnType<typeof measurementWithNamedType> | null>(null);
-  const [rawAnalysis, setRawAnalysis] = useState<ReturnType<typeof analysisWithNamedType> | null>(null);
+  const [rawMeasurement, setRawMeasurement] = useState<ReturnType<
+    typeof measurementWithNamedType
+  > | null>(null);
+  const [rawAnalysis, setRawAnalysis] = useState<ReturnType<
+    typeof analysisWithNamedType
+  > | null>(null);
   const [customDetails, setCustomDetails] = useState<string | null>(null);
 
   if (!outcome) return null;
@@ -145,7 +150,9 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
                       <div className="raw">
                         <div
                           className="button"
-                          onClick={() => setRawMeasurement(measurementWithNamedType(measurement))}
+                          onClick={() =>
+                            setRawMeasurement(measurementWithNamedType(measurement))
+                          }
                         >
                           &lt;&gt;
                         </div>
@@ -207,7 +214,9 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
                   <div className="raw">
                     <div
                       className="button"
-                      onClick={() => setRawAnalysis(analysisWithNamedType(currentAnalysis))}
+                      onClick={() =>
+                        setRawAnalysis(analysisWithNamedType(currentAnalysis))
+                      }
                     >
                       &lt;&gt;
                     </div>

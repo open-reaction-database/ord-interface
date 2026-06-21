@@ -23,7 +23,11 @@ interface CopyButtonProps {
   buttonText?: string;
 }
 
-const CopyButton: React.FC<CopyButtonProps> = ({ textToCopy, icon = 'content_copy', buttonText = '' }) => {
+const CopyButton: React.FC<CopyButtonProps> = ({
+  textToCopy,
+  icon = 'content_copy',
+  buttonText = '',
+}) => {
   const [displayNotification, setDisplayNotification] = useState(false);
   const [notificationStyle, setNotificationStyle] = useState({
     top: 0,

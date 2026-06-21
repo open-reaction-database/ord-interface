@@ -42,6 +42,8 @@ async def get_reaction_summary(reaction_id: str, compact: bool = True) -> str:
     if len(results) == 0 or len(results) > 1:
         raise ValueError(reaction_id)
     try:
-        return generate_text.generate_html(reaction=results[0].reaction, compact=compact)
+        return generate_text.generate_html(
+            reaction=results[0].reaction, compact=compact
+        )
     except (ValueError, KeyError):
         return "[Reaction cannot be displayed]"

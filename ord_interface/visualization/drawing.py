@@ -112,7 +112,9 @@ def mol_to_svg(
         return match.group(1)
 
 
-def _draw_svg(mol: Chem.Mol, size_x: int, size_y: int, bond_length: int) -> Draw.MolDraw2DSVG:
+def _draw_svg(
+    mol: Chem.Mol, size_x: int, size_y: int, bond_length: int
+) -> Draw.MolDraw2DSVG:
     """Creates a canvas and draws a SVG.
 
     Args:
@@ -132,7 +134,9 @@ def _draw_svg(mol: Chem.Mol, size_x: int, size_y: int, bond_length: int) -> Draw
     return drawer
 
 
-def mol_to_png(mol: Chem.Mol, max_size: int = 1000, bond_length: int = 25, png_quality: int = 70) -> str:
+def mol_to_png(
+    mol: Chem.Mol, max_size: int = 1000, bond_length: int = 25, png_quality: int = 70
+) -> str:
     """Creates a (cropped) PNG molecule drawing as a string.
 
     Args:

@@ -34,7 +34,14 @@ interface ChartViewProps {
   isCollapsed?: boolean;
 }
 
-const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, datasetId, isCollapsed = false }) => {
+const ChartView: React.FC<ChartViewProps> = ({
+  uniqueId,
+  title,
+  apiCall,
+  role,
+  datasetId,
+  isCollapsed = false,
+}) => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [inputsData, setInputsData] = useState<ChartData[]>([]);
@@ -126,7 +133,9 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
         .on('mouseover', (event: MouseEvent, d: ChartData) => {
           setCurrentTimesAppearing(d.times_appearing);
           setTooltipOffsetHorizontal(event.clientX);
-          setTooltipOffsetVertical(role === 'product' ? event.clientY - 240 : event.clientY - 140);
+          setTooltipOffsetVertical(
+            role === 'product' ? event.clientY - 240 : event.clientY - 140,
+          );
           setShowTooltip('visible');
           setShowSmiles(true);
           setMolLoading(true);
@@ -239,7 +248,9 @@ const ChartView: React.FC<ChartViewProps> = ({ uniqueId, title, apiCall, role, d
       <div className="chart-view__title-and-chart">
         <span
           className="chart-view__title"
-          style={isCollapsed ? { fontSize: '10pt', width: '150px' } : { fontSize: '14pt' }}
+          style={
+            isCollapsed ? { fontSize: '10pt', width: '150px' } : { fontSize: '14pt' }
+          }
         >
           {title}
         </span>

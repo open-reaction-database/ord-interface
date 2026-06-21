@@ -24,7 +24,12 @@ interface EntityTableProps<T> {
   children: (entities: T[]) => ReactNode;
 }
 
-function EntityTable<T>({ tableData, title = '', displaySearch = true, children }: EntityTableProps<T>) {
+function EntityTable<T>({
+  tableData,
+  title = '',
+  displaySearch = true,
+  children,
+}: EntityTableProps<T>) {
   const [entities, setEntities] = useState<T[]>([]);
   const [searchString, setSearchString] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,7 +116,9 @@ function EntityTable<T>({ tableData, title = '', displaySearch = true, children 
     <div className="table-main">
       <div className="table-container">
         <div className="header">
-          <div className="title-holder">{title && <div className="title">{title}</div>}</div>
+          <div className="title-holder">
+            {title && <div className="title">{title}</div>}
+          </div>
         </div>
 
         {displaySearch && (
@@ -180,7 +187,9 @@ function EntityTable<T>({ tableData, title = '', displaySearch = true, children 
                 className={`paginav ${currentPage > 1 ? '' : 'no-click'}`}
                 onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
               >
-                <span className="word">{currentPage > 1 ? currentPage - 1 : '...'}</span>
+                <span className="word">
+                  {currentPage > 1 ? currentPage - 1 : '...'}
+                </span>
               </div>
 
               <div className="paginav no-click">
@@ -189,9 +198,13 @@ function EntityTable<T>({ tableData, title = '', displaySearch = true, children 
 
               <div
                 className={`paginav ${currentPage < lastPage ? '' : 'no-click'}`}
-                onClick={() => currentPage < lastPage && handlePageChange(currentPage + 1)}
+                onClick={() =>
+                  currentPage < lastPage && handlePageChange(currentPage + 1)
+                }
               >
-                <span className="word">{currentPage < lastPage ? currentPage + 1 : '...'}</span>
+                <span className="word">
+                  {currentPage < lastPage ? currentPage + 1 : '...'}
+                </span>
               </div>
 
               <div

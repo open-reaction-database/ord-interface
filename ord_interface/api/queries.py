@@ -149,7 +149,9 @@ class ReactionSmartsQuery(ReactionQuery):
 class ReactionConversionQuery(ReactionQuery):
     """Looks up reactions by conversion."""
 
-    def __init__(self, min_conversion: float | None, max_conversion: float | None) -> None:
+    def __init__(
+        self, min_conversion: float | None, max_conversion: float | None
+    ) -> None:
         """Initializes the query.
 
         Args:
@@ -157,7 +159,9 @@ class ReactionConversionQuery(ReactionQuery):
             max_conversion: Maximum conversion, as a percentage.
         """
         if min_conversion is None and max_conversion is None:
-            raise ValueError("At least one of min_conversion or max_conversion must be specified")
+            raise ValueError(
+                "At least one of min_conversion or max_conversion must be specified"
+            )
         self._min_conversion = min_conversion
         self._max_conversion = max_conversion
 
@@ -353,7 +357,9 @@ async def fetch_results(cursor: DictCursor) -> list[str]:
     """
     reaction_ids = set()
     async for row in cursor:
-        assert row["reaction_id"] not in reaction_ids  # Sanity check for well-written queries.
+        assert (
+            row["reaction_id"] not in reaction_ids
+        )  # Sanity check for well-written queries.
         reaction_ids.add(row["reaction_id"])
     return list(reaction_ids)
 
@@ -374,7 +380,9 @@ async def run_queries(
         List of reaction IDs.
     """
     queries_list: list[ReactionQuery] = (
-        [reaction_queries] if isinstance(reaction_queries, ReactionQuery) else reaction_queries
+        [reaction_queries]
+        if isinstance(reaction_queries, ReactionQuery)
+        else reaction_queries
     )
     queries, combined_params = [], []
     for reaction_query in queries_list:
@@ -406,10 +414,15 @@ class QueryResult(BaseModel):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, QueryResult):
             return NotImplemented
-        return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
+        return (
+            self.dataset_id == other.dataset_id
+            and self.reaction_id == other.reaction_id
+        )
 
 
-async def fetch_reactions(cursor: DictCursor, reaction_ids: list[str]) -> list[QueryResult]:
+async def fetch_reactions(
+    cursor: DictCursor, reaction_ids: list[str]
+) -> list[QueryResult]:
     """Fetches dataset and proto information for a list of reaction IDs."""
     query = """
         SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
@@ -422,7 +435,9 @@ async def fetch_reactions(cursor: DictCursor, reaction_ids: list[str]) -> list[Q
     async for row in cursor:
         results.append(
             QueryResult(
-                dataset_id=row["dataset_id"], reaction_id=row["reaction_id"], proto=b64encode(row["proto"]).decode()
+                dataset_id=row["dataset_id"],
+                reaction_id=row["reaction_id"],
+                proto=b64encode(row["proto"]).decode(),
             )
         )
     return results

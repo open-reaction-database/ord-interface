@@ -36,13 +36,17 @@ export const formattedTime = (time: Time.AsObject | undefined): string | null =>
  * Used by both ReactionCard yield/conversion and OutcomesView so the two
  * call sites stay in sync.
  */
-export const formatPercentage = (percentage: Percentage.AsObject | undefined): string => {
+export const formatPercentage = (
+  percentage: Percentage.AsObject | undefined,
+): string => {
   if (!percentage) return '';
   const rounded = Math.round(percentage.value * 10) / 10;
   // Percentage.precision defaults to 0 in proto3; treat 0 as "no precision
   // recorded" rather than "± 0", matching the Vue OutcomesView's
   // `isNaN(precision)` guard.
   const precision =
-    Number.isFinite(percentage.precision) && percentage.precision !== 0 ? ` ± ${percentage.precision}` : '';
+    Number.isFinite(percentage.precision) && percentage.precision !== 0
+      ? ` ± ${percentage.precision}`
+      : '';
   return `${rounded}%${precision}`;
 };

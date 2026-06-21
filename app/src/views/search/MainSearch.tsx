@@ -76,23 +76,34 @@ const MainSearch: React.FC = () => {
 
     if (options.reagent.reagents.length) {
       options.reagent.reagents.forEach(reagent => {
-        searchParams.append('component', `${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`);
+        searchParams.append(
+          'component',
+          `${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`,
+        );
       });
-      searchParams.set('use_stereochemistry', options.reagent.useStereochemistry.toString());
+      searchParams.set(
+        'use_stereochemistry',
+        options.reagent.useStereochemistry.toString(),
+      );
       searchParams.set('similarity', options.reagent.similarityThreshold.toString());
     }
 
     options.dataset.datasetIds.forEach(id => searchParams.append('dataset_id', id));
     options.dataset.DOIs.forEach(doi => searchParams.append('doi', doi));
     options.reaction.reactionIds.forEach(id => searchParams.append('reaction_id', id));
-    options.reaction.reactionSmarts.forEach(smarts => searchParams.append('reaction_smarts', smarts));
+    options.reaction.reactionSmarts.forEach(smarts =>
+      searchParams.append('reaction_smarts', smarts),
+    );
 
     // Yield/conversion: only include when narrower than the full 0-100 range.
     if (options.reaction.min_yield !== 0 || options.reaction.max_yield !== 100) {
       searchParams.set('min_yield', options.reaction.min_yield.toString());
       searchParams.set('max_yield', options.reaction.max_yield.toString());
     }
-    if (options.reaction.min_conversion !== 0 || options.reaction.max_conversion !== 100) {
+    if (
+      options.reaction.min_conversion !== 0 ||
+      options.reaction.max_conversion !== 100
+    ) {
       searchParams.set('min_conversion', options.reaction.min_conversion.toString());
       searchParams.set('max_conversion', options.reaction.max_conversion.toString());
     }
@@ -104,7 +115,9 @@ const MainSearch: React.FC = () => {
 
   return (
     <div id="search-main">
-      <div className={`search-options-container ${showOptions ? 'slide-out' : 'hidden'}`}>
+      <div
+        className={`search-options-container ${showOptions ? 'slide-out' : 'hidden'}`}
+      >
         <div className="title">Filters & Options</div>
         <div className="options-holder">
           <SearchOptions onSearchOptions={updateSearchOptions} />
@@ -122,7 +135,10 @@ const MainSearch: React.FC = () => {
       <div className="search-results">
         {!hasSearchParams && (
           <div className="no-results">
-            <div className="title">Enter search criteria using the filters and options panel, then click Search.</div>
+            <div className="title">
+              Enter search criteria using the filters and options panel, then click
+              Search.
+            </div>
           </div>
         )}
         {hasSearchParams && error && (
@@ -135,7 +151,9 @@ const MainSearch: React.FC = () => {
         )}
         {hasSearchParams && !error && !loading && !searchResults.length && (
           <div className="no-results">
-            <div className="title">No results. Adjust the filters and options and search again.</div>
+            <div className="title">
+              No results. Adjust the filters and options and search again.
+            </div>
           </div>
         )}
         {hasSearchParams && !error && loading && (

@@ -50,7 +50,15 @@ const MainReactionView: React.FC = () => {
   const [activeNav, setActiveNav] = useState<string>('summary');
 
   const setupTabs = ['vessel', 'environment', 'automation'];
-  const conditionTabs = ['temperature', 'pressure', 'stirring', 'illumination', 'electrochemistry', 'flow', 'other'];
+  const conditionTabs = [
+    'temperature',
+    'pressure',
+    'stirring',
+    'illumination',
+    'electrochemistry',
+    'flow',
+    'other',
+  ];
 
   const getReactionData = useCallback(async (): Promise<ReactionData | null> => {
     if (!reactionId) return null;
@@ -67,10 +75,14 @@ const MainReactionView: React.FC = () => {
       if (!data?.[0]?.proto) return null;
 
       const bytes = base64ToBytes(data[0].proto);
-      const decoded = reaction_pb.Reaction.deserializeBinary(new Uint8Array(bytes)).toObject();
+      const decoded = reaction_pb.Reaction.deserializeBinary(
+        new Uint8Array(bytes),
+      ).toObject();
 
       // Sort inputs by their declared addition order.
-      decoded.inputsMap?.sort((a, b) => (a[1].additionOrder ?? 0) - (b[1].additionOrder ?? 0));
+      decoded.inputsMap?.sort(
+        (a, b) => (a[1].additionOrder ?? 0) - (b[1].additionOrder ?? 0),
+      );
 
       return decoded;
     } catch (error) {
@@ -83,11 +95,15 @@ const MainReactionView: React.FC = () => {
     if (!reactionId) return '';
 
     try {
-      const response = await fetch(`/api/reaction_summary?reaction_id=${reactionId}&compact=false`);
+      const response = await fetch(
+        `/api/reaction_summary?reaction_id=${reactionId}&compact=false`,
+      );
       // Don't pipe a 4xx/5xx HTML error body into the summary panel via
       // dangerouslySetInnerHTML; return empty so the section stays blank.
       if (!response.ok) {
-        console.error(`reaction_summary failed (HTTP ${response.status}) for ${reactionId}`);
+        console.error(
+          `reaction_summary failed (HTTP ${response.status}) for ${reactionId}`,
+        );
         return '';
       }
       return await response.text();
@@ -120,8 +136,10 @@ const MainReactionView: React.FC = () => {
 
     if (input.additionSpeed?.type !== undefined) {
       formatted.additionSpeed =
-        enumName(reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType, input.additionSpeed.type)?.toLowerCase() ??
-        '';
+        enumName(
+          reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType,
+          input.additionSpeed.type,
+        )?.toLowerCase() ?? '';
     }
 
     if (input.additionDuration) {
@@ -134,7 +152,12 @@ const MainReactionView: React.FC = () => {
   const displayConditionsOther = useMemo(() => {
     const conditions = reaction?.conditions;
     if (!conditions) return undefined;
-    const otherFields: Array<keyof typeof conditions> = ['reflux', 'ph', 'conditionsAreDynamic', 'details'];
+    const otherFields: Array<keyof typeof conditions> = [
+      'reflux',
+      'ph',
+      'conditionsAreDynamic',
+      'details',
+    ];
     return otherFields.find(key => conditions[key]);
   }, [reaction?.conditions]);
 
@@ -142,7 +165,10 @@ const MainReactionView: React.FC = () => {
     const provenance = reaction?.provenance;
     if (!provenance?.recordCreated) return [];
 
-    const created: RecordEvent.AsObject = { ...provenance.recordCreated, details: '(record created)' };
+    const created: RecordEvent.AsObject = {
+      ...provenance.recordCreated,
+      details: '(record created)',
+    };
     const modified = provenance.recordModifiedList ?? [];
     const all = [created, ...modified];
 
@@ -171,7 +197,10 @@ const MainReactionView: React.FC = () => {
     const fetchData = async () => {
       if (!reactionId) return;
 
-      const [reactionData, summaryData] = await Promise.all([getReactionData(), getReactionSummary()]);
+      const [reactionData, summaryData] = await Promise.all([
+        getReactionData(),
+        getReactionSummary(),
+      ]);
 
       if (reactionData) {
         setReaction(reactionData);
@@ -311,12 +340,14 @@ const MainReactionView: React.FC = () => {
                   </div>
                   <div className="title">Components</div>
                   <div className="compound">
-                    {reaction.inputsMap[inputsIdx][1].componentsList?.map((component, index) => (
-                      <CompoundView
-                        key={index}
-                        component={component}
-                      />
-                    ))}
+                    {reaction.inputsMap[inputsIdx][1].componentsList?.map(
+                      (component, index) => (
+                        <CompoundView
+                          key={index}
+                          component={component}
+                        />
+                      ),
+                    )}
                   </div>
                 </div>
               </div>

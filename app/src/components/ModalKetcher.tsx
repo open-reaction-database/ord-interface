@@ -34,7 +34,11 @@ interface KetcherWindow extends Window {
   ketcher?: KetcherApi;
 }
 
-const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onCloseModal }) => {
+const ModalKetcher: React.FC<ModalKetcherProps> = ({
+  smiles,
+  onUpdateSmiles,
+  onCloseModal,
+}) => {
   const [contWin, setContWin] = useState<KetcherWindow | null>(null);
   const [mutatedSmiles, setMutatedSmiles] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
@@ -42,7 +46,9 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
   const drawSmiles = useCallback(async () => {
     if (mutatedSmiles && contWin?.ketcher) {
       try {
-        const response = await fetch(`/api/molfile?smiles=${encodeURIComponent(mutatedSmiles)}`);
+        const response = await fetch(
+          `/api/molfile?smiles=${encodeURIComponent(mutatedSmiles)}`,
+        );
         if (response.ok) {
           const molfile = (await response.json()) as string;
           contWin.ketcher.setMolecule(molfile);
@@ -95,7 +101,9 @@ const ModalKetcher: React.FC<ModalKetcherProps> = ({ smiles, onUpdateSmiles, onC
   // useCallback-based version re-fired on every relevant state change).
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      const iframe = document.getElementById('ketcher-iframe') as HTMLIFrameElement | null;
+      const iframe = document.getElementById(
+        'ketcher-iframe',
+      ) as HTMLIFrameElement | null;
       if (!iframe?.contentWindow) return;
       try {
         const win = iframe.contentWindow as KetcherWindow;

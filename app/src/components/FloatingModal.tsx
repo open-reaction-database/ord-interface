@@ -23,7 +23,11 @@ interface FloatingModalProps {
   onCloseModal: () => void;
 }
 
-const FloatingModal: React.FC<FloatingModalProps> = ({ title, children, onCloseModal }) => {
+const FloatingModal: React.FC<FloatingModalProps> = ({
+  title,
+  children,
+  onCloseModal,
+}) => {
   return (
     <div className="modal-main">
       <div

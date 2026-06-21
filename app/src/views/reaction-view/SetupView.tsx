@@ -43,7 +43,10 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
     if (!vessel?.attachmentsList?.length) return '';
     return vessel.attachmentsList
       .map(attach => {
-        const type = enumName(reaction_pb.VesselAttachment.VesselAttachmentType, attach.type);
+        const type = enumName(
+          reaction_pb.VesselAttachment.VesselAttachmentType,
+          attach.type,
+        );
         return `${String(type ?? '')}${attach.details ? `: ${attach.details}` : ''}`;
       })
       .join(', ');
@@ -53,7 +56,10 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
     if (!vessel?.preparationsList?.length) return '';
     return vessel.preparationsList
       .map(prep => {
-        const type = enumName(reaction_pb.VesselPreparation.VesselPreparationType, prep.type);
+        const type = enumName(
+          reaction_pb.VesselPreparation.VesselPreparationType,
+          prep.type,
+        );
         return `${String(type ?? '')}${prep.details ? `: ${prep.details}` : ''}`;
       })
       .join(', ');
@@ -61,14 +67,22 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
 
   const vesselMaterial = useMemo(() => {
     if (!vessel?.material?.type) return '';
-    return String(enumName(reaction_pb.VesselMaterial.VesselMaterialType, vessel.material.type) ?? '');
+    return String(
+      enumName(reaction_pb.VesselMaterial.VesselMaterialType, vessel.material.type) ??
+        '',
+    );
   }, [vessel?.material?.type]);
 
   const reactionEnv = useMemo(() => {
     const envVal = setup?.environment?.type;
     if (!envVal) return null;
     return (
-      String(enumName(reaction_pb.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType, envVal) ?? '') || null
+      String(
+        enumName(
+          reaction_pb.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType,
+          envVal,
+        ) ?? '',
+      ) || null
     );
   }, [setup?.environment?.type]);
 
