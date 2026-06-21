@@ -49,3 +49,6 @@ __pycache__/
 
 # VSCode.
 .vscode/
+
+# pytype cache (stale; ty is the type checker now).
+.pytype/

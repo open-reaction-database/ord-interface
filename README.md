@@ -94,7 +94,7 @@ Production deployment is managed via Pulumi/ECS in the [`ord-infrastructure`](ht
 ### Minor changes (e.g. enum additions)
 
 - Update the `ord-schema` specifier in `pyproject.toml` under `[project] dependencies`, then run `uv lock` to refresh `uv.lock`.
-- Update the matching version in [`ord_interface/Dockerfile`](./ord_interface/Dockerfile).
+- Update the matching `ord-schema` version in [`app/package.json`](./app/package.json), then run `npm install` to refresh `app/package-lock.json`.
 - Contact the ORD site administrator to roll out the new version to staging.
 
 ### Major changes (new message types, etc.)
