@@ -53,17 +53,7 @@ jobs:
         run: |
           uv run coverage erase
           uv run pytest -vv --cov=ord_interface --durations=20 --ignore=ord_interface/editor
-          uv run coverage xml
-      # Codecov uses CODECOV_TOKEN when set. Do not fail the job when uploads cannot authenticate:
-      # fork PRs (tokenless), Dependabot PRs (no repo secrets + protected dependabot/* branches).
-      # Pushes to main and normal same-repo PRs stay strict.
-      - uses: codecov/codecov-action@v5
-        with:
-          files: coverage.xml
-          # CODECOV_TOKEN is an org-wide token, so the repo slug must be explicit.
-          slug: open-reaction-database/ord-interface
-          fail_ci_if_error: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork && !startsWith(github.head_ref, 'dependabot/')) }}
-          token: ${{ secrets.CODECOV_TOKEN }}
+          uv run coverage report
 
   test_app:
     strategy:
