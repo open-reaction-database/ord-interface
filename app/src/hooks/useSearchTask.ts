@@ -18,6 +18,7 @@ import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import reaction_pb from 'ord-schema';
 import { base64ToBytes } from '../utils/base64';
+import { fetchJson } from '../utils/api';
 import type { SearchResult } from '../types/search';
 
 const POLL_INTERVAL_MS = 1000;
@@ -85,13 +86,11 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
       if (taskRef.current.taskId === null) {
         if (!taskRef.current.submitPromise) {
           taskRef.current.startTime = Date.now();
-          taskRef.current.submitPromise = (async () => {
-            const submitRes = await fetch(`/api/submit_query${queryString}`);
-            if (!submitRes.ok) {
-              throw new Error(`submit_query failed (HTTP ${submitRes.status})`);
-            }
-            return (await submitRes.json()) as string;
-          })();
+          taskRef.current.submitPromise = fetchJson<string>(
+            `/api/submit_query${queryString}`,
+            undefined,
+            'submit_query',
+          );
         }
         try {
           taskRef.current.taskId = await taskRef.current.submitPromise;

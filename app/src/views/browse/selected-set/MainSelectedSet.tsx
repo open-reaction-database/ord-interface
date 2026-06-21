@@ -22,6 +22,7 @@ import ReactionCard from '../../../components/ReactionCard';
 import DownloadResults from '../../../components/DownloadResults';
 import CopyButton from '../../../components/CopyButton';
 import { base64ToBytes } from '../../../utils/base64';
+import { fetchJson } from '../../../utils/api';
 import type { SearchResult } from '../../../types/search';
 import './MainSelectedSet.scss';
 
@@ -38,14 +39,15 @@ const MainSelectedSet: React.FC = () => {
   const getSelectedReactions = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/reactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reaction_ids: reactionIds }),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch reactions');
-      const fetched = (await response.json()) as Array<Omit<SearchResult, 'data'>>;
+      const fetched = await fetchJson<Array<Omit<SearchResult, 'data'>>>(
+        '/api/reactions',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reaction_ids: reactionIds }),
+        },
+        'reactions',
+      );
 
       const decoded: SearchResult[] = fetched.map(r => ({
         ...r,

@@ -21,6 +21,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import ChartView from './ChartView';
 import SearchResults from './SearchResults';
 import { useSearchTask } from '../../hooks/useSearchTask';
+import { fetchJson } from '../../utils/api';
 import type { Dataset } from '../../types/search';
 import './MainDatasetView.scss';
 
@@ -40,15 +41,12 @@ const MainDatasetView: React.FC = () => {
   const { data: datasetData, error: datasetError } = useQuery<Dataset>({
     queryKey: ['dataset-metadata', datasetId],
     enabled: !!datasetId,
-    queryFn: async () => {
-      const res = await fetch(
+    queryFn: () =>
+      fetchJson<Dataset>(
         `/api/dataset?dataset_id=${encodeURIComponent(datasetId!)}`,
-      );
-      if (!res.ok) {
-        throw new Error(`Failed to load dataset metadata (HTTP ${res.status})`);
-      }
-      return (await res.json()) as Dataset;
-    },
+        undefined,
+        'dataset metadata',
+      ),
   });
 
   return (

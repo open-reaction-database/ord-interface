@@ -18,6 +18,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import reaction_pb from 'ord-schema';
+import { fetchJson } from '../../utils/api';
 import './ChartView.scss';
 
 interface ChartData {
@@ -63,20 +64,19 @@ const ChartView: React.FC<ChartViewProps> = ({
 
     const binary = compound.serializeBinary();
 
-    const response = await fetch('/api/compound_svg', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-protobuf',
+    // Throw on non-2xx (via fetchJson) so the caller's .catch sets molHtml to
+    // null instead of feeding an HTML error page to dangerouslySetInnerHTML.
+    return fetchJson<string>(
+      '/api/compound_svg',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-protobuf',
+        },
+        body: binary as BodyInit,
       },
-      body: binary as BodyInit,
-    });
-
-    // Throw on non-2xx so the caller's .catch sets molHtml to null instead
-    // of feeding an HTML error page to dangerouslySetInnerHTML.
-    if (!response.ok) {
-      throw new Error(`compound_svg failed (HTTP ${response.status})`);
-    }
-    return response.json();
+      'compound_svg',
+    );
   }, []);
 
   const createChart = useCallback(
@@ -213,17 +213,12 @@ const ChartView: React.FC<ChartViewProps> = ({
     const controller = new AbortController();
     setLoading(true);
     setFetchError(null);
-    fetch(`/api/${apiCall}?dataset_id=${encodeURIComponent(datasetId)}`, {
-      method: 'GET',
-      signal: controller.signal,
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`${apiCall} failed (HTTP ${response.status})`);
-        }
-        return response.json();
-      })
-      .then((data: ChartData[]) => {
+    fetchJson<ChartData[]>(
+      `/api/${apiCall}?dataset_id=${encodeURIComponent(datasetId)}`,
+      { method: 'GET', signal: controller.signal },
+      apiCall,
+    )
+      .then(data => {
         setLoading(false);
         setInputsData(data);
       })
