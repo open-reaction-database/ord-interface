@@ -46,12 +46,20 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
   const [compoundSVG, setCompoundSVG] = useState<string | null>(null);
   const [showRawData, setShowRawData] = useState(false);
 
-  const compoundAmountObj = useMemo(() => amountObj(component?.amount), [component?.amount]);
-  const compoundAmount = useMemo(() => amountStr(compoundAmountObj), [compoundAmountObj]);
+  const compoundAmountObj = useMemo(
+    () => amountObj(component?.amount),
+    [component?.amount],
+  );
+  const compoundAmount = useMemo(
+    () => amountStr(compoundAmountObj),
+    [compoundAmountObj],
+  );
 
   const compoundRole = useMemo(() => {
     if (!component?.reactionRole) return '';
-    return String(enumName(reaction_pb.ReactionRole.ReactionRoleType, component.reactionRole) ?? '');
+    return String(
+      enumName(reaction_pb.ReactionRole.ReactionRoleType, component.reactionRole) ?? '',
+    );
   }, [component?.reactionRole]);
 
   const rawData: RawData = useMemo(() => {
@@ -59,7 +67,12 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
 
     if (component?.identifiersList?.length) {
       returnObj.identifiers = component.identifiersList.map(identifier => ({
-        type: String(enumName(reaction_pb.CompoundIdentifier.CompoundIdentifierType, identifier.type) ?? ''),
+        type: String(
+          enumName(
+            reaction_pb.CompoundIdentifier.CompoundIdentifierType,
+            identifier.type,
+          ) ?? '',
+        ),
         value: identifier.value,
       }));
     }
@@ -75,7 +88,12 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
 
     if (component?.preparationsList?.length) {
       returnObj.preparations = component.preparationsList.map(prep => ({
-        type: String(enumName(reaction_pb.CompoundPreparation.CompoundPreparationType, prep.type) ?? ''),
+        type: String(
+          enumName(
+            reaction_pb.CompoundPreparation.CompoundPreparationType,
+            prep.type,
+          ) ?? '',
+        ),
         details: prep.details,
       }));
     }
@@ -90,7 +108,8 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
 
     if (component?.texture) {
       const textureObj: { type: string; details?: string } = {
-        type: component.texture.type !== undefined ? String(component.texture.type) : '',
+        type:
+          component.texture.type !== undefined ? String(component.texture.type) : '',
       };
       if (component.texture.details) {
         textureObj.details = component.texture.details;
@@ -101,12 +120,17 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
     return returnObj;
   }, [component, compoundRole, compoundAmountObj]);
 
-  const gridColumns = useMemo(() => `1fr repeat(${component?.amount ? 3 : 2}, auto)`, [component?.amount]);
+  const gridColumns = useMemo(
+    () => `1fr repeat(${component?.amount ? 3 : 2}, auto)`,
+    [component?.amount],
+  );
 
   const smilesValue = useMemo(() => {
     if (!component?.identifiersList?.length) return null;
     const smilesType = reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES;
-    const smilesIdentifier = component.identifiersList.find(identifier => identifier.type === smilesType);
+    const smilesIdentifier = component.identifiersList.find(
+      identifier => identifier.type === smilesType,
+    );
     return smilesIdentifier?.value ?? null;
   }, [component?.identifiersList]);
 
@@ -181,8 +205,12 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
             ))}
             {rawData.amount && <pre>amount: {JSON.stringify(rawData.amount)}</pre>}
             <pre>reaction_role: {rawData.reaction_role}</pre>
-            {rawData.is_desired_product && <pre>is_desired_product: {rawData.is_desired_product}</pre>}
-            {rawData.isolated_color && <pre>isolated_color: {rawData.isolated_color}</pre>}
+            {rawData.is_desired_product && (
+              <pre>is_desired_product: {rawData.is_desired_product}</pre>
+            )}
+            {rawData.isolated_color && (
+              <pre>isolated_color: {rawData.isolated_color}</pre>
+            )}
             {rawData.texture && <pre>texture: {JSON.stringify(rawData.texture)}</pre>}
             {rawData.preparations?.map((prep, index) => (
               <pre key={index}>preparations: {JSON.stringify(prep)}</pre>

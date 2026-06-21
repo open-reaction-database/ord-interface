@@ -32,14 +32,17 @@ const NAME_IDENTIFIER_TYPE = reaction_pb.CompoundIdentifier.CompoundIdentifierTy
 const getNameIdentifier = (identifiers: CompoundIdentifier.AsObject[]): string => {
   // Falls back to the first identifier when the compound has no NAME entry,
   // rather than throwing the way the Vue source did.
-  const nameIdentifier = identifiers.find(identifier => identifier.type === NAME_IDENTIFIER_TYPE);
+  const nameIdentifier = identifiers.find(
+    identifier => identifier.type === NAME_IDENTIFIER_TYPE,
+  );
   return nameIdentifier?.value ?? identifiers[0]?.value ?? '';
 };
 
 const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
   if (!workup) return null;
 
-  const workupType = enumName(reaction_pb.ReactionWorkup.ReactionWorkupType, workup.type) ?? '';
+  const workupType =
+    enumName(reaction_pb.ReactionWorkup.ReactionWorkupType, workup.type) ?? '';
   const duration = formattedTime(workup.duration);
   const aliquotAmount = workup.amount ? amountStr(amountObj(workup.amount)) : '';
 
@@ -102,7 +105,9 @@ const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
           <div className="components">
             {workup.input.componentsList.map((component, idx) => (
               <React.Fragment key={idx}>
-                <div className="identifier">{getNameIdentifier(component.identifiersList)}</div>
+                <div className="identifier">
+                  {getNameIdentifier(component.identifiersList)}
+                </div>
                 <div className="amount">{amountStr(amountObj(component.amount))}</div>
               </React.Fragment>
             ))}

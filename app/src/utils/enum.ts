@@ -22,8 +22,12 @@
  * rather than indexable records, so this helper takes `unknown` for the map and
  * narrows internally rather than asking callers to add unsafe casts.
  */
-export function enumName(enumMap: unknown, value: number | undefined): string | undefined {
-  if (value === undefined || enumMap === null || typeof enumMap !== 'object') return undefined;
+export function enumName(
+  enumMap: unknown,
+  value: number | undefined,
+): string | undefined {
+  if (value === undefined || enumMap === null || typeof enumMap !== 'object')
+    return undefined;
   for (const [key, mapped] of Object.entries(enumMap as Record<string, unknown>)) {
     if (mapped === value) return key;
   }

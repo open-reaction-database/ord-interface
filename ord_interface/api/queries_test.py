@@ -34,7 +34,9 @@ from ord_interface.api.queries import (
 
 @pytest.mark.asyncio
 async def test_fetch_reactions(test_cursor):
-    results = await fetch_reactions(test_cursor, ["ord-1e8382606d99485b9859da6a92f80a72"])
+    results = await fetch_reactions(
+        test_cursor, ["ord-1e8382606d99485b9859da6a92f80a72"]
+    )
     assert len(results) == 1
     result = results[0]
     assert result.dataset_id == "ord_dataset-b440f8c90b6343189093770060fc4098"
@@ -83,7 +85,9 @@ async def test_reaction_yield_query(test_cursor):
 async def test_doi_query(test_cursor):
     dois = ["10.1126/science.1255525"]
     query = DoiQuery(dois)
-    results = await fetch_reactions(test_cursor, await run_queries(test_cursor, query, limit=10))
+    results = await fetch_reactions(
+        test_cursor, await run_queries(test_cursor, query, limit=10)
+    )
     assert len(results) == 10
     for result in results:
         assert result.reaction.provenance.doi in dois
@@ -92,7 +96,9 @@ async def test_doi_query(test_cursor):
 @pytest.mark.asyncio
 async def test_exact_query(test_cursor):
     query = ReactionComponentQuery(
-        "[Br]C1=CC=C(C(C)=O)C=C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.EXACT
+        "[Br]C1=CC=C(C(C)=O)C=C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.EXACT,
     )
     results = await run_queries(test_cursor, query, limit=5)
     assert len(results) == 5
@@ -101,7 +107,9 @@ async def test_exact_query(test_cursor):
 @pytest.mark.asyncio
 async def test_substructure_query(test_cursor):
     query = ReactionComponentQuery(
-        "C", ReactionComponentQuery.Target.OUTPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+        "C",
+        ReactionComponentQuery.Target.OUTPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
     )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
@@ -110,12 +118,16 @@ async def test_substructure_query(test_cursor):
 @pytest.mark.asyncio
 async def test_chiral_substructure_query(test_cursor):
     query = ReactionComponentQuery(
-        "OC1CC(O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+        "OC1CC(O)C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
     )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
     query = ReactionComponentQuery(
-        "O[C@H]1C[C@H](O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+        "O[C@H]1C[C@H](O)C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
     )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
@@ -139,7 +151,11 @@ async def test_chiral_substructure_query(test_cursor):
 
 @pytest.mark.asyncio
 async def test_smarts_query(test_cursor):
-    query = ReactionComponentQuery("[#6]", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SMARTS)
+    query = ReactionComponentQuery(
+        "[#6]",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SMARTS,
+    )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
@@ -163,19 +179,25 @@ async def test_similarity_query(test_cursor):
 async def test_bad_smiles(test_cursor):
     with pytest.raises(ValueError, match="Cannot parse pattern"):
         ReactionComponentQuery(
-            "invalid_smiles", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+            "invalid_smiles",
+            ReactionComponentQuery.Target.INPUT,
+            ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
         )
 
 
 @pytest.mark.asyncio
 async def test_fetch_dataset_most_used_smiles_for_inputs(test_cursor):
     dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
-    results = await fetch_dataset_most_used_smiles_for_inputs(test_cursor, dataset_id, limit=10)
+    results = await fetch_dataset_most_used_smiles_for_inputs(
+        test_cursor, dataset_id, limit=10
+    )
     assert len(results) == 10
 
 
 @pytest.mark.asyncio
 async def test_fetch_dataset_most_used_smiles_for_products(test_cursor):
     dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
-    results = await fetch_dataset_most_used_smiles_for_products(test_cursor, dataset_id, limit=10)
+    results = await fetch_dataset_most_used_smiles_for_products(
+        test_cursor, dataset_id, limit=10
+    )
     assert len(results) == 10

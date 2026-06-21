@@ -28,7 +28,10 @@ import type {
 import { enumName } from './enum';
 
 export const tempType = (type: number | undefined): string =>
-  enumName(reaction_pb.TemperatureConditions.TemperatureControl.TemperatureControlType, type) ?? '';
+  enumName(
+    reaction_pb.TemperatureConditions.TemperatureControl.TemperatureControlType,
+    type,
+  ) ?? '';
 
 export const tempSetPoint = (setpoint: Temperature.AsObject | undefined): string => {
   if (!setpoint) return 'None';
@@ -38,7 +41,8 @@ export const tempSetPoint = (setpoint: Temperature.AsObject | undefined): string
 };
 
 export const pressureType = (type: number | undefined): string =>
-  enumName(reaction_pb.PressureConditions.PressureControl.PressureControlType, type) ?? '';
+  enumName(reaction_pb.PressureConditions.PressureControl.PressureControlType, type) ??
+  '';
 
 export const pressureSetPoint = (setpoint: Pressure.AsObject | undefined): string => {
   if (!setpoint) return 'None';
@@ -47,8 +51,13 @@ export const pressureSetPoint = (setpoint: Pressure.AsObject | undefined): strin
   return `${setpoint.value}${precision} ${unit ? unit.toLowerCase() : ''}`;
 };
 
-export const pressureAtmo = (atmo: PressureConditions.Atmosphere.AsObject | undefined): string => {
-  const type = enumName(reaction_pb.PressureConditions.Atmosphere.AtmosphereType, atmo?.type);
+export const pressureAtmo = (
+  atmo: PressureConditions.Atmosphere.AsObject | undefined,
+): string => {
+  const type = enumName(
+    reaction_pb.PressureConditions.Atmosphere.AtmosphereType,
+    atmo?.type,
+  );
   return `${type ?? ''}${atmo?.details ? `, ${atmo.details}` : ''}`;
 };
 
@@ -60,12 +69,20 @@ export const stirType = (type: number | undefined): string =>
  * to numeric enum values, so "Rate" always rendered as undefined. Take the
  * type field explicitly.
  */
-export const stirRate = (rate: StirringConditions.StirringRate.AsObject | undefined): string =>
-  enumName(reaction_pb.StirringConditions.StirringRate.StirringRateType, rate?.type) ?? '';
+export const stirRate = (
+  rate: StirringConditions.StirringRate.AsObject | undefined,
+): string =>
+  enumName(reaction_pb.StirringConditions.StirringRate.StirringRateType, rate?.type) ??
+  '';
 
-export const illumType = (illum: IlluminationConditions.AsObject | undefined): string => {
+export const illumType = (
+  illum: IlluminationConditions.AsObject | undefined,
+): string => {
   if (!illum) return '';
-  const type = enumName(reaction_pb.IlluminationConditions.IlluminationType, illum.type);
+  const type = enumName(
+    reaction_pb.IlluminationConditions.IlluminationType,
+    illum.type,
+  );
   return `${type ?? ''}${illum.details ? `: ${illum.details}` : ''}`;
 };
 
@@ -80,7 +97,9 @@ export const lengthStr = (length: Length.AsObject | undefined): string | undefin
   return `${length.value}${unit ? ` ${unit.toLowerCase()}` : ''}`;
 };
 
-export const electrochemType = (type: ElectrochemistryConditions.AsObject['type'] | undefined): string =>
+export const electrochemType = (
+  type: ElectrochemistryConditions.AsObject['type'] | undefined,
+): string =>
   enumName(reaction_pb.ElectrochemistryConditions.ElectrochemistryType, type) ?? '';
 
 export const flowType = (type: FlowConditions.AsObject['type'] | undefined): string =>

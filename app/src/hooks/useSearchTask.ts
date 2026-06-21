@@ -23,7 +23,9 @@ import type { SearchResult } from '../types/search';
 const POLL_INTERVAL_MS = 1000;
 const POLL_TIMEOUT_MS = 120_000;
 
-type TaskState = { status: 'success'; results: SearchResult[] } | { status: 'pending'; taskId: string };
+type TaskState =
+  | { status: 'success'; results: SearchResult[] }
+  | { status: 'pending'; taskId: string };
 
 interface TaskRef {
   queryString: string | null;
@@ -52,21 +54,32 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
   // <StrictMode> dev the effect was re-running after queryFn had already set
   // startTime, leaving it at 0 — and "Date.now() - 0 > 120s" tripped the
   // timeout on the very first poll iteration.
-  const taskRef = useRef<TaskRef>({ queryString: null, taskId: null, submitPromise: null, startTime: 0 });
+  const taskRef = useRef<TaskRef>({
+    queryString: null,
+    taskId: null,
+    submitPromise: null,
+    startTime: 0,
+  });
 
   return useQuery<TaskState>({
     queryKey: ['search-task', queryString],
     enabled: enabled && queryString !== null,
     retry: false,
     staleTime: Infinity,
-    refetchInterval: query => (query.state.data?.status === 'pending' ? POLL_INTERVAL_MS : false),
+    refetchInterval: query =>
+      query.state.data?.status === 'pending' ? POLL_INTERVAL_MS : false,
     refetchIntervalInBackground: false,
     queryFn: async (): Promise<TaskState> => {
       if (!queryString) return { status: 'success', results: [] };
 
       // queryString changed since the last call — start fresh.
       if (taskRef.current.queryString !== queryString) {
-        taskRef.current = { queryString, taskId: null, submitPromise: null, startTime: 0 };
+        taskRef.current = {
+          queryString,
+          taskId: null,
+          submitPromise: null,
+          startTime: 0,
+        };
       }
 
       if (taskRef.current.taskId === null) {
@@ -93,13 +106,17 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
         throw new Error(`Search task ${id} timed out after ${POLL_TIMEOUT_MS / 1000}s`);
       }
 
-      const res = await fetch(`/api/fetch_query_result?task_id=${taskRef.current.taskId}`);
+      const res = await fetch(
+        `/api/fetch_query_result?task_id=${taskRef.current.taskId}`,
+      );
 
       if (res.status === 200) {
         const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
         const results: SearchResult[] = raw.map(r => ({
           ...r,
-          data: reaction_pb.Reaction.deserializeBinary(new Uint8Array(base64ToBytes(r.proto))).toObject(),
+          data: reaction_pb.Reaction.deserializeBinary(
+            new Uint8Array(base64ToBytes(r.proto)),
+          ).toObject(),
         }));
         taskRef.current.taskId = null;
         return { status: 'success', results };

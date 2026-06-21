@@ -27,7 +27,15 @@ from typing import Any, cast
 from uuid import uuid4
 
 import psycopg
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Response,
+    status,
+)
 from ord_schema.logging import get_logger
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
@@ -92,7 +100,9 @@ async def get_redis() -> AsyncIterator[Redis]:
     async with Redis(host=host, port=port, ssl=ssl) as client:
         # redis.asyncio stubs return Awaitable[bool] | bool from ping(); the runtime is always awaitable.
         if not await cast(Awaitable[bool], client.ping()):
-            raise RuntimeError(f"Failed to connect to Redis server {host}:{port} ({ssl=})")
+            raise RuntimeError(
+                f"Failed to connect to Redis server {host}:{port} ({ssl=})"
+            )
         logger.debug(f"Connected to Redis server {host}:{port} ({ssl=})")
         yield client
 
@@ -117,7 +127,9 @@ class QueryParams:
     limit: int | None = None
 
 
-async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] | list[str]:
+async def run_query(
+    params: QueryParams, return_ids: bool
+) -> list[QueryResult] | list[str]:
     """Runs a query and returns a list of matched reactions."""
     queries = []
     if params.dataset_id and isinstance(params.dataset_id, list):
@@ -127,7 +139,9 @@ async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] 
     if params.reaction_smarts:
         queries.append(ReactionSmartsQuery(params.reaction_smarts))
     if params.min_conversion is not None or params.max_conversion is not None:
-        queries.append(ReactionConversionQuery(params.min_conversion, params.max_conversion))
+        queries.append(
+            ReactionConversionQuery(params.min_conversion, params.max_conversion)
+        )
     if params.min_yield is not None or params.max_yield is not None:
         queries.append(ReactionYieldQuery(params.min_yield, params.max_yield))
     if params.doi and isinstance(params.doi, list):
@@ -201,7 +215,9 @@ class DatasetInfo(BaseModel):
 async def get_datasets() -> list[DatasetInfo]:
     """Returns info about the current datasets."""
     async with get_cursor() as cursor:
-        await cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
+        await cursor.execute(
+            "SELECT dataset_id, name, description, num_reactions FROM dataset"
+        )
         return [DatasetInfo(**row) async for row in cursor]
 
 
@@ -215,7 +231,9 @@ async def get_dataset(dataset_id: str) -> DatasetInfo:
         )
         row = await cursor.fetchone()
         if row is None:
-            raise HTTPException(status_code=404, detail=f"dataset not found: {dataset_id}")
+            raise HTTPException(
+                status_code=404, detail=f"dataset not found: {dataset_id}"
+            )
         return DatasetInfo(**row)
 
 
@@ -232,8 +250,12 @@ async def get_molfile(smiles: str) -> str:
 async def get_search_results(inputs: ReactionIdList):
     """Downloads search results as a Dataset proto."""
     results = await get_reactions(inputs)
-    dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
-    return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
+    dataset = dataset_pb2.Dataset(
+        name="ORD Search Results", reactions=[result.reaction for result in results]
+    )
+    return Response(
+        gzip.compress(dataset.SerializeToString()), media_type="application/gzip"
+    )
 
 
 async def run_task(task_id: str, params: QueryParams) -> bool:
@@ -246,7 +268,9 @@ async def run_task(task_id: str, params: QueryParams) -> bool:
 
 
 @router.get("/submit_query")
-async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = Depends()) -> str:
+async def submit_query(
+    background_tasks: BackgroundTasks, params: QueryParams = Depends()
+) -> str:
     """Submits a query as a background task."""
     task_id = str(uuid4())
     async with get_redis() as client:
@@ -261,10 +285,14 @@ async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
     async with get_redis() as client:
         if not await client.exists(f"query:{task_id}"):
-            return Response(f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND)
+            return Response(
+                f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND
+            )
         result = await client.get(f"result:{task_id}")
     if result is None:
-        return Response(f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED)
+        return Response(
+            f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED
+        )
     async with get_cursor() as cursor:
         return await fetch_reactions(cursor, json.loads(result))
 
@@ -272,12 +300,16 @@ async def fetch_query_result(task_id: str):
 @router.get("/input_stats")
 async def get_input_stats(dataset_id: str, limit: int = 30) -> list[StatsResult]:
     async with get_cursor() as cursor:
-        results = await fetch_dataset_most_used_smiles_for_inputs(cursor, dataset_id, limit=limit)
+        results = await fetch_dataset_most_used_smiles_for_inputs(
+            cursor, dataset_id, limit=limit
+        )
     return results
 
 
 @router.get("/product_stats")
 async def get_product_stats(dataset_id: str, limit: int = 30) -> list[StatsResult]:
     async with get_cursor() as cursor:
-        results = await fetch_dataset_most_used_smiles_for_products(cursor, dataset_id, limit=limit)
+        results = await fetch_dataset_most_used_smiles_for_products(
+            cursor, dataset_id, limit=limit
+        )
     return results

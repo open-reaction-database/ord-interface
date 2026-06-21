@@ -29,7 +29,11 @@ const MainDatasetView: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const datasetQuery = `?dataset_id=${datasetId}&limit=100`;
-  const { data: searchData, isFetching, error } = useSearchTask(datasetId ? datasetQuery : null, !!datasetId);
+  const {
+    data: searchData,
+    isFetching,
+    error,
+  } = useSearchTask(datasetId ? datasetQuery : null, !!datasetId);
   const searchResults = searchData?.status === 'success' ? searchData.results : [];
   const loading = !!datasetId && (isFetching || searchData?.status === 'pending');
 
@@ -37,7 +41,9 @@ const MainDatasetView: React.FC = () => {
     queryKey: ['dataset-metadata', datasetId],
     enabled: !!datasetId,
     queryFn: async () => {
-      const res = await fetch(`/api/dataset?dataset_id=${encodeURIComponent(datasetId!)}`);
+      const res = await fetch(
+        `/api/dataset?dataset_id=${encodeURIComponent(datasetId!)}`,
+      );
       if (!res.ok) {
         throw new Error(`Failed to load dataset metadata (HTTP ${res.status})`);
       }
@@ -67,7 +73,9 @@ const MainDatasetView: React.FC = () => {
                   className="material-icons"
                   title={isCollapsed ? 'Expand' : 'Collapse'}
                 >
-                  {isCollapsed ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left'}
+                  {isCollapsed
+                    ? 'keyboard_double_arrow_right'
+                    : 'keyboard_double_arrow_left'}
                 </i>
               </button>
             </div>
@@ -103,7 +111,9 @@ const MainDatasetView: React.FC = () => {
           <div className="h4">Dataset Metadata</div>
           {datasetError ? (
             <div className="no-results">
-              <div className="title">Failed to load dataset metadata: {datasetError.message}</div>
+              <div className="title">
+                Failed to load dataset metadata: {datasetError.message}
+              </div>
             </div>
           ) : (
             <table>

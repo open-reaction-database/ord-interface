@@ -23,7 +23,11 @@ interface SearchItemListProps {
   onUpdateItemList: (newList: string[]) => void;
 }
 
-const SearchItemList: React.FC<SearchItemListProps> = ({ title, itemList, onUpdateItemList }) => {
+const SearchItemList: React.FC<SearchItemListProps> = ({
+  title,
+  itemList,
+  onUpdateItemList,
+}) => {
   const [mutatedList, setMutatedList] = useState<string[]>([]);
   const [itemToAdd, setItemToAdd] = useState<string>('');
 

@@ -51,9 +51,13 @@ def reaction() -> Iterator[reaction_pb2.Reaction]:
             amount="catalytic",
         )
     )
-    reaction.conditions.pressure.atmosphere.type = reaction_pb2.PressureConditions.Atmosphere.OXYGEN
+    reaction.conditions.pressure.atmosphere.type = (
+        reaction_pb2.PressureConditions.Atmosphere.OXYGEN
+    )
     reaction.conditions.stirring.rate.rpm = 100
-    reaction.conditions.temperature.control.type = reaction_pb2.TemperatureConditions.TemperatureControl.OIL_BATH
+    reaction.conditions.temperature.control.type = (
+        reaction_pb2.TemperatureConditions.TemperatureControl.OIL_BATH
+    )
     reaction.conditions.temperature.setpoint.CopyFrom(
         reaction_pb2.Temperature(value=100, units=reaction_pb2.Temperature.CELSIUS)
     )
@@ -67,14 +71,32 @@ def reaction() -> Iterator[reaction_pb2.Reaction]:
 
 def test_text(reaction):
     text = generate_text.generate_text(reaction)
-    expected = ["vessel", "oil bath", "after 40 min", "as a solvent", "hexanone", "automatically", "mL", "catalytic"]
+    expected = [
+        "vessel",
+        "oil bath",
+        "after 40 min",
+        "as a solvent",
+        "hexanone",
+        "automatically",
+        "mL",
+        "catalytic",
+    ]
     for value in expected:
         assert value in text
 
 
 def test_html(reaction):
     html = generate_text.generate_html(reaction)
-    expected = ["<table", "hexanone", "under oxygen", "100 rpm", "40 min", "solvent", "100 °C", "catalytic"]
+    expected = [
+        "<table",
+        "hexanone",
+        "under oxygen",
+        "100 rpm",
+        "40 min",
+        "solvent",
+        "100 °C",
+        "catalytic",
+    ]
     for value in expected:
         assert value in html
 
@@ -84,7 +106,14 @@ def test_compact_html(reaction):
     expected = ["<table"]
     for value in expected:
         assert value in html
-    not_expected = ["hexanone", "under oxygen", "100 rpm", "40 min", "solvent", "100 °C"]
+    not_expected = [
+        "hexanone",
+        "under oxygen",
+        "100 rpm",
+        "40 min",
+        "solvent",
+        "100 °C",
+    ]
     for value in not_expected:
         assert value not in html
 
