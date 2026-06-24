@@ -45,7 +45,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from base64 import b64decode, b64encode
 from enum import Enum, auto
-from typing import Any
+from typing import Any, LiteralString
 
 from ord_schema import message_helpers, validations
 from ord_schema.logging import get_logger
@@ -67,6 +67,20 @@ class ReactionQuery(ABC):
     @abstractmethod
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
+
+    @property
+    def session_config(self) -> dict[str, str]:
+        """RDKit GUC settings required for index-assisted execution.
+
+        Some RDKit operators read tuning parameters from session settings rather
+        than from the query text (e.g. the similarity threshold for ``%`` and the
+        chirality flag for ``@>``). ``run_queries`` applies these via
+        ``set_config`` before executing.
+
+        Returns:
+            Mapping of GUC name to value, as strings for ``set_config()``.
+        """
+        return {}
 
 
 class DatasetIdQuery(ReactionQuery):
@@ -303,37 +317,44 @@ class ReactionComponentQuery(ReactionQuery):
         self._use_chirality = use_chirality
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
+    def _mols_join(self) -> LiteralString:
+        """Returns the JOINs linking ord.reaction to rdkit.mols for the target components."""
         if self._target == ReactionComponentQuery.Target.INPUT:
-            mols_sql = """
+            return """
             JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
             JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
             JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
             """
-        else:
-            mols_sql = """
+        return """
             JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
             JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
             JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
             """
+
+    @property
+    def is_similarity(self) -> bool:
+        """Whether this is a similarity query, whose matches can be ranked by score."""
+        return self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR
+
+    @property
+    def query_and_parameters(self) -> tuple[str, list]:
+        """Returns the query and any query parameters."""
+        mols_sql = self._mols_join
         if self._match_mode == ReactionComponentQuery.MatchMode.EXACT:
             predicate_sql = "rdkit.mols.smiles = %s"
             params = [Chem.CanonSmiles(self._pattern)]
         elif self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR:
-            predicate_sql = "tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s)) >= %s"
-            params = [self._pattern, self._similarity_threshold]
+            # The %% (Tanimoto) operator uses the GiST index on morgan_bfp; the
+            # threshold is supplied via rdkit.tanimoto_threshold (session_config).
+            predicate_sql = "rdkit.mols.morgan_bfp %% morganbv_fp(%s)"
+            params = [self._pattern]
         elif self._match_mode == ReactionComponentQuery.MatchMode.SUBSTRUCTURE:
-            if self._use_chirality:
-                predicate_sql = "substruct_chiral(rdkit.mols.mol, %s)"
-            else:
-                predicate_sql = "substruct(rdkit.mols.mol, %s)"
+            # The @> (substructure) operator uses the GiST index on mol; chirality
+            # is controlled via rdkit.do_chiral_sss (session_config).
+            predicate_sql = "rdkit.mols.mol @> %s::mol"
             params = [self._pattern]
         elif self._match_mode == ReactionComponentQuery.MatchMode.SMARTS:
-            if self._use_chirality:
-                predicate_sql = "substruct_chiral(rdkit.mols.mol, %s::qmol)"
-            else:
-                predicate_sql = "substruct(rdkit.mols.mol, %s::qmol)"
+            predicate_sql = "rdkit.mols.mol @> %s::qmol"
             params = [self._pattern]
         else:
             raise NotImplementedError(f"Unsupported match_mode: {self._match_mode}")
@@ -344,6 +365,49 @@ class ReactionComponentQuery(ReactionQuery):
             WHERE {predicate_sql}
         """
         return query, params
+
+    def similarity_score_query(self) -> tuple[LiteralString, list]:
+        """Returns a query ranking reactions by similarity, plus its leading parameter.
+
+        Each reaction is scored by the greatest Tanimoto similarity to the query
+        pattern among its components on the searched side -- reactants or products,
+        matching this predicate's target -- and the results are ordered by that score,
+        descending. The two sides are never combined. The caller supplies the
+        candidate reaction IDs (and any LIMIT) as the remaining parameters; scoring
+        runs over that already-filtered set, so the per-row ``tanimoto_sml()`` calls
+        are cheap.
+
+        Raises:
+            ValueError: If this is not a similarity query.
+        """
+        if not self.is_similarity:
+            raise ValueError("similarity_score_query is only valid for SIMILAR queries")
+        query = f"""
+            SELECT reaction.reaction_id,
+                   MAX(tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s))) AS similarity
+            FROM ord.reaction
+            {self._mols_join}
+            WHERE reaction.reaction_id = ANY (%s)
+            GROUP BY reaction.reaction_id
+            ORDER BY similarity DESC, reaction.reaction_id
+        """
+        return query, [self._pattern]
+
+    @property
+    def session_config(self) -> dict[str, str]:
+        """RDKit GUC settings required for index-assisted execution."""
+        if self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR:
+            return {"rdkit.tanimoto_threshold": str(self._similarity_threshold)}
+        if (
+            self._match_mode
+            in (
+                ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
+                ReactionComponentQuery.MatchMode.SMARTS,
+            )
+            and self._use_chirality
+        ):
+            return {"rdkit.do_chiral_sss": "true"}
+        return {}
 
 
 async def fetch_results(cursor: DictCursor) -> list[str]:
@@ -377,27 +441,77 @@ async def run_queries(
         limit: Integer maximum number of matches. If None (the default), no limit is set.
 
     Returns:
-        List of reaction IDs.
+        List of reaction IDs. When the query contains exactly one similarity
+        predicate, the IDs are ordered by descending similarity; otherwise the
+        order is unspecified.
     """
     queries_list: list[ReactionQuery] = (
         [reaction_queries]
         if isinstance(reaction_queries, ReactionQuery)
         else reaction_queries
     )
+    similarity_queries = [
+        query
+        for query in queries_list
+        if isinstance(query, ReactionComponentQuery) and query.is_similarity
+    ]
+    # Ranking needs a single similarity predicate to define the order; with zero or
+    # several, results are returned unordered.
+    ranking_query = similarity_queries[0] if len(similarity_queries) == 1 else None
+
     queries, combined_params = [], []
+    config: dict[str, str] = {}
     for reaction_query in queries_list:
         query, params = reaction_query.query_and_parameters
         queries.append(query)
         combined_params.extend(params)
+        for name, value in reaction_query.session_config.items():
+            existing = config.setdefault(name, value)
+            if existing != value:
+                raise ValueError(
+                    f"Conflicting values for {name}: {existing} != {value}"
+                )
     combined_query = "\nINTERSECT\n".join(queries)
-    if limit:
-        # TODO(skearnes): Adding LIMIT can significantly slow down queries, especially if they return few results.
-        # See https://stackoverflow.com/q/21385555.
+    if limit and ranking_query is None:
+        # LIMIT sits on top of the whole INTERSECT. Each branch is materialized
+        # (sort + unique for DISTINCT) before the set operation, so this truncates
+        # the final result rather than bounding the per-branch index scans. When
+        # ranking, the LIMIT is deferred to the scoring step so it selects the most
+        # similar matches rather than an arbitrary subset.
         combined_query += "LIMIT %s"
         combined_params.append(limit)
+    # Apply RDKit GUCs so the substructure/similarity operators can use their GiST
+    # indexes. These are set transaction-locally (set_config local=true), so they
+    # apply to the queries below and reset when the transaction ends -- safe even if
+    # the connection is later returned to a pool and reused.
+    for name, value in config.items():
+        await cursor.execute("SELECT set_config(%s, %s, true)", (name, value))
     logger.debug((combined_query, combined_params))
     await cursor.execute(combined_query, combined_params)
-    return await fetch_results(cursor)
+    reaction_ids = await fetch_results(cursor)
+    if ranking_query is not None:
+        reaction_ids = await _rank_by_similarity(
+            cursor, ranking_query, reaction_ids, limit
+        )
+    return reaction_ids
+
+
+async def _rank_by_similarity(
+    cursor: DictCursor,
+    ranking_query: ReactionComponentQuery,
+    reaction_ids: list[str],
+    limit: int | None,
+) -> list[str]:
+    """Returns the matched reaction IDs ordered by descending similarity, limited to ``limit``."""
+    if not reaction_ids:
+        return []
+    query, params = ranking_query.similarity_score_query()
+    params.append(reaction_ids)
+    if limit:
+        query += "\nLIMIT %s"
+        params.append(limit)
+    await cursor.execute(query, params)
+    return [row["reaction_id"] async for row in cursor]
 
 
 class QueryResult(BaseModel):
@@ -423,24 +537,27 @@ class QueryResult(BaseModel):
 async def fetch_reactions(
     cursor: DictCursor, reaction_ids: list[str]
 ) -> list[QueryResult]:
-    """Fetches dataset and proto information for a list of reaction IDs."""
+    """Fetches dataset and proto information for a list of reaction IDs.
+
+    Results preserve the order of ``reaction_ids`` (e.g. similarity ranking from
+    ``run_queries``); duplicate or unknown IDs are dropped.
+    """
+    unique_ids = list(dict.fromkeys(reaction_ids))  # De-dup, preserving order.
     query = """
         SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
         FROM ord.reaction
         JOIN ord.dataset ON dataset.id = reaction.dataset_id
         WHERE reaction.reaction_id = ANY (%s)
     """
-    await cursor.execute(query, (list(set(reaction_ids)),))
-    results = []
+    await cursor.execute(query, (unique_ids,))
+    results_by_id = {}
     async for row in cursor:
-        results.append(
-            QueryResult(
-                dataset_id=row["dataset_id"],
-                reaction_id=row["reaction_id"],
-                proto=b64encode(row["proto"]).decode(),
-            )
+        results_by_id[row["reaction_id"]] = QueryResult(
+            dataset_id=row["dataset_id"],
+            reaction_id=row["reaction_id"],
+            proto=b64encode(row["proto"]).decode(),
         )
-    return results
+    return [results_by_id[rid] for rid in unique_ids if rid in results_by_id]
 
 
 class StatsResult(BaseModel):
