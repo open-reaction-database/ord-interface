@@ -481,10 +481,11 @@ async def run_queries(
         combined_query += "LIMIT %s"
         combined_params.append(limit)
     # Apply RDKit GUCs so the substructure/similarity operators can use their GiST
-    # indexes. Connections are created per request (see get_cursor), so these
-    # session-level settings do not leak between queries.
+    # indexes. These are set transaction-locally (set_config local=true), so they
+    # apply to the queries below and reset when the transaction ends -- safe even if
+    # the connection is later returned to a pool and reused.
     for name, value in config.items():
-        await cursor.execute("SELECT set_config(%s, %s, false)", (name, value))
+        await cursor.execute("SELECT set_config(%s, %s, true)", (name, value))
     logger.debug((combined_query, combined_params))
     await cursor.execute(combined_query, combined_params)
     reaction_ids = await fetch_results(cursor)

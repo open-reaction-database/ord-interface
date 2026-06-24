@@ -175,8 +175,13 @@ async def test_similarity_query(test_cursor):
     assert len(results) == 10
 
 
-async def _max_similarities(test_cursor, reaction_ids, pattern):
-    """Returns each reaction's greatest input-component Tanimoto similarity to ``pattern``."""
+async def _max_input_similarities(test_cursor, reaction_ids, pattern):
+    """Returns each reaction's greatest input-component Tanimoto similarity to ``pattern``.
+
+    Independently recomputes the ranking score for INPUT-target similarity queries
+    (it hardcodes the input-component join); an OUTPUT-target check would need the
+    product-component join instead.
+    """
     await test_cursor.execute(
         """
         SELECT reaction.reaction_id,
@@ -204,7 +209,7 @@ async def test_similarity_ranking(test_cursor):
     ranked = await run_queries(test_cursor, query)
     assert len(ranked) > 10  # Enough matches to make the top-N check meaningful.
     # Results are ordered by descending best-component similarity.
-    scores = await _max_similarities(test_cursor, ranked, "CC=O")
+    scores = await _max_input_similarities(test_cursor, ranked, "CC=O")
     ordered = [scores[reaction_id] for reaction_id in ranked]
     assert ordered == sorted(ordered, reverse=True)
     # Limiting returns the most similar matches, not an arbitrary subset.
