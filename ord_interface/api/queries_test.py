@@ -175,6 +175,43 @@ async def test_similarity_query(test_cursor):
     assert len(results) == 10
 
 
+async def _max_similarities(test_cursor, reaction_ids, pattern):
+    """Returns each reaction's greatest input-component Tanimoto similarity to ``pattern``."""
+    await test_cursor.execute(
+        """
+        SELECT reaction.reaction_id,
+               MAX(tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s))) AS similarity
+        FROM ord.reaction
+        JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
+        JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
+        JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
+        WHERE reaction.reaction_id = ANY (%s)
+        GROUP BY reaction.reaction_id
+        """,
+        [pattern, reaction_ids],
+    )
+    return {row["reaction_id"]: row["similarity"] async for row in test_cursor}
+
+
+@pytest.mark.asyncio
+async def test_similarity_ranking(test_cursor):
+    kwargs: dict[str, Any] = {
+        "pattern": "CC=O",
+        "target": ReactionComponentQuery.Target.INPUT,
+        "match_mode": ReactionComponentQuery.MatchMode.SIMILAR,
+    }
+    query = ReactionComponentQuery(**kwargs, similarity_threshold=0.05)
+    ranked = await run_queries(test_cursor, query)
+    assert len(ranked) > 10  # Enough matches to make the top-N check meaningful.
+    # Results are ordered by descending best-component similarity.
+    scores = await _max_similarities(test_cursor, ranked, "CC=O")
+    ordered = [scores[reaction_id] for reaction_id in ranked]
+    assert ordered == sorted(ordered, reverse=True)
+    # Limiting returns the most similar matches, not an arbitrary subset.
+    top = await run_queries(test_cursor, query, limit=10)
+    assert top == ranked[:10]
+
+
 @pytest.mark.asyncio
 async def test_bad_smiles(test_cursor):
     with pytest.raises(ValueError, match="Cannot parse pattern"):
