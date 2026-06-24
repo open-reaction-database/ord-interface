@@ -369,11 +369,13 @@ class ReactionComponentQuery(ReactionQuery):
     def similarity_score_query(self) -> tuple[LiteralString, list]:
         """Returns a query ranking reactions by similarity, plus its leading parameter.
 
-        Each reaction is scored by the greatest Tanimoto similarity of its target
-        components to the query pattern, and the results are ordered by that score,
-        descending. The caller supplies the candidate reaction IDs (and any LIMIT) as
-        the remaining parameters; scoring runs over that already-filtered set, so the
-        per-row ``tanimoto_sml()`` calls are cheap.
+        Each reaction is scored by the greatest Tanimoto similarity to the query
+        pattern among its components on the searched side -- reactants or products,
+        matching this predicate's target -- and the results are ordered by that score,
+        descending. The two sides are never combined. The caller supplies the
+        candidate reaction IDs (and any LIMIT) as the remaining parameters; scoring
+        runs over that already-filtered set, so the per-row ``tanimoto_sml()`` calls
+        are cheap.
 
         Raises:
             ValueError: If this is not a similarity query.
