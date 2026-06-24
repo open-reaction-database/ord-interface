@@ -175,21 +175,30 @@ async def test_similarity_query(test_cursor):
     assert len(results) == 10
 
 
-async def _max_input_similarities(test_cursor, reaction_ids, pattern):
-    """Returns each reaction's greatest input-component Tanimoto similarity to ``pattern``.
+async def _max_similarities(test_cursor, reaction_ids, pattern, target):
+    """Returns each reaction's greatest component Tanimoto similarity to ``pattern`` on ``target``'s side.
 
-    Independently recomputes the ranking score for INPUT-target similarity queries
-    (it hardcodes the input-component join); an OUTPUT-target check would need the
-    product-component join instead.
+    Independently recomputes the ranking score, mirroring
+    ``ReactionComponentQuery._mols_join`` for INPUT vs OUTPUT targets.
     """
-    await test_cursor.execute(
-        """
-        SELECT reaction.reaction_id,
-               MAX(tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s))) AS similarity
-        FROM ord.reaction
+    if target == ReactionComponentQuery.Target.INPUT:
+        join = """
         JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
         JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
         JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
+        """
+    else:
+        join = """
+        JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
+        JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+        JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
+        """
+    await test_cursor.execute(
+        f"""
+        SELECT reaction.reaction_id,
+               MAX(tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s))) AS similarity
+        FROM ord.reaction
+        {join}
         WHERE reaction.reaction_id = ANY (%s)
         GROUP BY reaction.reaction_id
         """,
@@ -209,7 +218,9 @@ async def test_similarity_ranking(test_cursor):
     ranked = await run_queries(test_cursor, query)
     assert len(ranked) > 10  # Enough matches to make the top-N check meaningful.
     # Results are ordered by descending best-component similarity.
-    scores = await _max_input_similarities(test_cursor, ranked, "CC=O")
+    scores = await _max_similarities(
+        test_cursor, ranked, "CC=O", ReactionComponentQuery.Target.INPUT
+    )
     ordered = [scores[reaction_id] for reaction_id in ranked]
     assert ordered == sorted(ordered, reverse=True)
     # Limiting returns the most similar matches, not an arbitrary subset.
