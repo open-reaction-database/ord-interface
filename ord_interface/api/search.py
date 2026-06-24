@@ -66,6 +66,10 @@ router = APIRouter(tags=["client"])
 
 BOND_LENGTH = 20
 MAX_RESULTS = 1000
+_QUERY_TIMEOUT_DETAIL = (
+    "Query timed out; it may be too broad. Refine your search -- e.g. a more "
+    "specific substructure or a higher similarity threshold."
+)
 
 
 @asynccontextmanager
@@ -83,8 +87,13 @@ async def get_cursor() -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
                 host=os.environ["POSTGRES_HOST"],
             ),
         )
+    # Cap query runtime so a pathological (e.g. very broad substructure) search
+    # fails fast with a clear message instead of hanging; tunable via env.
+    timeout_ms = int(os.getenv("ORD_INTERFACE_QUERY_TIMEOUT_MS", "30000"))
     async with await psycopg.AsyncConnection[dict[str, Any]].connect(
-        dsn, row_factory=dict_row, options="-c search_path=public,ord"
+        dsn,
+        row_factory=dict_row,
+        options=f"-c search_path=public,ord -c statement_timeout={timeout_ms}",
     ) as connection:
         await connection.set_read_only(True)
         async with connection.cursor() as cursor:
@@ -177,7 +186,10 @@ async def run_query(
 @router.get("/query")
 async def query(params: QueryParams = Depends()) -> list[QueryResult]:
     """Runs a query."""
-    result = await run_query(params, return_ids=False)
+    try:
+        result = await run_query(params, return_ids=False)
+    except psycopg.errors.QueryCanceled as error:
+        raise HTTPException(status_code=400, detail=_QUERY_TIMEOUT_DETAIL) from error
     return cast(list[QueryResult], result)  # Type hint.
 
 
@@ -261,7 +273,13 @@ async def get_search_results(inputs: ReactionIdList):
 async def run_task(task_id: str, params: QueryParams) -> bool:
     """Wraps run_query() as a background task."""
     # NOTE(skearnes): Use reaction IDs to avoid stuffing full protos into the result database.
-    result = await run_query(params, return_ids=True)
+    result: list[str] | dict[str, str]
+    try:
+        result = cast(list[str], await run_query(params, return_ids=True))
+    except psycopg.errors.QueryCanceled:
+        # Surface the timeout via fetch_query_result instead of leaving the task
+        # forever "pending".
+        result = {"error": "timeout"}
     logger.debug(f"Finished task {task_id}")
     async with get_redis() as client:
         return await client.set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
@@ -293,8 +311,11 @@ async def fetch_query_result(task_id: str):
         return Response(
             f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED
         )
+    parsed = json.loads(result)
+    if isinstance(parsed, dict) and parsed.get("error") == "timeout":
+        raise HTTPException(status_code=400, detail=_QUERY_TIMEOUT_DETAIL)
     async with get_cursor() as cursor:
-        return await fetch_reactions(cursor, json.loads(result))
+        return await fetch_reactions(cursor, cast(list[str], parsed))
 
 
 @router.get("/input_stats")
