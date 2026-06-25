@@ -24,6 +24,16 @@
     grid-template-columns: 1fr 1fr 1fr auto auto;
   }
 
+  // Clamp long descriptions to a few lines (with an ellipsis) based on the
+  // available column width, rather than a fixed character count.
+  .column.description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   .loading {
     margin-top: 30vh;
   }

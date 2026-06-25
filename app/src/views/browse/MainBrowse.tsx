@@ -45,11 +45,6 @@ const MainBrowse: React.FC = () => {
       });
   }, []);
 
-  const truncateDescription = (description?: string) => {
-    if (!description) return '';
-    return description.length > 75 ? description.substr(0, 75) + '...' : description;
-  };
-
   if (loading) {
     return (
       <div id="browse-main">
@@ -89,7 +84,7 @@ const MainBrowse: React.FC = () => {
                   <Link to={`/dataset/${row.dataset_id}`}>{row.dataset_id}</Link>
                 </div>
                 <div className="column">{row.name}</div>
-                <div className="column">{truncateDescription(row.description)}</div>
+                <div className="column description">{row.description}</div>
                 <div className="column">{row.num_reactions}</div>
                 <div className="column">{row.submitted_at ?? '—'}</div>
               </React.Fragment>
