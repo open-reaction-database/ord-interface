@@ -25,6 +25,7 @@ interface Dataset {
   name: string;
   description?: string;
   num_reactions: number;
+  submitted_at?: string | null;
 }
 
 const MainBrowse: React.FC = () => {
@@ -81,6 +82,7 @@ const MainBrowse: React.FC = () => {
             <div className="column label">Name</div>
             <div className="column label">Description</div>
             <div className="column label">Size</div>
+            <div className="column label">Submitted</div>
             {entities.map(row => (
               <React.Fragment key={row.dataset_id}>
                 <div className="column">
@@ -89,6 +91,7 @@ const MainBrowse: React.FC = () => {
                 <div className="column">{row.name}</div>
                 <div className="column">{truncateDescription(row.description)}</div>
                 <div className="column">{row.num_reactions}</div>
+                <div className="column">{row.submitted_at ?? '—'}</div>
               </React.Fragment>
             ))}
           </div>

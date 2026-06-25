@@ -91,6 +91,13 @@ def test_get_datasets(test_client):
     response.raise_for_status()
     dataset_info = response.json()
     assert len(dataset_info) == 3
+    assert all("submitted_at" in row for row in dataset_info)
+    # Datasets are ordered by submission date, newest first, with undated
+    # datasets (submitted_at is None) sorted last.
+    submitted = [row["submitted_at"] for row in dataset_info]
+    dated = [value for value in submitted if value is not None]
+    assert dated == sorted(dated, reverse=True)
+    assert submitted == dated + [None] * (len(submitted) - len(dated))
 
 
 def test_get_dataset(test_client):
