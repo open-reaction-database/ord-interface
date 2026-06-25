@@ -15,7 +15,9 @@
 """Tests for ord_interface.api.search."""
 
 import gzip
+from unittest.mock import patch
 
+import psycopg
 import pytest
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
@@ -63,6 +65,19 @@ def test_query(test_client, params, num_expected):
     response = test_client.get("/api/query", params=params)
     response.raise_for_status()
     assert len(response.json()) == num_expected
+
+
+def test_query_timeout_returns_400(test_client):
+    """A query that hits statement_timeout surfaces a helpful 400, not a 500/hang."""
+    with patch(
+        "ord_interface.api.search.run_queries",
+        side_effect=psycopg.errors.QueryCanceled,
+    ):
+        response = test_client.get(
+            "/api/query", params={"component": ["C;input;substructure"]}
+        )
+    assert response.status_code == 400
+    assert "broad" in response.json()["detail"].lower()
 
 
 def test_get_reaction(test_client):
