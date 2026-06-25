@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import EntityTable from '../../components/EntityTable';
+import FloatingModal from '../../components/FloatingModal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './MainBrowse.scss';
 
@@ -27,6 +28,70 @@ interface Dataset {
   num_reactions: number;
   submitted_at?: string | null;
 }
+
+// Description cell that clamps long text and, only when the text is actually
+// clipped, offers an expand button that shows the full description in a
+// floating modal (so the table layout never reflows).
+const DescriptionCell: React.FC<{ name: string; description?: string }> = ({
+  name,
+  description,
+}) => {
+  const textRef = useRef<HTMLDivElement>(null);
+  const [isClamped, setIsClamped] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  useLayoutEffect(() => {
+    const element = textRef.current;
+    if (!element) return;
+    const check = () => setIsClamped(element.scrollHeight > element.clientHeight + 1);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [description]);
+
+  return (
+    <div className="column description-cell">
+      <div
+        ref={textRef}
+        className="description-text"
+      >
+        {description}
+      </div>
+      {isClamped && (
+        <button
+          type="button"
+          className="expand-button"
+          aria-label="Show full description"
+          title="Show full description"
+          onClick={() => setExpanded(true)}
+        >
+          <svg
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" />
+          </svg>
+        </button>
+      )}
+      {expanded && (
+        <FloatingModal
+          title={name}
+          onCloseModal={() => setExpanded(false)}
+        >
+          {description}
+        </FloatingModal>
+      )}
+    </div>
+  );
+};
 
 const MainBrowse: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -84,7 +149,10 @@ const MainBrowse: React.FC = () => {
                   <Link to={`/dataset/${row.dataset_id}`}>{row.dataset_id}</Link>
                 </div>
                 <div className="column">{row.name}</div>
-                <div className="column description">{row.description}</div>
+                <DescriptionCell
+                  name={row.name}
+                  description={row.description}
+                />
                 <div className="column">{row.num_reactions}</div>
                 <div className="column">{row.submitted_at ?? '—'}</div>
               </React.Fragment>

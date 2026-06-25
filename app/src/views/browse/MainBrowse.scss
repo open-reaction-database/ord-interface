@@ -24,14 +24,38 @@
     grid-template-columns: 1fr 1fr 1fr auto auto;
   }
 
+  .description-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
   // Clamp long descriptions to a few lines (with an ellipsis) based on the
   // available column width, rather than a fixed character count.
-  .column.description {
+  .description-text {
+    flex: 1;
+    min-width: 0;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .expand-button {
+    flex: none;
+    display: inline-flex;
+    padding: 0.15rem;
+    border: none;
+    background: none;
+    color: vars.$linkblue;
+    cursor: pointer;
+    opacity: 0.6;
+
+    &:hover {
+      color: vars.$hoverblue;
+      opacity: 1;
+    }
   }
 
   .loading {
