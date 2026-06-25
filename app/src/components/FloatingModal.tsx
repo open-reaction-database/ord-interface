@@ -18,15 +18,18 @@ import React, { type ReactNode } from 'react';
 import './FloatingModal.scss';
 
 interface FloatingModalProps {
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   onCloseModal: () => void;
+  // Optional extra class on the modal container, for per-use sizing overrides.
+  className?: string;
 }
 
 const FloatingModal: React.FC<FloatingModalProps> = ({
   title,
   children,
   onCloseModal,
+  className,
 }) => {
   return (
     <div className="modal-main">
@@ -35,7 +38,7 @@ const FloatingModal: React.FC<FloatingModalProps> = ({
         onClick={onCloseModal}
       />
       <div className="modal-holder">
-        <div className="modal-container">
+        <div className={`modal-container${className ? ` ${className}` : ''}`}>
           <div className="header">
             <div className="modal-title">{title}</div>
             <div

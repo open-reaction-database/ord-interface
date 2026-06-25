@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import EntityTable from '../../components/EntityTable';
 import FloatingModal from '../../components/FloatingModal';
@@ -29,64 +29,62 @@ interface Dataset {
   submitted_at?: string | null;
 }
 
-// Description cell that clamps long text and, only when the text is actually
-// clipped, offers an expand button that shows the full description in a
-// floating modal (so the table layout never reflows).
-const DescriptionCell: React.FC<{ name: string; description?: string }> = ({
-  name,
-  description,
-}) => {
-  const textRef = useRef<HTMLDivElement>(null);
-  const [isClamped, setIsClamped] = useState(false);
+// Description cell: the text is clamped to a few lines, and an always-present
+// button opens a floating "card" modal with the dataset's full details. The
+// modal overlay means the table layout never reflows.
+const DescriptionCell: React.FC<{
+  datasetId: string;
+  name: string;
+  description?: string;
+  submittedAt?: string | null;
+  numReactions: number;
+}> = ({ datasetId, name, description, submittedAt, numReactions }) => {
   const [expanded, setExpanded] = useState(false);
-
-  useLayoutEffect(() => {
-    const element = textRef.current;
-    if (!element) return;
-    const check = () => setIsClamped(element.scrollHeight > element.clientHeight + 1);
-    check();
-    const observer = new ResizeObserver(check);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [description]);
 
   return (
     <div className="column description-cell">
-      <div
-        ref={textRef}
-        className="description-text"
+      <div className="description-text">{description}</div>
+      <button
+        type="button"
+        className="expand-button"
+        aria-label="Show dataset details"
+        title="Show dataset details"
+        onClick={() => setExpanded(true)}
       >
-        {description}
-      </div>
-      {isClamped && (
-        <button
-          type="button"
-          className="expand-button"
-          aria-label="Show full description"
-          title="Show full description"
-          onClick={() => setExpanded(true)}
+        <svg
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
         >
-          <svg
-            viewBox="0 0 16 16"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" />
-          </svg>
-        </button>
-      )}
+          <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" />
+        </svg>
+      </button>
       {expanded && (
         <FloatingModal
-          title={name}
+          title={
+            <>
+              {name}
+              <div className="modal-dataset-id">{datasetId}</div>
+            </>
+          }
+          className="description-modal"
           onCloseModal={() => setExpanded(false)}
         >
-          {description}
+          <div className="modal-meta">
+            <span>
+              <strong>Submitted:</strong> {submittedAt ?? '—'}
+            </span>
+            <span>
+              <strong>Reactions:</strong> {numReactions.toLocaleString()}
+            </span>
+          </div>
+          <div className="modal-description">{description}</div>
         </FloatingModal>
       )}
     </div>
@@ -142,7 +140,6 @@ const MainBrowse: React.FC = () => {
             <div className="column label">Name</div>
             <div className="column label">Description</div>
             <div className="column label">Size</div>
-            <div className="column label">Submitted</div>
             {entities.map(row => (
               <React.Fragment key={row.dataset_id}>
                 <div className="column">
@@ -150,11 +147,13 @@ const MainBrowse: React.FC = () => {
                 </div>
                 <div className="column">{row.name}</div>
                 <DescriptionCell
+                  datasetId={row.dataset_id}
                   name={row.name}
                   description={row.description}
+                  submittedAt={row.submitted_at}
+                  numReactions={row.num_reactions}
                 />
                 <div className="column">{row.num_reactions}</div>
-                <div className="column">{row.submitted_at ?? '—'}</div>
               </React.Fragment>
             ))}
           </div>

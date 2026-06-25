@@ -24,7 +24,7 @@
     // minmax(0, 1fr) (rather than 1fr) lets the flexible columns shrink to
     // their share instead of being widened by long content like descriptions
     // or dataset IDs, which would otherwise overflow the table.
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
   }
 
   // Allow cells to shrink below their content's intrinsic width, and wrap long
@@ -71,4 +71,37 @@
   .loading {
     margin-top: 30vh;
   }
+}
+
+// Description modal: size to its content (capped) instead of the shared modal's
+// fixed height, so short descriptions don't leave empty space below.
+.modal-main .modal-container.description-modal {
+  height: auto;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+
+  .body {
+    height: auto;
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+.modal-dataset-id {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 400;
+  margin-top: 0.25rem;
+}
+
+.modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.modal-description {
+  white-space: pre-wrap;
 }
