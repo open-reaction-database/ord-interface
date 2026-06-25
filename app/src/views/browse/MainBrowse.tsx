@@ -153,9 +153,7 @@ const MainBrowse: React.FC = () => {
                   submittedAt={row.submitted_at}
                   numReactions={row.num_reactions}
                 />
-                <div className="column size">
-                  {row.num_reactions.toLocaleString()}
-                </div>
+                <div className="column size">{row.num_reactions.toLocaleString()}</div>
               </React.Fragment>
             ))}
           </div>
