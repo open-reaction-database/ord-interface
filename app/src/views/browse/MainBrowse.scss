@@ -21,7 +21,17 @@
   padding: 1rem 0;
 
   .table-container {
-    grid-template-columns: 1fr 1fr 1fr auto auto;
+    // minmax(0, 1fr) (rather than 1fr) lets the flexible columns shrink to
+    // their share instead of being widened by long content like descriptions
+    // or dataset IDs, which would otherwise overflow the table.
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  }
+
+  // Allow cells to shrink below their content's intrinsic width, and wrap long
+  // unbreakable tokens (e.g. dataset IDs) instead of overflowing.
+  .column {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .description-cell {
