@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import datetime
 import gzip
 import json
 import os
@@ -209,14 +210,16 @@ class DatasetInfo(BaseModel):
     name: str
     description: str | None
     num_reactions: int
+    submitted_at: datetime.date | None
 
 
 @router.get("/datasets")
 async def get_datasets() -> list[DatasetInfo]:
-    """Returns info about the current datasets."""
+    """Returns info about the current datasets, most recently submitted first."""
     async with get_cursor() as cursor:
         await cursor.execute(
-            "SELECT dataset_id, name, description, num_reactions FROM dataset"
+            "SELECT dataset_id, name, description, num_reactions, submitted_at FROM dataset "
+            "ORDER BY submitted_at DESC NULLS LAST, dataset_id"
         )
         return [DatasetInfo(**row) async for row in cursor]
 
@@ -226,7 +229,7 @@ async def get_dataset(dataset_id: str) -> DatasetInfo:
     """Returns info about a single dataset."""
     async with get_cursor() as cursor:
         await cursor.execute(
-            "SELECT dataset_id, name, description, num_reactions FROM dataset WHERE dataset_id = %s",
+            "SELECT dataset_id, name, description, num_reactions, submitted_at FROM dataset WHERE dataset_id = %s",
             (dataset_id,),
         )
         row = await cursor.fetchone()
