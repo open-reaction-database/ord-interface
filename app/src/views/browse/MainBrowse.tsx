@@ -17,6 +17,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import EntityTable from '../../components/EntityTable';
+import FloatingModal from '../../components/FloatingModal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './MainBrowse.scss';
 
@@ -27,6 +28,68 @@ interface Dataset {
   num_reactions: number;
   submitted_at?: string | null;
 }
+
+// Description cell: the text is clamped to a few lines, and an always-present
+// button opens a floating "card" modal with the dataset's full details. The
+// modal overlay means the table layout never reflows.
+const DescriptionCell: React.FC<{
+  datasetId: string;
+  name: string;
+  description?: string;
+  submittedAt?: string | null;
+  numReactions: number;
+}> = ({ datasetId, name, description, submittedAt, numReactions }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="column description-cell">
+      <div className="description-text">{description}</div>
+      <button
+        type="button"
+        className="expand-button"
+        aria-label="Show dataset details"
+        title="Show dataset details"
+        onClick={() => setExpanded(true)}
+      >
+        <svg
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" />
+        </svg>
+      </button>
+      {expanded && (
+        <FloatingModal
+          title={
+            <>
+              {name}
+              <div className="modal-dataset-id">{datasetId}</div>
+            </>
+          }
+          className="description-modal"
+          onCloseModal={() => setExpanded(false)}
+        >
+          <div className="modal-meta">
+            <span>
+              <strong>Submitted:</strong> {submittedAt ?? '—'}
+            </span>
+            <span>
+              <strong>Reactions:</strong> {numReactions.toLocaleString()}
+            </span>
+          </div>
+          <div className="modal-description">{description}</div>
+        </FloatingModal>
+      )}
+    </div>
+  );
+};
 
 const MainBrowse: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -44,11 +107,6 @@ const MainBrowse: React.FC = () => {
         setLoading(false);
       });
   }, []);
-
-  const truncateDescription = (description?: string) => {
-    if (!description) return '';
-    return description.length > 75 ? description.substr(0, 75) + '...' : description;
-  };
 
   if (loading) {
     return (
@@ -81,17 +139,21 @@ const MainBrowse: React.FC = () => {
             <div className="column label">Dataset ID</div>
             <div className="column label">Name</div>
             <div className="column label">Description</div>
-            <div className="column label">Size</div>
-            <div className="column label">Submitted</div>
+            <div className="column label size">Size</div>
             {entities.map(row => (
               <React.Fragment key={row.dataset_id}>
                 <div className="column">
                   <Link to={`/dataset/${row.dataset_id}`}>{row.dataset_id}</Link>
                 </div>
                 <div className="column">{row.name}</div>
-                <div className="column">{truncateDescription(row.description)}</div>
-                <div className="column">{row.num_reactions}</div>
-                <div className="column">{row.submitted_at ?? '—'}</div>
+                <DescriptionCell
+                  datasetId={row.dataset_id}
+                  name={row.name}
+                  description={row.description}
+                  submittedAt={row.submitted_at}
+                  numReactions={row.num_reactions}
+                />
+                <div className="column size">{row.num_reactions.toLocaleString()}</div>
               </React.Fragment>
             ))}
           </div>
