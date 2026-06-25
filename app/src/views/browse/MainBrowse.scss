@@ -34,6 +34,10 @@
     overflow-wrap: anywhere;
   }
 
+  .column.size {
+    text-align: right;
+  }
+
   .description-cell {
     display: flex;
     align-items: flex-start;

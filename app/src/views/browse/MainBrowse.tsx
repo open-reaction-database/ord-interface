@@ -139,7 +139,7 @@ const MainBrowse: React.FC = () => {
             <div className="column label">Dataset ID</div>
             <div className="column label">Name</div>
             <div className="column label">Description</div>
-            <div className="column label">Size</div>
+            <div className="column label size">Size</div>
             {entities.map(row => (
               <React.Fragment key={row.dataset_id}>
                 <div className="column">
@@ -153,7 +153,9 @@ const MainBrowse: React.FC = () => {
                   submittedAt={row.submitted_at}
                   numReactions={row.num_reactions}
                 />
-                <div className="column">{row.num_reactions}</div>
+                <div className="column size">
+                  {row.num_reactions.toLocaleString()}
+                </div>
               </React.Fragment>
             ))}
           </div>
