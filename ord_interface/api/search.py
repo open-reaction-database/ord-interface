@@ -154,7 +154,9 @@ async def run_query(
         if params.similarity is not None:
             kwargs["similarity_threshold"] = params.similarity
         for spec in params.component:
-            pattern, target_name, mode_name = spec.split(";")
+            # Split from the right: the pattern may itself contain ";" (SMARTS uses it
+            # as a low-precedence AND), while target and mode never do.
+            pattern, target_name, mode_name = spec.rsplit(";", 2)
             queries.append(
                 ReactionComponentQuery(
                     pattern,

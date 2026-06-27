@@ -65,6 +65,16 @@ def test_query(test_client, params, num_expected):
     assert len(response.json()) == num_expected
 
 
+def test_query_smarts_with_semicolon(test_client):
+    # SMARTS uses ";" as a low-precedence AND, which collides with the component
+    # spec delimiter; the spec must still parse (it 500'd before the rsplit fix).
+    response = test_client.get(
+        "/api/query", params={"component": ["[#6;R];input;smarts"]}
+    )
+    response.raise_for_status()
+    assert isinstance(response.json(), list)
+
+
 def test_get_reaction(test_client):
     response = test_client.get(
         "/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"}
