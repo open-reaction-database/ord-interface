@@ -45,7 +45,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from base64 import b64decode, b64encode
 from enum import Enum, auto
-from typing import Any, LiteralString
+from typing import Any, LiteralString, cast
 
 from ord_schema import message_helpers, validations
 from ord_schema.logging import get_logger
@@ -65,8 +65,20 @@ class ReactionQuery(ABC):
 
     @property
     @abstractmethod
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns a boolean SQL predicate plus its parameters.
+
+        The predicate is evaluated against a single outer ``ord.reaction`` row
+        (aliased ``reaction``) in ``run_queries`` -- typically an ``EXISTS (...)``
+        correlated subquery. Combining predicates with ``AND`` over ``ord.reaction``
+        lets the planner lead with the most selective one (a semi-join) and stop
+        early under ``LIMIT``, rather than materializing one ``SELECT DISTINCT`` per
+        predicate and intersecting them.
+
+        Returns:
+            A ``(predicate_sql, params)`` tuple; ``params`` fill the predicate's
+            ``%s`` placeholders in order.
+        """
 
     @property
     def session_config(self) -> dict[str, str]:
@@ -98,15 +110,16 @@ class DatasetIdQuery(ReactionQuery):
         self._dataset_ids = dataset_ids
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        query = """
-            SELECT DISTINCT reaction.reaction_id
-            FROM ord.reaction
-            JOIN ord.dataset ON dataset.id = reaction.dataset_id
-            WHERE dataset.dataset_id = ANY (%s)
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns the query predicate and any query parameters."""
+        predicate = """
+            EXISTS (
+                SELECT 1 FROM ord.dataset
+                WHERE dataset.id = reaction.dataset_id
+                AND dataset.dataset_id = ANY (%s)
+            )
         """
-        return query, [self._dataset_ids]
+        return predicate, [self._dataset_ids]
 
 
 class ReactionIdQuery(ReactionQuery):
@@ -124,14 +137,9 @@ class ReactionIdQuery(ReactionQuery):
         self._reaction_ids = reaction_ids
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        query = """
-            SELECT DISTINCT reaction.reaction_id
-            FROM ord.reaction
-            WHERE reaction.reaction_id = ANY (%s)
-        """
-        return query, [self._reaction_ids]
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns the query predicate and any query parameters."""
+        return "reaction.reaction_id = ANY (%s)", [self._reaction_ids]
 
 
 class ReactionSmartsQuery(ReactionQuery):
@@ -149,15 +157,16 @@ class ReactionSmartsQuery(ReactionQuery):
         self._reaction_smarts = reaction_smarts
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        query = """
-            SELECT DISTINCT reaction.reaction_id
-            FROM ord.reaction
-            JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
-            WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s)
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns the query predicate and any query parameters."""
+        predicate = """
+            EXISTS (
+                SELECT 1 FROM rdkit.reactions
+                WHERE rdkit.reactions.id = reaction.rdkit_reaction_id
+                AND rdkit.reactions.reaction @> reaction_from_smarts(%s)
+            )
         """
-        return query, [self._reaction_smarts]
+        return predicate, [self._reaction_smarts]
 
 
 class ReactionConversionQuery(ReactionQuery):
@@ -180,24 +189,25 @@ class ReactionConversionQuery(ReactionQuery):
         self._max_conversion = max_conversion
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        query = """
-            SELECT DISTINCT reaction.reaction_id
-            FROM ord.reaction
-            JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
-            JOIN ord.percentage on percentage.reaction_outcome_id = reaction_outcome.id
-        """
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns the query predicate and any query parameters."""
         if self._min_conversion is not None and self._max_conversion is not None:
-            query += "WHERE percentage.value >= %s AND percentage.value <= %s\n"
+            condition = "percentage.value >= %s AND percentage.value <= %s"
             params = [self._min_conversion, self._max_conversion]
         elif self._min_conversion is not None:
-            query += "WHERE percentage.value >= %s\n"
+            condition = "percentage.value >= %s"
             params = [self._min_conversion]
         else:
-            query += "WHERE percentage.value <= %s\n"
+            condition = "percentage.value <= %s"
             params = [self._max_conversion]
-        return query, params
+        predicate = f"""
+            EXISTS (
+                SELECT 1 FROM ord.reaction_outcome
+                JOIN ord.percentage ON percentage.reaction_outcome_id = reaction_outcome.id
+                WHERE reaction_outcome.reaction_id = reaction.id AND {condition}
+            )
+        """
+        return predicate, params
 
 
 class ReactionYieldQuery(ReactionQuery):
@@ -216,25 +226,26 @@ class ReactionYieldQuery(ReactionQuery):
         self._max_yield = max_yield
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        query = """
-            SELECT DISTINCT reaction.reaction_id
-            FROM ord.reaction
-            JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
-            JOIN ord.product_compound on product_compound.reaction_outcome_id = reaction_outcome.id
-            JOIN ord.product_measurement on product_measurement.product_compound_id = product_compound.id
-            JOIN ord.percentage on percentage.product_measurement_id = product_measurement.id
-            WHERE product_measurement.type = 'YIELD'
-        """
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns the query predicate and any query parameters."""
+        conditions = "product_measurement.type = 'YIELD'"
         params = []
         if self._min_yield is not None:
-            query += "AND percentage.value >= %s\n"
+            conditions += " AND percentage.value >= %s"
             params.append(self._min_yield)
         if self._max_yield is not None:
-            query += "AND percentage.value <= %s\n"
+            conditions += " AND percentage.value <= %s"
             params.append(self._max_yield)
-        return query, params
+        predicate = f"""
+            EXISTS (
+                SELECT 1 FROM ord.reaction_outcome
+                JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+                JOIN ord.product_measurement ON product_measurement.product_compound_id = product_compound.id
+                JOIN ord.percentage ON percentage.product_measurement_id = product_measurement.id
+                WHERE reaction_outcome.reaction_id = reaction.id AND {conditions}
+            )
+        """
+        return predicate, params
 
 
 class DoiQuery(ReactionQuery):
@@ -259,15 +270,16 @@ class DoiQuery(ReactionQuery):
         self._dois = parsed_dois
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        query = """
-            SELECT DISTINCT reaction.reaction_id
-            FROM ord.reaction
-            JOIN ord.reaction_provenance ON reaction_provenance.reaction_id = reaction.id
-            WHERE reaction_provenance.doi = ANY (%s)
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns the query predicate and any query parameters."""
+        predicate = """
+            EXISTS (
+                SELECT 1 FROM ord.reaction_provenance
+                WHERE reaction_provenance.reaction_id = reaction.id
+                AND reaction_provenance.doi = ANY (%s)
+            )
         """
-        return query, [self._dois]
+        return predicate, [self._dois]
 
 
 class ReactionComponentQuery(ReactionQuery):
@@ -332,14 +344,34 @@ class ReactionComponentQuery(ReactionQuery):
             """
 
     @property
+    def _mols_source(self) -> LiteralString:
+        """Returns the component tables and the correlation to the outer ``reaction`` row.
+
+        The FROM list starts at the component table (not ``ord.reaction``) so it can be
+        used inside a correlated ``EXISTS`` against the outer ``reaction`` alias.
+        """
+        if self._target == ReactionComponentQuery.Target.INPUT:
+            return """
+            ord.reaction_input
+            JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
+            JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
+            WHERE reaction_input.reaction_id = reaction.id
+            """
+        return """
+            ord.reaction_outcome
+            JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+            JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
+            WHERE reaction_outcome.reaction_id = reaction.id
+            """
+
+    @property
     def is_similarity(self) -> bool:
         """Whether this is a similarity query, whose matches can be ranked by score."""
         return self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR
 
     @property
-    def query_and_parameters(self) -> tuple[str, list]:
-        """Returns the query and any query parameters."""
-        mols_sql = self._mols_join
+    def where_predicate(self) -> tuple[str, list]:
+        """Returns the query predicate and any query parameters."""
         if self._match_mode == ReactionComponentQuery.MatchMode.EXACT:
             predicate_sql = "rdkit.mols.smiles = %s"
             params = [Chem.CanonSmiles(self._pattern)]
@@ -358,13 +390,12 @@ class ReactionComponentQuery(ReactionQuery):
             params = [self._pattern]
         else:
             raise NotImplementedError(f"Unsupported match_mode: {self._match_mode}")
-        query = f"""
-            SELECT DISTINCT reaction.reaction_id
-            FROM ord.reaction
-            {mols_sql}
-            WHERE {predicate_sql}
+        predicate = f"""
+            EXISTS (
+                SELECT 1 FROM {self._mols_source} AND {predicate_sql}
+            )
         """
-        return query, params
+        return predicate, params
 
     def similarity_score_query(self) -> tuple[LiteralString, list]:
         """Returns a query ranking reactions by similarity, plus its leading parameter.
@@ -459,11 +490,11 @@ async def run_queries(
     # several, results are returned unordered.
     ranking_query = similarity_queries[0] if len(similarity_queries) == 1 else None
 
-    queries, combined_params = [], []
+    predicates, combined_params = [], []
     config: dict[str, str] = {}
     for reaction_query in queries_list:
-        query, params = reaction_query.query_and_parameters
-        queries.append(query)
+        predicate, params = reaction_query.where_predicate
+        predicates.append(predicate)
         combined_params.extend(params)
         for name, value in reaction_query.session_config.items():
             existing = config.setdefault(name, value)
@@ -471,14 +502,18 @@ async def run_queries(
                 raise ValueError(
                     f"Conflicting values for {name}: {existing} != {value}"
                 )
-    combined_query = "\nINTERSECT\n".join(queries)
+    if not predicates:
+        raise ValueError("No query parameters were specified.")
+    # Each predicate is an EXISTS (or direct) condition over a single ord.reaction row,
+    # ANDed together. The planner can lead with the most selective one as a semi-join
+    # and -- crucially -- stop once LIMIT rows are found, instead of materializing one
+    # SELECT DISTINCT per predicate and intersecting them.
+    where = " AND ".join(f"({predicate})" for predicate in predicates)
+    combined_query = f"SELECT reaction.reaction_id FROM ord.reaction WHERE {where}"
     if limit and ranking_query is None:
-        # LIMIT sits on top of the whole INTERSECT. Each branch is materialized
-        # (sort + unique for DISTINCT) before the set operation, so this truncates
-        # the final result rather than bounding the per-branch index scans. When
-        # ranking, the LIMIT is deferred to the scoring step so it selects the most
-        # similar matches rather than an arbitrary subset.
-        combined_query += "LIMIT %s"
+        # When ranking, the LIMIT is deferred to the scoring step so it selects the
+        # most similar matches rather than an arbitrary subset.
+        combined_query += "\nLIMIT %s"
         combined_params.append(limit)
     # Apply RDKit GUCs so the substructure/similarity operators can use their GiST
     # indexes. These are set transaction-locally (set_config local=true), so they
@@ -487,7 +522,9 @@ async def run_queries(
     for name, value in config.items():
         await cursor.execute("SELECT set_config(%s, %s, true)", (name, value))
     logger.debug((combined_query, combined_params))
-    await cursor.execute(combined_query, combined_params)
+    # The SQL text is assembled only from internal predicate fragments (all user values
+    # are bound via combined_params), so treating it as a trusted query string is safe.
+    await cursor.execute(cast(LiteralString, combined_query), combined_params)
     reaction_ids = await fetch_results(cursor)
     if ranking_query is not None:
         reaction_ids = await _rank_by_similarity(
