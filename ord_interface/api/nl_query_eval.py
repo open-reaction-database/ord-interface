@@ -29,12 +29,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import os
 import time
 from importlib import resources
 
 import anthropic
+import yaml
 from ord_schema.logging import get_logger
 from pydantic import BaseModel
 
@@ -57,9 +57,13 @@ SEARCH_TIMEOUT_SECONDS = 60.0
 
 
 class ComponentExpectation(BaseModel):
-    """Expected component constraint; the identifier is matched as a substring."""
+    """Expected component constraint.
 
-    identifier_contains: str
+    The identifier is matched exactly (case- and whitespace-insensitive), so the model
+    must reproduce the specific compound -- e.g. "4-aminophenol", not "aminophenol".
+    """
+
+    identifier: str
     target: str
     mode: str
 
@@ -83,10 +87,10 @@ class EvalCase(BaseModel):
 
 def load_cases() -> list[EvalCase]:
     """Loads the evaluation cases bundled alongside this module."""
-    raw = (resources.files("ord_interface.api") / "nl_query_eval_cases.json").read_text(
+    raw = (resources.files("ord_interface.api") / "nl_query_eval_cases.yaml").read_text(
         encoding="utf-8"
     )
-    return [EvalCase.model_validate(case) for case in json.loads(raw)]
+    return [EvalCase.model_validate(case) for case in yaml.safe_load(raw)]
 
 
 def check_interpretation(expect: CaseExpectation, interpretation: NLQuery) -> list[str]:
@@ -108,13 +112,14 @@ def check_interpretation(expect: CaseExpectation, interpretation: NLQuery) -> li
             if (
                 candidate.target == wanted.target
                 and candidate.mode == wanted.mode
-                and wanted.identifier_contains.lower() in candidate.identifier.lower()
+                and candidate.identifier.strip().lower()
+                == wanted.identifier.strip().lower()
             ):
                 remaining.remove(candidate)
                 break
         else:
             mismatches.append(
-                f"missing component {wanted.identifier_contains!r} "
+                f"missing component {wanted.identifier!r} "
                 f"({wanted.target}/{wanted.mode})"
             )
     for extra in remaining:

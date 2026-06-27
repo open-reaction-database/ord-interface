@@ -37,39 +37,43 @@ def test_check_interpretation_passes_on_match():
     expect = CaseExpectation(
         components=[
             ComponentExpectation(
-                identifier_contains="benzene", target="INPUT", mode="EXACT"
+                identifier="benzene", target="INPUT", mode="EXACT"
             )
         ],
         min_yield=70,
     )
     interpretation = NLQuery(
-        components=[NLComponent(identifier="benzene", target="INPUT", mode="EXACT")],
+        components=[NLComponent(identifier="Benzene", target="INPUT", mode="EXACT")],
         min_yield=70,
     )
+    # Matching is case- and whitespace-insensitive but otherwise exact.
     assert check_interpretation(expect, interpretation) == []
 
 
-def test_check_interpretation_substring_identifier_matches():
+def test_check_interpretation_requires_exact_identifier():
+    # A less-specific identifier must NOT match: "aminophenol" != "4-aminophenol".
     expect = CaseExpectation(
         components=[
             ComponentExpectation(
-                identifier_contains="aminophenol", target="INPUT", mode="EXACT"
+                identifier="4-aminophenol", target="INPUT", mode="EXACT"
             )
         ]
     )
     interpretation = NLQuery(
         components=[
-            NLComponent(identifier="4-aminophenol", target="INPUT", mode="EXACT")
+            NLComponent(identifier="aminophenol", target="INPUT", mode="EXACT")
         ]
     )
-    assert check_interpretation(expect, interpretation) == []
+    mismatches = check_interpretation(expect, interpretation)
+    assert any("missing component" in m for m in mismatches)
+    assert any("unexpected component" in m for m in mismatches)
 
 
 def test_check_interpretation_flags_wrong_target():
     expect = CaseExpectation(
         components=[
             ComponentExpectation(
-                identifier_contains="ibuprofen", target="OUTPUT", mode="EXACT"
+                identifier="ibuprofen", target="OUTPUT", mode="EXACT"
             )
         ]
     )
@@ -85,7 +89,7 @@ def test_check_interpretation_flags_over_extracted_yield():
     expect = CaseExpectation(
         components=[
             ComponentExpectation(
-                identifier_contains="benzene", target="INPUT", mode="EXACT"
+                identifier="benzene", target="INPUT", mode="EXACT"
             )
         ]
     )

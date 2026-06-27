@@ -38,6 +38,7 @@ dependencies = [
     "psycopg[binary,pool]>=3",
     "psycopg2-binary>=2.8.5",
     "pygithub>=1.51",
+    "pyyaml",
     "rdkit>=2021.9.5",
     "redis[hiredis]",
     "requests>=2.24.0",
@@ -62,8 +63,8 @@ dev = [
 include = ["ord_interface*"]
 
 [tool.setuptools.package-data]
-# The natural-language system prompt is shipped as a data file, not Python.
-"ord_interface.api" = ["*.md"]
+# The natural-language system prompt (*.md) and eval cases (*.yaml) ship as data.
+"ord_interface.api" = ["*.md", "*.yaml"]
 
 [tool.ruff]
 line-length = 88
