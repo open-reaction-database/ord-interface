@@ -1059,7 +1059,7 @@ requires-dist = [
     { name = "gunicorn" },
     { name = "jinja2", specifier = ">=2.0.0" },
     { name = "numpy", specifier = ">=1.26.4" },
-    { name = "ord-schema", extras = ["orm"], specifier = ">=0.7,<0.8" },
+    { name = "ord-schema", extras = ["orm"], specifier = ">=0.7.1,<0.8" },
     { name = "pandas", specifier = ">=1.0.4" },
     { name = "protobuf", specifier = ">=4.22,<6" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3" },
@@ -1087,7 +1087,7 @@ dev = [
 
 [[package]]
 name = "ord-schema"
-version = "0.7.0"
+version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "joblib" },
@@ -1099,12 +1099,11 @@ dependencies = [
     { name = "pyarrow" },
     { name = "python-dateutil" },
     { name = "rdkit" },
-    { name = "tenacity" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/73/42/c1e7bb88151a7af343665861c518c4c08372a6dc48064d4694b07ce8b64c/ord_schema-0.7.0.tar.gz", hash = "sha256:702724676c066bdb6986b47548f1ed71a2d76f99346fd3eb7859ab38796bf142", size = 167438, upload-time = "2026-06-24T23:22:06.006Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/60/e89587eff14d1d8c47582d2d3f29a2e5b1cfbc8eb91edc8e708f91f1c192/ord_schema-0.7.1.tar.gz", hash = "sha256:037efc6f5cc1e5b871d6e348286a13529b7722417056770cabfa0ce72e4d140f", size = 167134, upload-time = "2026-06-27T02:15:23.887Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/64/a690cecfa6073c20f59adc6233e744f389d09201a5edd7d6b0b29ab6009b/ord_schema-0.7.0-py3-none-any.whl", hash = "sha256:1c460ee0a46430b5906fff41e95f59a7c7b398d0418c267da3aaad3aacc0abae", size = 190702, upload-time = "2026-06-24T23:22:04.55Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/f3/97734584f9fa7a5312ec712f7769103cceb784c3fda0531fca98fb0c1e5f/ord_schema-0.7.1-py3-none-any.whl", hash = "sha256:d04f42ec944fb8397d399631f77238b3c47d5b8db11c6dca61ce0870e8c15a30", size = 190535, upload-time = "2026-06-27T02:15:22.539Z" },
 ]
 
 [package.optional-dependencies]

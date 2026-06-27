@@ -31,6 +31,7 @@ import argparse
 import asyncio
 import json
 import os
+import time
 from importlib import resources
 
 import anthropic
@@ -49,6 +50,10 @@ logger = get_logger(__name__)
 # Numeric filters the model must populate only when the question asks for them; an
 # unexpected value here is over-extraction and counts as a miss.
 _NUMERIC_FIELDS = ("min_yield", "max_yield", "min_conversion", "max_conversion")
+
+# Bound each DB search so a pathologically slow query (e.g. a common-scaffold
+# SUBSTRUCTURE match) is reported rather than hanging the whole sweep.
+SEARCH_TIMEOUT_SECONDS = 60.0
 
 
 class ComponentExpectation(BaseModel):
@@ -127,7 +132,7 @@ def check_interpretation(expect: CaseExpectation, interpretation: NLQuery) -> li
 
 
 class CaseResult(BaseModel):
-    """Outcome of evaluating one case."""
+    """Outcome of evaluating one case, with a per-phase time breakdown (seconds)."""
 
     question: str
     passed: bool
@@ -135,6 +140,9 @@ class CaseResult(BaseModel):
     interpretation: NLQuery
     num_results: int | None = None
     error: str | None = None
+    translate_s: float = 0.0
+    resolve_s: float = 0.0
+    search_s: float = 0.0
 
 
 async def evaluate_case(
@@ -148,16 +156,25 @@ async def evaluate_case(
         search: If True, resolve and run the query against the database.
 
     Returns:
-        The case result, including any execution error in ``error``.
+        The case result, including a per-phase time breakdown and any execution error.
     """
+    start = time.perf_counter()
     interpretation = await translate(case.question, client)
+    translate_s = time.perf_counter() - start
     mismatches = check_interpretation(case.expect, interpretation)
     num_results = None
     error = None
+    resolve_s = 0.0
+    search_s = 0.0
     if search:
         try:
+            mark = time.perf_counter()
             params, _ = await build_query_params(interpretation)
-            results = await run_query(params, return_ids=True)
+            resolve_s = time.perf_counter() - mark
+            mark = time.perf_counter()
+            async with asyncio.timeout(SEARCH_TIMEOUT_SECONDS):
+                results = await run_query(params, return_ids=True)
+            search_s = time.perf_counter() - mark
             num_results = len(results)
         except Exception as exc:  # Resolution/DB failures shouldn't abort the sweep.
             error = f"{type(exc).__name__}: {exc}"
@@ -168,6 +185,9 @@ async def evaluate_case(
         interpretation=interpretation,
         num_results=num_results,
         error=error,
+        translate_s=translate_s,
+        resolve_s=resolve_s,
+        search_s=search_s,
     )
 
 
@@ -188,7 +208,14 @@ async def run_eval(search: bool, model: str | None) -> list[CaseResult]:
     results = []
     for index, case in enumerate(cases, start=1):
         logger.info(f"[{index}/{len(cases)}] {case.question}")
-        results.append(await evaluate_case(case, client, search))
+        result = await evaluate_case(case, client, search)
+        # Stream the timing immediately so a slow sweep still yields data per case.
+        logger.info(
+            f"    translate={result.translate_s:.1f}s "
+            f"resolve={result.resolve_s:.1f}s search={result.search_s:.1f}s "
+            f"results={result.num_results}"
+        )
+        results.append(result)
     return results
 
 
@@ -208,10 +235,23 @@ def _format_report(results: list[CaseResult]) -> str:
         elif result.num_results is not None:
             note = " (ZERO RESULTS)" if result.num_results == 0 else ""
             lines.append(f"         -> {result.num_results} reactions{note}")
+        total_s = result.translate_s + result.resolve_s + result.search_s
+        lines.append(
+            f"         time {total_s:5.1f}s "
+            f"(translate {result.translate_s:.1f} + "
+            f"resolve {result.resolve_s:.1f} + search {result.search_s:.1f})"
+        )
     total = len(results)
     rate = passed / total if total else 0.0
     lines.append("")
     lines.append(f"Translation accuracy: {passed}/{total} ({rate:.0%})")
+    if any(r.num_results is not None for r in results):
+        lines.append(
+            "Totals: "
+            f"translate {sum(r.translate_s for r in results):.1f}s, "
+            f"resolve {sum(r.resolve_s for r in results):.1f}s, "
+            f"search {sum(r.search_s for r in results):.1f}s"
+        )
     return "\n".join(lines)
 
 

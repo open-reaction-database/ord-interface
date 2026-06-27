@@ -22,7 +22,7 @@ path as the structured API.
 The language model only ever emits a structured query (a forced tool call); it
 never writes SQL and never invents SMILES. Compound names are resolved to SMILES
 deterministically via ``ord_schema.resolvers``, so the model's chemistry is
-grounded in PubChem/OPSIN rather than its own recall.
+grounded in PubChem/CIR/OPSIN rather than its own recall.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from importlib import resources
 from typing import Literal, cast
 
 import anthropic
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from ord_schema.logging import get_logger
 from ord_schema.resolvers import canonicalize_smiles, resolve_name
 from pydantic import BaseModel, Field
@@ -51,17 +51,22 @@ router = APIRouter(tags=["nl"])
 DEFAULT_MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 1024
 
-# Identical questions are cached so repeated (or abusive) queries don't each pay for a
-# model call. Bump the version when the prompt, schema, or response shape changes so
-# stale interpretations are not served.
-CACHE_VERSION = "v1"
-CACHE_TTL_SECONDS = 60 * 60
+# Only the model's translation is cached -- not the search results -- so repeated (or
+# abusive) identical questions don't each pay for a model call, while the database query
+# is always re-run and stays fresh. Bump the version when the prompt or NLQuery schema
+# changes so stale interpretations are not served.
+TRANSLATION_CACHE_VERSION = "v1"
+TRANSLATION_CACHE_TTL_SECONDS = 60 * 60
 
 # Name -> SMILES resolutions are cached separately and for much longer: they are stable
 # (a name maps to the same structure) and shared across different questions that mention
-# the same compound, which spares PubChem/OPSIN repeated lookups.
+# the same compound, which spares the name resolvers repeated lookups.
 RESOLVE_CACHE_VERSION = "v1"
 RESOLVE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30
+
+# The cache is an optimization, never a dependency: an unreachable or slow Redis must
+# fail fast so the request falls back to a live call instead of stalling on it.
+REDIS_OP_TIMEOUT_SECONDS = 1.0
 
 Target = Literal["INPUT", "OUTPUT"]
 MatchMode = Literal["EXACT", "SIMILAR", "SUBSTRUCTURE", "SMARTS"]
@@ -228,7 +233,7 @@ def _resolve_name_key(name: str) -> str:
 async def _resolve_name_cached(name: str) -> tuple[str, str]:
     """Resolves a compound name to (SMILES, resolver), caching successful lookups.
 
-    The blocking PubChem/OPSIN call runs in a worker thread. Failures are not cached so
+    The blocking PubChem/CIR/OPSIN call runs in a worker thread. Failures are not cached so
     a transient PubChem outage does not poison the cache with a permanent miss.
 
     Args:
@@ -259,7 +264,7 @@ async def _resolve_component(component: NLComponent) -> ResolvedComponent:
 
     SMARTS patterns pass through untouched. Otherwise the identifier is treated as a
     SMILES if RDKit can parse it, and falls back to (cached) name resolution via
-    PubChem/OPSIN.
+    PubChem/CIR/OPSIN.
 
     Args:
         component: The component to resolve.
@@ -306,17 +311,13 @@ async def build_query_params(
     Raises:
         HTTPException: If a named compound cannot be resolved to a structure.
     """
-    resolved = []
-    components = []
-    for component in nl_query.components:
-        try:
-            resolved_component = await _resolve_component(component)
-        except ValueError as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
-        resolved.append(resolved_component)
-        components.append(
-            f"{resolved_component.smiles};{component.target};{component.mode}"
+    try:
+        resolved = await asyncio.gather(
+            *(_resolve_component(component) for component in nl_query.components)
         )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    components = [f"{r.smiles};{r.target};{r.mode}" for r in resolved]
     params = QueryParams(
         component=components or None,
         min_yield=nl_query.min_yield,
@@ -343,11 +344,13 @@ class NLQueryResponse(BaseModel):
 async def _redis_get(key: str) -> str | None:
     """Returns a cached string value, or None on a miss or any Redis failure.
 
-    The cache is best-effort: a Redis outage degrades to a miss rather than an error.
+    The cache is best-effort: an unreachable or slow Redis degrades to a miss within
+    REDIS_OP_TIMEOUT_SECONDS rather than stalling (or failing) the request.
     """
     try:
-        async with get_redis() as client:
-            value = await client.get(key)
+        async with asyncio.timeout(REDIS_OP_TIMEOUT_SECONDS):
+            async with get_redis() as client:
+                value = await client.get(key)
     except Exception as error:
         logger.warning(f"Redis read failed for {key!r}: {error}")
         return None
@@ -357,64 +360,76 @@ async def _redis_get(key: str) -> str | None:
 
 
 async def _redis_set(key: str, value: str, ttl_seconds: int) -> None:
-    """Stores a string value with a TTL, ignoring any Redis failure (best-effort)."""
+    """Stores a string value with a TTL, ignoring an unreachable/slow Redis (best-effort)."""
     try:
-        async with get_redis() as client:
-            await client.set(key, value, ex=ttl_seconds)
+        async with asyncio.timeout(REDIS_OP_TIMEOUT_SECONDS):
+            async with get_redis() as client:
+                await client.set(key, value, ex=ttl_seconds)
     except Exception as error:
         logger.warning(f"Redis write failed for {key!r}: {error}")
 
 
-def _cache_key(query: str) -> str:
+def _translation_cache_key(query: str) -> str:
     """Returns the Redis cache key for a question under the current model and version."""
     model = os.getenv("ORD_NL_QUERY_MODEL", DEFAULT_MODEL)
     digest = hashlib.sha256(f"{model}\n{query.strip()}".encode()).hexdigest()
-    return f"nl_query:{CACHE_VERSION}:{digest}"
+    return f"nl_query:{TRANSLATION_CACHE_VERSION}:{digest}"
 
 
-async def _cache_get(key: str) -> NLQueryResponse | None:
-    """Returns a cached response, or None on a miss or unparseable payload."""
+async def _translation_cache_get(key: str) -> NLQuery | None:
+    """Returns a cached translation, or None on a miss or unparseable payload."""
     raw = await _redis_get(key)
     if raw is None:
         return None
     try:
-        return NLQueryResponse.model_validate_json(raw)
+        return NLQuery.model_validate_json(raw)
     except ValueError as error:
-        logger.warning(f"Discarding unparseable cached NL response: {error}")
+        logger.warning(f"Discarding unparseable cached translation: {error}")
         return None
 
 
-async def _cache_set(key: str, response: NLQueryResponse) -> None:
-    """Stores a response in the cache (best-effort)."""
-    await _redis_set(key, response.model_dump_json(), CACHE_TTL_SECONDS)
+async def _translation_cache_set(key: str, interpretation: NLQuery) -> None:
+    """Stores a translation in the cache (best-effort)."""
+    await _redis_set(
+        key, interpretation.model_dump_json(), TRANSLATION_CACHE_TTL_SECONDS
+    )
 
 
 @router.get("/nl_query")
-async def nl_query(q: str) -> NLQueryResponse:
+async def nl_query(
+    q: str = Query(min_length=1, max_length=2000),
+) -> NLQueryResponse:
     """Runs a natural-language search.
 
     The interpreted query and resolved structures are returned alongside the results
     so the user can see -- and trust or correct -- how their question was understood.
-    Identical questions are served from a short-lived Redis cache to avoid repeating
-    the model call; the cache is best-effort and a Redis outage falls back to a live
-    translation rather than failing the request.
+    Only the model's translation is cached (best-effort, in Redis): identical questions
+    skip the model call, but the database query is always re-run so results stay fresh.
+    A Redis outage falls back to a live translation rather than failing the request.
     """
-    key = _cache_key(q)
-    cached = await _cache_get(key)
-    if cached is not None:
-        logger.info(f"NL query cache hit for {q!r}")
-        return cached
-    client = _get_client()
-    interpretation = await translate(q, client)
-    # Resolution caches hits and runs the blocking PubChem/OPSIN lookups in a thread.
+    key = _translation_cache_key(q)
+    interpretation = await _translation_cache_get(key)
+    if interpretation is not None:
+        logger.info(f"NL query translation cache hit for {q!r}")
+    else:
+        client = _get_client()
+        interpretation = await translate(q, client)
+        await _translation_cache_set(key, interpretation)
+    # Resolution caches hits and runs the blocking name-resolver lookups in a thread.
     params, resolved = await build_query_params(interpretation)
     logger.info(f"NL query {q!r} -> {json.dumps(interpretation.model_dump())}")
-    results = cast(list[QueryResult], await run_query(params, return_ids=False))
-    response = NLQueryResponse(
+    try:
+        results = cast(list[QueryResult], await run_query(params, return_ids=False))
+    except ValueError as error:
+        # Raised when the interpretation has no usable constraints (e.g. "show me
+        # everything"); surface a 422 rather than an unhandled 500.
+        raise HTTPException(
+            status_code=422,
+            detail="Could not extract any search constraints from the question.",
+        ) from error
+    return NLQueryResponse(
         query=q,
         interpretation=interpretation,
         resolved_components=resolved,
         results=results,
     )
-    await _cache_set(key, response)
-    return response

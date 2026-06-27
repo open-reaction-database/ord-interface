@@ -32,8 +32,6 @@ from ord_interface.api import nl_query
 from ord_interface.api.nl_query import (
     NLComponent,
     NLQuery,
-    NLQueryResponse,
-    ResolvedComponent,
     build_query_params,
     translate,
 )
@@ -207,73 +205,76 @@ async def test_translate_api_error_maps_to_503():
     assert excinfo.value.status_code == 503
 
 
-def _make_response(query: str) -> NLQueryResponse:
-    return NLQueryResponse(
-        query=query,
-        interpretation=NLQuery(
-            components=[
-                NLComponent(identifier="benzene", target="INPUT", mode="EXACT")
-            ]
-        ),
-        resolved_components=[
-            ResolvedComponent(
-                identifier="benzene",
-                smiles="c1ccccc1",
-                resolver="PubChem API",
-                target="INPUT",
-                mode="EXACT",
-            )
-        ],
-        results=[],
+def _benzene_interpretation() -> NLQuery:
+    return NLQuery(
+        components=[NLComponent(identifier="benzene", target="INPUT", mode="EXACT")]
     )
 
 
 @pytest.mark.asyncio
-async def test_nl_query_returns_cached_response_without_model_call(monkeypatch):
-    cached = _make_response("reactions using benzene")
-
+async def test_nl_query_uses_cached_translation_without_model_call(monkeypatch):
     async def fake_cache_get(key):
-        return cached
+        return _benzene_interpretation()
 
     def fail_get_client():
-        raise AssertionError("model must not be called on a cache hit")
+        raise AssertionError("model must not be called on a translation cache hit")
 
-    monkeypatch.setattr(nl_query, "_cache_get", fake_cache_get)
+    async def fake_run_query(params, return_ids):
+        return []
+
+    monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
     monkeypatch.setattr(nl_query, "_get_client", fail_get_client)
+    monkeypatch.setattr(nl_query, "run_query", fake_run_query)
+    monkeypatch.setattr(
+        nl_query, "resolve_name", lambda value_type, value: ("c1ccccc1", "PubChem API")
+    )
     result = await nl_query_endpoint(q="reactions using benzene")
-    assert result is cached
+    # The search still runs on a cache hit, so results are fresh.
+    assert result.interpretation.components[0].identifier == "benzene"
+    assert result.resolved_components[0].smiles == "c1ccccc1"
 
 
 @pytest.mark.asyncio
-async def test_nl_query_translates_and_caches_on_miss(monkeypatch):
+async def test_nl_query_translates_and_caches_translation_on_miss(monkeypatch):
     stored = {}
 
     async def fake_cache_get(key):
         return None
 
-    async def fake_cache_set(key, response):
-        stored[key] = response
+    async def fake_cache_set(key, interpretation):
+        stored[key] = interpretation
 
     async def fake_translate(query, client):
-        return NLQuery(
-            components=[
-                NLComponent(identifier="benzene", target="INPUT", mode="EXACT")
-            ]
-        )
+        return _benzene_interpretation()
 
     async def fake_run_query(params, return_ids):
         return []
 
-    monkeypatch.setattr(nl_query, "_cache_get", fake_cache_get)
-    monkeypatch.setattr(nl_query, "_cache_set", fake_cache_set)
+    monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
+    monkeypatch.setattr(nl_query, "_translation_cache_set", fake_cache_set)
     monkeypatch.setattr(nl_query, "_get_client", lambda: mock.AsyncMock())
     monkeypatch.setattr(nl_query, "translate", fake_translate)
     monkeypatch.setattr(nl_query, "run_query", fake_run_query)
     monkeypatch.setattr(
-        nl_query,
-        "resolve_name",
-        lambda value_type, value: ("c1ccccc1", "PubChem API"),
+        nl_query, "resolve_name", lambda value_type, value: ("c1ccccc1", "PubChem API")
     )
     result = await nl_query_endpoint(q="reactions using benzene")
     assert result.resolved_components[0].smiles == "c1ccccc1"
-    assert len(stored) == 1  # Response was written to the cache.
+    # Only the translation is cached -- not the search results.
+    assert len(stored) == 1
+    assert isinstance(next(iter(stored.values())), NLQuery)
+
+
+@pytest.mark.asyncio
+async def test_nl_query_empty_interpretation_returns_422(monkeypatch):
+    async def fake_cache_get(key):
+        return NLQuery()  # No components, no filters.
+
+    async def fail_run_query(params, return_ids):
+        raise ValueError("No query parameters were specified.")
+
+    monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
+    monkeypatch.setattr(nl_query, "run_query", fail_run_query)
+    with pytest.raises(HTTPException) as excinfo:
+        await nl_query_endpoint(q="show me everything")
+    assert excinfo.value.status_code == 422
