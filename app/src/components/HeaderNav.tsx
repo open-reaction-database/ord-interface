@@ -50,12 +50,6 @@ const HeaderNav: React.FC = () => {
               >
                 Search
               </Link>
-              <Link
-                className="nav-link header-nav__link"
-                to="/ask"
-              >
-                Ask
-              </Link>
             </div>
             <div className="nav-item header-nav__nav-item">
               <a
