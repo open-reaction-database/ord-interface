@@ -26,6 +26,7 @@ description = "Interface for the Open Reaction Database"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "anthropic",
     "fastapi",
     "flask>=1.1.2",
     "gunicorn",
@@ -59,6 +60,10 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["ord_interface*"]
+
+[tool.setuptools.package-data]
+# The natural-language system prompt is shipped as a data file, not Python.
+"ord_interface.api" = ["*.md"]
 
 [tool.ruff]
 line-length = 88
