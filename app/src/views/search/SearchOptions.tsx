@@ -177,12 +177,16 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       const components = Array.isArray(q.component) ? q.component : [q.component];
 
       components.forEach((comp: string) => {
-        const compArray = comp.split(';');
-        const compType = compArray[1] === 'input' ? 'reactants' : 'products';
-        const matchMode = compArray[2] || 'exact';
+        const parsed = JSON.parse(comp) as {
+          pattern: string;
+          target: string;
+          mode?: string;
+        };
+        const compType = parsed.target === 'input' ? 'reactants' : 'products';
+        const matchMode = parsed.mode || 'exact';
         const component: ReagentComponent = {
-          smileSmart: compArray[0].replaceAll('%3D', '='),
-          source: compArray[1],
+          smileSmart: parsed.pattern,
+          source: parsed.target,
           matchMode,
         };
 

@@ -122,10 +122,24 @@ class QueryParams:
     min_yield: float | None = None
     max_yield: float | None = None
     doi: list[str] | None = Query(None)
+    # Each value is a JSON-encoded ComponentSpec; see ComponentSpec.
     component: list[str] | None = Query(None)
     use_stereochemistry: bool | None = None
     similarity: float | None = None
     limit: int | None = None
+
+
+class ComponentSpec(BaseModel):
+    """A single component predicate, JSON-encoded in each ``component`` query value.
+
+    Replaces a legacy ``"pattern;target;mode"`` string whose ``;`` delimiter collided
+    with SMARTS patterns (which use ``;`` as a low-precedence AND). ``target`` and
+    ``mode`` are matched case-insensitively against the ReactionComponentQuery enums.
+    """
+
+    pattern: str
+    target: str
+    mode: str
 
 
 async def run_query(
@@ -154,12 +168,12 @@ async def run_query(
         if params.similarity is not None:
             kwargs["similarity_threshold"] = params.similarity
         for spec in params.component:
-            pattern, target_name, mode_name = spec.split(";")
+            component = ComponentSpec.model_validate_json(spec)
             queries.append(
                 ReactionComponentQuery(
-                    pattern,
-                    ReactionComponentQuery.Target[target_name.upper()],
-                    ReactionComponentQuery.MatchMode[mode_name.upper()],
+                    component.pattern,
+                    ReactionComponentQuery.Target[component.target.upper()],
+                    ReactionComponentQuery.MatchMode[component.mode.upper()],
                     **kwargs,
                 )
             )
