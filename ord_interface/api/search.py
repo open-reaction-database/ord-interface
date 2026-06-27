@@ -68,6 +68,16 @@ router = APIRouter(tags=["client"])
 BOND_LENGTH = 20
 MAX_RESULTS = 1000
 
+# Postgres statement_timeout (ms) applied to every search connection so a pathological
+# query (e.g. a common-scaffold substructure match) is cancelled and reported rather
+# than running for tens of seconds. Override with ORD_INTERFACE_STATEMENT_TIMEOUT_MS.
+STATEMENT_TIMEOUT_MS = int(os.getenv("ORD_INTERFACE_STATEMENT_TIMEOUT_MS", "20000"))
+
+QUERY_TOO_BROAD_DETAIL = (
+    "The search was too broad and timed out. Add more constraints -- for example a "
+    "yield or conversion filter, a dataset, or a more specific structure."
+)
+
 
 @asynccontextmanager
 async def get_cursor() -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
@@ -85,7 +95,9 @@ async def get_cursor() -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
             ),
         )
     async with await psycopg.AsyncConnection[dict[str, Any]].connect(
-        dsn, row_factory=dict_row, options="-c search_path=public,ord"
+        dsn,
+        row_factory=dict_row,
+        options=f"-c search_path=public,ord -c statement_timeout={STATEMENT_TIMEOUT_MS}",
     ) as connection:
         await connection.set_read_only(True)
         async with connection.cursor() as cursor:
@@ -168,11 +180,15 @@ async def run_query(
     limit = MAX_RESULTS
     if params.limit:
         limit = min(params.limit, MAX_RESULTS)
-    async with get_cursor() as cursor:
-        reaction_ids = await run_queries(cursor, queries, limit=limit)
-        if return_ids:
-            return reaction_ids
-        return await fetch_reactions(cursor, reaction_ids)
+    try:
+        async with get_cursor() as cursor:
+            reaction_ids = await run_queries(cursor, queries, limit=limit)
+            if return_ids:
+                return reaction_ids
+            return await fetch_reactions(cursor, reaction_ids)
+    except psycopg.errors.QueryCanceled as error:
+        # statement_timeout fired: the query was too expensive to run to completion.
+        raise HTTPException(status_code=400, detail=QUERY_TOO_BROAD_DETAIL) from error
 
 
 @router.get("/query")
@@ -262,9 +278,23 @@ async def get_search_results(inputs: ReactionIdList):
 
 
 async def run_task(task_id: str, params: QueryParams) -> bool:
-    """Wraps run_query() as a background task."""
-    # NOTE(skearnes): Use reaction IDs to avoid stuffing full protos into the result database.
-    result = await run_query(params, return_ids=True)
+    """Wraps run_query() as a background task.
+
+    A failed query (e.g. a statement_timeout mapped to an HTTPException) is recorded
+    under ``error:{task_id}`` so ``fetch_query_result`` can report it instead of
+    leaving the task pending forever.
+    """
+    try:
+        # NOTE(skearnes): Use reaction IDs to avoid stuffing full protos into the result database.
+        result = await run_query(params, return_ids=True)
+    except HTTPException as error:
+        logger.info(f"Task {task_id} failed: {error.detail}")
+        async with get_redis() as client:
+            return await client.set(
+                f"error:{task_id}",
+                json.dumps({"status_code": error.status_code, "detail": error.detail}),
+                ex=60 * 60,
+            )
     logger.debug(f"Finished task {task_id}")
     async with get_redis() as client:
         return await client.set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
@@ -291,7 +321,11 @@ async def fetch_query_result(task_id: str):
             return Response(
                 f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND
             )
+        error = await client.get(f"error:{task_id}")
         result = await client.get(f"result:{task_id}")
+    if error is not None:
+        failure = json.loads(error)
+        return Response(failure["detail"], status_code=failure["status_code"])
     if result is None:
         return Response(
             f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED

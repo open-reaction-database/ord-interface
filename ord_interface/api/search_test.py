@@ -15,13 +15,18 @@
 """Tests for ord_interface.api.search."""
 
 import gzip
+from contextlib import asynccontextmanager
 
+import psycopg
 import pytest
+from fastapi import HTTPException
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
 
+from ord_interface.api import search
 from ord_interface.api.queries import QueryResult
+from ord_interface.api.search import QueryParams, run_query, run_task
 
 QUERY_PARAMS = [
     # Single factor queries.
@@ -177,3 +182,47 @@ def test_get_product_stats(test_client):
     response.raise_for_status()
     product_stats = response.json()
     assert len(product_stats) == 10
+
+
+@asynccontextmanager
+async def _dummy_cursor():
+    yield None
+
+
+@pytest.mark.asyncio
+async def test_run_query_timeout_maps_to_400(monkeypatch):
+    # A statement_timeout surfaces as psycopg QueryCanceled; the endpoint should
+    # translate it into a graceful 400 rather than letting it become a 500.
+    monkeypatch.setattr(search, "get_cursor", _dummy_cursor)
+
+    async def cancel(*args, **kwargs):
+        raise psycopg.errors.QueryCanceled("canceling statement due to statement timeout")
+
+    monkeypatch.setattr(search, "run_queries", cancel)
+    with pytest.raises(HTTPException) as excinfo:
+        await run_query(QueryParams(component=["c1ccccc1;input;substructure"]), return_ids=True)
+    assert excinfo.value.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_run_task_records_error(monkeypatch):
+    stored = {}
+
+    class FakeRedis:
+        async def set(self, key, value, ex=None):
+            stored[key] = value
+            return True
+
+    @asynccontextmanager
+    async def fake_redis():
+        yield FakeRedis()
+
+    async def fail(params, return_ids):
+        raise HTTPException(status_code=400, detail="too broad")
+
+    monkeypatch.setattr(search, "get_redis", fake_redis)
+    monkeypatch.setattr(search, "run_query", fail)
+    await run_task("task-1", QueryParams(component=["c1ccccc1;input;substructure"]))
+    assert "error:task-1" in stored
+    assert "result:task-1" not in stored
+    assert '"status_code": 400' in stored["error:task-1"]
