@@ -24,6 +24,7 @@ import About from './views/About';
 import MainBrowse from './views/browse/MainBrowse';
 import MainSelectedSet from './views/browse/selected-set/MainSelectedSet';
 import MainSearch from './views/search/MainSearch';
+import MainNLSearch from './views/nl-search/MainNLSearch';
 import MainDatasetView from './views/dataset-view/MainDatasetView';
 import MainReactionView from './views/reaction-view/MainReactionView';
 import './App.scss';
@@ -54,6 +55,10 @@ const AppContent: React.FC = () => {
         <Route
           path="/search"
           element={<MainSearch />}
+        />
+        <Route
+          path="/ask"
+          element={<MainNLSearch />}
         />
         <Route
           path="/dataset/:datasetId"
