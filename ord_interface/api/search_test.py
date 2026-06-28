@@ -94,9 +94,7 @@ def test_query_accepts_legacy_component_format(test_client):
 
 def test_query_invalid_component_returns_400(test_client):
     # A spec that is neither JSON nor a 3-field legacy string is a client error.
-    response = test_client.get(
-        "/api/query", params={"component": ["not-a-valid-spec"]}
-    )
+    response = test_client.get("/api/query", params={"component": ["not-a-valid-spec"]})
     assert response.status_code == 400
 
 
