@@ -191,20 +191,23 @@ async def run_query(
         if params.similarity is not None:
             kwargs["similarity_threshold"] = params.similarity
         for spec in params.component:
+            # Cover the whole predicate: a bad target/mode is a KeyError on the enum
+            # lookup and an unparseable pattern is a ValueError from the query -- both
+            # are client errors, not 500s.
             try:
                 component = ComponentSpec.parse(spec)
-            except ValueError as error:
+                queries.append(
+                    ReactionComponentQuery(
+                        component.pattern,
+                        ReactionComponentQuery.Target[component.target.upper()],
+                        ReactionComponentQuery.MatchMode[component.mode.upper()],
+                        **kwargs,
+                    )
+                )
+            except (KeyError, ValueError) as error:
                 raise HTTPException(
                     status_code=400, detail=f"Invalid component spec: {spec!r}"
                 ) from error
-            queries.append(
-                ReactionComponentQuery(
-                    component.pattern,
-                    ReactionComponentQuery.Target[component.target.upper()],
-                    ReactionComponentQuery.MatchMode[component.mode.upper()],
-                    **kwargs,
-                )
-            )
     if not queries:
         raise ValueError("No query parameters were specified.")
     limit = MAX_RESULTS

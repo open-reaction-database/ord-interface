@@ -41,13 +41,26 @@ interface ParsedComponent {
  * because a SMARTS pattern may itself contain `;`.
  */
 const parseComponent = (comp: string): ParsedComponent => {
-  try {
-    return JSON.parse(comp) as ParsedComponent;
-  } catch {
+  const parseLegacy = (): ParsedComponent => {
     const parts = comp.split(';');
     const mode = parts.pop();
     const target = parts.pop() ?? 'input';
     return { pattern: parts.join(';'), target, mode };
+  };
+  try {
+    const parsed = JSON.parse(comp) as unknown;
+    // JSON.parse succeeds for null/numbers/etc.; require the component shape.
+    if (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      typeof (parsed as ParsedComponent).pattern === 'string' &&
+      typeof (parsed as ParsedComponent).target === 'string'
+    ) {
+      return parsed as ParsedComponent;
+    }
+    return parseLegacy();
+  } catch {
+    return parseLegacy();
   }
 };
 

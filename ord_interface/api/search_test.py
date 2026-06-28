@@ -98,6 +98,14 @@ def test_query_invalid_component_returns_400(test_client):
     assert response.status_code == 400
 
 
+def test_query_invalid_mode_returns_400(test_client):
+    # Valid JSON but an unknown match mode (enum KeyError) is still a client error.
+    response = test_client.get(
+        "/api/query", params={"component": [_spec("C", "input", "bogus")]}
+    )
+    assert response.status_code == 400
+
+
 def test_get_reaction(test_client):
     response = test_client.get(
         "/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"}
