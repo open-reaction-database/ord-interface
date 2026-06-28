@@ -53,10 +53,10 @@ router = APIRouter(tags=["nl"])
 DEFAULT_MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 1024
 
-# Only the model's translation is cached -- not the search results -- so repeated (or
-# abusive) identical questions don't each pay for a model call, while the database query
-# is always re-run and stays fresh. Bump the version when the prompt or NLQuery schema
-# changes so stale interpretations are not served.
+# Only the model's translation is cached -- not the search results -- so repeated
+# identical questions don't each pay for a model call, while the database query is always
+# re-run and stays fresh. Bump the version when the prompt or NLQuery schema changes so
+# stale interpretations are not served.
 TRANSLATION_CACHE_VERSION = "v3"
 TRANSLATION_CACHE_TTL_SECONDS = 60 * 60
 
@@ -288,9 +288,8 @@ async def _resolve_component(component: NLComponent) -> ResolvedComponent:
             resolved to neither SMILES nor a name.
     """
     if component.mode == "SMARTS":
-        # The model authors SMARTS patterns directly, so validate before the pattern
-        # reaches the database; a parse failure here surfaces as a clean 422 rather than
-        # a 400 deep in query execution (which a dry run would skip entirely).
+        # The model authors SMARTS directly; validate up front so a bad pattern is a
+        # 422 here rather than a 400 deep in query execution (skipped on dry runs).
         if Chem.MolFromSmarts(component.identifier) is None:
             raise ValueError(f"Invalid SMARTS pattern: {component.identifier!r}")
         return ResolvedComponent(
@@ -330,11 +329,9 @@ async def build_query_params(
             or reaction SMARTS is unparseable (all 422).
     """
     if nl_query.reaction_smarts is not None:
-        # Validate here so a bad reaction SMARTS is a clear 422 in both normal and
-        # dry-run mode, rather than a misleading "no constraints" 422 from run_query
-        # (normal) or an unvalidated pass-through (dry run, which skips run_query).
-        # ReactionFromSmarts returns None for some malformed patterns and raises
-        # ValueError for others (e.g. a missing ``>>``); treat both as invalid.
+        # Validate up front so a bad pattern is a 422 in both normal and dry-run mode
+        # (dry run skips run_query, which validates otherwise). ReactionFromSmarts
+        # returns None for some malformed input and raises ValueError for the rest.
         try:
             reaction = rdChemReactions.ReactionFromSmarts(nl_query.reaction_smarts)
         except ValueError:
