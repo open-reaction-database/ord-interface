@@ -78,7 +78,11 @@ const MainSearch: React.FC = () => {
       options.reagent.reagents.forEach(reagent => {
         searchParams.append(
           'component',
-          `${reagent.smileSmart};${reagent.source};${reagent.matchMode.toLowerCase()}`,
+          JSON.stringify({
+            pattern: reagent.smileSmart,
+            target: reagent.source,
+            mode: reagent.matchMode.toLowerCase(),
+          }),
         );
       });
       searchParams.set(

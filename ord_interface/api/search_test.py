@@ -15,6 +15,7 @@
 """Tests for ord_interface.api.search."""
 
 import gzip
+import json
 
 import pytest
 from ord_schema.proto import dataset_pb2
@@ -22,6 +23,12 @@ from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from ord_interface.api.queries import QueryResult
+
+
+def _spec(pattern: str, target: str, mode: str) -> str:
+    """Returns a JSON-encoded component spec for the `component` query parameter."""
+    return json.dumps({"pattern": pattern, "target": target, "mode": mode})
+
 
 QUERY_PARAMS = [
     # Single factor queries.
@@ -31,26 +38,26 @@ QUERY_PARAMS = [
     ({"min_conversion": 50, "max_conversion": 90}, 7),
     ({"min_yield": 50, "max_yield": 90}, 51),
     ({"doi": ["10.1126/science.1255525"]}, 24),
-    ({"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]}, 10),
-    ({"component": ["C;input;substructure"]}, 144),
+    ({"component": [_spec("[Br]C1=CC=C(C(C)=O)C=C1", "input", "exact")]}, 10),
+    ({"component": [_spec("C", "input", "substructure")]}, 144),
     (
         {
-            "component": ["O[C@@H]1C[C@H](O)C1;input;substructure"],
+            "component": [_spec("O[C@@H]1C[C@H](O)C1", "input", "substructure")],
             "use_stereochemistry": True,
         },
         20,
     ),
-    ({"component": ["[#6];input;smarts"]}, 144),
-    ({"component": ["CC=O;input;similar"], "similarity": 0.5}, 0),
-    ({"component": ["CC=O;input;similar"], "similarity": 0.05}, 120),
+    ({"component": [_spec("[#6]", "input", "smarts")]}, 144),
+    ({"component": [_spec("CC=O", "input", "similar")], "similarity": 0.5}, 0),
+    ({"component": [_spec("CC=O", "input", "similar")], "similarity": 0.05}, 120),
     # Multi-factor queries.
     (
         {
             "min_yield": 50,
             "max_yield": 90,
             "component": [
-                "[Br]C1=CC=C(C(C)=O)C=C1;input;exact",
-                "CC(C)(C)OC(=O)NC;input;substructure",
+                _spec("[Br]C1=CC=C(C(C)=O)C=C1", "input", "exact"),
+                _spec("CC(C)(C)OC(=O)NC", "input", "substructure"),
             ],
         },
         7,
@@ -63,6 +70,40 @@ def test_query(test_client, params, num_expected):
     response = test_client.get("/api/query", params=params)
     response.raise_for_status()
     assert len(response.json()) == num_expected
+
+
+def test_query_smarts_with_semicolon(test_client):
+    # SMARTS uses ";" as a low-precedence AND; JSON-encoding the component spec means
+    # such patterns parse cleanly (the legacy ";"-delimited format split incorrectly).
+    response = test_client.get(
+        "/api/query", params={"component": [_spec("[#6;R]", "input", "smarts")]}
+    )
+    response.raise_for_status()
+    assert isinstance(response.json(), list)
+
+
+def test_query_accepts_legacy_component_format(test_client):
+    # Previously shared "pattern;target;mode" URLs still work (backward compatibility).
+    response = test_client.get(
+        "/api/query",
+        params={"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]},
+    )
+    response.raise_for_status()
+    assert len(response.json()) == 10
+
+
+def test_query_invalid_component_returns_400(test_client):
+    # A spec that is neither JSON nor a 3-field legacy string is a client error.
+    response = test_client.get("/api/query", params={"component": ["not-a-valid-spec"]})
+    assert response.status_code == 400
+
+
+def test_query_invalid_mode_returns_400(test_client):
+    # Valid JSON but an unknown match mode (enum KeyError) is still a client error.
+    response = test_client.get(
+        "/api/query", params={"component": [_spec("C", "input", "bogus")]}
+    )
+    assert response.status_code == 400
 
 
 def test_get_reaction(test_client):

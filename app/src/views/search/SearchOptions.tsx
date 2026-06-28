@@ -27,6 +27,43 @@ interface ReagentComponent {
   matchMode?: string;
 }
 
+interface ParsedComponent {
+  pattern: string;
+  target: string;
+  mode?: string;
+}
+
+/**
+ * Parses a `component` query-parameter value.
+ *
+ * New values are JSON objects; the legacy `pattern;target;mode` form is still accepted
+ * so previously shared search URLs keep working. The legacy parse splits from the right
+ * because a SMARTS pattern may itself contain `;`.
+ */
+const parseComponent = (comp: string): ParsedComponent => {
+  const parseLegacy = (): ParsedComponent => {
+    const parts = comp.split(';');
+    const mode = parts.pop();
+    const target = parts.pop() ?? 'input';
+    return { pattern: parts.join(';'), target, mode };
+  };
+  try {
+    const parsed = JSON.parse(comp) as unknown;
+    // JSON.parse succeeds for null/numbers/etc.; require the component shape.
+    if (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      typeof (parsed as ParsedComponent).pattern === 'string' &&
+      typeof (parsed as ParsedComponent).target === 'string'
+    ) {
+      return parsed as ParsedComponent;
+    }
+    return parseLegacy();
+  } catch {
+    return parseLegacy();
+  }
+};
+
 interface ReagentOptions {
   reactants: ReagentComponent[];
   products: ReagentComponent[];
@@ -177,12 +214,12 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       const components = Array.isArray(q.component) ? q.component : [q.component];
 
       components.forEach((comp: string) => {
-        const compArray = comp.split(';');
-        const compType = compArray[1] === 'input' ? 'reactants' : 'products';
-        const matchMode = compArray[2] || 'exact';
+        const parsed = parseComponent(comp);
+        const compType = parsed.target === 'input' ? 'reactants' : 'products';
+        const matchMode = parsed.mode || 'exact';
         const component: ReagentComponent = {
-          smileSmart: compArray[0].replaceAll('%3D', '='),
-          source: compArray[1],
+          smileSmart: parsed.pattern,
+          source: parsed.target,
           matchMode,
         };
 
