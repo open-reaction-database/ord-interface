@@ -38,7 +38,7 @@ import anthropic
 from fastapi import APIRouter, HTTPException, Query
 from ord_schema.logging import get_logger
 from ord_schema.resolvers import canonicalize_smiles, resolve_name
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from rdkit import Chem
 
 from ord_interface.api.queries import QueryResult
@@ -209,7 +209,16 @@ async def translate(query: str, client: anthropic.AsyncAnthropic) -> NLQuery:
             isinstance(block, anthropic.types.ToolUseBlock)
             and block.name == "build_query"
         ):
-            return NLQuery.model_validate(block.input)
+            try:
+                return NLQuery.model_validate(block.input)
+            except ValidationError as error:
+                # The forced tool schema makes this unlikely, but a payload that slips
+                # through becomes a 502 rather than an unhandled 500.
+                logger.warning(f"Model tool call failed schema validation: {error}")
+                raise HTTPException(
+                    status_code=502,
+                    detail="Language model returned a malformed structured query.",
+                ) from error
     raise HTTPException(
         status_code=502, detail="Language model did not return a structured query."
     )
@@ -397,7 +406,9 @@ async def _translation_cache_get(key: str) -> NLQuery | None:
         return None
     try:
         return NLQuery.model_validate_json(raw)
-    except ValueError as error:
+    except (ValueError, ValidationError) as error:
+        # ValidationError covers a cache entry written by an older NLQuery schema;
+        # ValueError covers malformed JSON. Either way, degrade to a miss.
         logger.warning(f"Discarding unparseable cached translation: {error}")
         return None
 

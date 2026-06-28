@@ -214,6 +214,39 @@ async def test_translate_without_tool_call_raises():
 
 
 @pytest.mark.asyncio
+async def test_translate_invalid_tool_payload_maps_to_502():
+    # A tool call whose payload fails NLQuery validation (bad target) is a 502, not a 500.
+    tool_use = anthropic.types.ToolUseBlock(
+        type="tool_use",
+        id="toolu_test",
+        name="build_query",
+        input={
+            "components": [
+                {"identifier": "benzene", "target": "NOWHERE", "mode": "EXACT"}
+            ]
+        },
+    )
+    response = SimpleNamespace(content=[tool_use])
+    client = mock.AsyncMock()
+    client.messages.create.return_value = response
+    with pytest.raises(HTTPException) as excinfo:
+        await translate("anything", client)
+    assert excinfo.value.status_code == 502
+
+
+@pytest.mark.asyncio
+async def test_translation_cache_get_discards_invalid_payload(monkeypatch):
+    # A cached entry from an older schema (here, a bad mode) degrades to a miss, not a 500.
+    async def stale(key):
+        return json.dumps(
+            {"components": [{"identifier": "x", "target": "INPUT", "mode": "BOGUS"}]}
+        )
+
+    monkeypatch.setattr(nl_query, "_redis_get", stale)
+    assert await nl_query._translation_cache_get("key") is None
+
+
+@pytest.mark.asyncio
 async def test_translate_rate_limit_maps_to_429():
     request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
     response = httpx.Response(429, request=request)
