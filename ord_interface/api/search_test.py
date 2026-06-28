@@ -82,6 +82,24 @@ def test_query_smarts_with_semicolon(test_client):
     assert isinstance(response.json(), list)
 
 
+def test_query_accepts_legacy_component_format(test_client):
+    # Previously shared "pattern;target;mode" URLs still work (backward compatibility).
+    response = test_client.get(
+        "/api/query",
+        params={"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]},
+    )
+    response.raise_for_status()
+    assert len(response.json()) == 10
+
+
+def test_query_invalid_component_returns_400(test_client):
+    # A spec that is neither JSON nor a 3-field legacy string is a client error.
+    response = test_client.get(
+        "/api/query", params={"component": ["not-a-valid-spec"]}
+    )
+    assert response.status_code == 400
+
+
 def test_get_reaction(test_client):
     response = test_client.get(
         "/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"}

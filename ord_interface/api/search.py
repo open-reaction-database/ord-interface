@@ -141,6 +141,29 @@ class ComponentSpec(BaseModel):
     target: str
     mode: str
 
+    @classmethod
+    def parse(cls, spec: str) -> ComponentSpec:
+        """Parses one ``component`` value, accepting JSON or the legacy format.
+
+        New values are JSON objects; the legacy ``"pattern;target;mode"`` form is still
+        accepted so previously shared search URLs keep working. The legacy parse splits
+        from the right because a SMARTS ``pattern`` may itself contain ``;``.
+
+        Args:
+            spec: A single ``component`` query-parameter value.
+
+        Returns:
+            The parsed ComponentSpec.
+
+        Raises:
+            ValueError: If ``spec`` is neither valid JSON nor a 3-field legacy string.
+        """
+        spec = spec.strip()
+        if spec.startswith("{"):
+            return cls.model_validate_json(spec)
+        pattern, target, mode = spec.rsplit(";", 2)
+        return cls(pattern=pattern, target=target, mode=mode)
+
 
 async def run_query(
     params: QueryParams, return_ids: bool
@@ -168,7 +191,12 @@ async def run_query(
         if params.similarity is not None:
             kwargs["similarity_threshold"] = params.similarity
         for spec in params.component:
-            component = ComponentSpec.model_validate_json(spec)
+            try:
+                component = ComponentSpec.parse(spec)
+            except ValueError as error:
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid component spec: {spec!r}"
+                ) from error
             queries.append(
                 ReactionComponentQuery(
                     component.pattern,

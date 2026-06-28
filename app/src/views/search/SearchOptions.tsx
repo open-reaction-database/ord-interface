@@ -27,6 +27,30 @@ interface ReagentComponent {
   matchMode?: string;
 }
 
+interface ParsedComponent {
+  pattern: string;
+  target: string;
+  mode?: string;
+}
+
+/**
+ * Parses a `component` query-parameter value.
+ *
+ * New values are JSON objects; the legacy `pattern;target;mode` form is still accepted
+ * so previously shared search URLs keep working. The legacy parse splits from the right
+ * because a SMARTS pattern may itself contain `;`.
+ */
+const parseComponent = (comp: string): ParsedComponent => {
+  try {
+    return JSON.parse(comp) as ParsedComponent;
+  } catch {
+    const parts = comp.split(';');
+    const mode = parts.pop();
+    const target = parts.pop() ?? 'input';
+    return { pattern: parts.join(';'), target, mode };
+  }
+};
+
 interface ReagentOptions {
   reactants: ReagentComponent[];
   products: ReagentComponent[];
@@ -177,11 +201,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       const components = Array.isArray(q.component) ? q.component : [q.component];
 
       components.forEach((comp: string) => {
-        const parsed = JSON.parse(comp) as {
-          pattern: string;
-          target: string;
-          mode?: string;
-        };
+        const parsed = parseComponent(comp);
         const compType = parsed.target === 'input' ? 'reactants' : 'products';
         const matchMode = parsed.mode || 'exact';
         const component: ReagentComponent = {
