@@ -26,17 +26,19 @@ description = "Interface for the Open Reaction Database"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "anthropic",
     "fastapi",
     "flask>=1.1.2",
     "gunicorn",
     "jinja2>=2.0.0",
     "numpy>=1.26.4",
-    "ord-schema[orm]>=0.7,<0.8",
+    "ord-schema[orm]>=0.7.1,<0.8",
     "pandas>=1.0.4",
     "protobuf>=4.22,<6",
     "psycopg[binary,pool]>=3",
     "psycopg2-binary>=2.8.5",
     "pygithub>=1.51",
+    "pyyaml",
     "rdkit>=2021.9.5",
     "redis[hiredis]",
     "requests>=2.24.0",
@@ -59,6 +61,10 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["ord_interface*"]
+
+[tool.setuptools.package-data]
+# The natural-language system prompt (*.md) and eval cases (*.yaml) ship as data.
+"ord_interface.api" = ["*.md", "*.yaml"]
 
 [tool.ruff]
 line-length = 88

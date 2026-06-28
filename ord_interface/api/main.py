@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from ord_interface.api import search, view
+from ord_interface.api import nl_query, search, view
 from ord_interface.api.testing import setup_test_postgres
 
 
@@ -44,3 +44,4 @@ async def lifespan(*args, **kwargs):
 app = FastAPI(lifespan=lifespan, root_path="/api")
 app.include_router(search.router)
 app.include_router(view.router)
+app.include_router(nl_query.router)
