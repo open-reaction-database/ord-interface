@@ -14,7 +14,7 @@
 
 """Evaluation harness for natural-language query translation.
 
-Runs a set of example questions (``nl_query_eval_cases.json``) through the live model
+Runs a set of example questions (``nl_query_eval_cases.yaml``) through the live model
 and checks the structured interpretation against per-case expectations, reporting a
 translation-accuracy score. Optionally (``--search``) it also resolves each query and
 runs it against the database to surface zero-result translations.
@@ -50,7 +50,14 @@ logger = get_logger(__name__)
 
 # Numeric filters the model must populate only when the question asks for them; an
 # unexpected value here is over-extraction and counts as a miss.
-_NUMERIC_FIELDS = ("min_yield", "max_yield", "min_conversion", "max_conversion")
+_NUMERIC_FIELDS = (
+    "min_yield",
+    "max_yield",
+    "min_conversion",
+    "max_conversion",
+    "similarity_threshold",
+    "limit",
+)
 
 # Bound each DB search so a pathologically slow query (e.g. a common-scaffold
 # SUBSTRUCTURE match) is reported rather than hanging the whole sweep.
@@ -102,6 +109,8 @@ class CaseExpectation(BaseModel):
     max_yield: float | None = None
     min_conversion: float | None = None
     max_conversion: float | None = None
+    similarity_threshold: float | None = None
+    limit: int | None = None
 
 
 class EvalCase(BaseModel):
