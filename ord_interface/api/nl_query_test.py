@@ -66,7 +66,12 @@ async def test_build_query_params_resolves_name(monkeypatch):
         min_yield=70,
     )
     params, resolved = await build_query_params(query)
-    assert params.component == ["CC(=O)O;INPUT;EXACT"]
+    assert params.component is not None
+    assert json.loads(params.component[0]) == {
+        "pattern": "CC(=O)O",
+        "target": "INPUT",
+        "mode": "EXACT",
+    }
     assert params.min_yield == 70
     assert resolved[0].smiles == "CC(=O)O"
     assert resolved[0].resolver == "PubChem API"
@@ -85,7 +90,12 @@ async def test_build_query_params_accepts_verbatim_smiles(monkeypatch):
         ]
     )
     params, resolved = await build_query_params(query)
-    assert params.component == ["c1ccccc1;OUTPUT;SUBSTRUCTURE"]
+    assert params.component is not None
+    assert json.loads(params.component[0]) == {
+        "pattern": "c1ccccc1",
+        "target": "OUTPUT",
+        "mode": "SUBSTRUCTURE",
+    }
     assert resolved[0].resolver == "SMILES (verbatim)"
 
 
@@ -100,7 +110,12 @@ async def test_build_query_params_passes_smarts_through(monkeypatch):
         ]
     )
     params, _ = await build_query_params(query)
-    assert params.component == ["[#6][F,Cl,Br,I];INPUT;SMARTS"]
+    assert params.component is not None
+    assert json.loads(params.component[0]) == {
+        "pattern": "[#6][F,Cl,Br,I]",
+        "target": "INPUT",
+        "mode": "SMARTS",
+    }
 
 
 @pytest.mark.asyncio
@@ -278,3 +293,23 @@ async def test_nl_query_empty_interpretation_returns_422(monkeypatch):
     with pytest.raises(HTTPException) as excinfo:
         await nl_query_endpoint(q="show me everything")
     assert excinfo.value.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_nl_query_dry_run_skips_search(monkeypatch):
+    async def fake_cache_get(key):
+        return _benzene_interpretation()
+
+    async def fail_run_query(params, return_ids):
+        raise AssertionError("run_query must not be called in dry-run mode")
+
+    monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
+    monkeypatch.setattr(nl_query, "run_query", fail_run_query)
+    monkeypatch.setattr(
+        nl_query, "resolve_name", lambda value_type, value: ("c1ccccc1", "PubChem API")
+    )
+    result = await nl_query_endpoint(q="reactions using benzene", dry_run=True)
+    assert result.dry_run is True
+    assert result.results == []
+    # The query that would have run is still surfaced for inspection.
+    assert json.loads(result.query_components[0])["pattern"] == "c1ccccc1"

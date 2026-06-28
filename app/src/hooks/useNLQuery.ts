@@ -28,7 +28,9 @@ import type {
 export interface NLQueryData {
   interpretation: NLInterpretation;
   resolvedComponents: ResolvedComponent[];
+  queryComponents: string[];
   results: SearchResult[];
+  dryRun: boolean;
 }
 
 /**
@@ -40,18 +42,17 @@ export interface NLQueryData {
  * same way, and the model's interpretation is surfaced so the page can show the
  * user how their question was understood.
  */
-export function useNLQuery(query: string | null, enabled: boolean) {
+export function useNLQuery(query: string | null, enabled: boolean, dryRun = false) {
   return useQuery<NLQueryData>({
-    queryKey: ['nl-query', query],
+    queryKey: ['nl-query', query, dryRun],
     enabled: enabled && query !== null && query.trim() !== '',
     retry: false,
     staleTime: Infinity,
     queryFn: async (): Promise<NLQueryData> => {
-      const raw = await fetchJson<NLQueryResponse>(
-        `/api/nl_query?q=${encodeURIComponent(query as string)}`,
-        undefined,
-        'nl_query',
-      );
+      const url =
+        `/api/nl_query?q=${encodeURIComponent(query as string)}` +
+        (dryRun ? '&dry_run=true' : '');
+      const raw = await fetchJson<NLQueryResponse>(url, undefined, 'nl_query');
       const results: SearchResult[] = raw.results.map(r => ({
         ...r,
         data: reaction_pb.Reaction.deserializeBinary(
@@ -61,7 +62,9 @@ export function useNLQuery(query: string | null, enabled: boolean) {
       return {
         interpretation: raw.interpretation,
         resolvedComponents: raw.resolved_components,
+        queryComponents: raw.query_components,
         results,
+        dryRun: raw.dry_run,
       };
     },
   });

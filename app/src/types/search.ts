@@ -86,5 +86,8 @@ export interface NLQueryResponse {
   query: string;
   interpretation: NLInterpretation;
   resolved_components: ResolvedComponent[];
+  // JSON-encoded ComponentSpec strings that would be executed (shown for dry runs).
+  query_components: string[];
   results: Omit<SearchResult, 'data'>[];
+  dry_run: boolean;
 }

@@ -41,7 +41,7 @@ from ord_schema.resolvers import canonicalize_smiles, resolve_name
 from pydantic import BaseModel, Field
 
 from ord_interface.api.queries import QueryResult
-from ord_interface.api.search import QueryParams, get_redis, run_query
+from ord_interface.api.search import ComponentSpec, QueryParams, get_redis, run_query
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["nl"])
@@ -317,7 +317,10 @@ async def build_query_params(
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
-    components = [f"{r.smiles};{r.target};{r.mode}" for r in resolved]
+    components = [
+        ComponentSpec(pattern=r.smiles, target=r.target, mode=r.mode).model_dump_json()
+        for r in resolved
+    ]
     params = QueryParams(
         component=components or None,
         min_yield=nl_query.min_yield,
@@ -338,7 +341,11 @@ class NLQueryResponse(BaseModel):
     query: str
     interpretation: NLQuery
     resolved_components: list[ResolvedComponent]
+    # The structured component predicates (JSON ComponentSpec strings) that would be
+    # executed -- surfaced so a dry run shows the exact query, not just the results.
+    query_components: list[str]
     results: list[QueryResult]
+    dry_run: bool = False
 
 
 async def _redis_get(key: str) -> str | None:
@@ -398,6 +405,7 @@ async def _translation_cache_set(key: str, interpretation: NLQuery) -> None:
 @router.get("/nl_query")
 async def nl_query(
     q: str = Query(min_length=1, max_length=2000),
+    dry_run: bool = False,
 ) -> NLQueryResponse:
     """Runs a natural-language search.
 
@@ -406,6 +414,9 @@ async def nl_query(
     Only the model's translation is cached (best-effort, in Redis): identical questions
     skip the model call, but the database query is always re-run so results stay fresh.
     A Redis outage falls back to a live translation rather than failing the request.
+
+    With ``dry_run=true`` the question is translated and resolved but the database
+    search is not executed -- useful for inspecting exactly what query would run.
     """
     key = _translation_cache_key(q)
     interpretation = await _translation_cache_get(key)
@@ -417,19 +428,25 @@ async def nl_query(
         await _translation_cache_set(key, interpretation)
     # Resolution caches hits and runs the blocking name-resolver lookups in a thread.
     params, resolved = await build_query_params(interpretation)
-    logger.info(f"NL query {q!r} -> {json.dumps(interpretation.model_dump())}")
-    try:
-        results = cast(list[QueryResult], await run_query(params, return_ids=False))
-    except ValueError as error:
-        # Raised when the interpretation has no usable constraints (e.g. "show me
-        # everything"); surface a 422 rather than an unhandled 500.
-        raise HTTPException(
-            status_code=422,
-            detail="Could not extract any search constraints from the question.",
-        ) from error
+    logger.info(
+        f"NL query {q!r} (dry_run={dry_run}) -> {json.dumps(interpretation.model_dump())}"
+    )
+    results: list[QueryResult] = []
+    if not dry_run:
+        try:
+            results = cast(list[QueryResult], await run_query(params, return_ids=False))
+        except ValueError as error:
+            # Raised when the interpretation has no usable constraints (e.g. "show me
+            # everything"); surface a 422 rather than an unhandled 500.
+            raise HTTPException(
+                status_code=422,
+                detail="Could not extract any search constraints from the question.",
+            ) from error
     return NLQueryResponse(
         query=q,
         interpretation=interpretation,
         resolved_components=resolved,
+        query_components=params.component or [],
         results=results,
+        dry_run=dry_run,
     )

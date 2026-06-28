@@ -74,22 +74,34 @@ const MainNLSearch: React.FC = () => {
   // survive reloads, mirroring the structured search page.
   const [searchParams, setSearchParams] = useSearchParams();
   const submittedQuery = searchParams.get('q');
+  // Dev mode: translate + resolve but don't run the search; kept in the URL so it's
+  // shareable and survives reloads, like the query itself.
+  const dryRun = searchParams.get('dry_run') === '1';
   const [input, setInput] = useState(submittedQuery ?? '');
 
-  const { data, isFetching, error } = useNLQuery(submittedQuery, true);
+  const { data, isFetching, error } = useNLQuery(submittedQuery, true, dryRun);
+
+  const apply = (query: string, dry: boolean) => {
+    const next: Record<string, string> = {};
+    if (query) next.q = query;
+    if (dry) next.dry_run = '1';
+    setSearchParams(next);
+  };
 
   const submit = (value: string) => {
     const trimmed = value.trim();
     setInput(trimmed);
-    if (trimmed) {
-      setSearchParams({ q: trimmed });
-    } else {
-      setSearchParams({});
-    }
+    apply(trimmed, dryRun);
   };
 
   return (
     <div className="nl-search">
+      <div
+        className="nl-search__banner"
+        role="status"
+      >
+        🚧 This feature is in development — results may be incomplete or change.
+      </div>
       <h1 className="nl-search__title">Ask about reactions</h1>
       <p className="nl-search__subtitle">
         Describe what you&apos;re looking for in plain language — compound names are
@@ -110,10 +122,25 @@ const MainNLSearch: React.FC = () => {
           placeholder="e.g. reactions using benzene as an input with yield greater than 70%"
           onChange={event => setInput(event.target.value)}
         />
-        <button className="nl-search__button" type="submit" disabled={isFetching}>
+        <button
+          className="nl-search__button"
+          type="submit"
+          disabled={isFetching}
+        >
           {isFetching ? 'Searching…' : 'Search'}
         </button>
       </form>
+
+      <label className="nl-search__dry-run-toggle">
+        <input
+          type="checkbox"
+          checked={dryRun}
+          onChange={event =>
+            apply(submittedQuery ?? input.trim(), event.target.checked)
+          }
+        />
+        Dry run — translate &amp; resolve only, don&apos;t run the search
+      </label>
 
       <div className="nl-search__examples">
         {EXAMPLES.map(example => (
@@ -128,14 +155,25 @@ const MainNLSearch: React.FC = () => {
         ))}
       </div>
 
-      {error && (
-        <div className="nl-search__error">{(error as Error).message}</div>
-      )}
+      {error && <div className="nl-search__error">{(error as Error).message}</div>}
 
       {data && submittedQuery && (
         <>
           <Interpretation data={data} />
-          {data.results.length > 0 ? (
+          {data.dryRun ? (
+            <div className="nl-search__dry-run">
+              <div className="nl-search__dry-run-title">
+                Dry run — search not executed
+              </div>
+              <pre className="nl-search__dry-run-query">
+                {JSON.stringify(
+                  data.queryComponents.map(component => JSON.parse(component)),
+                  null,
+                  2,
+                )}
+              </pre>
+            </div>
+          ) : data.results.length > 0 ? (
             <SearchResults searchResults={data.results} />
           ) : (
             <div className="nl-search__empty">

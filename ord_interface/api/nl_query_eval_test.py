@@ -36,9 +36,7 @@ def test_load_cases_returns_nonempty():
 def test_check_interpretation_passes_on_match():
     expect = CaseExpectation(
         components=[
-            ComponentExpectation(
-                identifier="benzene", target="INPUT", mode="EXACT"
-            )
+            ComponentExpectation(identifier="benzene", target="INPUT", mode="EXACT")
         ],
         min_yield=70,
     )
@@ -60,9 +58,7 @@ def test_check_interpretation_requires_exact_identifier():
         ]
     )
     interpretation = NLQuery(
-        components=[
-            NLComponent(identifier="aminophenol", target="INPUT", mode="EXACT")
-        ]
+        components=[NLComponent(identifier="aminophenol", target="INPUT", mode="EXACT")]
     )
     mismatches = check_interpretation(expect, interpretation)
     assert any("missing component" in m for m in mismatches)
@@ -72,9 +68,7 @@ def test_check_interpretation_requires_exact_identifier():
 def test_check_interpretation_flags_wrong_target():
     expect = CaseExpectation(
         components=[
-            ComponentExpectation(
-                identifier="ibuprofen", target="OUTPUT", mode="EXACT"
-            )
+            ComponentExpectation(identifier="ibuprofen", target="OUTPUT", mode="EXACT")
         ]
     )
     interpretation = NLQuery(
@@ -88,9 +82,7 @@ def test_check_interpretation_flags_wrong_target():
 def test_check_interpretation_flags_over_extracted_yield():
     expect = CaseExpectation(
         components=[
-            ComponentExpectation(
-                identifier="benzene", target="INPUT", mode="EXACT"
-            )
+            ComponentExpectation(identifier="benzene", target="INPUT", mode="EXACT")
         ]
     )
     interpretation = NLQuery(

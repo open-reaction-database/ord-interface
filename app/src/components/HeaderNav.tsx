@@ -50,12 +50,8 @@ const HeaderNav: React.FC = () => {
               >
                 Search
               </Link>
-              <Link
-                className="nav-link header-nav__link"
-                to="/ask"
-              >
-                Ask
-              </Link>
+              {/* The /ask route exists but is intentionally unlisted while the
+                  natural-language feature is in development. */}
             </div>
             <div className="nav-item header-nav__nav-item">
               <a
