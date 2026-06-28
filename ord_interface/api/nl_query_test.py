@@ -135,6 +135,24 @@ async def test_build_query_params_invalid_smarts(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_build_query_params_invalid_reaction_smarts():
+    # An unparseable reaction SMARTS is a clear 422 (in both normal and dry-run mode),
+    # not a misleading "no constraints" error from run_query or a silent pass-through.
+    query = NLQuery(reaction_smarts="this is not a reaction")
+    with pytest.raises(HTTPException) as excinfo:
+        await build_query_params(query)
+    assert excinfo.value.status_code == 422
+    assert "reaction smarts" in excinfo.value.detail.lower()
+
+
+@pytest.mark.asyncio
+async def test_build_query_params_accepts_valid_reaction_smarts():
+    query = NLQuery(reaction_smarts="[C:1]=[O:2]>>[C:1][O:2]")
+    params, _ = await build_query_params(query)
+    assert params.reaction_smarts == "[C:1]=[O:2]>>[C:1][O:2]"
+
+
+@pytest.mark.asyncio
 async def test_build_query_params_unresolvable_name(monkeypatch):
     def raise_value_error(value_type, value):
         raise ValueError(f"Could not resolve {value_type} {value} to SMILES")

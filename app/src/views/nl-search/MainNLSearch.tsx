@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import SearchResults from '../search/SearchResults';
 import { useNLQuery } from '../../hooks/useNLQuery';
@@ -150,6 +150,11 @@ const MainNLSearch: React.FC = () => {
   // shareable and survives reloads, like the query itself.
   const dryRun = searchParams.get('dry_run') === '1';
   const [input, setInput] = useState(submittedQuery ?? '');
+  // Keep the text box in sync with the URL so browser back/forward navigation (which
+  // changes ?q=) updates the visible query instead of leaving a stale value.
+  useEffect(() => {
+    setInput(submittedQuery ?? '');
+  }, [submittedQuery]);
 
   const { data, isFetching, error } = useNLQuery(submittedQuery, true, dryRun);
 

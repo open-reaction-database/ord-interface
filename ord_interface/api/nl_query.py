@@ -40,6 +40,7 @@ from ord_schema.logging import get_logger
 from ord_schema.resolvers import canonicalize_smiles, resolve_name
 from pydantic import BaseModel, Field, ValidationError
 from rdkit import Chem
+from rdkit.Chem import rdChemReactions
 
 from ord_interface.api.queries import QueryResult
 from ord_interface.api.search import ComponentSpec, QueryParams, get_redis, run_query
@@ -325,8 +326,24 @@ async def build_query_params(
         A tuple of the QueryParams to execute and the resolved components (for display).
 
     Raises:
-        HTTPException: If a named compound cannot be resolved to a structure.
+        HTTPException: If a named compound cannot be resolved, or a model-authored SMARTS
+            or reaction SMARTS is unparseable (all 422).
     """
+    if nl_query.reaction_smarts is not None:
+        # Validate here so a bad reaction SMARTS is a clear 422 in both normal and
+        # dry-run mode, rather than a misleading "no constraints" 422 from run_query
+        # (normal) or an unvalidated pass-through (dry run, which skips run_query).
+        # ReactionFromSmarts returns None for some malformed patterns and raises
+        # ValueError for others (e.g. a missing ``>>``); treat both as invalid.
+        try:
+            reaction = rdChemReactions.ReactionFromSmarts(nl_query.reaction_smarts)
+        except ValueError:
+            reaction = None
+        if reaction is None:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid reaction SMARTS: {nl_query.reaction_smarts!r}",
+            )
     try:
         resolved = await asyncio.gather(
             *(_resolve_component(component) for component in nl_query.components)
