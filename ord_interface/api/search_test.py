@@ -196,11 +196,15 @@ async def test_run_query_timeout_maps_to_400(monkeypatch):
     monkeypatch.setattr(search, "get_cursor", _dummy_cursor)
 
     async def cancel(*args, **kwargs):
-        raise psycopg.errors.QueryCanceled("canceling statement due to statement timeout")
+        raise psycopg.errors.QueryCanceled(
+            "canceling statement due to statement timeout"
+        )
 
     monkeypatch.setattr(search, "run_queries", cancel)
     with pytest.raises(HTTPException) as excinfo:
-        await run_query(QueryParams(component=["c1ccccc1;input;substructure"]), return_ids=True)
+        await run_query(
+            QueryParams(component=["c1ccccc1;input;substructure"]), return_ids=True
+        )
     assert excinfo.value.status_code == 400
 
 
