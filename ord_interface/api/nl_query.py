@@ -39,6 +39,7 @@ from fastapi import APIRouter, HTTPException, Query
 from ord_schema.logging import get_logger
 from ord_schema.resolvers import canonicalize_smiles, resolve_name
 from pydantic import BaseModel, Field
+from rdkit import Chem
 
 from ord_interface.api.queries import QueryResult
 from ord_interface.api.search import ComponentSpec, QueryParams, get_redis, run_query
@@ -55,7 +56,7 @@ MAX_TOKENS = 1024
 # abusive) identical questions don't each pay for a model call, while the database query
 # is always re-run and stays fresh. Bump the version when the prompt or NLQuery schema
 # changes so stale interpretations are not served.
-TRANSLATION_CACHE_VERSION = "v1"
+TRANSLATION_CACHE_VERSION = "v3"
 TRANSLATION_CACHE_TTL_SECONDS = 60 * 60
 
 # Name -> SMILES resolutions are cached separately and for much longer: they are stable
@@ -262,9 +263,9 @@ async def _resolve_name_cached(name: str) -> tuple[str, str]:
 async def _resolve_component(component: NLComponent) -> ResolvedComponent:
     """Resolves a component's identifier to canonical SMILES.
 
-    SMARTS patterns pass through untouched. Otherwise the identifier is treated as a
-    SMILES if RDKit can parse it, and falls back to (cached) name resolution via
-    PubChem/CIR/OPSIN.
+    SMARTS patterns pass through untouched once validated. Otherwise the identifier is
+    treated as a SMILES if RDKit can parse it, and falls back to (cached) name resolution
+    via PubChem/CIR/OPSIN.
 
     Args:
         component: The component to resolve.
@@ -273,9 +274,15 @@ async def _resolve_component(component: NLComponent) -> ResolvedComponent:
         The resolved component.
 
     Raises:
-        ValueError: If the identifier can be resolved to neither SMILES nor a name.
+        ValueError: If a SMARTS pattern is unparseable, or a non-SMARTS identifier can be
+            resolved to neither SMILES nor a name.
     """
     if component.mode == "SMARTS":
+        # The model authors SMARTS patterns directly, so validate before the pattern
+        # reaches the database; a parse failure here surfaces as a clean 422 rather than
+        # a 400 deep in query execution (which a dry run would skip entirely).
+        if Chem.MolFromSmarts(component.identifier) is None:
+            raise ValueError(f"Invalid SMARTS pattern: {component.identifier!r}")
         return ResolvedComponent(
             identifier=component.identifier,
             smiles=component.identifier,

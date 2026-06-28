@@ -119,6 +119,22 @@ async def test_build_query_params_passes_smarts_through(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_build_query_params_invalid_smarts(monkeypatch):
+    # A SMARTS the model authored but RDKit cannot parse should be a clean 422, not a
+    # 400 surfaced deep in query execution (which a dry run would skip entirely).
+    monkeypatch.setattr(
+        nl_query, "canonicalize_smiles", mock.Mock(side_effect=AssertionError)
+    )
+    query = NLQuery(
+        components=[NLComponent(identifier="[Br", target="OUTPUT", mode="SMARTS")]
+    )
+    with pytest.raises(HTTPException) as excinfo:
+        await build_query_params(query)
+    assert excinfo.value.status_code == 422
+    assert "[Br" in excinfo.value.detail
+
+
+@pytest.mark.asyncio
 async def test_build_query_params_unresolvable_name(monkeypatch):
     def raise_value_error(value_type, value):
         raise ValueError(f"Could not resolve {value_type} {value} to SMILES")

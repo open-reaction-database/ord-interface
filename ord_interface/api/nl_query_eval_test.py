@@ -65,6 +65,36 @@ def test_check_interpretation_requires_exact_identifier():
     assert any("unexpected component" in m for m in mismatches)
 
 
+def test_check_interpretation_matches_equivalent_smarts():
+    # Equivalent SMARTS that differ as strings should match once canonicalized.
+    expect = CaseExpectation(
+        components=[
+            ComponentExpectation(identifier="cB(O)O", target="OUTPUT", mode="SMARTS")
+        ]
+    )
+    interpretation = NLQuery(
+        components=[NLComponent(identifier="[c]B(O)O", target="OUTPUT", mode="SMARTS")]
+    )
+    assert check_interpretation(expect, interpretation) == []
+
+
+def test_check_interpretation_matches_equivalent_smiles():
+    # Equivalent SMILES (different atom ordering) should match once canonicalized.
+    expect = CaseExpectation(
+        components=[
+            ComponentExpectation(
+                identifier="c1ccncc1", target="OUTPUT", mode="SUBSTRUCTURE"
+            )
+        ]
+    )
+    interpretation = NLQuery(
+        components=[
+            NLComponent(identifier="n1ccccc1", target="OUTPUT", mode="SUBSTRUCTURE")
+        ]
+    )
+    assert check_interpretation(expect, interpretation) == []
+
+
 def test_check_interpretation_flags_wrong_target():
     expect = CaseExpectation(
         components=[

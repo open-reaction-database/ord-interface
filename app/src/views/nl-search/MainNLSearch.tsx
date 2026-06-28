@@ -19,6 +19,7 @@ import { useSearchParams } from 'react-router-dom';
 import SearchResults from '../search/SearchResults';
 import { useNLQuery } from '../../hooks/useNLQuery';
 import type { NLQueryData } from '../../hooks/useNLQuery';
+import type { NLInterpretation, ResolvedComponent } from '../../types/search';
 import './MainNLSearch.scss';
 
 const EXAMPLES = [
@@ -27,9 +28,25 @@ const EXAMPLES = [
   'reactions that make an aryl boronic acid',
 ];
 
-/** Renders the model's interpretation so users can see how their question was read. */
-const Interpretation: React.FC<{ data: NLQueryData }> = ({ data }) => {
-  const { interpretation, resolvedComponents } = data;
+const ROLE_LABEL = { OUTPUT: 'product', INPUT: 'reactant/reagent' } as const;
+
+// A "(verbatim)" resolver tag means the model supplied the structure directly (a SMILES
+// or SMARTS), so no name resolver was actually called.
+const isVerbatim = (resolver: string): boolean => resolver.includes('verbatim');
+
+// The distinct network resolvers that actually ran, ignoring verbatim passthroughs and
+// the "(cached)" suffix so a fresh and a cached PubChem hit count as one resolver.
+const resolversUsed = (components: ResolvedComponent[]): string[] =>
+  Array.from(
+    new Set(
+      components
+        .filter(component => !isVerbatim(component.resolver))
+        .map(component => component.resolver.replace(/ \(cached\)$/, '')),
+    ),
+  );
+
+/** Extracts the model's non-component filters as human-readable strings. */
+const filterSummary = (interpretation: NLInterpretation): string[] => {
   const filters: string[] = [];
   if (interpretation.min_yield != null)
     filters.push(`yield ≥ ${interpretation.min_yield}%`);
@@ -41,30 +58,85 @@ const Interpretation: React.FC<{ data: NLQueryData }> = ({ data }) => {
     filters.push(`conversion ≤ ${interpretation.max_conversion}%`);
   if (interpretation.reaction_smarts)
     filters.push(`reaction SMARTS ${interpretation.reaction_smarts}`);
+  if (interpretation.similarity_threshold != null)
+    filters.push(`similarity threshold ${interpretation.similarity_threshold}`);
   if (interpretation.use_stereochemistry) filters.push('stereochemistry respected');
+  if (interpretation.limit != null) filters.push(`limit ${interpretation.limit}`);
+  return filters;
+};
+
+/**
+ * Shows how a question was read, separating the two provenance layers: what the
+ * language model extracted (the `build_query` tool call) and what the deterministic
+ * resolvers turned each identifier into. A "verbatim" resolver means the model supplied
+ * the structure directly (a SMILES or SMARTS), so nothing was looked up.
+ */
+const Interpretation: React.FC<{ data: NLQueryData }> = ({ data }) => {
+  const { interpretation, resolvedComponents } = data;
+  const filters = filterSummary(interpretation);
+  // Only components whose names actually went through a network resolver; SMILES/SMARTS
+  // the model supplied verbatim were never resolved and don't belong in this section.
+  const resolved = resolvedComponents.filter(
+    component => !isVerbatim(component.resolver),
+  );
 
   return (
     <div className="nl-search__interpretation">
-      <div className="nl-search__interpretation-title">Interpreted as:</div>
-      <ul className="nl-search__interpretation-list">
-        {resolvedComponents.map((component, index) => (
-          <li key={index}>
-            <span className="nl-search__role">
-              {component.target === 'OUTPUT' ? 'product' : 'reactant/reagent'}
-            </span>{' '}
-            <strong>{component.identifier}</strong>{' '}
-            <span className="nl-search__mode">({component.mode.toLowerCase()})</span>{' '}
-            <code>{component.smiles}</code>{' '}
-            <span className="nl-search__resolver">via {component.resolver}</span>
-          </li>
-        ))}
-        {filters.map((filter, index) => (
-          <li key={`filter-${index}`}>{filter}</li>
-        ))}
-        {resolvedComponents.length === 0 && filters.length === 0 && (
-          <li>(no constraints extracted)</li>
+      <section className="nl-search__layer">
+        <div className="nl-search__interpretation-title">
+          From the model{' '}
+          <span className="nl-search__provenance">(build_query tool call)</span>
+        </div>
+        {interpretation.components.length > 0 ? (
+          <ul className="nl-search__interpretation-list">
+            {interpretation.components.map((component, index) => (
+              <li key={index}>
+                <span className="nl-search__role">{ROLE_LABEL[component.target]}</span>{' '}
+                <strong>{component.identifier}</strong>{' '}
+                <span className="nl-search__mode">
+                  ({component.mode.toLowerCase()})
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="nl-search__muted">(no components extracted)</div>
         )}
-      </ul>
+        {filters.length > 0 && (
+          <ul className="nl-search__interpretation-list">
+            {filters.map((filter, index) => (
+              <li key={`filter-${index}`}>{filter}</li>
+            ))}
+          </ul>
+        )}
+        <details className="nl-search__raw">
+          <summary>Raw tool call</summary>
+          <pre className="nl-search__raw-json">
+            {JSON.stringify(interpretation, null, 2)}
+          </pre>
+        </details>
+      </section>
+
+      {resolved.length > 0 && (
+        <section className="nl-search__layer">
+          <div className="nl-search__interpretation-title">
+            Resolved to structures{' '}
+            <span className="nl-search__provenance">
+              ({resolversUsed(resolved).join(', ')})
+            </span>
+          </div>
+          <ul className="nl-search__resolution-list">
+            {resolved.map((component, index) => (
+              <li key={index}>
+                <span className="nl-search__identifier">{component.identifier}</span>
+                <span className="nl-search__arrow">→</span>
+                <code>{component.smiles}</code>
+                <span className="nl-search__resolver">via {component.resolver}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 };
@@ -165,13 +237,6 @@ const MainNLSearch: React.FC = () => {
               <div className="nl-search__dry-run-title">
                 Dry run — search not executed
               </div>
-              <pre className="nl-search__dry-run-query">
-                {JSON.stringify(
-                  data.queryComponents.map(component => JSON.parse(component)),
-                  null,
-                  2,
-                )}
-              </pre>
             </div>
           ) : data.results.length > 0 ? (
             <SearchResults searchResults={data.results} />

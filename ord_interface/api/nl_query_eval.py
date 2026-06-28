@@ -37,6 +37,7 @@ import anthropic
 import yaml
 from ord_schema.logging import get_logger
 from pydantic import BaseModel
+from rdkit import Chem
 
 from ord_interface.api.nl_query import (
     NLQuery,
@@ -59,13 +60,38 @@ SEARCH_TIMEOUT_SECONDS = 60.0
 class ComponentExpectation(BaseModel):
     """Expected component constraint.
 
-    The identifier is matched exactly (case- and whitespace-insensitive), so the model
-    must reproduce the specific compound -- e.g. "4-aminophenol", not "aminophenol".
+    Identifiers are compared by structure, not by exact string: SMARTS and SMILES are
+    canonicalized with RDKit so equivalent patterns match (e.g. ``cB(O)O`` vs
+    ``[c]B(O)O``), while names that RDKit cannot parse fall back to a case- and
+    whitespace-insensitive string compare (so "4-aminophenol" still differs from
+    "aminophenol").
     """
 
     identifier: str
     target: str
     mode: str
+
+
+def _canonical_identifier(identifier: str, mode: str) -> str:
+    """Canonicalizes a component identifier for structure-aware comparison.
+
+    Args:
+        identifier: The component identifier (a name, SMILES, or SMARTS).
+        mode: The match mode; ``SMARTS`` is parsed as SMARTS, everything else as SMILES.
+
+    Returns:
+        The RDKit-canonical SMARTS or SMILES, or the lowercased, stripped identifier when
+        RDKit cannot parse it (e.g. a compound name awaiting resolution).
+    """
+    if mode == "SMARTS":
+        mol = Chem.MolFromSmarts(identifier)
+        if mol is not None:
+            return Chem.MolToSmarts(mol)
+    else:
+        mol = Chem.MolFromSmiles(identifier)
+        if mol is not None:
+            return Chem.MolToSmiles(mol)
+    return identifier.strip().lower()
 
 
 class CaseExpectation(BaseModel):
@@ -112,8 +138,8 @@ def check_interpretation(expect: CaseExpectation, interpretation: NLQuery) -> li
             if (
                 candidate.target == wanted.target
                 and candidate.mode == wanted.mode
-                and candidate.identifier.strip().lower()
-                == wanted.identifier.strip().lower()
+                and _canonical_identifier(candidate.identifier, candidate.mode)
+                == _canonical_identifier(wanted.identifier, wanted.mode)
             ):
                 remaining.remove(candidate)
                 break
