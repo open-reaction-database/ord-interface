@@ -122,10 +122,47 @@ class QueryParams:
     min_yield: float | None = None
     max_yield: float | None = None
     doi: list[str] | None = Query(None)
+    # Each value is a JSON-encoded ComponentSpec; see ComponentSpec.
     component: list[str] | None = Query(None)
     use_stereochemistry: bool | None = None
     similarity: float | None = None
     limit: int | None = None
+
+
+class ComponentSpec(BaseModel):
+    """A single component predicate, JSON-encoded in each ``component`` query value.
+
+    Replaces a legacy ``"pattern;target;mode"`` string whose ``;`` delimiter collided
+    with SMARTS patterns (which use ``;`` as a low-precedence AND). ``target`` and
+    ``mode`` are matched case-insensitively against the ReactionComponentQuery enums.
+    """
+
+    pattern: str
+    target: str
+    mode: str
+
+    @classmethod
+    def parse(cls, spec: str) -> ComponentSpec:
+        """Parses one ``component`` value, accepting JSON or the legacy format.
+
+        New values are JSON objects; the legacy ``"pattern;target;mode"`` form is still
+        accepted so previously shared search URLs keep working. The legacy parse splits
+        from the right because a SMARTS ``pattern`` may itself contain ``;``.
+
+        Args:
+            spec: A single ``component`` query-parameter value.
+
+        Returns:
+            The parsed ComponentSpec.
+
+        Raises:
+            ValueError: If ``spec`` is neither valid JSON nor a 3-field legacy string.
+        """
+        spec = spec.strip()
+        if spec.startswith("{"):
+            return cls.model_validate_json(spec)
+        pattern, target, mode = spec.rsplit(";", 2)
+        return cls(pattern=pattern, target=target, mode=mode)
 
 
 async def run_query(
@@ -154,17 +191,23 @@ async def run_query(
         if params.similarity is not None:
             kwargs["similarity_threshold"] = params.similarity
         for spec in params.component:
-            # Split from the right: the pattern may itself contain ";" (SMARTS uses it
-            # as a low-precedence AND), while target and mode never do.
-            pattern, target_name, mode_name = spec.rsplit(";", 2)
-            queries.append(
-                ReactionComponentQuery(
-                    pattern,
-                    ReactionComponentQuery.Target[target_name.upper()],
-                    ReactionComponentQuery.MatchMode[mode_name.upper()],
-                    **kwargs,
+            # Cover the whole predicate: a bad target/mode is a KeyError on the enum
+            # lookup and an unparseable pattern is a ValueError from the query -- both
+            # are client errors, not 500s.
+            try:
+                component = ComponentSpec.parse(spec)
+                queries.append(
+                    ReactionComponentQuery(
+                        component.pattern,
+                        ReactionComponentQuery.Target[component.target.upper()],
+                        ReactionComponentQuery.MatchMode[component.mode.upper()],
+                        **kwargs,
+                    )
                 )
-            )
+            except (KeyError, ValueError) as error:
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid component spec: {spec!r}"
+                ) from error
     if not queries:
         raise ValueError("No query parameters were specified.")
     limit = MAX_RESULTS
