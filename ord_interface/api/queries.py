@@ -154,7 +154,8 @@ class ReactionSmartsQuery(ReactionQuery):
         query = """
             SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
+            JOIN derived.reaction_smiles ON reaction_smiles.reaction_id = reaction.id
+            JOIN rdkit.reactions ON rdkit.reactions.id = reaction_smiles.rdkit_reaction_id
             WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s)
         """
         return query, [self._reaction_smarts]
@@ -323,12 +324,14 @@ class ReactionComponentQuery(ReactionQuery):
             return """
             JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
             JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
-            JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
+            JOIN derived.compound_smiles ON compound_smiles.compound_id = compound.id
+            JOIN rdkit.mols ON rdkit.mols.id = compound_smiles.rdkit_mol_id
             """
         return """
             JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
             JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
-            JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
+            JOIN derived.product_compound_smiles ON product_compound_smiles.product_compound_id = product_compound.id
+            JOIN rdkit.mols ON rdkit.mols.id = product_compound_smiles.rdkit_mol_id
             """
 
     @property
@@ -544,9 +547,10 @@ async def fetch_reactions(
     """
     unique_ids = list(dict.fromkeys(reaction_ids))  # De-dup, preserving order.
     query = """
-        SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
+        SELECT dataset.dataset_id, reaction.reaction_id, reactions.proto
         FROM ord.reaction
         JOIN ord.dataset ON dataset.id = reaction.dataset_id
+        JOIN public.reactions ON reactions.reaction_id = reaction.reaction_id
         WHERE reaction.reaction_id = ANY (%s)
     """
     await cursor.execute(query, (unique_ids,))
@@ -574,6 +578,8 @@ async def _fetch_dataset_most_used_smiles(
     compound_table: str,
     join_table: str,
     foreign_key: str,
+    smiles_table: str,
+    smiles_foreign_key: str,
     limit: int,
 ) -> list[StatsResult]:
     """Fetches the top K most used SMILES for a dataset, joined through the given tables.
@@ -581,32 +587,45 @@ async def _fetch_dataset_most_used_smiles(
     Args:
         cursor: Database cursor.
         dataset_id: Dataset to aggregate over.
-        compound_table: Table holding SMILES, e.g. "compound" or "product_compound".
+        compound_table: Compound table linking to reactions, e.g. "compound" or
+            "product_compound".
         join_table: Table linking compounds to reactions, e.g. "reaction_input".
         foreign_key: Column on ``compound_table`` referencing ``join_table``.
+        smiles_table: Derived table holding the generated SMILES, e.g.
+            "compound_smiles" or "product_compound_smiles".
+        smiles_foreign_key: Column on ``smiles_table`` referencing ``compound_table``.
         limit: Maximum number of rows to return.
 
     Returns:
         Most frequently appearing SMILES, in descending order of frequency.
     """
     # Compose schema-qualified identifiers safely rather than interpolating raw
-    # strings into the SQL text.
+    # strings into the SQL text. The SMILES live in the derived schema, one row per
+    # compound, joined back to the compound table by its primary key.
     compound = sql.Identifier("ord", compound_table)
     join = sql.Identifier("ord", join_table)
+    smiles = sql.Identifier("derived", smiles_table)
     query = sql.SQL(
         """
-            SELECT smiles, COUNT(*) AS times_appearing
+            SELECT {smiles}.smiles AS smiles, COUNT(*) AS times_appearing
             FROM {compound}
             JOIN {join} ON {compound}.{foreign_key} = {join}.id
             JOIN ord.reaction ON {join}.reaction_id = ord.reaction.id
             JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
+            JOIN {smiles} ON {smiles}.{smiles_foreign_key} = {compound}.id
             WHERE ord.dataset.dataset_id = %s
-            AND smiles IS NOT NULL
-            GROUP BY smiles
+            AND {smiles}.smiles IS NOT NULL
+            GROUP BY {smiles}.smiles
             ORDER BY times_appearing DESC
             LIMIT %s
         """
-    ).format(compound=compound, join=join, foreign_key=sql.Identifier(foreign_key))
+    ).format(
+        compound=compound,
+        join=join,
+        foreign_key=sql.Identifier(foreign_key),
+        smiles=smiles,
+        smiles_foreign_key=sql.Identifier(smiles_foreign_key),
+    )
     await cursor.execute(query, (dataset_id, limit))
     results = []
     async for row in cursor:
@@ -624,6 +643,8 @@ async def fetch_dataset_most_used_smiles_for_inputs(
         compound_table="compound",
         join_table="reaction_input",
         foreign_key="reaction_input_id",
+        smiles_table="compound_smiles",
+        smiles_foreign_key="compound_id",
         limit=limit,
     )
 
@@ -638,5 +659,7 @@ async def fetch_dataset_most_used_smiles_for_products(
         compound_table="product_compound",
         join_table="reaction_outcome",
         foreign_key="reaction_outcome_id",
+        smiles_table="product_compound_smiles",
+        smiles_foreign_key="product_compound_id",
         limit=limit,
     )

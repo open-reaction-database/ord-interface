@@ -185,13 +185,15 @@ async def _max_similarities(test_cursor, reaction_ids, pattern, target):
         join = """
         JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
         JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
-        JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
+        JOIN derived.compound_smiles ON compound_smiles.compound_id = compound.id
+        JOIN rdkit.mols ON rdkit.mols.id = compound_smiles.rdkit_mol_id
         """
     else:
         join = """
         JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
         JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
-        JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
+        JOIN derived.product_compound_smiles ON product_compound_smiles.product_compound_id = product_compound.id
+        JOIN rdkit.mols ON rdkit.mols.id = product_compound_smiles.rdkit_mol_id
         """
     await test_cursor.execute(
         f"""
