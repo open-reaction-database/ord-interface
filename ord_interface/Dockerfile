@@ -91,7 +91,6 @@ WORKDIR /app/ord-interface
 # Copy the rest of the editor files.
 COPY ord_interface/editor/ ord_interface/editor/
 # Now copy everything else.
-COPY ord_interface/about.html ord_interface/
 COPY ord_interface/interface.py ord_interface/
 COPY ord_interface/api/ ord_interface/api/
 COPY ord_interface/visualization/ ord_interface/visualization/

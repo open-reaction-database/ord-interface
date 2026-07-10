@@ -181,7 +181,7 @@ const About: React.FC = () => {
             <ul className="about__leadership-column">
               <li className="about__list-item">Joel Hawkins (Pfizer)</li>
               <li className="about__list-item">Klavs Jensen (MIT)</li>
-              <li className="about__list-item">Steven Kearnes (Relay)</li>
+              <li className="about__list-item">Steven Kearnes (Genesis)</li>
             </ul>
           </div>
           <h5 className="about__subsection-title">Advisory Board</h5>
