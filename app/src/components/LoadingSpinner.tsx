@@ -15,18 +15,18 @@
  */
 
 import React from 'react';
-import './LoadingSpinner.scss';
+import { Flex, Loader } from '@mantine/core';
 
+// Centered Mantine loader in the theme's primary color.
 const LoadingSpinner: React.FC = () => {
   return (
-    <div className="spinner-main">
-      <div className="loader-ring">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-    </div>
+    <Flex
+      justify="center"
+      align="center"
+      py="xl"
+    >
+      <Loader size="xl" />
+    </Flex>
   );
 };
 

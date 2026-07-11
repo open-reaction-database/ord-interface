@@ -15,8 +15,7 @@
  */
 
 import React from 'react';
-import reaction_pb from 'ord-schema';
-import type { CompoundIdentifier } from 'ord-schema/proto/reaction_pb';
+import { ord } from 'ord-schema-protobufjs';
 import { amountObj, amountStr } from '../../utils/amount';
 import { enumName } from '../../utils/enum';
 import { formattedTime } from '../../utils/outcomes';
@@ -27,9 +26,9 @@ interface WorkupsViewProps {
   workup: ReactionWorkupData | undefined;
 }
 
-const NAME_IDENTIFIER_TYPE = reaction_pb.CompoundIdentifier.CompoundIdentifierType.NAME;
+const NAME_IDENTIFIER_TYPE = ord.CompoundIdentifier.CompoundIdentifierType.NAME;
 
-const getNameIdentifier = (identifiers: CompoundIdentifier.AsObject[]): string => {
+const getNameIdentifier = (identifiers: ord.ICompoundIdentifier[]): string => {
   // Falls back to the first identifier when the compound has no NAME entry,
   // rather than throwing the way the Vue source did.
   const nameIdentifier = identifiers.find(
@@ -41,8 +40,7 @@ const getNameIdentifier = (identifiers: CompoundIdentifier.AsObject[]): string =
 const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
   if (!workup) return null;
 
-  const workupType =
-    enumName(reaction_pb.ReactionWorkup.ReactionWorkupType, workup.type) ?? '';
+  const workupType = enumName(ord.ReactionWorkup.ReactionWorkupType, workup.type) ?? '';
   const duration = formattedTime(workup.duration);
   const aliquotAmount = workup.amount ? amountStr(amountObj(workup.amount)) : '';
 
@@ -99,14 +97,14 @@ const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
         )}
       </div>
 
-      {workup.input && workup.input.componentsList.length > 0 && (
+      {workup.input?.components && workup.input.components.length > 0 && (
         <div className="inputs">
           <div className="title">Inputs</div>
           <div className="components">
-            {workup.input.componentsList.map((component, idx) => (
+            {workup.input.components.map((component, idx) => (
               <React.Fragment key={idx}>
                 <div className="identifier">
-                  {getNameIdentifier(component.identifiersList)}
+                  {getNameIdentifier(component.identifiers ?? [])}
                 </div>
                 <div className="amount">{amountStr(amountObj(component.amount))}</div>
               </React.Fragment>

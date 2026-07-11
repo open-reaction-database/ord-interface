@@ -15,9 +15,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import reaction_pb from 'ord-schema';
-import { base64ToBytes } from '../utils/base64';
-import { fetchJson } from '../utils/api';
+import { api } from '../utils/api';
+import { decodeReaction } from '../utils/proto';
 import type {
   NLInterpretation,
   NLQueryResponse,
@@ -49,15 +48,12 @@ export function useNLQuery(query: string | null, enabled: boolean, dryRun = fals
     retry: false,
     staleTime: Infinity,
     queryFn: async (): Promise<NLQueryData> => {
-      const url =
-        `/api/nl_query?q=${encodeURIComponent(query as string)}` +
-        (dryRun ? '&dry_run=true' : '');
-      const raw = await fetchJson<NLQueryResponse>(url, undefined, 'nl_query');
+      const { data: raw } = await api.get<NLQueryResponse>('/nl_query', {
+        params: { q: query, ...(dryRun ? { dry_run: 'true' } : {}) },
+      });
       const results: SearchResult[] = raw.results.map(r => ({
         ...r,
-        data: reaction_pb.Reaction.deserializeBinary(
-          new Uint8Array(base64ToBytes(r.proto)),
-        ).toObject(),
+        data: decodeReaction(r.proto),
       }));
       return {
         interpretation: raw.interpretation,

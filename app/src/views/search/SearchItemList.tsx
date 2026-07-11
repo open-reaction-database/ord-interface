@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
-import './SearchItemList.scss';
+import React, { useState } from 'react';
+import { ActionIcon, Flex, Text, TextInput, Tooltip } from '@mantine/core';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
+import classes from './SearchItemList.module.scss';
 
 interface SearchItemListProps {
   title: string;
@@ -23,67 +25,81 @@ interface SearchItemListProps {
   onUpdateItemList: (newList: string[]) => void;
 }
 
+/** Editable list of free-text filter values (reaction IDs, SMARTS, DOIs, …). */
 const SearchItemList: React.FC<SearchItemListProps> = ({
   title,
   itemList,
   onUpdateItemList,
 }) => {
-  const [mutatedList, setMutatedList] = useState<string[]>([]);
-  const [itemToAdd, setItemToAdd] = useState<string>('');
+  const [itemToAdd, setItemToAdd] = useState('');
 
-  const updateList = () => {
-    const newList = [...mutatedList, itemToAdd];
-    setMutatedList(newList);
+  const addItem = () => {
+    const trimmed = itemToAdd.trim();
+    if (!trimmed) return;
+    onUpdateItemList([...itemList, trimmed]);
     setItemToAdd('');
-    onUpdateItemList(newList);
   };
 
   const deleteItem = (idx: number) => {
-    const newList = mutatedList.filter((_, index) => index !== idx);
-    setMutatedList(newList);
-    onUpdateItemList(newList);
+    onUpdateItemList(itemList.filter((_, index) => index !== idx));
   };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && itemToAdd.trim()) {
-      updateList();
-    }
-  };
-
-  useEffect(() => {
-    setMutatedList(itemList || []);
-  }, [itemList]);
 
   return (
-    <div className="item-list">
-      <div className="title">{title}</div>
-      <div className="list">
-        {mutatedList.map((item, idx) => (
-          <React.Fragment key={idx}>
-            <div className="text">{item}</div>
-            <div className="delete">
-              <button onClick={() => deleteItem(idx)}>
-                <i className="material-icons">delete</i>
-              </button>
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="input">
-        <input
-          type="text"
-          value={itemToAdd}
-          onChange={e => setItemToAdd(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
-        <button
-          onClick={updateList}
-          disabled={!itemToAdd.trim()}
+    <div className={classes.itemList}>
+      <Text className={classes.title}>{title}</Text>
+      {itemList.map((item, idx) => (
+        <Flex
+          key={`${item}-${idx}`}
+          align="center"
+          justify="space-between"
+          gap="xs"
+          className={classes.row}
         >
-          <i className="material-icons">add</i>
-          <span>Add</span>
-        </button>
-      </div>
+          <Tooltip label={item}>
+            <Text
+              className={classes.rowText}
+              truncate
+            >
+              {item}
+            </Text>
+          </Tooltip>
+          <ActionIcon
+            variant="transparent"
+            color="secondary.1"
+            onClick={() => deleteItem(idx)}
+            aria-label={`Remove ${item}`}
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Flex>
+      ))}
+      <Flex
+        gap="xs"
+        align="center"
+      >
+        <TextInput
+          className={classes.input}
+          size="xs"
+          value={itemToAdd}
+          onChange={event => setItemToAdd(event.currentTarget.value)}
+          onKeyDown={event => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              addItem();
+            }
+          }}
+          aria-label={`Add ${title}`}
+        />
+        <ActionIcon
+          variant="default"
+          size="lg"
+          onClick={addItem}
+          disabled={!itemToAdd.trim()}
+          aria-label={`Add to ${title}`}
+        >
+          <IconPlus size={16} />
+        </ActionIcon>
+      </Flex>
     </div>
   );
 };

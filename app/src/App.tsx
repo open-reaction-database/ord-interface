@@ -15,10 +15,13 @@
  */
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Route, Switch } from 'wouter';
+import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HeaderNav from './components/HeaderNav';
 import MainFooter from './components/MainFooter';
+import NotFound from './views/NotFound';
 import Home from './views/Home';
 import About from './views/About';
 import MainBrowse from './views/browse/MainBrowse';
@@ -27,48 +30,56 @@ import MainSearch from './views/search/MainSearch';
 import MainNLSearch from './views/nl-search/MainNLSearch';
 import MainDatasetView from './views/dataset-view/MainDatasetView';
 import MainReactionView from './views/reaction-view/MainReactionView';
-import './App.scss';
+import { theme } from './styles/theme';
+import classes from './App.module.scss';
 
 const queryClient = new QueryClient();
 
 const AppContent: React.FC = () => {
   return (
-    <div id="main-container">
+    <div className={classes.shell}>
       <HeaderNav />
-      <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
-        <Route
-          path="/about"
-          element={<About />}
-        />
-        <Route
-          path="/browse"
-          element={<MainBrowse />}
-        />
-        <Route
-          path="/selected-set"
-          element={<MainSelectedSet />}
-        />
-        <Route
-          path="/search"
-          element={<MainSearch />}
-        />
-        <Route
-          path="/ask"
-          element={<MainNLSearch />}
-        />
-        <Route
-          path="/dataset/:datasetId"
-          element={<MainDatasetView />}
-        />
-        <Route
-          path="/id/:reactionId"
-          element={<MainReactionView />}
-        />
-      </Routes>
+      <main className={classes.main}>
+        <div className={classes.content}>
+          <Switch>
+            <Route
+              path="/"
+              component={Home}
+            />
+            <Route
+              path="/about"
+              component={About}
+            />
+            <Route
+              path="/browse"
+              component={MainBrowse}
+            />
+            <Route
+              path="/selected-set"
+              component={MainSelectedSet}
+            />
+            <Route
+              path="/search"
+              component={MainSearch}
+            />
+            <Route
+              path="/ask"
+              component={MainNLSearch}
+            />
+            <Route
+              path="/dataset/:datasetId"
+              component={MainDatasetView}
+            />
+            <Route
+              path="/id/:reactionId"
+              component={MainReactionView}
+            />
+            <Route>
+              <NotFound />
+            </Route>
+          </Switch>
+        </div>
+      </main>
       <MainFooter />
     </div>
   );
@@ -76,11 +87,15 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
+    <MantineProvider theme={theme}>
+      <QueryClientProvider client={queryClient}>
+        <Notifications
+          position="top-right"
+          containerWidth={350}
+        />
         <AppContent />
-      </Router>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </MantineProvider>
   );
 }
 

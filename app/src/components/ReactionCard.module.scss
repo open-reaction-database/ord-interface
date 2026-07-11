@@ -1,0 +1,117 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Result card in ord-app's ReactionCard style: bordered paper, title row with
+ * actions, preview, then two columns of label/value descriptors. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  margin-bottom: var(--mantine-spacing-md);
+
+  &.selected {
+    border: 2px solid var(--color-primary);
+  }
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.reactionId {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.minedBadge {
+  flex-shrink: 0;
+}
+
+/* Wide server-rendered reaction tables scroll inside the card rather than
+ * widening the page (ord-app issue #408 behavior). */
+.preview {
+  min-width: 0;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.previewError {
+  color: var(--color-text-secondary-1);
+  font-size: var(--font-size-md);
+}
+
+.descriptors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  border-top: 1px solid var(--color-border-1);
+  padding-top: 16px;
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.descriptorColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.descriptor {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  font-size: var(--font-size-md);
+  min-width: 0;
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  span {
+    overflow-wrap: anywhere;
+  }
+}
+
+.label {
+  color: var(--color-text-secondary-2);
+}
+
+.productValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

@@ -1,0 +1,112 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.reactionView {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.navHolder {
+  position: sticky;
+  top: calc(48px + var(--mantine-spacing-md));
+
+  @media (max-width: 900px) {
+    position: static;
+  }
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: calc(100vh - 48px - 2 * var(--mantine-spacing-md));
+  overflow-y: auto;
+}
+
+.navButton {
+  font-weight: 400;
+  text-transform: capitalize;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+  /* Anchor sections below the sticky header when scrolled to. */
+  scroll-margin-top: calc(48px + var(--mantine-spacing-md));
+}
+
+.summaryScroll {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.identifiers {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px 24px;
+  font-size: var(--font-size-md);
+}
+
+.subTitle {
+  font-weight: 700;
+  color: var(--color-text-secondary-3);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: minmax(140px, auto) 1fr;
+  gap: 6px 16px;
+  font-size: var(--font-size-md);
+}
+
+.label {
+  color: var(--color-text-secondary-2);
+  text-transform: capitalize;
+}
+
+.compounds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+}
+
+.rawRecord {
+  margin: 0;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.emptyState {
+  display: flex;
+  justify-content: center;
+  color: var(--color-text-secondary-2);
+}

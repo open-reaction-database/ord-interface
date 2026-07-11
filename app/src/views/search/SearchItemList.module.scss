@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Open Reaction Database Project Authors
+ * Copyright 2026 Open Reaction Database Project Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-export const base64ToBytes = (base64String: string): ArrayBuffer => {
-  // converts a base64 encoded string to Uint8Array so it can be parsed by
-  // ord-schema js wrapper
-  const binaryString = window.atob(base64String);
-  const length = binaryString.length;
-  const arrayBuffer = new ArrayBuffer(length);
-  const view = new Uint8Array(arrayBuffer);
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--mantine-spacing-sm);
+}
 
-  for (let i = 0; i < length; i++) {
-    view[i] = binaryString.charCodeAt(i);
-  }
+.title {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-2);
+}
 
-  return arrayBuffer;
-};
+.row {
+  min-width: 0;
+}
 
-export default base64ToBytes;
+.rowText {
+  font-size: var(--font-size-md);
+  min-width: 0;
+}
+
+.input {
+  flex: 1;
+}

@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-import type {
-  Reaction,
-  ReactionConditions,
-  ReactionNotes,
-  ReactionObservation,
-  ReactionOutcome,
-  ReactionProvenance,
-  ReactionSetup,
-  ReactionWorkup,
-} from 'ord-schema/proto/reaction_pb';
+import type { ord } from 'ord-schema-protobufjs';
 
-export type ReactionData = Reaction.AsObject;
-export type ReactionConditionsData = ReactionConditions.AsObject;
-export type ReactionNotesData = ReactionNotes.AsObject;
-export type ReactionObservationData = ReactionObservation.AsObject;
-export type ReactionOutcomeData = ReactionOutcome.AsObject;
-export type ReactionProvenanceData = ReactionProvenance.AsObject;
-export type ReactionSetupData = ReactionSetup.AsObject;
-export type ReactionWorkupData = ReactionWorkup.AsObject;
+// Decoded Reaction message (ord-schema-protobufjs, the same bindings ord-app
+// uses). Sub-message data flows through the I* interfaces so display
+// components stay compatible with any IReaction-shaped object.
+export type ReactionData = ord.Reaction;
+export type ReactionConditionsData = ord.IReactionConditions;
+export type ReactionNotesData = ord.IReactionNotes;
+export type ReactionObservationData = ord.IReactionObservation;
+export type ReactionOutcomeData = ord.IReactionOutcome;
+export type ReactionProvenanceData = ord.IReactionProvenance;
+export type ReactionSetupData = ord.IReactionSetup;
+export type ReactionWorkupData = ord.IReactionWorkup;
 
 export interface SearchResult {
   reaction_id: string;
@@ -48,6 +42,7 @@ export interface Dataset {
   name?: string;
   description?: string;
   num_reactions: number;
+  submitted_at?: string | null;
 }
 
 // Mirrors ord_interface.api.nl_query.NLComponent.

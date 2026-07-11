@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React from 'react';
+import { useParams } from 'wouter';
+import { Badge, Paper, SimpleGrid, Text, Title } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import CopyButton from '../../components/CopyButton';
 import ChartView from './ChartView';
 import SearchResults from './SearchResults';
 import { useSearchTask } from '../../hooks/useSearchTask';
-import { fetchJson } from '../../utils/api';
+import { api } from '../../utils/api';
 import type { Dataset } from '../../types/search';
-import './MainDatasetView.scss';
+import classes from './MainDatasetView.module.scss';
 
 const MainDatasetView: React.FC = () => {
   const { datasetId } = useParams<{ datasetId: string }>();
-  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const datasetQuery = `?dataset_id=${datasetId}&limit=100`;
   const {
@@ -42,121 +43,110 @@ const MainDatasetView: React.FC = () => {
     queryKey: ['dataset-metadata', datasetId],
     enabled: !!datasetId,
     queryFn: () =>
-      fetchJson<Dataset>(
-        `/api/dataset?dataset_id=${encodeURIComponent(datasetId!)}`,
-        undefined,
-        'dataset metadata',
-      ),
+      api
+        .get<Dataset>('/dataset', { params: { dataset_id: datasetId } })
+        .then(res => res.data),
   });
 
   return (
-    <div id="dataset-main">
-      <h1>Dataset View</h1>
-      <div
-        id="charts"
-        style={{
-          display: isCollapsed ? 'grid' : 'flex',
-          flexDirection: isCollapsed ? undefined : 'column',
-        }}
+    <div className={classes.datasetMain}>
+      {/* Dataset header, in the style of ord-app's DatasetHeader. */}
+      <Paper
+        radius="sm"
+        p="lg"
+        className={classes.header}
       >
-        <div
-          id="chartsection"
-          className="charts-container"
-          style={{ width: isCollapsed ? '80%' : '100%' }}
-        >
-          <div className="charts-header">
-            <div id="expand">
-              <button onClick={() => setIsCollapsed(c => !c)}>
-                <i
-                  className="material-icons"
-                  title={isCollapsed ? 'Expand' : 'Collapse'}
+        {datasetError ? (
+          <Text c="secondary.1">
+            Failed to load dataset metadata: {datasetError.message}
+          </Text>
+        ) : (
+          <>
+            <div className={classes.titleRow}>
+              <Title order={1}>{datasetData?.name || datasetId}</Title>
+              {datasetData && (
+                <Badge
+                  className={classes.countBadge}
+                  variant="light"
+                  color="gray"
+                  radius="xl"
                 >
-                  {isCollapsed
-                    ? 'keyboard_double_arrow_right'
-                    : 'keyboard_double_arrow_left'}
-                </i>
-              </button>
+                  {datasetData.num_reactions.toLocaleString()} reactions
+                </Badge>
+              )}
             </div>
-          </div>
-          <div
-            id="chartsectioncharts"
-            className={`charts-content ${isCollapsed ? '' : 'expanded'}`}
+            <div className={classes.datasetId}>
+              {datasetId}
+              <CopyButton textToCopy={datasetId ?? ''} />
+            </div>
+            {datasetData?.description && (
+              <Text className={classes.description}>{datasetData.description}</Text>
+            )}
+          </>
+        )}
+      </Paper>
+
+      {/* Composition charts. */}
+      {datasetId && (
+        <Paper
+          radius="sm"
+          p="lg"
+          className={classes.charts}
+        >
+          <Title
+            order={2}
+            className={classes.chartsTitle}
           >
-            {datasetId && (
-              <>
-                <ChartView
-                  uniqueId="reactantsFrequency"
-                  title="Frequency of Reactants"
-                  apiCall="input_stats"
-                  role="reactant"
-                  datasetId={datasetId}
-                  isCollapsed={isCollapsed}
-                />
-                <ChartView
-                  uniqueId="productsFrequency"
-                  title="Frequency of Products"
-                  apiCall="product_stats"
-                  role="product"
-                  datasetId={datasetId}
-                  isCollapsed={isCollapsed}
-                />
-              </>
-            )}
-          </div>
-        </div>
+            Composition
+          </Title>
+          <SimpleGrid
+            cols={{ base: 1, md: 2 }}
+            spacing="lg"
+          >
+            <ChartView
+              uniqueId="reactantsFrequency"
+              title="Frequency of reactants"
+              apiCall="input_stats"
+              role="reactant"
+              datasetId={datasetId}
+            />
+            <ChartView
+              uniqueId="productsFrequency"
+              title="Frequency of products"
+              apiCall="product_stats"
+              role="product"
+              datasetId={datasetId}
+            />
+          </SimpleGrid>
+        </Paper>
+      )}
 
-        <div id="datasection">
-          <div className="h4">Dataset Metadata</div>
-          {datasetError ? (
-            <div className="no-results">
-              <div className="title">
-                Failed to load dataset metadata: {datasetError.message}
-              </div>
-            </div>
-          ) : (
-            <table>
-              <tbody>
-                <tr>
-                  <td>Dataset ID:</td>
-                  <td>{datasetData?.dataset_id ?? '(no id)'}</td>
-                </tr>
-                <tr>
-                  <td>Dataset Name:</td>
-                  <td>{datasetData?.name ?? '(no name)'}</td>
-                </tr>
-                <tr>
-                  <td>Dataset Description:</td>
-                  <td>{datasetData?.description ?? '(no description)'}</td>
-                </tr>
-                <tr>
-                  <td>Number of Reactions in Dataset:</td>
-                  <td>{datasetData?.num_reactions}</td>
-                </tr>
-              </tbody>
-            </table>
-          )}
-
-          <div className="search-results-section">
-            {error ? (
-              <div className="no-results">
-                <div className="title">Failed to load reactions: {error.message}</div>
-              </div>
-            ) : loading ? (
-              <div className="loading">
-                <LoadingSpinner />
-              </div>
-            ) : searchResults.length > 0 ? (
-              <SearchResults
-                searchResults={searchResults}
-                isOverflow={(datasetData?.num_reactions ?? 0) > searchResults.length}
-              />
-            ) : (
-              <div className="no-results">
-                <div className="title">This dataset contains no reactions.</div>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Reactions. */}
+      <div className={classes.reactions}>
+        {error ? (
+          <Paper
+            radius="sm"
+            p="xl"
+            className={classes.emptyState}
+          >
+            <Text c="secondary.1">Failed to load reactions: {error.message}</Text>
+          </Paper>
+        ) : loading ? (
+          <LoadingSpinner />
+        ) : searchResults.length > 0 ? (
+          <SearchResults
+            searchResults={searchResults}
+            isOverflow={(datasetData?.num_reactions ?? 0) > searchResults.length}
+          />
+        ) : (
+          <Paper
+            radius="sm"
+            p="xl"
+            className={classes.emptyState}
+          >
+            <Text c="secondary.1">This dataset contains no reactions.</Text>
+          </Paper>
+        )}
       </div>
     </div>
   );

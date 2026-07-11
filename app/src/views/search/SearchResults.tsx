@@ -14,24 +14,28 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useSearch } from 'wouter';
+import { Button } from '@mantine/core';
+import { IconDownload, IconStack2 } from '@tabler/icons-react';
 import EntityTable from '../../components/EntityTable';
 import ReactionCard from '../../components/ReactionCard';
 import CopyButton from '../../components/CopyButton';
 import DownloadResults from '../../components/DownloadResults';
 import type { SearchResult } from '../../types/search';
-import './SearchResults.scss';
+import classes from './SearchResults.module.scss';
 
 interface SearchResultsProps {
   searchResults: SearchResult[];
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const search = useSearch();
+  const [, navigate] = useLocation();
   const [selectedReactions, setSelectedReactions] = useState<string[]>([]);
   const [showDownloadResults, setShowDownloadResults] = useState(false);
+
+  const locationSearch = search ? `?${search}` : '';
 
   const updateSelectedReactions = (reactionId: string, isSelected: boolean) => {
     if (isSelected) {
@@ -46,7 +50,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
     localStorage.setItem(
       'storedSet',
       JSON.stringify({
-        query: location.search,
+        query: locationSearch,
         reactions: selectedReactions,
       }),
     );
@@ -57,43 +61,46 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
   };
 
   // Restore the prior selection when the user returns from /selected-set to the
-  // same search URL. Driven by location.search only; results render directly
+  // same search URL. Driven by the query string only; results render directly
   // from the prop to avoid a one-frame empty flash on mount.
   useEffect(() => {
     const storedSetStr = localStorage.getItem('storedSet');
     if (!storedSetStr) return;
     try {
       const storedSet = JSON.parse(storedSetStr);
-      if (location.search === storedSet.query) {
+      if (locationSearch === storedSet.query) {
         setSelectedReactions(storedSet.reactions || []);
       }
     } catch (error) {
       console.error('Error parsing stored set:', error);
     }
-  }, [location.search]);
+  }, [locationSearch]);
 
   return (
-    <div className="search-results-main">
+    <div className={classes.searchResultsMain}>
       {searchResults.length > 0 && (
         <EntityTable
           tableData={searchResults}
-          title="Search Results"
+          title="Search results"
           displaySearch={false}
         >
           {entities => (
             <>
-              <div className="action-button-holder">
+              <div className={classes.actionButtons}>
                 <CopyButton
                   textToCopy={window.location.href}
                   icon="share"
-                  buttonText="Shareable Link"
+                  buttonText="Shareable link"
                 />
-                <button
+                <Button
+                  variant="default"
+                  radius="sm"
+                  leftSection={<IconDownload size={16} />}
                   disabled={!searchResults.length}
                   onClick={() => setShowDownloadResults(true)}
                 >
-                  Download All Search Results
-                </button>
+                  Download all results
+                </Button>
               </div>
               {entities.map(row => (
                 <ReactionCard
@@ -110,13 +117,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults }) => {
       )}
 
       {selectedReactions.length > 0 && (
-        <div className="view-selected-container">
-          <div
-            className="view-selected-button"
+        <div className={classes.viewSelectedContainer}>
+          <Button
+            radius="xl"
+            leftSection={<IconStack2 size={16} />}
             onClick={goToViewSelected}
           >
-            View {selectedReactions.length} selected reactions
-          </div>
+            View {selectedReactions.length} selected reaction
+            {selectedReactions.length === 1 ? '' : 's'}
+          </Button>
         </div>
       )}
 

@@ -14,55 +14,41 @@
  * limitations under the License.
  */
 
-import reaction_pb from 'ord-schema';
-import type {
-  ElectrochemistryConditions,
-  FlowConditions,
-  IlluminationConditions,
-  Length,
-  PressureConditions,
-  StirringConditions,
-  Temperature,
-  Pressure,
-} from 'ord-schema/proto/reaction_pb';
+import { ord } from 'ord-schema-protobufjs';
 import { enumName } from './enum';
 
-export const tempType = (type: number | undefined): string =>
-  enumName(
-    reaction_pb.TemperatureConditions.TemperatureControl.TemperatureControlType,
-    type,
-  ) ?? '';
-
-export const tempSetPoint = (setpoint: Temperature.AsObject | undefined): string => {
-  if (!setpoint) return 'None';
-  const unit = enumName(reaction_pb.Temperature.TemperatureUnit, setpoint.units);
-  const precision = setpoint.precision ? ` (± ${setpoint.precision})` : '';
-  return `${setpoint.value}${precision} °${unit ? unit.charAt(0) : ''}`;
-};
-
-export const pressureType = (type: number | undefined): string =>
-  enumName(reaction_pb.PressureConditions.PressureControl.PressureControlType, type) ??
+export const tempType = (type: number | null | undefined): string =>
+  enumName(ord.TemperatureConditions.TemperatureControl.TemperatureControlType, type) ??
   '';
 
-export const pressureSetPoint = (setpoint: Pressure.AsObject | undefined): string => {
+export const tempSetPoint = (setpoint: ord.ITemperature | null | undefined): string => {
   if (!setpoint) return 'None';
-  const unit = enumName(reaction_pb.Pressure.PressureUnit, setpoint.units);
+  const unit = enumName(ord.Temperature.TemperatureUnit, setpoint.units);
   const precision = setpoint.precision ? ` (± ${setpoint.precision})` : '';
-  return `${setpoint.value}${precision} ${unit ? unit.toLowerCase() : ''}`;
+  return `${setpoint.value ?? 0}${precision} °${unit ? unit.charAt(0) : ''}`;
+};
+
+export const pressureType = (type: number | null | undefined): string =>
+  enumName(ord.PressureConditions.PressureControl.PressureControlType, type) ?? '';
+
+export const pressureSetPoint = (
+  setpoint: ord.IPressure | null | undefined,
+): string => {
+  if (!setpoint) return 'None';
+  const unit = enumName(ord.Pressure.PressureUnit, setpoint.units);
+  const precision = setpoint.precision ? ` (± ${setpoint.precision})` : '';
+  return `${setpoint.value ?? 0}${precision} ${unit ? unit.toLowerCase() : ''}`;
 };
 
 export const pressureAtmo = (
-  atmo: PressureConditions.Atmosphere.AsObject | undefined,
+  atmo: ord.PressureConditions.IAtmosphere | null | undefined,
 ): string => {
-  const type = enumName(
-    reaction_pb.PressureConditions.Atmosphere.AtmosphereType,
-    atmo?.type,
-  );
+  const type = enumName(ord.PressureConditions.Atmosphere.AtmosphereType, atmo?.type);
   return `${type ?? ''}${atmo?.details ? `, ${atmo.details}` : ''}`;
 };
 
-export const stirType = (type: number | undefined): string =>
-  enumName(reaction_pb.StirringConditions.StirringMethodType, type) ?? '';
+export const stirType = (type: number | null | undefined): string =>
+  enumName(ord.StirringConditions.StirringMethodType, type) ?? '';
 
 /**
  * The Vue util mistakenly passed the whole StirringRate object and compared it
@@ -70,37 +56,46 @@ export const stirType = (type: number | undefined): string =>
  * type field explicitly.
  */
 export const stirRate = (
-  rate: StirringConditions.StirringRate.AsObject | undefined,
+  rate: ord.StirringConditions.IStirringRate | null | undefined,
 ): string =>
-  enumName(reaction_pb.StirringConditions.StirringRate.StirringRateType, rate?.type) ??
-  '';
+  enumName(ord.StirringConditions.StirringRate.StirringRateType, rate?.type) ?? '';
 
 export const illumType = (
-  illum: IlluminationConditions.AsObject | undefined,
+  illum: ord.IIlluminationConditions | null | undefined,
 ): string => {
   if (!illum) return '';
-  const type = enumName(
-    reaction_pb.IlluminationConditions.IlluminationType,
-    illum.type,
-  );
+  const type = enumName(ord.IlluminationConditions.IlluminationType, illum.type);
   return `${type ?? ''}${illum.details ? `: ${illum.details}` : ''}`;
 };
 
 /**
- * Format a Length.AsObject like "5 mm". Returns `undefined` when there's
+ * Format a Length message like "5 mm". Returns `undefined` when there's
  * nothing to show. The Vue ConditionsView used to render the whole Length
  * object, which serialized as "[object Object]".
  */
-export const lengthStr = (length: Length.AsObject | undefined): string | undefined => {
+export const lengthStr = (
+  length: ord.ILength | null | undefined,
+): string | undefined => {
   if (!length) return undefined;
-  const unit = enumName(reaction_pb.Length.LengthUnit, length.units);
-  return `${length.value}${unit ? ` ${unit.toLowerCase()}` : ''}`;
+  const unit = enumName(ord.Length.LengthUnit, length.units);
+  return `${length.value ?? 0}${unit ? ` ${unit.toLowerCase()}` : ''}`;
 };
 
-export const electrochemType = (
-  type: ElectrochemistryConditions.AsObject['type'] | undefined,
-): string =>
-  enumName(reaction_pb.ElectrochemistryConditions.ElectrochemistryType, type) ?? '';
+/**
+ * Format a Wavelength message like "450 nanometer". Returns `undefined` when
+ * there's nothing to show. Wavelength has its own unit enum, so it can't be
+ * formatted with lengthStr without mislabeling the units.
+ */
+export const wavelengthStr = (
+  wavelength: ord.IWavelength | null | undefined,
+): string | undefined => {
+  if (!wavelength) return undefined;
+  const unit = enumName(ord.Wavelength.WavelengthUnit, wavelength.units);
+  return `${wavelength.value ?? 0}${unit ? ` ${unit.toLowerCase()}` : ''}`;
+};
 
-export const flowType = (type: FlowConditions.AsObject['type'] | undefined): string =>
-  enumName(reaction_pb.FlowConditions.FlowType, type) ?? '';
+export const electrochemType = (type: number | null | undefined): string =>
+  enumName(ord.ElectrochemistryConditions.ElectrochemistryType, type) ?? '';
+
+export const flowType = (type: number | null | undefined): string =>
+  enumName(ord.FlowConditions.FlowType, type) ?? '';

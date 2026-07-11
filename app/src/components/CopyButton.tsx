@@ -14,66 +14,64 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
-import './CopyButton.scss';
+import React from 'react';
+import { ActionIcon, Button, Tooltip } from '@mantine/core';
+import { IconCopy, IconShare } from '@tabler/icons-react';
+import { NotificationVariant, showNotification } from '../utils/showNotification';
 
 interface CopyButtonProps {
   textToCopy: string;
-  icon?: string;
+  icon?: 'copy' | 'share';
   buttonText?: string;
 }
 
 const CopyButton: React.FC<CopyButtonProps> = ({
   textToCopy,
-  icon = 'content_copy',
+  icon = 'copy',
   buttonText = '',
 }) => {
-  const [displayNotification, setDisplayNotification] = useState(false);
-  const [notificationStyle, setNotificationStyle] = useState({
-    top: 0,
-    left: 0,
-  });
-
-  const handleCopy = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    // Move notification block to mouse cursor position
-    const { clientX, clientY } = event;
-    setNotificationStyle({
-      top: clientY,
-      left: clientX,
-    });
-
+  const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(textToCopy);
-      setDisplayNotification(true);
-
-      setTimeout(() => {
-        setDisplayNotification(false);
-      }, 1500);
+      showNotification({
+        variant: NotificationVariant.SUCCESS,
+        message: 'Copied to clipboard',
+      });
     } catch (err) {
       console.error('Failed to copy text:', err);
+      showNotification({
+        variant: NotificationVariant.ERROR,
+        message: 'Failed to copy to clipboard',
+      });
     }
   };
 
-  return (
-    <div className="copy-button-main">
-      <button onClick={handleCopy}>
-        <i className="material-icons">{icon}</i>
-        {buttonText && <div className="copy">{buttonText}</div>}
-      </button>
+  const iconNode = icon === 'share' ? <IconShare size={16} /> : <IconCopy size={16} />;
 
-      {displayNotification && (
-        <div
-          id="copy-notification"
-          className={`fade-enter ${displayNotification ? 'fade-enter-active' : ''}`}
-          style={{
-            top: `${notificationStyle.top}px`,
-            left: `${notificationStyle.left}px`,
-          }}
+  if (!buttonText) {
+    return (
+      <Tooltip label="Copy to clipboard">
+        <ActionIcon
+          variant="transparent"
+          color="secondary.1"
+          onClick={handleCopy}
+          aria-label="Copy to clipboard"
         >
-          Copied to clipboard!
-        </div>
-      )}
-    </div>
+          {iconNode}
+        </ActionIcon>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Button
+      variant="default"
+      radius="sm"
+      leftSection={iconNode}
+      onClick={handleCopy}
+    >
+      {buttonText}
+    </Button>
   );
 };
 

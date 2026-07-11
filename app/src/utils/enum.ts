@@ -18,15 +18,15 @@
  * Reverse-lookup the name of a protobuf enum map (e.g.
  * `ReactionSetup.ReactionEnvironment.ReactionEnvironmentType`) for a given numeric value.
  *
- * ord-schema generates these as TS interfaces (`{ UNSPECIFIED: 0; CUSTOM: 1; ... }`)
- * rather than indexable records, so this helper takes `unknown` for the map and
+ * ord-schema-protobufjs enums are declared as TS enums but materialize at runtime
+ * as plain name→number objects, so this helper takes `unknown` for the map and
  * narrows internally rather than asking callers to add unsafe casts.
  */
 export function enumName(
   enumMap: unknown,
-  value: number | undefined,
+  value: number | null | undefined,
 ): string | undefined {
-  if (value === undefined || enumMap === null || typeof enumMap !== 'object')
+  if (value == null || enumMap === null || typeof enumMap !== 'object')
     return undefined;
   for (const [key, mapped] of Object.entries(enumMap as Record<string, unknown>)) {
     if (mapped === value) return key;

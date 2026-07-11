@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import reaction_pb from 'ord-schema';
-import type {
-  CompoundIdentifier,
-  ProductMeasurement,
-} from 'ord-schema/proto/reaction_pb';
-import LoadingSpinner from './LoadingSpinner';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation } from 'wouter';
+import { Badge, Button, Checkbox, Loader, Paper, Text } from '@mantine/core';
+import { ord } from 'ord-schema-protobufjs';
+import clsx from 'clsx';
 import CopyButton from './CopyButton';
+import { api } from '../utils/api';
 import { enumName } from '../utils/enum';
 import { formatPercentage } from '../utils/outcomes';
-import type { SearchResult, ReactionData } from '../types/search';
-import './ReactionCard.scss';
+import type { ReactionData, SearchResult } from '../types/search';
+import classes from './ReactionCard.module.scss';
 
 interface ReactionCardProps {
   reaction: SearchResult;
@@ -35,8 +33,7 @@ interface ReactionCardProps {
   onSelectionChange?: (reactionId: string, isSelected: boolean) => void;
 }
 
-const YIELD_MEASUREMENT_TYPE =
-  reaction_pb.ProductMeasurement.ProductMeasurementType.YIELD;
+const YIELD_MEASUREMENT_TYPE = ord.ProductMeasurement.ProductMeasurementType.YIELD;
 
 const ReactionCard: React.FC<ReactionCardProps> = ({
   reaction,
@@ -44,35 +41,30 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
   isSelected = false,
   onSelectionChange,
 }) => {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [reactionTable, setReactionTable] = useState<string | null>(null);
+  const [tableError, setTableError] = useState(false);
 
   const getReactionTable = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/api/reaction_summary?reaction_id=${reaction.reaction_id}`,
-      );
-      // Skip the 4xx/5xx body — it's an HTML error page that
-      // dangerouslySetInnerHTML would render verbatim in every card.
-      if (!response.ok) {
-        console.error(
-          `reaction_summary failed (HTTP ${response.status}) for ${reaction.reaction_id}`,
-        );
-        return;
-      }
-      setReactionTable(await response.text());
+      const response = await api.get<string>('/reaction_summary', {
+        params: { reaction_id: reaction.reaction_id },
+      });
+      setReactionTable(response.data);
     } catch (error) {
+      // Never pipe an HTML error body into dangerouslySetInnerHTML.
       console.error('Error fetching reaction table:', error);
+      setTableError(true);
     }
   }, [reaction.reaction_id]);
 
-  const getYield = (measurements: ProductMeasurement.AsObject[] = []): string => {
+  const getYield = (measurements: ord.IProductMeasurement[]): string => {
     const yieldObj = measurements.find(m => m.type === YIELD_MEASUREMENT_TYPE);
     return yieldObj?.percentage ? formatPercentage(yieldObj.percentage) : 'Not listed';
   };
 
   const getConversion = (data: ReactionData | undefined): string => {
-    const conversion = data?.outcomesList?.[0]?.conversion;
+    const conversion = data?.outcomes?.[0]?.conversion;
     if (!conversion) return 'Not listed';
     return formatPercentage(conversion);
   };
@@ -83,21 +75,21 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
 
     const temp = data.conditions?.temperature?.setpoint;
     if (temp) {
-      const units = enumName(reaction_pb.Temperature.TemperatureUnit, temp.units);
-      details.push(`at ${temp.value}${units ? ` ${units.toLowerCase()}` : '°C'}`);
+      const units = enumName(ord.Temperature.TemperatureUnit, temp.units);
+      details.push(`at ${temp.value ?? 0}${units ? ` ${units.toLowerCase()}` : '°C'}`);
     }
 
     const pressure = data.conditions?.pressure?.setpoint;
     if (pressure) {
-      const units = enumName(reaction_pb.Pressure.PressureUnit, pressure.units);
+      const units = enumName(ord.Pressure.PressureUnit, pressure.units);
       details.push(
-        `under ${pressure.value}${units ? ` ${units.toLowerCase()}` : ' atm'}`,
+        `under ${pressure.value ?? 0}${units ? ` ${units.toLowerCase()}` : ' atm'}`,
       );
     }
 
-    const reactionTime = data.outcomesList?.[0]?.reactionTime;
+    const reactionTime = data.outcomes?.[0]?.reactionTime;
     if (reactionTime?.value) {
-      const units = enumName(reaction_pb.Time.TimeUnit, reactionTime.units);
+      const units = enumName(ord.Time.TimeUnit, reactionTime.units);
       details.push(
         `for ${reactionTime.value}${units ? ` ${units.toLowerCase()}` : 's'}`,
       );
@@ -106,22 +98,12 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
     return details;
   };
 
-  const productIdentifier = (identifier: CompoundIdentifier.AsObject): string => {
+  const productIdentifier = (identifier: ord.ICompoundIdentifier): string => {
     const type = enumName(
-      reaction_pb.CompoundIdentifier.CompoundIdentifierType,
+      ord.CompoundIdentifier.CompoundIdentifierType,
       identifier.type,
     );
-    return `${type ?? ''}: ${identifier.value}`;
-  };
-
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (onSelectionChange) {
-      onSelectionChange(reaction.reaction_id, event.target.checked);
-    }
-  };
-
-  const handleViewDetails = () => {
-    navigate(`/id/${reaction.reaction_id}`);
+    return `${type ?? ''}: ${identifier.value ?? ''}`;
   };
 
   useEffect(() => {
@@ -129,102 +111,136 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
   }, [getReactionTable]);
 
   const reactionData = reaction.data;
-  const firstOutcome = reactionData?.outcomesList?.[0];
-  const firstProduct = firstOutcome?.productsList?.[0];
-  const firstProductIdentifier = firstProduct?.identifiersList?.[0];
+  const firstOutcome = reactionData?.outcomes?.[0];
+  const firstProduct = firstOutcome?.products?.[0];
+  const firstProductIdentifier = firstProduct?.identifiers?.[0];
   const provenance = reactionData?.provenance;
 
   return (
-    <div className="reaction-container">
-      <div className={`row ${isSelected ? 'selected' : ''}`}>
-        {isSelectable && (
-          <div className="select">
-            <input
-              type="checkbox"
-              id={`select_${reaction.reaction_id}`}
-              value={reaction.reaction_id}
+    <Paper
+      radius="sm"
+      p="lg"
+      className={clsx(classes.card, { [classes.selected]: isSelected })}
+    >
+      <div className={classes.topRow}>
+        <div className={classes.topLeft}>
+          {isSelectable && (
+            <Checkbox
+              size="sm"
               checked={isSelected}
-              onChange={handleCheckboxChange}
+              onChange={event =>
+                onSelectionChange?.(reaction.reaction_id, event.currentTarget.checked)
+              }
+              aria-label="Select reaction"
             />
-            <label htmlFor={`select_${reaction.reaction_id}`}>Select reaction</label>
-          </div>
-        )}
+          )}
+          <Text
+            className={classes.reactionId}
+            title={reaction.reaction_id}
+          >
+            {reaction.reaction_id}
+          </Text>
+          {provenance?.isMined && (
+            <Badge
+              variant="light"
+              color="orange"
+              radius="xl"
+              className={classes.minedBadge}
+            >
+              Mined
+            </Badge>
+          )}
+        </div>
+        <Button
+          variant="default"
+          size="compact-sm"
+          radius="sm"
+          onClick={() => navigate(`/id/${reaction.reaction_id}`)}
+        >
+          View details
+        </Button>
+      </div>
 
-        {provenance?.isMined && (
-          <div className="is-mined">
-            <div className="is-mined-badge">Mined</div>
-          </div>
+      <div className={classes.preview}>
+        {reactionTable ? (
+          <div dangerouslySetInnerHTML={{ __html: reactionTable }} />
+        ) : tableError ? (
+          <Text className={classes.previewError}>Reaction preview unavailable.</Text>
+        ) : (
+          <Loader size="sm" />
         )}
+      </div>
 
-        <div className="reaction-table">
-          {reactionTable ? (
-            <div dangerouslySetInnerHTML={{ __html: reactionTable }} />
-          ) : (
-            <LoadingSpinner />
+      <div className={classes.descriptors}>
+        <div className={classes.descriptorColumn}>
+          <div className={classes.descriptor}>
+            <span className={classes.label}>Yield</span>
+            <span>{getYield(firstProduct?.measurements ?? [])}</span>
+          </div>
+          <div className={classes.descriptor}>
+            <span className={classes.label}>Conversion</span>
+            <span>{getConversion(reactionData)}</span>
+          </div>
+          <div className={classes.descriptor}>
+            <span className={classes.label}>Conditions</span>
+            <span>
+              {conditionsAndDuration(reactionData).join('; ') || 'Not listed'}
+            </span>
+          </div>
+          {firstProductIdentifier && (
+            <div className={classes.descriptor}>
+              <span className={classes.label}>Product</span>
+              <span className={classes.productValue}>
+                {productIdentifier(firstProductIdentifier)}
+                <CopyButton textToCopy={firstProductIdentifier.value || ''} />
+              </span>
+            </div>
           )}
         </div>
 
-        <div className="info">
-          <div className="col full">
-            <button onClick={handleViewDetails}>View Full Details</button>
-          </div>
-
-          <div className="col">
-            <div className="yield">
-              Yield: {getYield(firstProduct?.measurementsList || [])}
-            </div>
-            <div className="conversion">Conversion: {getConversion(reactionData)}</div>
-            <div className="conditions">
-              Conditions:{' '}
-              {conditionsAndDuration(reactionData).join('; ') || 'Not Listed'}
-            </div>
-            {firstProductIdentifier && (
-              <div className="smile">
-                <CopyButton textToCopy={firstProductIdentifier.value || ''} />
-                <div className="value">
-                  Product {productIdentifier(firstProductIdentifier)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="col">
-            <div className="creator">
-              Uploaded by {provenance?.recordCreated?.person?.name || 'Unknown'},{' '}
+        <div className={classes.descriptorColumn}>
+          <div className={classes.descriptor}>
+            <span className={classes.label}>Uploaded by</span>
+            <span>
+              {provenance?.recordCreated?.person?.name || 'Unknown'},{' '}
               {provenance?.recordCreated?.person?.organization || 'Unknown'}
-            </div>
-            <div className="date">
-              Uploaded on{' '}
+            </span>
+          </div>
+          <div className={classes.descriptor}>
+            <span className={classes.label}>Uploaded on</span>
+            <span>
               {provenance?.recordCreated?.time?.value
                 ? new Date(provenance.recordCreated.time.value).toLocaleDateString()
                 : 'Unknown'}
-            </div>
-            <div className="doi">DOI: {provenance?.doi || 'Not available'}</div>
-            {provenance?.publicationUrl && (
-              <div className="publication">
-                <a
-                  href={provenance.publicationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Publication URL
-                </a>
-              </div>
-            )}
-            <div className="dataset">
-              Dataset:{' '}
+            </span>
+          </div>
+          <div className={classes.descriptor}>
+            <span className={classes.label}>DOI</span>
+            <span>{provenance?.doi || 'Not available'}</span>
+          </div>
+          {provenance?.publicationUrl && (
+            <div className={classes.descriptor}>
+              <span className={classes.label}>Publication</span>
               <a
-                href={`/search?dataset_id=${reaction.dataset_id}&limit=100`}
+                href={provenance.publicationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {reaction.dataset_id}
+                {provenance.publicationUrl}
               </a>
             </div>
-          </div>
+          )}
+          {reaction.dataset_id && (
+            <div className={classes.descriptor}>
+              <span className={classes.label}>Dataset</span>
+              <Link href={`/dataset/${reaction.dataset_id}`}>
+                {reaction.dataset_id}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </Paper>
   );
 };
 

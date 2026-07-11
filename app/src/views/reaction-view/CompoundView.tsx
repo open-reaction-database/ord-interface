@@ -15,18 +15,19 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import reaction_pb from 'ord-schema';
-import type { Compound, ProductCompound } from 'ord-schema/proto/reaction_pb';
+import { ord } from 'ord-schema-protobufjs';
 import FloatingModal from '../../components/FloatingModal';
+import { api } from '../../utils/api';
+import { encodeCompound } from '../../utils/proto';
 import { amountObj, amountStr } from '../../utils/amount';
 import { enumName } from '../../utils/enum';
 import './CompoundView.scss';
 
 // CompoundView is invoked with both reaction inputs (Compound) and outcome
 // products (ProductCompound); the two protobuf messages share most rendered
-// fields but each carries a few of its own (Compound: reactionRole / preparationsList,
+// fields but each carries a few of its own (Compound: reactionRole / preparations,
 // ProductCompound: isDesiredProduct / isolatedColor / texture).
-type ComponentLike = Partial<Compound.AsObject> & Partial<ProductCompound.AsObject>;
+type ComponentLike = ord.ICompound & ord.IProductCompound;
 
 interface CompoundViewProps {
   component: ComponentLike | undefined;
@@ -58,22 +59,20 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
   const compoundRole = useMemo(() => {
     if (!component?.reactionRole) return '';
     return String(
-      enumName(reaction_pb.ReactionRole.ReactionRoleType, component.reactionRole) ?? '',
+      enumName(ord.ReactionRole.ReactionRoleType, component.reactionRole) ?? '',
     );
   }, [component?.reactionRole]);
 
   const rawData: RawData = useMemo(() => {
     const returnObj: RawData = { reaction_role: compoundRole };
 
-    if (component?.identifiersList?.length) {
-      returnObj.identifiers = component.identifiersList.map(identifier => ({
+    if (component?.identifiers?.length) {
+      returnObj.identifiers = component.identifiers.map(identifier => ({
         type: String(
-          enumName(
-            reaction_pb.CompoundIdentifier.CompoundIdentifierType,
-            identifier.type,
-          ) ?? '',
+          enumName(ord.CompoundIdentifier.CompoundIdentifierType, identifier.type) ??
+            '',
         ),
-        value: identifier.value,
+        value: identifier.value ?? '',
       }));
     }
 
@@ -86,15 +85,12 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
       };
     }
 
-    if (component?.preparationsList?.length) {
-      returnObj.preparations = component.preparationsList.map(prep => ({
+    if (component?.preparations?.length) {
+      returnObj.preparations = component.preparations.map(prep => ({
         type: String(
-          enumName(
-            reaction_pb.CompoundPreparation.CompoundPreparationType,
-            prep.type,
-          ) ?? '',
+          enumName(ord.CompoundPreparation.CompoundPreparationType, prep.type) ?? '',
         ),
-        details: prep.details,
+        details: prep.details ?? '',
       }));
     }
 
@@ -108,8 +104,7 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
 
     if (component?.texture) {
       const textureObj: { type: string; details?: string } = {
-        type:
-          component.texture.type !== undefined ? String(component.texture.type) : '',
+        type: component.texture.type != null ? String(component.texture.type) : '',
       };
       if (component.texture.details) {
         textureObj.details = component.texture.details;
@@ -126,42 +121,35 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
   );
 
   const smilesValue = useMemo(() => {
-    if (!component?.identifiersList?.length) return null;
-    const smilesType = reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES;
-    const smilesIdentifier = component.identifiersList.find(
+    if (!component?.identifiers?.length) return null;
+    const smilesType = ord.CompoundIdentifier.CompoundIdentifierType.SMILES;
+    const smilesIdentifier = component.identifiers.find(
       identifier => identifier.type === smilesType,
     );
     return smilesIdentifier?.value ?? null;
-  }, [component?.identifiersList]);
+  }, [component?.identifiers]);
 
   useEffect(() => {
     if (!smilesValue) return;
 
-    // prep compound
-    const compound = new reaction_pb.Compound();
-    const identifier = compound.addIdentifiers();
-    identifier.setValue(smilesValue);
-    identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
+    const binary = encodeCompound({
+      identifiers: [
+        {
+          type: ord.CompoundIdentifier.CompoundIdentifierType.SMILES,
+          value: smilesValue,
+        },
+      ],
+    });
 
     const fetchSVG = async () => {
       try {
-        const response = await fetch('/api/compound_svg', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-protobuf',
-          },
-          body: compound.serializeBinary() as BodyInit,
+        const response = await api.post<string>('/compound_svg', binary, {
+          headers: { 'Content-Type': 'application/x-protobuf' },
         });
-
+        setCompoundSVG(response.data);
+      } catch (error) {
         // Skip the 4xx/5xx body — it's an HTML error page that
         // dangerouslySetInnerHTML would render verbatim in the SVG slot.
-        if (!response.ok) {
-          console.error(`compound_svg failed (HTTP ${response.status})`);
-          return;
-        }
-        const result = await response.json();
-        setCompoundSVG(result);
-      } catch (error) {
         console.error('Error fetching compound SVG:', error);
       }
     };

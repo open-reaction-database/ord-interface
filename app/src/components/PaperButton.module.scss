@@ -1,0 +1,77 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Ported from ord-app's PaperButton: colored icon chip, tile fills with the
+ * accent color on hover and the chip inverts. */
+
+.section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--paper-button-color);
+
+  & > svg {
+    width: 16px;
+    height: 16px;
+    color: var(--color-white);
+  }
+}
+
+.root {
+  width: 100%;
+  height: 80px;
+  padding: var(--mantine-spacing-md);
+  padding-left: 24px;
+
+  &:hover,
+  &:active {
+    color: var(--color-white);
+    background-color: var(--paper-button-color);
+
+    & .section {
+      background-color: var(--color-white);
+
+      & > svg {
+        color: var(--paper-button-color);
+      }
+    }
+
+    & .subtitle {
+      color: var(--color-baseWhite);
+    }
+  }
+}
+
+.subtitle {
+  color: var(--color-text-secondary-2);
+  font-weight: 400;
+}
+
+.inner {
+  gap: 16px;
+  justify-content: flex-start;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+}

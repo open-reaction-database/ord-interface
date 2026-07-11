@@ -16,10 +16,16 @@
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import svgr from 'vite-plugin-svgr';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), svgr(), tsconfigPaths()],
+  // Because ketcher needs asserts which requires super outdated package util
+  define: {
+    'process.env': {},
+  },
   server: {
     port: 8080, // parity with old vue app
     proxy: {
@@ -27,6 +33,11 @@ export default defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
+    },
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
 });

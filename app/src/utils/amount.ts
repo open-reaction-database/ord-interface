@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import reaction_pb from 'ord-schema';
-import type { Amount } from 'ord-schema/proto/reaction_pb';
+import { ord } from 'ord-schema-protobufjs';
 import { enumName } from './enum';
 
 export type AmountCategory = 'moles' | 'volume' | 'mass' | 'unmeasured' | '';
@@ -27,30 +26,30 @@ export interface AmountObj {
 }
 
 /**
- * Normalize a Compound.amount oneof (Amount.AsObject) into a flat
- * { unitAmount, unitType, unitCategory } triple so render code doesn't
- * have to branch on which oneof field is populated.
+ * Normalize a Compound.amount oneof into a flat { unitAmount, unitType,
+ * unitCategory } triple so render code doesn't have to branch on which oneof
+ * field is populated.
  */
-export const amountObj = (amount: Amount.AsObject | undefined): AmountObj => {
+export const amountObj = (amount: ord.IAmount | null | undefined): AmountObj => {
   if (!amount) return { unitCategory: '' };
   if (amount.moles) {
     return {
-      unitAmount: amount.moles.value,
-      unitType: enumName(reaction_pb.Moles.MolesUnit, amount.moles.units),
+      unitAmount: amount.moles.value ?? undefined,
+      unitType: enumName(ord.Moles.MolesUnit, amount.moles.units),
       unitCategory: 'moles',
     };
   }
   if (amount.volume) {
     return {
-      unitAmount: amount.volume.value,
-      unitType: enumName(reaction_pb.Volume.VolumeUnit, amount.volume.units),
+      unitAmount: amount.volume.value ?? undefined,
+      unitType: enumName(ord.Volume.VolumeUnit, amount.volume.units),
       unitCategory: 'volume',
     };
   }
   if (amount.mass) {
     return {
-      unitAmount: amount.mass.value,
-      unitType: enumName(reaction_pb.Mass.MassUnit, amount.mass.units),
+      unitAmount: amount.mass.value ?? undefined,
+      unitType: enumName(ord.Mass.MassUnit, amount.mass.units),
       unitCategory: 'mass',
     };
   }

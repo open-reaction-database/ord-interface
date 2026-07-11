@@ -27,6 +27,7 @@ import {
   stirType,
   tempSetPoint,
   tempType,
+  wavelengthStr,
 } from '../../utils/conditions';
 import type { ReactionConditionsData } from '../../types/search';
 import './ConditionsView.scss';
@@ -54,11 +55,11 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           )}
           <div className="label">Setpoint</div>
           <div className="value">{tempSetPoint(t?.setpoint)}</div>
-          {t?.measurementsList && t.measurementsList.length > 0 && (
+          {t?.measurements && t.measurements.length > 0 && (
             <>
               <div className="label">Measurements</div>
               {/* TODO: render temperature measurements once the schema's shape is fully ported. */}
-              <div className="value">{t.measurementsList.length} recorded</div>
+              <div className="value">{t.measurements.length} recorded</div>
             </>
           )}
         </div>
@@ -83,11 +84,11 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           <div className="value">{pressureSetPoint(p?.setpoint)}</div>
           <div className="label">Atmosphere</div>
           <div className="value">{pressureAtmo(p?.atmosphere)}</div>
-          {p?.measurementsList && p.measurementsList.length > 0 && (
+          {p?.measurements && p.measurements.length > 0 && (
             <>
               <div className="label">Measurements</div>
               {/* TODO: render pressure measurements once the schema's shape is fully ported. */}
-              <div className="value">{p.measurementsList.length} recorded</div>
+              <div className="value">{p.measurements.length} recorded</div>
             </>
           )}
         </div>
@@ -130,7 +131,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           <div className="label">Type</div>
           <div className="value">{illumType(i)}</div>
           <div className="label">Peak Wavelength</div>
-          <div className="value">{lengthStr(i?.peakWavelength) ?? 'None'}</div>
+          <div className="value">{wavelengthStr(i?.peakWavelength) ?? 'None'}</div>
           {i?.color && (
             <>
               <div className="label">Color</div>
@@ -169,7 +170,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
               <div className="value">{e.cathodeMaterial}</div>
             </>
           )}
-          {/* TODO: render current, voltage, electrodeSeparation, and measurementsList. */}
+          {/* TODO: render current, voltage, electrodeSeparation, and measurements. */}
         </div>
       </div>
     );

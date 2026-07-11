@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Open Reaction Database Project Authors
+ * Copyright 2026 Open Reaction Database Project Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,36 @@
  * limitations under the License.
  */
 
-@use '../styles/vars.scss' as vars;
+/* Ported from ord-app's Pagination.module.scss. */
 
-.home {
-  margin-top: 20vh;
+.paginationContainer {
+  margin-top: 20px;
+}
 
-  &__image-container {
-    width: 90%;
-    margin: auto;
-    max-width: 800px;
+.controlButton {
+  color: var(--color-text-primary);
+
+  &:disabled {
+    background-color: transparent;
+    color: #a6a6a6;
   }
+}
 
-  &__logo {
-    width: 100%;
-    height: auto;
+.paginationRoot {
+  --pagination-active-bg: var(--color-background-gray);
+  --pagination-control-radius: 8px;
+
+  button {
+    font-size: var(--font-size-md);
+    border: none;
+    color: var(--color-text-primary);
   }
+}
+
+.select {
+  width: 80px;
+}
+
+.selectInput {
+  border-radius: 8px;
 }

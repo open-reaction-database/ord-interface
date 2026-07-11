@@ -16,9 +16,8 @@
 
 import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import reaction_pb from 'ord-schema';
-import { base64ToBytes } from '../utils/base64';
-import { fetchJson } from '../utils/api';
+import { api } from '../utils/api';
+import { decodeReaction } from '../utils/proto';
 import type { SearchResult } from '../types/search';
 
 const POLL_INTERVAL_MS = 1000;
@@ -86,11 +85,9 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
       if (taskRef.current.taskId === null) {
         if (!taskRef.current.submitPromise) {
           taskRef.current.startTime = Date.now();
-          taskRef.current.submitPromise = fetchJson<string>(
-            `/api/submit_query${queryString}`,
-            undefined,
-            'submit_query',
-          );
+          taskRef.current.submitPromise = api
+            .get<string>(`/submit_query${queryString}`)
+            .then(res => res.data);
         }
         try {
           taskRef.current.taskId = await taskRef.current.submitPromise;
@@ -105,29 +102,22 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
         throw new Error(`Search task ${id} timed out after ${POLL_TIMEOUT_MS / 1000}s`);
       }
 
-      const res = await fetch(
-        `/api/fetch_query_result?task_id=${taskRef.current.taskId}`,
-      );
+      // 200 = done, 202 = still running; anything else is an error.
+      const res = await api.get<Omit<SearchResult, 'data'>[]>('/fetch_query_result', {
+        params: { task_id: taskRef.current.taskId },
+        validateStatus: status => status === 200 || status === 202,
+      });
 
       if (res.status === 200) {
-        const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
-        const results: SearchResult[] = raw.map(r => ({
+        const results: SearchResult[] = res.data.map(r => ({
           ...r,
-          data: reaction_pb.Reaction.deserializeBinary(
-            new Uint8Array(base64ToBytes(r.proto)),
-          ).toObject(),
+          data: decodeReaction(r.proto),
         }));
         taskRef.current.taskId = null;
         return { status: 'success', results };
       }
 
-      if (res.status === 202) {
-        return { status: 'pending', taskId: taskRef.current.taskId };
-      }
-
-      const id = taskRef.current.taskId;
-      taskRef.current.taskId = null;
-      throw new Error(`Search task ${id} failed (HTTP ${res.status})`);
+      return { status: 'pending', taskId: taskRef.current.taskId! };
     },
   });
 }

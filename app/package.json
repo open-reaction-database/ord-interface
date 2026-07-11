@@ -13,15 +13,24 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@mantine/core": "^7.15.3",
+    "@mantine/hooks": "^7.15.3",
+    "@mantine/notifications": "^7.15.3",
+    "@tabler/icons-react": "^3.22.0",
     "@tanstack/react-query": "^5.90.2",
     "@types/d3": "^7.4.3",
+    "axios": "^1.16.0",
+    "buffer": "^6.0.3",
+    "clsx": "^2.1.1",
     "d3": "^7.9.0",
-    "ord-schema": "^0.3.99",
+    "ketcher-react": "^3.15.0",
+    "ketcher-standalone": "^3.15.0",
+    "mantine-react-table": "^2.0.0-beta.8",
+    "ord-schema-protobufjs": "^0.6.31",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-range": "^1.10.0",
-    "react-router-dom": "^7.9.1",
-    "sass": "^1.93.1"
+    "sass": "^1.93.1",
+    "wouter": "^3.3.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
@@ -32,12 +41,26 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
+    "postcss": "^8.4.49",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.4.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.44.0",
-    "vite": "^7.3.5"
+    "vite": "^7.3.5",
+    "vite-plugin-svgr": "^4.3.0",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "overrides": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "ketcher-react": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    },
+    "ketcher-core": "^3.15.0",
+    "draft-js": {
+      "immutable": "3.8.3"
+    },
+    "immutable@<3.8.3": "3.8.3"
   }
 }

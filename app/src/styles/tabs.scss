@@ -24,11 +24,18 @@
   flex-wrap: wrap;
 
   .tab {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--mantine-radius-sm, 6px);
     border: 1px solid vars.$medgrey;
+    background-color: var(--color-background-white, #fff);
+    color: var(--color-text-secondary-3, #4a5e6d);
+    font-size: var(--font-size-md, 14px);
     cursor: pointer;
     transition: 0.25s;
+
+    &:hover {
+      color: var(--color-text-hover, #ff8d00);
+    }
 
     &.selected {
       background-color: vars.$linkblue;

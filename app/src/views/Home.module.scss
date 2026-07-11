@@ -1,0 +1,262 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.home {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hero */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 20px 8px;
+}
+
+.logo {
+  width: 320px;
+  max-width: 90%;
+  height: auto;
+}
+
+.tagline {
+  max-width: 720px;
+  margin-top: 20px;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary-3);
+}
+
+.searchRow {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 640px;
+  margin-top: 28px;
+}
+
+.searchInput {
+  flex: 1;
+}
+
+.advancedLink {
+  margin-top: 12px;
+  font-size: var(--font-size-md);
+}
+
+.stats {
+  display: flex;
+  gap: 64px;
+  margin-top: 36px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  color: var(--color-text-primary);
+}
+
+.statLabel {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-2);
+}
+
+/* Action tiles */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--mantine-spacing-md);
+  margin-top: 40px;
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Shared section scaffolding */
+
+.section {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.sectionFooterLink {
+  margin-top: var(--mantine-spacing-sm);
+  font-size: var(--font-size-md);
+  align-self: flex-end;
+}
+
+.countBadge {
+  background-color: var(--color-background-gray);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Featured dataset cards */
+
+.datasetCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+
+  &:hover {
+    color: inherit;
+    border-color: var(--color-primary);
+
+    .datasetCardName {
+      color: var(--color-text-hover);
+    }
+  }
+}
+
+.datasetCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.datasetCardName {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  color: var(--color-primary);
+  transition: color 0.15s;
+  overflow-wrap: anywhere;
+}
+
+.datasetCardDescription {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-3);
+  min-height: 63px;
+}
+
+.datasetCardFooter {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-2);
+}
+
+/* News */
+
+.newsPaper {
+  background-color: var(--color-background-white);
+}
+
+.newsRow {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 16px;
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+
+  & + .newsRow {
+    border-top: 1px solid var(--color-border-1);
+  }
+}
+
+.newsDate {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-1);
+  padding-top: 1px;
+}
+
+.newsTitle {
+  font-weight: 500;
+
+  a {
+    color: var(--color-text-primary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.newsText {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-3);
+  margin-top: 2px;
+}
+
+/* Open by design */
+
+.feature {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: var(--mantine-spacing-md) 0;
+}
+
+.featureChip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+
+  & > svg {
+    width: 16px;
+    height: 16px;
+    color: var(--color-white);
+  }
+}
+
+.featureText {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-3);
+  margin: 4px 0 6px;
+}
+
+/* Citation */
+
+.citation {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.citationText {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary-3);
+  margin-top: 6px;
+  max-width: 900px;
+}

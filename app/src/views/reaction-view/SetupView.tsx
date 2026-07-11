@@ -15,7 +15,7 @@
  */
 
 import React, { useMemo } from 'react';
-import reaction_pb from 'ord-schema';
+import { ord } from 'ord-schema-protobufjs';
 import { enumName } from '../../utils/enum';
 import type { ReactionSetupData } from '../../types/search';
 import './SetupView.scss';
@@ -30,46 +30,39 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
 
   const vesselType = useMemo(() => {
     if (!vessel?.type) return '';
-    return enumName(reaction_pb.Vessel.VesselType, vessel.type) ?? '';
+    return enumName(ord.Vessel.VesselType, vessel.type) ?? '';
   }, [vessel?.type]);
 
   const vesselVolume = useMemo(() => {
     if (!vessel?.volume) return '';
-    const label = enumName(reaction_pb.Volume.VolumeUnit, vessel.volume.units);
+    const label = enumName(ord.Volume.VolumeUnit, vessel.volume.units);
     return `${vessel.volume.value} ${label ? String(label).toLowerCase() : ''}`;
   }, [vessel?.volume]);
 
   const vesselAttachments = useMemo(() => {
-    if (!vessel?.attachmentsList?.length) return '';
-    return vessel.attachmentsList
+    if (!vessel?.attachments?.length) return '';
+    return vessel.attachments
       .map(attach => {
-        const type = enumName(
-          reaction_pb.VesselAttachment.VesselAttachmentType,
-          attach.type,
-        );
+        const type = enumName(ord.VesselAttachment.VesselAttachmentType, attach.type);
         return `${String(type ?? '')}${attach.details ? `: ${attach.details}` : ''}`;
       })
       .join(', ');
-  }, [vessel?.attachmentsList]);
+  }, [vessel?.attachments]);
 
   const vesselPrep = useMemo(() => {
-    if (!vessel?.preparationsList?.length) return '';
-    return vessel.preparationsList
+    if (!vessel?.preparations?.length) return '';
+    return vessel.preparations
       .map(prep => {
-        const type = enumName(
-          reaction_pb.VesselPreparation.VesselPreparationType,
-          prep.type,
-        );
+        const type = enumName(ord.VesselPreparation.VesselPreparationType, prep.type);
         return `${String(type ?? '')}${prep.details ? `: ${prep.details}` : ''}`;
       })
       .join(', ');
-  }, [vessel?.preparationsList]);
+  }, [vessel?.preparations]);
 
   const vesselMaterial = useMemo(() => {
     if (!vessel?.material?.type) return '';
     return String(
-      enumName(reaction_pb.VesselMaterial.VesselMaterialType, vessel.material.type) ??
-        '',
+      enumName(ord.VesselMaterial.VesselMaterialType, vessel.material.type) ?? '',
     );
   }, [vessel?.material?.type]);
 
@@ -79,7 +72,7 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
     return (
       String(
         enumName(
-          reaction_pb.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType,
+          ord.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType,
           envVal,
         ) ?? '',
       ) || null
@@ -106,14 +99,14 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
           <div className="label">Volume</div>
           <div className="value">{vesselVolume}</div>
 
-          {vessel?.attachmentsList && vessel.attachmentsList.length > 0 && (
+          {vessel?.attachments && vessel.attachments.length > 0 && (
             <>
               <div className="label">Attachments</div>
               <div className="value">{vesselAttachments}</div>
             </>
           )}
 
-          {vessel?.preparationsList && vessel.preparationsList.length > 0 && (
+          {vessel?.preparations && vessel.preparations.length > 0 && (
             <>
               <div className="label">Preparations</div>
               <div className="value">{vesselPrep}</div>

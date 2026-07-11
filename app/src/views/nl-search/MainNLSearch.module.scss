@@ -1,0 +1,143 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.nlSearch {
+  display: flex;
+  flex-direction: column;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.banner {
+  margin-bottom: var(--mantine-spacing-lg);
+}
+
+.subtitle {
+  color: var(--color-text-secondary-3);
+  margin-top: 4px;
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--mantine-spacing-lg);
+}
+
+.input {
+  flex: 1;
+}
+
+.dryRunToggle {
+  margin-top: var(--mantine-spacing-sm);
+}
+
+.examples {
+  margin-top: var(--mantine-spacing-md);
+}
+
+.example {
+  font-weight: 400;
+  color: var(--color-text-secondary-3);
+}
+
+.error {
+  margin-top: var(--mantine-spacing-md);
+}
+
+.interpretation {
+  margin: var(--mantine-spacing-lg) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+}
+
+.layer {
+  border-top: 1px solid var(--color-border-1);
+  padding-top: var(--mantine-spacing-md);
+}
+
+.layerTitle {
+  font-weight: 600;
+}
+
+.provenance {
+  font-weight: 400;
+  color: var(--color-text-secondary-2);
+  font-size: var(--font-size-sm);
+}
+
+.list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: var(--font-size-md);
+}
+
+.role {
+  color: var(--color-text-secondary-2);
+}
+
+.mode {
+  color: var(--color-text-secondary-2);
+}
+
+.muted {
+  color: var(--color-text-secondary-1);
+  font-size: var(--font-size-md);
+}
+
+.raw {
+  margin-top: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary-2);
+
+  summary {
+    cursor: pointer;
+  }
+}
+
+.rawJson {
+  margin: 8px 0 0;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.resolutionList {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: var(--font-size-md);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+}
+
+.arrow {
+  color: var(--color-text-secondary-1);
+}
+
+.resolver {
+  color: var(--color-text-secondary-2);
+  font-size: var(--font-size-sm);
+}
+
+.dryRunNote {
+  display: flex;
+  justify-content: center;
+}

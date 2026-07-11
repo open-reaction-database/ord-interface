@@ -15,9 +15,10 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import reaction_pb from 'ord-schema';
-import type { ReactionInput, RecordEvent } from 'ord-schema/proto/reaction_pb';
+import { useParams } from 'wouter';
+import { Button, Paper, Title } from '@mantine/core';
+import { ord } from 'ord-schema-protobufjs';
+import clsx from 'clsx';
 import CompoundView from './CompoundView';
 import SetupView from './SetupView';
 import ConditionsView from './ConditionsView';
@@ -29,11 +30,24 @@ import ProvenanceView from './ProvenanceView';
 import EventsView from './EventsView';
 import FloatingModal from '../../components/FloatingModal';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { base64ToBytes } from '../../utils/base64';
+import { api } from '../../utils/api';
+import { decodeReaction, sortedInputEntries } from '../../utils/proto';
 import { enumName } from '../../utils/enum';
 import { formattedTime } from '../../utils/outcomes';
 import type { ReactionData } from '../../types/search';
-import './MainReactionView.scss';
+import '../../styles/tabs.scss';
+import classes from './MainReactionView.module.scss';
+
+const SETUP_TABS = ['vessel', 'environment', 'automation'];
+const CONDITION_TABS = [
+  'temperature',
+  'pressure',
+  'stirring',
+  'illumination',
+  'electrochemistry',
+  'flow',
+  'other',
+];
 
 const MainReactionView: React.FC = () => {
   const { reactionId } = useParams<{ reactionId: string }>();
@@ -49,42 +63,15 @@ const MainReactionView: React.FC = () => {
   const [navItems, setNavItems] = useState<string[]>([]);
   const [activeNav, setActiveNav] = useState<string>('summary');
 
-  const setupTabs = ['vessel', 'environment', 'automation'];
-  const conditionTabs = [
-    'temperature',
-    'pressure',
-    'stirring',
-    'illumination',
-    'electrochemistry',
-    'flow',
-    'other',
-  ];
-
   const getReactionData = useCallback(async (): Promise<ReactionData | null> => {
     if (!reactionId) return null;
 
     try {
-      const response = await fetch('/api/reactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reaction_ids: [reactionId] }),
+      const response = await api.post<Array<{ proto: string }>>('/reactions', {
+        reaction_ids: [reactionId],
       });
-
-      if (!response.ok) return null;
-      const data = (await response.json()) as Array<{ proto: string }>;
-      if (!data?.[0]?.proto) return null;
-
-      const bytes = base64ToBytes(data[0].proto);
-      const decoded = reaction_pb.Reaction.deserializeBinary(
-        new Uint8Array(bytes),
-      ).toObject();
-
-      // Sort inputs by their declared addition order.
-      decoded.inputsMap?.sort(
-        (a, b) => (a[1].additionOrder ?? 0) - (b[1].additionOrder ?? 0),
-      );
-
-      return decoded;
+      if (!response.data?.[0]?.proto) return null;
+      return decodeReaction(response.data[0].proto);
     } catch (error) {
       console.error('Error fetching reaction data:', error);
       return null;
@@ -95,28 +82,27 @@ const MainReactionView: React.FC = () => {
     if (!reactionId) return '';
 
     try {
-      const response = await fetch(
-        `/api/reaction_summary?reaction_id=${reactionId}&compact=false`,
-      );
+      const response = await api.get<string>('/reaction_summary', {
+        params: { reaction_id: reactionId, compact: false },
+      });
+      return response.data;
+    } catch (error) {
       // Don't pipe a 4xx/5xx HTML error body into the summary panel via
       // dangerouslySetInnerHTML; return empty so the section stays blank.
-      if (!response.ok) {
-        console.error(
-          `reaction_summary failed (HTTP ${response.status}) for ${reactionId}`,
-        );
-        return '';
-      }
-      return await response.text();
-    } catch (error) {
       console.error('Error fetching reaction summary:', error);
       return '';
     }
   }, [reactionId]);
 
+  const inputEntries = useMemo(
+    () => sortedInputEntries(reaction?.inputs),
+    [reaction?.inputs],
+  );
+
   const displayDetails = useMemo<Record<string, React.ReactNode>>(() => {
-    const inputEntry = reaction?.inputsMap?.[inputsIdx];
+    const inputEntry = inputEntries[inputsIdx];
     if (!inputEntry) return {};
-    const input: ReactionInput.AsObject = inputEntry[1];
+    const input: ord.IReactionInput = inputEntry[1];
 
     const raw = { ...(input as unknown as Record<string, unknown>) };
     const formatted: Record<string, React.ReactNode> = {};
@@ -126,18 +112,18 @@ const MainReactionView: React.FC = () => {
       formatted[key] = value as React.ReactNode;
     }
 
-    if (input.additionDevice?.type !== undefined) {
+    if (input.additionDevice?.type != null) {
       formatted.additionDevice =
         enumName(
-          reaction_pb.ReactionInput.AdditionDevice.AdditionDeviceType,
+          ord.ReactionInput.AdditionDevice.AdditionDeviceType,
           input.additionDevice.type,
         )?.toLowerCase() ?? '';
     }
 
-    if (input.additionSpeed?.type !== undefined) {
+    if (input.additionSpeed?.type != null) {
       formatted.additionSpeed =
         enumName(
-          reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType,
+          ord.ReactionInput.AdditionSpeed.AdditionSpeedType,
           input.additionSpeed.type,
         )?.toLowerCase() ?? '';
     }
@@ -147,7 +133,7 @@ const MainReactionView: React.FC = () => {
     }
 
     return formatted;
-  }, [reaction, inputsIdx]);
+  }, [inputEntries, inputsIdx]);
 
   const displayConditionsOther = useMemo(() => {
     const conditions = reaction?.conditions;
@@ -161,15 +147,15 @@ const MainReactionView: React.FC = () => {
     return otherFields.find(key => conditions[key]);
   }, [reaction?.conditions]);
 
-  const events = useMemo<RecordEvent.AsObject[]>(() => {
+  const events = useMemo<ord.IRecordEvent[]>(() => {
     const provenance = reaction?.provenance;
     if (!provenance?.recordCreated) return [];
 
-    const created: RecordEvent.AsObject = {
+    const created: ord.IRecordEvent = {
       ...provenance.recordCreated,
       details: '(record created)',
     };
-    const modified = provenance.recordModifiedList ?? [];
+    const modified = provenance.recordModified ?? [];
     const all = [created, ...modified];
 
     all.sort((a, b) => {
@@ -181,11 +167,11 @@ const MainReactionView: React.FC = () => {
     return all;
   }, [reaction?.provenance]);
 
-  const getReactionType = (id: number): string =>
-    enumName(reaction_pb.ReactionIdentifier.ReactionIdentifierType, id) ?? '';
+  const getReactionType = (id: number | null | undefined): string =>
+    enumName(ord.ReactionIdentifier.ReactionIdentifierType, id) ?? '';
 
-  const getWorkupLabel = (type: number): string => {
-    const name = enumName(reaction_pb.ReactionWorkup.ReactionWorkupType, type);
+  const getWorkupLabel = (type: number | null | undefined): string => {
+    const name = enumName(ord.ReactionWorkup.ReactionWorkupType, type);
     return name ? name.toLowerCase().replace(/_/g, ' ') : '';
   };
 
@@ -207,20 +193,12 @@ const MainReactionView: React.FC = () => {
         setReactionSummary(summaryData);
 
         const items = ['summary', 'identifiers', 'inputs'];
-        const optionals: Array<keyof ReactionData> = [
-          'setup',
-          'conditions',
-          'notes',
-          'observationsList',
-          'workupsList',
-        ];
 
-        optionals.forEach(key => {
-          const value = reactionData[key];
-          if (Array.isArray(value) ? value.length > 0 : Boolean(value)) {
-            items.push(key.replace(/List$/, ''));
-          }
-        });
+        if (reactionData.setup) items.push('setup');
+        if (reactionData.conditions) items.push('conditions');
+        if (reactionData.notes) items.push('notes');
+        if (reactionData.observations?.length) items.push('observations');
+        if (reactionData.workups?.length) items.push('workups');
 
         items.push('outcomes', 'provenance', 'full-record');
         setNavItems(items);
@@ -234,7 +212,7 @@ const MainReactionView: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100;
+      const scrollPosition = window.scrollY + 120;
 
       for (let i = navItems.length - 1; i >= 0; i--) {
         const element = document.getElementById(navItems[i]);
@@ -254,276 +232,314 @@ const MainReactionView: React.FC = () => {
   }, [navItems]);
 
   if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!reaction) {
     return (
-      <div className="main-reaction-view">
-        <div className="loading">
-          <LoadingSpinner />
-        </div>
-      </div>
+      <Paper
+        radius="sm"
+        p="xl"
+        className={classes.emptyState}
+      >
+        Failed to load reaction {reactionId}.
+      </Paper>
     );
   }
 
   return (
-    <div className="main-reaction-view">
-      <div className="reaction-transition">
-        <div className="nav-holder">
-          <div className="nav">
-            {navItems.map(item => (
-              <div
-                key={item}
-                className={`nav-item ${activeNav === item ? 'active' : ''}`}
-                onClick={() => scrollTo(item)}
-              >
-                {item.replace(/-/g, ' ')}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="content">
-          <div className="title">Summary</div>
-          <div
-            id="summary"
-            className="section"
-          >
-            {reactionSummary && (
-              <div className="summary">
-                <div
-                  className="display"
-                  dangerouslySetInnerHTML={{ __html: reactionSummary }}
-                />
-              </div>
-            )}
-          </div>
-
-          {reaction?.identifiersList && reaction.identifiersList.length > 0 && (
-            <div id="identifiers">
-              <div className="title">Identifiers</div>
-              <div className="section">
-                <div className="identifiers">
-                  {reaction.identifiersList.map((identifier, index) => (
-                    <React.Fragment key={index}>
-                      <div className="value">{getReactionType(identifier.type)}</div>
-                      <div className="value">{identifier.value}</div>
-                      <div className="value">{identifier.details}</div>
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.inputsMap && reaction.inputsMap.length > 0 && (
-            <div id="inputs">
-              <div className="title">Inputs</div>
-              <div className="section">
-                <div className="tabs">
-                  {reaction.inputsMap.map(([key], idx) => (
-                    <div
-                      key={idx}
-                      className={`tab ${inputsIdx === idx ? 'selected' : ''}`}
-                      onClick={() => setInputsIdx(idx)}
-                    >
-                      {key}
-                    </div>
-                  ))}
-                </div>
-                <div className="input">
-                  <div className="title">Details</div>
-                  <div className="details">
-                    {Object.keys(displayDetails).map(key => (
-                      <React.Fragment key={key}>
-                        <div className="label">{key.replace(/(?=[A-Z])/g, ' ')}</div>
-                        <div className="value">{displayDetails[key]}</div>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  <div className="title">Components</div>
-                  <div className="compound">
-                    {reaction.inputsMap[inputsIdx][1].componentsList?.map(
-                      (component, index) => (
-                        <CompoundView
-                          key={index}
-                          component={component}
-                        />
-                      ),
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.setup && (
-            <div id="setup">
-              <div className="title">Setup</div>
-              <div className="section">
-                <div className="tabs">
-                  {setupTabs.map(
-                    tab =>
-                      (tab !== 'automation' || reaction.setup?.isAutomated) && (
-                        <div
-                          key={tab}
-                          className={`tab capitalize ${setupTab === tab ? 'selected' : ''}`}
-                          onClick={() => setSetupTab(tab)}
-                        >
-                          {tab}
-                        </div>
-                      ),
-                  )}
-                </div>
-                <div className="details">
-                  <SetupView
-                    setup={reaction.setup}
-                    display={setupTab}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.conditions && (
-            <div id="conditions">
-              <div className="title">Conditions</div>
-              <div className="section">
-                <div className="tabs">
-                  {conditionTabs.map(
-                    tab =>
-                      (reaction.conditions?.[tab as keyof typeof reaction.conditions] ||
-                        (tab === 'other' && displayConditionsOther)) && (
-                        <div
-                          key={tab}
-                          className={`tab capitalize ${conditionTab === tab ? 'selected' : ''}`}
-                          onClick={() => setConditionTab(tab)}
-                        >
-                          {tab}
-                        </div>
-                      ),
-                  )}
-                </div>
-                <div className="details">
-                  <ConditionsView
-                    conditions={reaction.conditions}
-                    display={conditionTab}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.notes && (
-            <div id="notes">
-              <div className="title">Notes</div>
-              <div className="section">
-                <div className="details">
-                  <NotesView notes={reaction.notes} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.observationsList && reaction.observationsList.length > 0 && (
-            <div id="observations">
-              <div className="title">Observations</div>
-              <div className="section">
-                <div className="details">
-                  <ObservationsView observations={reaction.observationsList} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.workupsList && reaction.workupsList.length > 0 && (
-            <div id="workups">
-              <div className="title">Workups</div>
-              <div className="section">
-                <div className="tabs">
-                  {reaction.workupsList.map((workup, idx) => (
-                    <div
-                      key={idx}
-                      className={`tab capitalize ${workupsTab === idx ? 'selected' : ''}`}
-                      onClick={() => setWorkupsTab(idx)}
-                    >
-                      {getWorkupLabel(workup.type)}
-                    </div>
-                  ))}
-                </div>
-                <div className="details">
-                  <WorkupsView workup={reaction.workupsList[workupsTab]} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.outcomesList && reaction.outcomesList.length > 0 && (
-            <div id="outcomes">
-              <div className="title">Outcomes</div>
-              <div className="section">
-                <div className="tabs">
-                  {reaction.outcomesList.map((_outcome, idx) => (
-                    <div
-                      key={idx}
-                      className={`tab capitalize ${outcomesTab === idx ? 'selected' : ''}`}
-                      onClick={() => setOutcomesTab(idx)}
-                    >
-                      Outcome {idx + 1}
-                    </div>
-                  ))}
-                </div>
-                <div className="details">
-                  {/* key=outcomesTab so the inner tab/modal state resets when the user switches outcomes. */}
-                  <OutcomesView
-                    key={outcomesTab}
-                    outcome={reaction.outcomesList[outcomesTab]}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {reaction?.provenance && (
-            <div id="provenance">
-              <div className="title">Provenance</div>
-              <div className="section">
-                <ProvenanceView provenance={reaction.provenance} />
-              </div>
-            </div>
-          )}
-
-          {events.length > 0 && (
-            <div id="events">
-              <div className="title">Record Events</div>
-              <div className="section">
-                <EventsView events={events} />
-              </div>
-            </div>
-          )}
-
-          {reaction && (
-            <div id="full-record">
-              <div className="title">Full Record</div>
-              <div className="section">
-                <div
-                  className="full-record button"
-                  onClick={() => setShowRawReaction(true)}
-                >
-                  View Full Record
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showRawReaction && reaction && (
-            <FloatingModal
-              title="Raw Data"
-              onCloseModal={() => setShowRawReaction(false)}
+    <div className={classes.reactionView}>
+      <aside className={classes.navHolder}>
+        <Paper
+          radius="sm"
+          p="sm"
+          className={classes.nav}
+        >
+          {navItems.map(item => (
+            <Button
+              key={item}
+              variant={activeNav === item ? 'filled' : 'transparent'}
+              color={activeNav === item ? 'primary' : 'gray'}
+              justify="flex-start"
+              fullWidth
+              size="compact-md"
+              className={classes.navButton}
+              onClick={() => scrollTo(item)}
             >
-              <div className="data">
-                <pre>{JSON.stringify(reaction, null, 2)}</pre>
-              </div>
-            </FloatingModal>
+              {item.replace(/-/g, ' ')}
+            </Button>
+          ))}
+        </Paper>
+      </aside>
+
+      <div className={classes.content}>
+        <Paper
+          id="summary"
+          radius="sm"
+          p="lg"
+          className={classes.section}
+        >
+          <Title order={2}>Summary</Title>
+          {reactionSummary && (
+            <div className={classes.summaryScroll}>
+              <div dangerouslySetInnerHTML={{ __html: reactionSummary }} />
+            </div>
           )}
-        </div>
+        </Paper>
+
+        {reaction.identifiers.length > 0 && (
+          <Paper
+            id="identifiers"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Identifiers</Title>
+            <div className={classes.identifiers}>
+              {reaction.identifiers.map((identifier, index) => (
+                <React.Fragment key={index}>
+                  <div>{getReactionType(identifier.type)}</div>
+                  <div>{identifier.value}</div>
+                  <div>{identifier.details}</div>
+                </React.Fragment>
+              ))}
+            </div>
+          </Paper>
+        )}
+
+        {inputEntries.length > 0 && (
+          <Paper
+            id="inputs"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Inputs</Title>
+            <div className="tabs">
+              {inputEntries.map(([key], idx) => (
+                <div
+                  key={idx}
+                  className={clsx('tab', { selected: inputsIdx === idx })}
+                  onClick={() => setInputsIdx(idx)}
+                >
+                  {key}
+                </div>
+              ))}
+            </div>
+            <div className={classes.subTitle}>Details</div>
+            <div className={classes.detailsGrid}>
+              {Object.keys(displayDetails).map(key => (
+                <React.Fragment key={key}>
+                  <div className={classes.label}>{key.replace(/(?=[A-Z])/g, ' ')}</div>
+                  <div>{displayDetails[key]}</div>
+                </React.Fragment>
+              ))}
+            </div>
+            <div className={classes.subTitle}>Components</div>
+            <div className={classes.compounds}>
+              {inputEntries[inputsIdx]?.[1].components?.map((component, index) => (
+                <CompoundView
+                  key={index}
+                  component={component}
+                />
+              ))}
+            </div>
+          </Paper>
+        )}
+
+        {reaction.setup && (
+          <Paper
+            id="setup"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Setup</Title>
+            <div className="tabs">
+              {SETUP_TABS.map(
+                tab =>
+                  (tab !== 'automation' || reaction.setup?.isAutomated) && (
+                    <div
+                      key={tab}
+                      className={clsx('tab', 'capitalize', {
+                        selected: setupTab === tab,
+                      })}
+                      onClick={() => setSetupTab(tab)}
+                    >
+                      {tab}
+                    </div>
+                  ),
+              )}
+            </div>
+            <SetupView
+              setup={reaction.setup}
+              display={setupTab}
+            />
+          </Paper>
+        )}
+
+        {reaction.conditions && (
+          <Paper
+            id="conditions"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Conditions</Title>
+            <div className="tabs">
+              {CONDITION_TABS.map(
+                tab =>
+                  (reaction.conditions?.[tab as keyof typeof reaction.conditions] ||
+                    (tab === 'other' && displayConditionsOther)) && (
+                    <div
+                      key={tab}
+                      className={clsx('tab', 'capitalize', {
+                        selected: conditionTab === tab,
+                      })}
+                      onClick={() => setConditionTab(tab)}
+                    >
+                      {tab}
+                    </div>
+                  ),
+              )}
+            </div>
+            <ConditionsView
+              conditions={reaction.conditions}
+              display={conditionTab}
+            />
+          </Paper>
+        )}
+
+        {reaction.notes && (
+          <Paper
+            id="notes"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Notes</Title>
+            <NotesView notes={reaction.notes} />
+          </Paper>
+        )}
+
+        {reaction.observations.length > 0 && (
+          <Paper
+            id="observations"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Observations</Title>
+            <ObservationsView observations={reaction.observations} />
+          </Paper>
+        )}
+
+        {reaction.workups.length > 0 && (
+          <Paper
+            id="workups"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Workups</Title>
+            <div className="tabs">
+              {reaction.workups.map((workup, idx) => (
+                <div
+                  key={idx}
+                  className={clsx('tab', 'capitalize', {
+                    selected: workupsTab === idx,
+                  })}
+                  onClick={() => setWorkupsTab(idx)}
+                >
+                  {getWorkupLabel(workup.type)}
+                </div>
+              ))}
+            </div>
+            <WorkupsView workup={reaction.workups[workupsTab]} />
+          </Paper>
+        )}
+
+        {reaction.outcomes.length > 0 && (
+          <Paper
+            id="outcomes"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Outcomes</Title>
+            <div className="tabs">
+              {reaction.outcomes.map((_outcome, idx) => (
+                <div
+                  key={idx}
+                  className={clsx('tab', 'capitalize', {
+                    selected: outcomesTab === idx,
+                  })}
+                  onClick={() => setOutcomesTab(idx)}
+                >
+                  Outcome {idx + 1}
+                </div>
+              ))}
+            </div>
+            {/* key=outcomesTab so the inner tab/modal state resets when the user switches outcomes. */}
+            <OutcomesView
+              key={outcomesTab}
+              outcome={reaction.outcomes[outcomesTab]}
+            />
+          </Paper>
+        )}
+
+        {reaction.provenance && (
+          <Paper
+            id="provenance"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Provenance</Title>
+            <ProvenanceView provenance={reaction.provenance} />
+          </Paper>
+        )}
+
+        {events.length > 0 && (
+          <Paper
+            id="events"
+            radius="sm"
+            p="lg"
+            className={classes.section}
+          >
+            <Title order={2}>Record events</Title>
+            <EventsView events={events} />
+          </Paper>
+        )}
+
+        <Paper
+          id="full-record"
+          radius="sm"
+          p="lg"
+          className={classes.section}
+        >
+          <Title order={2}>Full record</Title>
+          <div>
+            <Button
+              variant="default"
+              radius="sm"
+              onClick={() => setShowRawReaction(true)}
+            >
+              View full record
+            </Button>
+          </div>
+        </Paper>
+
+        {showRawReaction && (
+          <FloatingModal
+            title="Raw Data"
+            onCloseModal={() => setShowRawReaction(false)}
+          >
+            <pre className={classes.rawRecord}>
+              {JSON.stringify(ord.Reaction.toObject(reaction), null, 2)}
+            </pre>
+          </FloatingModal>
+        )}
       </div>
     </div>
   );

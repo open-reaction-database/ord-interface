@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Open Reaction Database Project Authors
+ * Copyright 2026 Open Reaction Database Project Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,35 +14,21 @@
  * limitations under the License.
  */
 
-@use '../styles/vars.scss' as vars;
+.container {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
 
-.download-results-main {
-  .download-body {
-    height: 100%;
-    display: grid;
-    grid-template-rows: 50% auto 1fr;
+.code {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--mantine-color-primary-0);
+}
 
-    * {
-      margin: auto;
-      width: fit-content;
-    }
-
-    .title {
-      font-size: 1.5rem;
-    }
-
-    .options {
-      label {
-        margin-right: 0.5rem;
-      }
-
-      select {
-        min-width: 7rem;
-      }
-    }
-
-    .download {
-      margin-top: 2rem;
-    }
-  }
+.message {
+  color: var(--color-text-secondary-2);
 }

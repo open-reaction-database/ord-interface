@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-$lightgrey: #f8f9fa;
-$medgrey: #e8e9e3;
-$darkgrey: #a0a0a0;
-$linkblue: #0d6efd;
-$hoverblue: #0a58ca;
+// Legacy SCSS aliases now pointing at the ord-app palette (see src/index.scss);
+// prefer the --color-* custom properties in new code.
+$lightgrey: #f8f8f8;
+$medgrey: #e8ebed;
+$darkgrey: #aab9c5;
+$linkblue: #3c78d8;
+$hoverblue: #2869d2;

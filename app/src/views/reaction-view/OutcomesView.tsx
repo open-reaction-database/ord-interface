@@ -15,8 +15,7 @@
  */
 
 import React, { useState } from 'react';
-import reaction_pb from 'ord-schema';
-import type { Analysis, ProductMeasurement } from 'ord-schema/proto/reaction_pb';
+import { ord } from 'ord-schema-protobufjs';
 import CompoundView from './CompoundView';
 import FloatingModal from '../../components/FloatingModal';
 import { amountObj, amountStr } from '../../utils/amount';
@@ -29,26 +28,26 @@ interface OutcomesViewProps {
   outcome: ReactionOutcomeData | undefined;
 }
 
-const measurementType = (type: number | undefined): string =>
-  enumName(reaction_pb.ProductMeasurement.ProductMeasurementType, type) ?? '';
+const measurementType = (type: number | null | undefined): string =>
+  enumName(ord.ProductMeasurement.ProductMeasurementType, type) ?? '';
 
-const analysisType = (type: number | undefined): string =>
-  enumName(reaction_pb.Analysis.AnalysisType, type) ?? '';
+const analysisType = (type: number | null | undefined): string =>
+  enumName(ord.Analysis.AnalysisType, type) ?? '';
 
-const measurementValue = (measurement: ProductMeasurement.AsObject): string => {
+const measurementValue = (measurement: ord.IProductMeasurement): string => {
   if (measurement.percentage) return formatPercentage(measurement.percentage);
   if (measurement.amount) return amountStr(amountObj(measurement.amount));
-  if (measurement.floatValue) return String(measurement.floatValue.value);
+  if (measurement.floatValue) return String(measurement.floatValue.value ?? '');
   if (measurement.stringValue) return measurement.stringValue;
   return '';
 };
 
-const measurementWithNamedType = (measurement: ProductMeasurement.AsObject) => ({
+const measurementWithNamedType = (measurement: ord.IProductMeasurement) => ({
   ...measurement,
   type: measurementType(measurement.type),
 });
 
-const analysisWithNamedType = (analysis: Analysis.AsObject) => ({
+const analysisWithNamedType = (analysis: ord.IAnalysis) => ({
   ...analysis,
   type: analysisType(analysis.type),
 });
@@ -70,8 +69,12 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
   const conversion = outcome.conversion;
   const showDetails = Boolean(reactionTime || conversion);
 
-  const currentProduct = outcome.productsList?.[productsIdx];
-  const currentAnalysis = outcome.analysesMap?.[analysesIdx]?.[1];
+  const products = outcome.products ?? [];
+  // protobufjs represents the analyses map as a plain object; render tabs in
+  // entry order.
+  const analysisEntries = Object.entries(outcome.analyses ?? {});
+  const currentProduct = products[productsIdx];
+  const currentAnalysis = analysisEntries[analysesIdx]?.[1];
 
   return (
     <div className="outcomes-view">
@@ -98,7 +101,7 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
       <div className="title">Products</div>
       <div className="sub-section">
         <div className="tabs">
-          {outcome.productsList?.map((_product, idx) => (
+          {products.map((_product, idx) => (
             <div
               key={idx}
               className={`tab ${productsIdx === idx ? 'selected' : ''}`}
@@ -122,7 +125,7 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
               <div className="label">Value</div>
               <div className="label">Analysis</div>
               <div className="label">Raw</div>
-              {currentProduct.measurementsList.map((measurement, idx) => {
+              {(currentProduct.measurements ?? []).map((measurement, idx) => {
                 const typeName = measurementType(measurement.type);
                 return (
                   <React.Fragment key={idx}>
@@ -188,12 +191,12 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
         )}
       </div>
 
-      {outcome.analysesMap && outcome.analysesMap.length > 0 && (
+      {analysisEntries.length > 0 && (
         <>
           <div className="title">Analyses</div>
           <div className="sub-section">
             <div className="tabs">
-              {outcome.analysesMap.map(([key], idx) => (
+              {analysisEntries.map(([key], idx) => (
                 <div
                   key={key}
                   className={`tab ${analysesIdx === idx ? 'selected' : ''}`}
