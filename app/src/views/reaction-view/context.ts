@@ -14,28 +14,19 @@
  * limitations under the License.
  */
 
-/* Page shell styles ported from ord-app's reactionPage.module.scss +
- * reactionCard.module.scss title helpers. */
+// Read-only analogue of ord-app's reactionContext: the decoded reaction is
+// threaded to the section components through context instead of a Redux store.
+import { createContext, useContext } from 'react';
+import { ord } from 'ord-schema-protobufjs';
 
-.tableContainer {
-  padding: 10px;
+export interface ReactionViewContextValue {
+  reaction: ord.Reaction;
 }
 
-.controlBlock {
-  width: 200px;
-}
+export const reactionViewContext = createContext<ReactionViewContextValue>({
+  reaction: new ord.Reaction(),
+});
 
-.titleWrapper {
-  overflow: hidden;
-}
-
-.title {
-  overflow: hidden;
-  word-break: break-all;
-}
-
-.emptyState {
-  display: flex;
-  justify-content: center;
-  color: var(--color-text-secondary-2);
+export function useReaction(): ord.Reaction {
+  return useContext(reactionViewContext).reaction;
 }

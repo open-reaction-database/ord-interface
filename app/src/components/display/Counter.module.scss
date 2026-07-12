@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Open Reaction Database Project Authors
+ * Copyright 2026 Open Reaction Database Project Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,16 @@
  * limitations under the License.
  */
 
-@use '../styles/vars' as vars;
+/* Ported from ord-app's counter.module.scss. */
 
-.content {
-  .table-container {
-    background-color: white;
-    width: 90%;
-    margin: auto;
-    border-radius: 0.5rem;
-    display: grid;
-    overflow: hidden;
+.counter {
+  padding: 2px 8px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  border-radius: var(--mantine-spacing-xl);
+}
 
-    .column {
-      border-top: 1px solid vars.$medgrey;
-      padding: 0.5rem;
-
-      &.label {
-        border-top: none;
-        font-weight: 700;
-        font-size: 1.25rem;
-      }
-    }
-  }
+.defaultColor {
+  background-color: var(--color-background-gray);
+  color: var(--color-text-primary);
 }

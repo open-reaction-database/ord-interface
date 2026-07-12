@@ -14,28 +14,25 @@
  * limitations under the License.
  */
 
-/* Page shell styles ported from ord-app's reactionPage.module.scss +
- * reactionCard.module.scss title helpers. */
+// Ported from ord-app's Counter (common/components/display/Counter).
+import { Badge } from '@mantine/core';
+import clsx from 'clsx';
+import classes from './Counter.module.scss';
 
-.tableContainer {
-  padding: 10px;
+interface CounterProps {
+  amount: number | string;
+  color?: string;
 }
 
-.controlBlock {
-  width: 200px;
+export function Counter({ amount, color = 'grey' }: Readonly<CounterProps>) {
+  return (
+    <Badge
+      className={clsx(classes.counter, { [classes.defaultColor]: color === 'grey' })}
+      color={color}
+    >
+      {amount}
+    </Badge>
+  );
 }
 
-.titleWrapper {
-  overflow: hidden;
-}
-
-.title {
-  overflow: hidden;
-  word-break: break-all;
-}
-
-.emptyState {
-  display: flex;
-  justify-content: center;
-  color: var(--color-text-secondary-2);
-}
+export default Counter;

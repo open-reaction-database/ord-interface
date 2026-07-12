@@ -14,28 +14,43 @@
  * limitations under the License.
  */
 
-/* Page shell styles ported from ord-app's reactionPage.module.scss +
- * reactionCard.module.scss title helpers. */
+/* Ported from ord-app's Breadcrumbs.module.scss. */
 
-.tableContainer {
-  padding: 10px;
-}
-
-.controlBlock {
-  width: 200px;
-}
-
-.titleWrapper {
-  overflow: hidden;
-}
-
-.title {
-  overflow: hidden;
-  word-break: break-all;
-}
-
-.emptyState {
+.container {
+  height: 40px;
   display: flex;
-  justify-content: center;
-  color: var(--color-text-secondary-2);
+  align-items: center;
+}
+
+.homeIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-icons-default);
+  cursor: pointer;
+}
+
+.link {
+  color: var(--mantine-color-primary-0);
+}
+
+.separator {
+  color: var(--color-text-secondary-1);
+}
+
+.breadcrumb {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  max-width: 260px;
+  overflow: hidden;
+}
+
+.text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
