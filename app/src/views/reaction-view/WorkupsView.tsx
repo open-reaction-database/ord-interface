@@ -82,7 +82,7 @@ const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
             vs. "actually strongly acidic"). Match the Vue v-if='workup.targetPh'
             behavior and hide on 0; if a record ever sets it to 0 explicitly,
             we'll need a `has*` helper from the schema to disambiguate. */}
-        {workup.targetPh !== undefined && workup.targetPh !== 0 && (
+        {workup.targetPh != null && workup.targetPh !== 0 && (
           <>
             <div className="label">Target pH</div>
             <div className="value">{workup.targetPh}</div>

@@ -94,7 +94,8 @@
   gap: var(--mantine-spacing-md);
   margin-top: 40px;
 
-  @media (max-width: 800px) {
+  /* Stack before the tile subtitles start truncating. */
+  @media (max-width: 1000px) {
     grid-template-columns: 1fr;
   }
 }
@@ -147,10 +148,12 @@
   }
 }
 
+/* Name with the count badge always beneath it, so cards in the grid stay
+ * uniform regardless of name length. */
 .datasetCardHeader {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 8px;
 }
 
@@ -159,7 +162,10 @@
   font-weight: 500;
   color: var(--color-primary);
   transition: color 0.15s;
-  overflow-wrap: anywhere;
+
+  /* Wrap at word boundaries; only split unbroken tokens like dataset ids. */
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .datasetCardDescription {

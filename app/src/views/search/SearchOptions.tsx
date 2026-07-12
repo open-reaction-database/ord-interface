@@ -156,7 +156,7 @@ const ComponentList: React.FC<ComponentListProps> = ({
       >
         <ActionIcon
           variant="default"
-          size="lg"
+          size={30}
           onClick={() => onDraw(idx)}
           aria-label="Draw structure"
         >

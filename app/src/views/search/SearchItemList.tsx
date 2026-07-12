@@ -92,7 +92,7 @@ const SearchItemList: React.FC<SearchItemListProps> = ({
         />
         <ActionIcon
           variant="default"
-          size="lg"
+          size={30}
           onClick={addItem}
           disabled={!itemToAdd.trim()}
           aria-label={`Add to ${title}`}

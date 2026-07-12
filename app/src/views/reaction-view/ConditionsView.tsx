@@ -111,7 +111,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           )}
           <div className="label">Rate</div>
           <div className="value">{stirRate(s?.rate) || 'UNSPECIFIED'}</div>
-          {s?.rate?.rpm !== undefined && s.rate.rpm !== 0 && (
+          {s?.rate?.rpm != null && s.rate.rpm !== 0 && (
             <>
               <div className="label">RPM</div>
               <div className="value">{s.rate.rpm}</div>
@@ -214,7 +214,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           {/* See WorkupsView for the proto3 zero-default tradeoff: 0 means
               "default unset" *or* a real, strongly-acidic pH. Match the Vue
               v-if='conditions.ph' behavior and hide on 0. */}
-          {conditions.ph !== undefined && conditions.ph !== 0 && (
+          {conditions.ph != null && conditions.ph !== 0 && (
             <>
               <div className="label">pH</div>
               <div className="value">{conditions.ph}</div>

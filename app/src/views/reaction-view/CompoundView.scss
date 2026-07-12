@@ -25,17 +25,26 @@
   }
 
   .label {
-    font-weight: 700;
-    border-bottom: 1px solid #000;
+    font-weight: 600;
+    color: var(--color-text-secondary-2, #637d92);
+    border-bottom: 1px solid vars.$medgrey;
   }
 
   .raw {
     .button {
-      padding: 0.5rem;
-      background-color: vars.$darkgrey;
-      color: white;
-      border-radius: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-background-white, #fff);
+      color: var(--color-text-secondary-2, #637d92);
+      border: 1px solid vars.$medgrey;
+      border-radius: 6px;
       cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      transition: color 0.15s;
+
+      &:hover {
+        color: var(--color-text-hover, #ff8d00);
+      }
     }
   }
 

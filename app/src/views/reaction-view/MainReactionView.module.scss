@@ -102,7 +102,8 @@
 .rawRecord {
   margin: 0;
   font-size: 12px;
-  overflow-x: auto;
+  max-height: 70vh;
+  overflow: auto;
 }
 
 .emptyState {
