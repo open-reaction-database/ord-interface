@@ -14,27 +14,19 @@
  * limitations under the License.
  */
 
+import axios from 'axios';
+
 /**
- * Fetches JSON from the API, throwing on a non-2xx response.
- *
- * Centralizes the "check response.ok, otherwise throw with the HTTP status"
- * boilerplate shared by the data-fetching hooks and components. The thrown
- * Error message is `${label} failed (HTTP ${status})`, where `label` defaults
- * to the request URL.
- *
- * Note: callers that intentionally *swallow* fetch errors — e.g. to keep an
- * HTML error body out of `dangerouslySetInnerHTML` — keep their own inline
- * `response.ok` handling and do not use this helper.
+ * Shared axios client for the ord-interface API (axios matches ord-app's HTTP
+ * stack). In dev, Vite proxies `/api` to the FastAPI backend; in production,
+ * nginx does the same.
  */
-export async function fetchJson<T>(
-  input: RequestInfo | URL,
-  init?: RequestInit,
-  label?: string,
-): Promise<T> {
-  const response = await fetch(input, init);
-  if (!response.ok) {
-    const name = label ?? (typeof input === 'string' ? input : 'request');
-    throw new Error(`${name} failed (HTTP ${response.status})`);
+export const api = axios.create({ baseURL: '/api' });
+
+/** Formats an unknown error as `${label} failed…` with HTTP status when available. */
+export function apiErrorMessage(error: unknown, label: string): string {
+  if (axios.isAxiosError(error) && error.response) {
+    return `${label} failed (HTTP ${error.response.status})`;
   }
-  return (await response.json()) as T;
+  return `${label} failed: ${error instanceof Error ? error.message : String(error)}`;
 }

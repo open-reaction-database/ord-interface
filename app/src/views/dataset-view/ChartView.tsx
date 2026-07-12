@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import LoadingSpinner from '../../components/LoadingSpinner';
-import reaction_pb from 'ord-schema';
-import { fetchJson } from '../../utils/api';
-import './ChartView.scss';
+import { Loader, Text } from '@mantine/core';
+import { ord } from 'ord-schema-protobufjs';
+import { api } from '../../utils/api';
+import { encodeCompound } from '../../utils/proto';
+import classes from './ChartView.module.scss';
 
 interface ChartData {
   smiles: string;
@@ -32,8 +33,10 @@ interface ChartViewProps {
   apiCall: string;
   role: string;
   datasetId: string;
-  isCollapsed?: boolean;
 }
+
+const CHART_WIDTH = 420;
+const CHART_HEIGHT = 260;
 
 const ChartView: React.FC<ChartViewProps> = ({
   uniqueId,
@@ -41,7 +44,6 @@ const ChartView: React.FC<ChartViewProps> = ({
   apiCall,
   role,
   datasetId,
-  isCollapsed = false,
 }) => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -57,26 +59,19 @@ const ChartView: React.FC<ChartViewProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
 
   const getMolHtml = useCallback(async (smiles: string): Promise<string> => {
-    const compound = new reaction_pb.Compound();
-    const identifier = compound.addIdentifiers();
-    identifier.setValue(smiles);
-    identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
-
-    const binary = compound.serializeBinary();
-
-    // Throw on non-2xx (via fetchJson) so the caller's .catch sets molHtml to
-    // null instead of feeding an HTML error page to dangerouslySetInnerHTML.
-    return fetchJson<string>(
-      '/api/compound_svg',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-protobuf',
+    const binary = encodeCompound({
+      identifiers: [
+        {
+          type: ord.CompoundIdentifier.CompoundIdentifierType.SMILES,
+          value: smiles,
         },
-        body: binary as BodyInit,
-      },
-      'compound_svg',
-    );
+      ],
+    });
+
+    const response = await api.post<string>('/compound_svg', binary, {
+      headers: { 'Content-Type': 'application/x-protobuf' },
+    });
+    return response.data;
   }, []);
 
   const createChart = useCallback(
@@ -118,10 +113,10 @@ const ChartView: React.FC<ChartViewProps> = ({
         .attr('viewBox', [0, 0, width, height])
         .attr('style', 'max-width: 100%; height: auto;');
 
-      // Create bars
+      // Create bars in the shared primary blue.
       svg
         .append('g')
-        .attr('fill', 'steelblue')
+        .attr('fill', '#3c78d8')
         .selectAll('rect')
         .data(data)
         .join('rect')
@@ -198,32 +193,24 @@ const ChartView: React.FC<ChartViewProps> = ({
     [getMolHtml, role],
   );
 
-  const resize = useCallback(() => {
-    const width = isCollapsed ? 180 : 400;
-    const height = isCollapsed ? 180 : 400;
-    createChart(inputsData, width, height);
-  }, [inputsData, isCollapsed, createChart]);
-
-  // Fetch chart data when the endpoint or dataset changes. The resize effect
-  // below redraws on isCollapsed change once inputsData is populated, so
-  // isCollapsed/createChart are intentionally not deps here. The
-  // AbortController guards against a stale response from the previous
-  // datasetId racing in after the new fetch has started.
+  // Fetch chart data when the endpoint or dataset changes. The AbortController
+  // guards against a stale response from the previous datasetId racing in
+  // after the new fetch has started.
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setFetchError(null);
-    fetchJson<ChartData[]>(
-      `/api/${apiCall}?dataset_id=${encodeURIComponent(datasetId)}`,
-      { method: 'GET', signal: controller.signal },
-      apiCall,
-    )
-      .then(data => {
+    api
+      .get<ChartData[]>(`/${apiCall}`, {
+        params: { dataset_id: datasetId },
+        signal: controller.signal,
+      })
+      .then(response => {
         setLoading(false);
-        setInputsData(data);
+        setInputsData(response.data);
       })
       .catch((error: Error) => {
-        if (error.name === 'AbortError') return;
+        if (error.name === 'CanceledError' || error.name === 'AbortError') return;
         console.error(`Error fetching ${apiCall}:`, error);
         setLoading(false);
         setFetchError(error.message);
@@ -231,24 +218,21 @@ const ChartView: React.FC<ChartViewProps> = ({
     return () => controller.abort();
   }, [apiCall, datasetId]);
 
-  // Resize chart when isCollapsed changes
   useEffect(() => {
     if (inputsData.length > 0) {
-      resize();
+      createChart(inputsData, CHART_WIDTH, CHART_HEIGHT);
     }
-  }, [isCollapsed, resize, inputsData.length]);
+  }, [inputsData, createChart]);
 
   return (
-    <div className="chart-view">
-      <div className="chart-view__title-and-chart">
-        <span
-          className="chart-view__title"
-          style={
-            isCollapsed ? { fontSize: '10pt', width: '150px' } : { fontSize: '14pt' }
-          }
+    <div className={classes.chartView}>
+      <div className={classes.titleAndChart}>
+        <Text
+          className={classes.title}
+          fw={500}
         >
           {title}
-        </span>
+        </Text>
 
         <svg
           ref={svgRef}
@@ -258,19 +242,19 @@ const ChartView: React.FC<ChartViewProps> = ({
       </div>
 
       {fetchError ? (
-        <div className="chart-view__error">Failed to load chart: {fetchError}</div>
+        <div className={classes.error}>Failed to load chart: {fetchError}</div>
       ) : (
         <div
-          className="chart-view__loading"
+          className={classes.loading}
           style={{ visibility: loading ? 'visible' : 'hidden' }}
         >
-          <LoadingSpinner />
+          <Loader size="sm" />
         </div>
       )}
 
       {showSmiles && (
         <div
-          className="chart-view__tooltip"
+          className={classes.tooltip}
           style={{
             top: `${tooltipOffsetVertical}px`,
             left: `${tooltipOffsetHorizontal}px`,
@@ -279,14 +263,14 @@ const ChartView: React.FC<ChartViewProps> = ({
         >
           <pre>Count: {currentTimesAppearing}</pre>
           <div
-            className="chart-view__svg"
+            className={classes.molSvg}
             dangerouslySetInnerHTML={{ __html: molHtml || '' }}
           />
           <div
-            className="chart-view__molloading"
+            className={classes.molLoading}
             style={{ visibility: molLoading ? 'visible' : 'hidden' }}
           >
-            <LoadingSpinner />
+            <Loader size="sm" />
           </div>
         </div>
       )}

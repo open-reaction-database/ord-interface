@@ -1,0 +1,73 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Ported from ord-app's componentsList.module.scss (5-column component grid;
+ * the actions column is kept for layout parity but renders empty read-only). */
+
+.grid {
+  display: grid;
+  grid-template-areas: 'identifiers preview role details actions';
+  grid-template-columns: repeat(4, 1fr) 120px;
+}
+
+.identifiers {
+  grid-area: identifiers;
+  overflow: hidden;
+}
+
+.preview {
+  grid-area: preview;
+  overflow: hidden;
+}
+
+.role {
+  grid-area: role;
+  overflow: hidden;
+}
+
+.details {
+  grid-area: details;
+  overflow: hidden;
+}
+
+.actions {
+  grid-area: actions;
+  overflow: hidden;
+}
+
+.row {
+  width: 100%;
+  min-height: 48px;
+}
+
+.imagePreview > * {
+  max-height: 80px;
+  max-width: 100%;
+}
+
+.row:not(:last-of-type) {
+  & > * {
+    border-bottom: 1px solid var(--color-border-1);
+    padding: var(--mantine-spacing-xs) 0;
+  }
+}
+
+.text {
+  height: 48px;
+  padding: var(--mantine-spacing-sm);
+  font-weight: 700;
+  color: var(--mantine-color-secondary-2);
+}

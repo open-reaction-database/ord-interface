@@ -1,0 +1,64 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.tableMain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.titleHolder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.countBadge {
+  background-color: var(--color-background-gray);
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.search {
+  width: 260px;
+  margin-left: auto;
+}
+
+/* Borderless filter input with a bottom rule, per ord-app's list pages. */
+.searchInput {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--color-border-1);
+  background: transparent;
+
+  &::placeholder {
+    color: var(--color-text-secondary-1);
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}

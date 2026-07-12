@@ -1,0 +1,56 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Ported from ord-app's inputs.module.scss + inputsComponentsList.module.scss
+ * (6-column grid: adds an `input` column before the shared 5). */
+
+.grid {
+  display: grid;
+  grid-template-areas: 'input identifiers preview role details actions';
+  grid-template-columns: repeat(5, 1fr) 120px;
+}
+
+.control {
+  flex: 1;
+}
+
+.input {
+  grid-area: input;
+}
+
+.row {
+  min-height: 48px;
+}
+
+.row:not(:last-of-type) {
+  & > * {
+    border-bottom: 1px solid var(--color-border-1);
+    padding: var(--mantine-spacing-xs) 0;
+  }
+}
+
+.text {
+  height: 48px;
+  padding: var(--mantine-spacing-sm);
+  font-weight: 700;
+  color: var(--mantine-color-secondary-2);
+}
+
+.icon {
+  width: 64px;
+  height: 41px;
+  color: var(--color-text-secondary-1);
+}

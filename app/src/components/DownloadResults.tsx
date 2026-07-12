@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Button, Flex, Select, Text } from '@mantine/core';
+import { IconDownload } from '@tabler/icons-react';
 import FloatingModal from './FloatingModal';
-import './DownloadResults.scss';
+import { api } from '../utils/api';
+import { NotificationVariant, showNotification } from '../utils/showNotification';
 
 interface DownloadResultsProps {
   reactionIds: string[];
@@ -30,6 +33,7 @@ const DownloadResults: React.FC<DownloadResultsProps> = ({
   onHideDownloadResults,
 }) => {
   const [fileType, setFileType] = useState<string>('pb.gz');
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const storedFileType = localStorage.getItem('downloadFileType') || 'pb.gz';
@@ -38,73 +42,73 @@ const DownloadResults: React.FC<DownloadResultsProps> = ({
 
   const handleFileTypeChange = (newFileType: string) => {
     setFileType(newFileType);
-    // Store selected file type in localStorage
     localStorage.setItem('downloadFileType', newFileType);
   };
 
-  const downloadResults = () => {
-    // Create .pb download of search results
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/download_search_results');
-    xhr.responseType = 'blob';
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        const url = URL.createObjectURL(xhr.response);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'ord_search_results.pb.gz';
-        link.click();
-        // https://stackoverflow.com/a/56547307.
-        setTimeout(() => {
-          URL.revokeObjectURL(url);
-          link.remove();
-        }, 100);
-      }
-    };
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(JSON.stringify({ reaction_ids: reactionIds }));
+  const downloadResults = async () => {
+    setDownloading(true);
+    try {
+      const response = await api.post<Blob>(
+        '/download_search_results',
+        { reaction_ids: reactionIds },
+        { responseType: 'blob' },
+      );
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'ord_search_results.pb.gz';
+      link.click();
+      // https://stackoverflow.com/a/56547307.
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        link.remove();
+      }, 100);
+    } catch (error) {
+      console.error('Error downloading search results:', error);
+      showNotification({
+        variant: NotificationVariant.ERROR,
+        message: 'Download failed',
+      });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (!showDownloadResults) return null;
 
   return (
-    <div className="download-results-main">
-      <FloatingModal
-        title="Download Results"
-        onCloseModal={onHideDownloadResults}
+    <FloatingModal
+      title="Download results"
+      size="md"
+      onCloseModal={onHideDownloadResults}
+    >
+      <Flex
+        direction="column"
+        gap="md"
       >
-        <div className="download-body">
-          <div className="title">
-            Select your desired file type and then click download.
-          </div>
-          <div className="options">
-            <label htmlFor="file-type-select">File type:</label>
-            <select
-              id="file-type-select"
-              value={fileType}
-              onChange={e => handleFileTypeChange(e.target.value)}
-            >
-              <option value="pb.gz">pb.gz</option>
-              <option
-                value="csv"
-                disabled
-              >
-                csv (coming soon)
-              </option>
-              <option
-                value="pbtxt"
-                disabled
-              >
-                pbtxt (coming soon)
-              </option>
-            </select>
-          </div>
-          <div className="download">
-            <button onClick={downloadResults}>Download {fileType} file</button>
-          </div>
-        </div>
-      </FloatingModal>
-    </div>
+        <Text size="sm">Select your desired file type and then click download.</Text>
+        <Select
+          label="File type"
+          value={fileType}
+          onChange={value => value && handleFileTypeChange(value)}
+          allowDeselect={false}
+          data={[
+            { value: 'pb.gz', label: 'pb.gz' },
+            { value: 'csv', label: 'csv (coming soon)', disabled: true },
+            { value: 'pbtxt', label: 'pbtxt (coming soon)', disabled: true },
+          ]}
+        />
+        <Flex justify="flex-end">
+          <Button
+            leftSection={<IconDownload size={16} />}
+            loading={downloading}
+            onClick={downloadResults}
+          >
+            Download {fileType} file
+          </Button>
+        </Flex>
+      </Flex>
+    </FloatingModal>
   );
 };
 

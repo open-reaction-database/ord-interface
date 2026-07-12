@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import React, { useState, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { useLocation, useSearch } from 'wouter';
+import { Paper, Text, Title } from '@mantine/core';
 import SearchOptions from './SearchOptions';
 import SearchResults from './SearchResults';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useSearchTask } from '../../hooks/useSearchTask';
-import './MainSearch.scss';
+import classes from './MainSearch.module.scss';
 
 interface SearchOptionsData {
   reagent: {
@@ -58,16 +59,18 @@ const MEANINGFUL_QUERY_PARAMS = [
 ];
 
 const MainSearch: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [showOptions, setShowOptions] = useState(false);
+  const search = useSearch();
+  const [, navigate] = useLocation();
+
+  // The submit_query endpoint takes the page's query string verbatim.
+  const queryString = search ? `?${search}` : '';
 
   const hasSearchParams = useMemo(() => {
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams(search);
     return MEANINGFUL_QUERY_PARAMS.some(param => params.has(param));
-  }, [location.search]);
+  }, [search]);
 
-  const { data, isFetching, error } = useSearchTask(location.search, hasSearchParams);
+  const { data, isFetching, error } = useSearchTask(queryString, hasSearchParams);
   const searchResults = data?.status === 'success' ? data.results : [];
   const loading = hasSearchParams && (isFetching || data?.status === 'pending');
 
@@ -114,57 +117,64 @@ const MainSearch: React.FC = () => {
 
     searchParams.set('limit', options.general.limit.toString() || '100');
 
-    navigate({ pathname: '/search', search: searchParams.toString() });
+    navigate(`/search?${searchParams.toString()}`);
   };
 
   return (
-    <div id="search-main">
-      <div
-        className={`search-options-container ${showOptions ? 'slide-out' : 'hidden'}`}
-      >
-        <div className="title">Filters & Options</div>
-        <div className="options-holder">
-          <SearchOptions onSearchOptions={updateSearchOptions} />
-        </div>
-        <div
-          className="slide-out-tab"
-          onClick={() => setShowOptions(!showOptions)}
+    <div className={classes.searchMain}>
+      <aside className={classes.optionsPanel}>
+        <Paper
+          radius="sm"
+          p="md"
+          className={classes.optionsPaper}
         >
-          <div className="line"></div>
-          <div className="line"></div>
-          <div className="line"></div>
-        </div>
-      </div>
+          <Title
+            order={2}
+            className={classes.optionsTitle}
+          >
+            Filters & options
+          </Title>
+          <SearchOptions onSearchOptions={updateSearchOptions} />
+        </Paper>
+      </aside>
 
-      <div className="search-results">
+      <div className={classes.results}>
         {!hasSearchParams && (
-          <div className="no-results">
-            <div className="title">
+          <Paper
+            radius="sm"
+            p="xl"
+            className={classes.emptyState}
+          >
+            <Text className={classes.emptyText}>
               Enter search criteria using the filters and options panel, then click
               Search.
-            </div>
-          </div>
+            </Text>
+          </Paper>
         )}
         {hasSearchParams && error && (
-          <div className="no-results">
-            <div className="title">Search failed: {error.message}</div>
-          </div>
+          <Paper
+            radius="sm"
+            p="xl"
+            className={classes.emptyState}
+          >
+            <Text className={classes.emptyText}>Search failed: {error.message}</Text>
+          </Paper>
         )}
         {hasSearchParams && !error && !loading && searchResults.length > 0 && (
           <SearchResults searchResults={searchResults} />
         )}
         {hasSearchParams && !error && !loading && !searchResults.length && (
-          <div className="no-results">
-            <div className="title">
+          <Paper
+            radius="sm"
+            p="xl"
+            className={classes.emptyState}
+          >
+            <Text className={classes.emptyText}>
               No results. Adjust the filters and options and search again.
-            </div>
-          </div>
+            </Text>
+          </Paper>
         )}
-        {hasSearchParams && !error && loading && (
-          <div className="loading">
-            <LoadingSpinner />
-          </div>
-        )}
+        {hasSearchParams && !error && loading && <LoadingSpinner />}
       </div>
     </div>
   );

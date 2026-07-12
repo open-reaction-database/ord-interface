@@ -1,0 +1,92 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.about {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background-white);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  padding: var(--mantine-spacing-lg) 0;
+
+  & + .section {
+    border-top: 1px solid var(--color-border-1);
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sectionHeader {
+  color: var(--color-text-secondary-3);
+}
+
+.sectionContent {
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  min-width: 0;
+
+  p {
+    margin: 0 0 12px;
+  }
+
+  ul {
+    margin: 0 0 12px;
+    padding-left: 20px;
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+}
+
+.subsectionTitle {
+  margin: 0 0 8px;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-secondary-2);
+}
+
+.leadershipGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+  margin-bottom: 12px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}

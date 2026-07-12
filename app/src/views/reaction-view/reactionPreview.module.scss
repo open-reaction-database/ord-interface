@@ -1,0 +1,133 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Ported from ord-app's reactionPreview.module.scss. */
+
+@use 'sass:math';
+
+$arrow-height: 24px;
+$arrow-width: 120px;
+$wrapper-height: 240px;
+
+.wrapper {
+  display: flex;
+  gap: var(--mantine-spacing-sm);
+  overflow: auto hidden;
+  align-items: center;
+  padding-bottom: var(--mantine-spacing-md);
+  min-height: $wrapper-height;
+  min-width: 0;
+}
+
+.inputCard {
+  display: flex;
+  flex-direction: column;
+  height: 224px;
+  border: 1px solid #e7ebef;
+  border-radius: 10px;
+  padding: var(--mantine-spacing-sm);
+  gap: var(--mantine-spacing-sm);
+}
+
+.componentList {
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.component {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  width: 100%;
+}
+
+.molecule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &,
+  & > * {
+    min-width: min-content;
+    max-height: 80px;
+    min-height: 60px;
+  }
+}
+
+.compoundSvg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  & > svg {
+    max-height: 80px;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+  }
+}
+
+.plus {
+  font-size: 24px;
+  line-height: 32px;
+  color: #090a0b;
+  margin-top: 16px;
+}
+
+.arrowWrapper {
+  position: relative;
+  width: $arrow-width;
+  min-width: $arrow-width;
+  height: $wrapper-height;
+}
+
+.arrow {
+  height: $arrow-height;
+  width: $arrow-width;
+  color: #090a0b;
+}
+
+.noPreviewWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.noPreviewIcon {
+  width: 48px;
+  height: 48px;
+  color: rgb(6 15 44 / 10%);
+}
+
+.desiredProductBadge {
+  min-width: max-content;
+  background-color: var(--color-purple);
+
+  .badgeLabel {
+    font-weight: 400;
+  }
+}
+
+.componentsMetadata {
+  overflow: hidden;
+
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

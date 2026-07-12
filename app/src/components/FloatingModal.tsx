@@ -15,43 +15,35 @@
  */
 
 import React, { type ReactNode } from 'react';
-import './FloatingModal.scss';
+import { Modal } from '@mantine/core';
 
 interface FloatingModalProps {
   title: ReactNode;
   children: ReactNode;
   onCloseModal: () => void;
-  // Optional extra class on the modal container, for per-use sizing overrides.
-  className?: string;
+  /** Mantine Modal size, e.g. 'md', 'xl', or a CSS width. */
+  size?: string | number;
 }
 
+// Thin wrapper over Mantine's Modal: callers mount it conditionally, so it is
+// always open while rendered.
 const FloatingModal: React.FC<FloatingModalProps> = ({
   title,
   children,
   onCloseModal,
-  className,
+  size = 'xl',
 }) => {
   return (
-    <div className="modal-main">
-      <div
-        className="modal-background"
-        onClick={onCloseModal}
-      />
-      <div className="modal-holder">
-        <div className={`modal-container${className ? ` ${className}` : ''}`}>
-          <div className="header">
-            <div className="modal-title">{title}</div>
-            <div
-              className="close"
-              onClick={onCloseModal}
-            >
-              &#10005;
-            </div>
-          </div>
-          <div className="body">{children}</div>
-        </div>
-      </div>
-    </div>
+    <Modal
+      opened
+      centered
+      radius="sm"
+      size={size}
+      title={title}
+      onClose={onCloseModal}
+    >
+      {children}
+    </Modal>
   );
 };
 

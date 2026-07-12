@@ -14,12 +14,34 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Range } from 'react-range';
-import ModalKetcher from '../../components/ModalKetcher';
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  lazy,
+} from 'react';
+import { useSearch } from 'wouter';
+import {
+  Accordion,
+  ActionIcon,
+  Button,
+  Checkbox,
+  Flex,
+  NumberInput,
+  RangeSlider,
+  SegmentedControl,
+  Slider,
+  Text,
+  TextInput,
+} from '@mantine/core';
+import { IconPencil, IconPlus, IconSearch, IconTrash } from '@tabler/icons-react';
 import SearchItemList from './SearchItemList';
-import './SearchOptions.scss';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import classes from './SearchOptions.module.scss';
+
+const ModalKetcher = lazy(() => import('../../components/ModalKetcher'));
 
 interface ReagentComponent {
   smileSmart: string;
@@ -105,11 +127,74 @@ interface SearchOptionsProps {
   onSearchOptions: (options: SearchOptionsData) => void;
 }
 
+const MATCH_MODES = ['exact', 'similar', 'substructure', 'SMARTS'];
+
+interface ComponentListProps {
+  title: string;
+  components: ReagentComponent[];
+  onDraw: (idx: number) => void;
+  onUpdate: (idx: number, smiles: string) => void;
+  onRemove: (idx: number) => void;
+  onAdd: () => void;
+}
+
+const ComponentList: React.FC<ComponentListProps> = ({
+  title,
+  components,
+  onDraw,
+  onUpdate,
+  onRemove,
+  onAdd,
+}) => (
+  <div className={classes.componentList}>
+    <Text className={classes.subtitle}>{title}</Text>
+    {components.map((component, idx) => (
+      <Flex
+        key={idx}
+        gap={4}
+        align="center"
+      >
+        <ActionIcon
+          variant="default"
+          size={30}
+          onClick={() => onDraw(idx)}
+          aria-label="Draw structure"
+        >
+          <IconPencil size={16} />
+        </ActionIcon>
+        <TextInput
+          className={classes.componentInput}
+          size="xs"
+          placeholder="SMILES or SMARTS"
+          value={component.smileSmart}
+          onChange={event => onUpdate(idx, event.currentTarget.value)}
+        />
+        <ActionIcon
+          variant="transparent"
+          color="secondary.1"
+          onClick={() => onRemove(idx)}
+          aria-label="Remove component"
+        >
+          <IconTrash size={16} />
+        </ActionIcon>
+      </Flex>
+    ))}
+    {!components.length && <Text className={classes.muted}>No components</Text>}
+    <Button
+      variant="transparent"
+      size="compact-sm"
+      leftSection={<IconPlus size={14} />}
+      className={classes.addButton}
+      onClick={onAdd}
+    >
+      Add component
+    </Button>
+  </div>
+);
+
 const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
-  const location = useLocation();
-  const [showReagentOptions, setShowReagentOptions] = useState(false);
-  const [showReactionOptions, setShowReactionOptions] = useState(false);
-  const [showDatasetOptions, setShowDatasetOptions] = useState(false);
+  const search = useSearch();
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   const [reagentOptions, setReagentOptions] = useState<ReagentOptions>({
     reactants: [],
@@ -143,10 +228,8 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
     'reactants',
   );
 
-  const matchModes = ['exact', 'similar', 'substructure', 'SMARTS'];
-
   const defaultQuery = useMemo<Record<string, string | string[]>>(() => {
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams(search);
     const query: Record<string, string | string[]> = {};
     for (const [key, value] of params.entries()) {
       const existing = query[key];
@@ -159,15 +242,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       }
     }
     return query;
-  }, [location.search]);
-
-  const simThresholdDisplay = useMemo(() => {
-    let trailingZeros = '';
-    const simThresh = reagentOptions.similarityThreshold.toString();
-    if (simThresh?.length < 2) trailingZeros = '.00';
-    else if (simThresh?.length < 4) trailingZeros = '0';
-    return simThresh + trailingZeros;
-  }, [reagentOptions.similarityThreshold]);
+  }, [search]);
 
   const openKetcherModal = (componentSet: 'reactants' | 'products', idx: number) => {
     setKetcherModalSmile(idx);
@@ -199,6 +274,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
 
   const setDefaultValues = useCallback(() => {
     const q = defaultQuery;
+    const open: string[] = [];
 
     // Reset reagent options first, then rebuild from URL
     const initialReagentOptions: ReagentOptions = {
@@ -234,12 +310,9 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
         q.use_stereochemistry === 'true' || false;
       initialReagentOptions.similarityThreshold = Number(q.similarity) || 0.5;
 
-      setReagentOptions(initialReagentOptions);
-      setShowReagentOptions(true);
-    } else {
-      // If no components in URL, reset to defaults
-      setReagentOptions(initialReagentOptions);
+      open.push('components');
     }
+    setReagentOptions(initialReagentOptions);
 
     // dataset options
     const datasetIds = Array.isArray(q.dataset_id)
@@ -251,7 +324,7 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
 
     setDatasetOptions({ datasetIds, DOIs });
     if (datasetIds.length || DOIs.length) {
-      setShowDatasetOptions(true);
+      open.push('datasets');
     }
 
     // reaction options
@@ -287,65 +360,40 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
       q.min_conversion !== undefined ||
       (q.max_conversion !== undefined && Number(q.max_conversion) !== 100)
     ) {
-      setShowReactionOptions(true);
+      open.push('reactions');
     }
 
     // general search params
     setSearchParams({ limit: Number(q.limit) || 100 });
+    setOpenSections(open.length ? open : ['components']);
   }, [defaultQuery]);
 
-  const addReactant = () => {
+  const updateComponentSmiles = (
+    componentSet: 'reactants' | 'products',
+    idx: number,
+    smiles: string,
+  ) => {
     setReagentOptions(prev => ({
       ...prev,
-      reactants: [...prev.reactants, { smileSmart: '', source: 'input' }],
-    }));
-  };
-
-  const removeReactant = (idx: number) => {
-    setReagentOptions(prev => ({
-      ...prev,
-      reactants: prev.reactants.filter((_, index) => index !== idx),
-    }));
-  };
-
-  const addProduct = () => {
-    setReagentOptions(prev => ({
-      ...prev,
-      products: [...prev.products, { smileSmart: '', source: 'output' }],
-    }));
-  };
-
-  const removeProduct = (idx: number) => {
-    setReagentOptions(prev => ({
-      ...prev,
-      products: prev.products.filter((_, index) => index !== idx),
-    }));
-  };
-
-  const updateReactantSmiles = (idx: number, smiles: string) => {
-    setReagentOptions(prev => ({
-      ...prev,
-      reactants: prev.reactants.map((reactant, index) =>
-        index === idx ? { ...reactant, smileSmart: smiles } : reactant,
+      [componentSet]: prev[componentSet].map((component, index) =>
+        index === idx ? { ...component, smileSmart: smiles } : component,
       ),
     }));
   };
 
-  const updateProductSmiles = (idx: number, smiles: string) => {
+  const addComponent = (componentSet: 'reactants' | 'products') => {
+    const source = componentSet === 'reactants' ? 'input' : 'output';
     setReagentOptions(prev => ({
       ...prev,
-      products: prev.products.map((product, index) =>
-        index === idx ? { ...product, smileSmart: smiles } : product,
-      ),
+      [componentSet]: [...prev[componentSet], { smileSmart: '', source }],
     }));
   };
 
-  const updateKetcherSmiles = (newSmiles: string) => {
-    if (ketcherModalSet === 'reactants') {
-      updateReactantSmiles(ketcherModalSmile, newSmiles);
-    } else {
-      updateProductSmiles(ketcherModalSmile, newSmiles);
-    }
+  const removeComponent = (componentSet: 'reactants' | 'products', idx: number) => {
+    setReagentOptions(prev => ({
+      ...prev,
+      [componentSet]: prev[componentSet].filter((_, index) => index !== idx),
+    }));
   };
 
   useEffect(() => {
@@ -353,336 +401,195 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({ onSearchOptions }) => {
   }, [setDefaultValues]);
 
   return (
-    <div className="search-options">
-      {/* Components Section */}
-      <div
-        className={`options-title ${showReagentOptions ? '' : 'closed'}`}
-        onClick={() => setShowReagentOptions(!showReagentOptions)}
+    <div className={classes.searchOptions}>
+      <Accordion
+        multiple
+        value={openSections}
+        onChange={setOpenSections}
+        radius="sm"
       >
-        <span>Components</span>
-        <i className="material-icons">expand_less</i>
-      </div>
+        <Accordion.Item value="components">
+          <Accordion.Control>Components</Accordion.Control>
+          <Accordion.Panel>
+            <SegmentedControl
+              fullWidth
+              size="xs"
+              value={reagentOptions.matchMode}
+              onChange={mode =>
+                setReagentOptions(prev => ({ ...prev, matchMode: mode }))
+              }
+              data={MATCH_MODES}
+            />
 
-      {showReagentOptions && (
-        <div
-          id="searchByReagent"
-          className="options-container"
-        >
-          <div className="section">
-            <div className="subtitle">
-              <div className="tabs">
-                {matchModes.map(mode => (
-                  <div
-                    key={mode}
-                    className={`tab capitalize ${reagentOptions.matchMode === mode ? 'selected' : ''}`}
-                    onClick={() =>
-                      setReagentOptions(prev => ({ ...prev, matchMode: mode }))
-                    }
-                  >
-                    {mode}
-                  </div>
-                ))}
+            <Checkbox
+              className={classes.stereoCheckbox}
+              size="sm"
+              label="Use stereochemistry"
+              checked={reagentOptions.useStereochemistry}
+              onChange={event =>
+                setReagentOptions(prev => ({
+                  ...prev,
+                  useStereochemistry: event.currentTarget.checked,
+                }))
+              }
+            />
+
+            {reagentOptions.matchMode === 'similar' && (
+              <div className={classes.similarity}>
+                <Text className={classes.subtitle}>
+                  Similarity threshold: {reagentOptions.similarityThreshold.toFixed(2)}
+                </Text>
+                <Slider
+                  min={0.1}
+                  max={1}
+                  step={0.01}
+                  label={value => value.toFixed(2)}
+                  value={reagentOptions.similarityThreshold}
+                  onChange={value =>
+                    setReagentOptions(prev => ({
+                      ...prev,
+                      similarityThreshold: value,
+                    }))
+                  }
+                />
               </div>
-            </div>
-          </div>
+            )}
 
-          <div className="section">
-            <div className="subtitle">General Options</div>
-            <div className="general options">
-              <label htmlFor="stereo">Use Stereochemistry</label>
-              <input
-                id="stereo"
-                type="checkbox"
-                checked={reagentOptions.useStereochemistry}
-                onChange={e =>
-                  setReagentOptions(prev => ({
-                    ...prev,
-                    useStereochemistry: e.target.checked,
-                  }))
-                }
-              />
-              {reagentOptions.matchMode === 'similar' && (
-                <>
-                  <label htmlFor="similarity">Similarity Threshold</label>
-                  <div className="slider-input">
-                    <div className="value">{simThresholdDisplay}</div>
-                    <input
-                      id="similarity"
-                      type="range"
-                      min="0.1"
-                      max="1.0"
-                      step="0.01"
-                      value={reagentOptions.similarityThreshold}
-                      onChange={e =>
-                        setReagentOptions(prev => ({
-                          ...prev,
-                          similarityThreshold: Number(e.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+            <ComponentList
+              title="Reactants & reagents"
+              components={reagentOptions.reactants}
+              onDraw={idx => openKetcherModal('reactants', idx)}
+              onUpdate={(idx, smiles) =>
+                updateComponentSmiles('reactants', idx, smiles)
+              }
+              onRemove={idx => removeComponent('reactants', idx)}
+              onAdd={() => addComponent('reactants')}
+            />
 
-          <div className="section">
-            <div className="subtitle">Reactants & Reagents</div>
-            <div className="reagent options">
-              {reagentOptions.reactants.map((reactant, idx) => (
-                <React.Fragment key={idx}>
-                  <div className="draw">
-                    <button onClick={() => openKetcherModal('reactants', idx)}>
-                      <i className="material-icons">draw</i>
-                    </button>
-                  </div>
-                  <div className="field long">
-                    <input
-                      type="text"
-                      value={reactant.smileSmart}
-                      onChange={e => updateReactantSmiles(idx, e.target.value)}
-                    />
-                  </div>
-                  <div className="delete">
-                    <button onClick={() => removeReactant(idx)}>
-                      <i className="material-icons">delete</i>
-                    </button>
-                  </div>
-                </React.Fragment>
-              ))}
-              {!reagentOptions.reactants?.length && (
-                <div className="copy">No components</div>
-              )}
-              <div id="add-component">
-                <button
-                  type="button"
-                  onClick={addReactant}
-                >
-                  <i className="material-icons">add</i>
-                  Add Component
-                </button>
-              </div>
-            </div>
-          </div>
+            <ComponentList
+              title="Products"
+              components={reagentOptions.products}
+              onDraw={idx => openKetcherModal('products', idx)}
+              onUpdate={(idx, smiles) => updateComponentSmiles('products', idx, smiles)}
+              onRemove={idx => removeComponent('products', idx)}
+              onAdd={() => addComponent('products')}
+            />
+          </Accordion.Panel>
+        </Accordion.Item>
 
-          <div className="section">
-            <div className="subtitle">Products</div>
-            <div className="reagent options">
-              {reagentOptions.products.map((product, idx) => (
-                <React.Fragment key={idx}>
-                  <div className="draw">
-                    <button onClick={() => openKetcherModal('products', idx)}>
-                      <i className="material-icons">draw</i>
-                    </button>
-                  </div>
-                  <div className="field long">
-                    <input
-                      type="text"
-                      value={product.smileSmart}
-                      onChange={e => updateProductSmiles(idx, e.target.value)}
-                    />
-                  </div>
-                  <div className="delete">
-                    <button onClick={() => removeProduct(idx)}>
-                      <i className="material-icons">delete</i>
-                    </button>
-                  </div>
-                </React.Fragment>
-              ))}
-              {!reagentOptions.products?.length && (
-                <div className="copy">No components</div>
-              )}
-              <div id="add-component">
-                <button
-                  type="button"
-                  onClick={addProduct}
-                >
-                  <i className="material-icons">add</i>
-                  Add Component
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        <Accordion.Item value="reactions">
+          <Accordion.Control>Reactions</Accordion.Control>
+          <Accordion.Panel>
+            <SearchItemList
+              title="Reaction IDs"
+              itemList={reactionOptions.reactionIds}
+              onUpdateItemList={newList =>
+                setReactionOptions(prev => ({ ...prev, reactionIds: newList }))
+              }
+            />
+            <SearchItemList
+              title="Reaction SMARTS"
+              itemList={reactionOptions.reactionSmarts}
+              onUpdateItemList={newList =>
+                setReactionOptions(prev => ({ ...prev, reactionSmarts: newList }))
+              }
+            />
 
-      {/* Reactions Section */}
-      <div
-        className={`options-title ${showReactionOptions ? '' : 'closed'}`}
-        onClick={() => setShowReactionOptions(!showReactionOptions)}
-      >
-        <span>Reactions</span>
-        <i className="material-icons">expand_less</i>
-      </div>
-
-      {showReactionOptions && (
-        <div
-          id="searchByReaction"
-          className="options-container"
-        >
-          <SearchItemList
-            title="Reaction IDs"
-            itemList={reactionOptions.reactionIds}
-            onUpdateItemList={newList =>
-              setReactionOptions(prev => ({ ...prev, reactionIds: newList }))
-            }
-          />
-          <SearchItemList
-            title="Reaction SMARTS"
-            itemList={reactionOptions.reactionSmarts}
-            onUpdateItemList={newList =>
-              setReactionOptions(prev => ({ ...prev, reactionSmarts: newList }))
-            }
-          />
-
-          <div className="slider-input multi">
-            <label htmlFor="yield">Yield</label>
-            <div className="value">
-              {reactionOptions.min_yield}% - {reactionOptions.max_yield}%
-            </div>
-            <div className="range-container">
-              <Range
-                step={1}
+            <div className={classes.rangeBlock}>
+              <Text className={classes.subtitle}>
+                Yield: {reactionOptions.min_yield}% – {reactionOptions.max_yield}%
+              </Text>
+              <RangeSlider
                 min={0}
                 max={100}
-                values={[reactionOptions.min_yield, reactionOptions.max_yield]}
-                onChange={values =>
+                step={1}
+                label={value => `${value}%`}
+                value={[reactionOptions.min_yield, reactionOptions.max_yield]}
+                onChange={([min, max]) =>
                   setReactionOptions(prev => ({
                     ...prev,
-                    min_yield: values[0],
-                    max_yield: values[1],
+                    min_yield: min,
+                    max_yield: max,
                   }))
                 }
-                renderTrack={({ props, children }) => (
-                  <div
-                    {...props}
-                    className="range-track"
-                    style={props.style}
-                  >
-                    {children}
-                  </div>
-                )}
-                renderThumb={({ props }) => (
-                  <div
-                    {...props}
-                    key={props.key}
-                    className="range-thumb"
-                    style={props.style}
-                  />
-                )}
               />
             </div>
-          </div>
 
-          <div className="slider-input multi">
-            <label htmlFor="conversion">Conversion</label>
-            <div className="value">
-              {reactionOptions.min_conversion}% - {reactionOptions.max_conversion}%
-            </div>
-            <div className="range-container">
-              <Range
-                step={1}
+            <div className={classes.rangeBlock}>
+              <Text className={classes.subtitle}>
+                Conversion: {reactionOptions.min_conversion}% –{' '}
+                {reactionOptions.max_conversion}%
+              </Text>
+              <RangeSlider
                 min={0}
                 max={100}
-                values={[
-                  reactionOptions.min_conversion,
-                  reactionOptions.max_conversion,
-                ]}
-                onChange={values =>
+                step={1}
+                label={value => `${value}%`}
+                value={[reactionOptions.min_conversion, reactionOptions.max_conversion]}
+                onChange={([min, max]) =>
                   setReactionOptions(prev => ({
                     ...prev,
-                    min_conversion: values[0],
-                    max_conversion: values[1],
+                    min_conversion: min,
+                    max_conversion: max,
                   }))
                 }
-                renderTrack={({ props, children }) => (
-                  <div
-                    {...props}
-                    className="range-track"
-                    style={props.style}
-                  >
-                    {children}
-                  </div>
-                )}
-                renderThumb={({ props }) => (
-                  <div
-                    {...props}
-                    key={props.key}
-                    className="range-thumb"
-                    style={props.style}
-                  />
-                )}
               />
             </div>
-          </div>
-        </div>
-      )}
+          </Accordion.Panel>
+        </Accordion.Item>
 
-      {/* Datasets Section */}
-      <div
-        className={`options-title ${showDatasetOptions ? '' : 'closed'}`}
-        onClick={() => setShowDatasetOptions(!showDatasetOptions)}
-      >
-        <span>Datasets</span>
-        <i className="material-icons">expand_less</i>
-      </div>
+        <Accordion.Item value="datasets">
+          <Accordion.Control>Datasets</Accordion.Control>
+          <Accordion.Panel>
+            <SearchItemList
+              title="Dataset IDs"
+              itemList={datasetOptions.datasetIds}
+              onUpdateItemList={newList =>
+                setDatasetOptions(prev => ({ ...prev, datasetIds: newList }))
+              }
+            />
+            <SearchItemList
+              title="DOIs"
+              itemList={datasetOptions.DOIs}
+              onUpdateItemList={newList =>
+                setDatasetOptions(prev => ({ ...prev, DOIs: newList }))
+              }
+            />
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
 
-      {showDatasetOptions && (
-        <div
-          id="searchByDataset"
-          className="options-container"
-        >
-          <SearchItemList
-            title="Dataset IDs"
-            itemList={datasetOptions.datasetIds}
-            onUpdateItemList={newList =>
-              setDatasetOptions(prev => ({ ...prev, datasetIds: newList }))
-            }
-          />
-          <SearchItemList
-            title="DOIs"
-            itemList={datasetOptions.DOIs}
-            onUpdateItemList={newList =>
-              setDatasetOptions(prev => ({ ...prev, DOIs: newList }))
-            }
-          />
-        </div>
-      )}
-
-      {/* Search Parameters Section */}
-      <div
-        id="searchParameters"
-        className="options-title"
-      >
-        Search Parameters
-      </div>
-      <div className="options-container">
-        <div className="section">
-          <label htmlFor="limit">Result Limit</label>
-          <input
-            id="limit"
-            type="number"
-            min="0"
-            value={searchParams.limit}
-            onChange={e =>
-              setSearchParams(prev => ({ ...prev, limit: Number(e.target.value) }))
-            }
-          />
-        </div>
-        <div className="search-button">
-          <button onClick={emitSearchOptions}>
-            <b>Search</b>
-          </button>
-        </div>
-      </div>
-
-      {/* Ketcher Modal */}
-      {showKetcherModal && (
-        <ModalKetcher
-          smiles={reagentOptions[ketcherModalSet][ketcherModalSmile]?.smileSmart || ''}
-          onUpdateSmiles={updateKetcherSmiles}
-          onCloseModal={() => setShowKetcherModal(false)}
+      <div className={classes.footer}>
+        <NumberInput
+          label="Result limit"
+          size="xs"
+          min={0}
+          value={searchParams.limit}
+          onChange={value =>
+            setSearchParams(prev => ({ ...prev, limit: Number(value) || 0 }))
+          }
         />
+        <Button
+          fullWidth
+          leftSection={<IconSearch size={16} />}
+          onClick={emitSearchOptions}
+        >
+          Search
+        </Button>
+      </div>
+
+      {showKetcherModal && (
+        <Suspense fallback={<LoadingSpinner />}>
+          <ModalKetcher
+            smiles={
+              reagentOptions[ketcherModalSet][ketcherModalSmile]?.smileSmart || ''
+            }
+            onUpdateSmiles={newSmiles =>
+              updateComponentSmiles(ketcherModalSet, ketcherModalSmile, newSmiles)
+            }
+            onCloseModal={() => setShowKetcherModal(false)}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import LoadingSpinner from './LoadingSpinner';
-import './ModalKetcher.scss';
+import React, { useEffect, useState } from 'react';
+import { Button, Flex, Modal } from '@mantine/core';
+import { Editor } from 'ketcher-react';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { StandaloneStructServiceProvider } from 'ketcher-standalone';
+import type { Ketcher } from 'ketcher-core';
+import 'ketcher-react/dist/index.css';
+import classes from './ModalKetcher.module.scss';
 
 interface ModalKetcherProps {
   smiles: string;
@@ -24,176 +30,72 @@ interface ModalKetcherProps {
   onCloseModal: () => void;
 }
 
-// Subset of the Ketcher API surface we actually invoke.
-interface KetcherApi {
-  setMolecule(molfile: string): void;
-  getSmiles(): Promise<string>;
-}
+const appWindow = globalThis as unknown as { ketcher: Ketcher | null };
 
-interface KetcherWindow extends Window {
-  ketcher?: KetcherApi;
-}
+const structServiceProvider = new StandaloneStructServiceProvider();
 
+/**
+ * Molecule drawing modal on ketcher-react + ketcher-standalone, matching
+ * ord-app's ComponentsKetcherEditor. Import lazily — the standalone struct
+ * service is a very large chunk.
+ */
 const ModalKetcher: React.FC<ModalKetcherProps> = ({
   smiles,
   onUpdateSmiles,
   onCloseModal,
 }) => {
-  const [contWin, setContWin] = useState<KetcherWindow | null>(null);
-  const [mutatedSmiles, setMutatedSmiles] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [ketcherInstance, setKetcherInstance] = useState<Ketcher | null>(null);
 
-  const drawSmiles = useCallback(async () => {
-    if (mutatedSmiles && contWin?.ketcher) {
-      try {
-        const response = await fetch(
-          `/api/molfile?smiles=${encodeURIComponent(mutatedSmiles)}`,
-        );
-        if (response.ok) {
-          const molfile = (await response.json()) as string;
-          contWin.ketcher.setMolecule(molfile);
-        } else {
-          console.warn('Failed to get molfile for SMILES:', mutatedSmiles);
-        }
-      } catch (error) {
-        console.error('Error loading molecule into Ketcher:', error);
-      }
+  useEffect(() => {
+    if (ketcherInstance && smiles) {
+      ketcherInstance.setMolecule(smiles);
     }
-  }, [mutatedSmiles, contWin]);
+    // Load only the initial structure; subsequent edits live in the ketcher
+    // instance itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ketcherInstance]);
 
-  const saveSmiles = useCallback(async () => {
-    if (contWin?.ketcher) {
-      try {
-        const newSmiles = await contWin.ketcher.getSmiles();
-        setMutatedSmiles(newSmiles);
-        onUpdateSmiles(newSmiles);
-        onCloseModal();
-      } catch (error) {
-        console.error('Error getting SMILES from Ketcher:', error);
-      }
-    }
-  }, [contWin, onUpdateSmiles, onCloseModal]);
-
-  const handleBackgroundClick = (e: React.MouseEvent) => {
-    // Close modal if clicking on background (not on modal content)
-    if (e.target === e.currentTarget) {
+  const handleSave = () => {
+    if (!ketcherInstance) return;
+    ketcherInstance.getSmiles().then(newSmiles => {
+      onUpdateSmiles(newSmiles);
       onCloseModal();
-    }
+    });
   };
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      // Close modal on Escape key
-      if (e.key === 'Escape') {
-        onCloseModal();
-      }
-    },
-    [onCloseModal],
-  );
-
-  useEffect(() => {
-    setMutatedSmiles(smiles);
-  }, [smiles]);
-
-  // Poll the iframe's contentWindow once per second until it exposes
-  // `ketcher`. Runs once on mount with no React state in the deps array so
-  // success doesn't kick off a fresh 30-second idle interval (the previous
-  // useCallback-based version re-fired on every relevant state change).
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      const iframe = document.getElementById(
-        'ketcher-iframe',
-      ) as HTMLIFrameElement | null;
-      if (!iframe?.contentWindow) return;
-      try {
-        const win = iframe.contentWindow as KetcherWindow;
-        if (win.ketcher) {
-          window.clearInterval(intervalId);
-          window.clearTimeout(timeoutId);
-          setContWin(win);
-          setLoading(false);
-        }
-      } catch {
-        // Cross-origin or other access issues — keep polling.
-      }
-    }, 1000);
-
-    const timeoutId = window.setTimeout(() => {
-      window.clearInterval(intervalId);
-      setLoading(prev => {
-        if (prev) console.warn('Ketcher failed to load within 30 seconds');
-        return false;
-      });
-    }, 30000);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.clearTimeout(timeoutId);
-    };
-  }, []);
-
-  useEffect(() => {
-    // Add keyboard event listener
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
-
-  // Re-trigger drawSmiles when contWin becomes available
-  useEffect(() => {
-    if (contWin && mutatedSmiles) {
-      drawSmiles();
-    }
-  }, [contWin, drawSmiles, mutatedSmiles]);
-
   return (
-    <div
-      className="background"
-      onClick={handleBackgroundClick}
+    <Modal
+      opened
+      onClose={onCloseModal}
+      classNames={{ content: classes.wrapper, body: classes.body }}
+      withCloseButton={false}
     >
-      <div
-        id="ketcher_modal"
-        className="modal"
-      >
-        <div className="modal-content">
-          <div className="modal-body">
-            {/* Point at Ketcher's own index.html (shipped in the standalone
-                bundle under app/public/ketcher/). All of Ketcher's bundled
-                asset paths are relative — sourcing from `/ketcher/index.html`
-                lets the iframe's document resolve them against
-                `/ketcher/static/...` correctly. Pointing the iframe at our
-                React Router route instead (the previous design) loaded our
-                shell HTML, which broke Ketcher's relative asset resolution. */}
-            <iframe
-              id="ketcher-iframe"
-              src="/ketcher/index.html"
-              title="Ketcher Molecular Editor"
-            />
-          </div>
-          <div className="modal-footer">
-            <button
-              type="button"
-              onClick={onCloseModal}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={saveSmiles}
-              disabled={loading}
-            >
-              Save
-            </button>
-          </div>
-          {loading && (
-            <div className="modal-loading">
-              <LoadingSpinner />
-            </div>
-          )}
-        </div>
+      <div className={classes.editorWrapper}>
+        <Editor
+          structServiceProvider={structServiceProvider}
+          staticResourcesUrl={import.meta.env.BASE_URL as string}
+          onInit={ketcher => {
+            setKetcherInstance(ketcher);
+            // Ketcher EXPECTS global object to have ketcher variable, otherwise it won't work
+            appWindow.ketcher = ketcher;
+          }}
+          errorHandler={console.error}
+        />
       </div>
-    </div>
+      <Flex
+        className={classes.actions}
+        gap="sm"
+        justify="flex-end"
+      >
+        <Button
+          variant="default"
+          onClick={onCloseModal}
+        >
+          Cancel
+        </Button>
+        <Button onClick={handleSave}>Save</Button>
+      </Flex>
+    </Modal>
   );
 };
 

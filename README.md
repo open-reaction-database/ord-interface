@@ -75,13 +75,14 @@ ORD_INTERFACE_TESTING=TRUE uv run uvicorn ord_interface.api.main:app --port 5000
 
 ### 3. Run the React SPA
 
-Download [Ketcher v2.5.1](https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip), extract it, and place the `standalone/` directory's contents inside `./app/public/ketcher/` (so that `app/public/ketcher/static/` and `app/public/ketcher/asset-manifest.json` exist). Then:
-
 ```shell
 cd app
 npm install
 npm run serve
 ```
+
+The molecule editor (Ketcher) is bundled from npm (`ketcher-react` +
+`ketcher-standalone`), so no separate download step is needed.
 
 Open <http://localhost:8080>. Vite hot-reloads source changes; `npm run dev` and `npm run preview` are also available as aliases for `vite` and `vite preview` respectively.
 
@@ -94,7 +95,7 @@ Production deployment is managed via Pulumi/ECS in the [`ord-infrastructure`](ht
 ### Minor changes (e.g. enum additions)
 
 - Update the `ord-schema` specifier in `pyproject.toml` under `[project] dependencies`, then run `uv lock` to refresh `uv.lock`.
-- Update the matching `ord-schema` version in [`app/package.json`](./app/package.json), then run `npm install` to refresh `app/package-lock.json`.
+- Update the matching `ord-schema-protobufjs` version in [`app/package.json`](./app/package.json), then run `npm install` to refresh `app/package-lock.json`.
 - Contact the ORD site administrator to roll out the new version to staging.
 
 ### Major changes (new message types, etc.)

@@ -15,12 +15,24 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearch } from 'wouter';
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Code,
+  Flex,
+  Paper,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
+import { IconBarrierBlock, IconSearch } from '@tabler/icons-react';
 import SearchResults from '../search/SearchResults';
 import { useNLQuery } from '../../hooks/useNLQuery';
 import type { NLQueryData } from '../../hooks/useNLQuery';
 import type { NLInterpretation, ResolvedComponent } from '../../types/search';
-import './MainNLSearch.scss';
+import classes from './MainNLSearch.module.scss';
 
 const EXAMPLES = [
   'reactions for synthesizing ibuprofen',
@@ -81,70 +93,74 @@ const Interpretation: React.FC<{ data: NLQueryData }> = ({ data }) => {
   );
 
   return (
-    <div className="nl-search__interpretation">
-      <section className="nl-search__layer">
-        <div className="nl-search__interpretation-title">
+    <Paper
+      radius="sm"
+      p="lg"
+      className={classes.interpretation}
+    >
+      <section>
+        <Text className={classes.layerTitle}>
           From the model{' '}
-          <span className="nl-search__provenance">(build_query tool call)</span>
-        </div>
+          <span className={classes.provenance}>(build_query tool call)</span>
+        </Text>
         {interpretation.components.length > 0 ? (
-          <ul className="nl-search__interpretation-list">
+          <ul className={classes.list}>
             {interpretation.components.map((component, index) => (
               <li key={index}>
-                <span className="nl-search__role">{ROLE_LABEL[component.target]}</span>{' '}
+                <span className={classes.role}>{ROLE_LABEL[component.target]}</span>{' '}
                 <strong>{component.identifier}</strong>{' '}
-                <span className="nl-search__mode">
-                  ({component.mode.toLowerCase()})
-                </span>
+                <span className={classes.mode}>({component.mode.toLowerCase()})</span>
               </li>
             ))}
           </ul>
         ) : (
-          <div className="nl-search__muted">(no components extracted)</div>
+          <Text className={classes.muted}>(no components extracted)</Text>
         )}
         {filters.length > 0 && (
-          <ul className="nl-search__interpretation-list">
+          <ul className={classes.list}>
             {filters.map((filter, index) => (
               <li key={`filter-${index}`}>{filter}</li>
             ))}
           </ul>
         )}
-        <details className="nl-search__raw">
+        <details className={classes.raw}>
           <summary>Raw tool call</summary>
-          <pre className="nl-search__raw-json">
+          <pre className={classes.rawJson}>
             {JSON.stringify(interpretation, null, 2)}
           </pre>
         </details>
       </section>
 
       {resolved.length > 0 && (
-        <section className="nl-search__layer">
-          <div className="nl-search__interpretation-title">
+        <section className={classes.layer}>
+          <Text className={classes.layerTitle}>
             Resolved to structures{' '}
-            <span className="nl-search__provenance">
+            <span className={classes.provenance}>
               ({resolversUsed(resolved).join(', ')})
             </span>
-          </div>
-          <ul className="nl-search__resolution-list">
+          </Text>
+          <ul className={classes.resolutionList}>
             {resolved.map((component, index) => (
               <li key={index}>
-                <span className="nl-search__identifier">{component.identifier}</span>
-                <span className="nl-search__arrow">→</span>
-                <code>{component.smiles}</code>
-                <span className="nl-search__resolver">via {component.resolver}</span>
+                <span>{component.identifier}</span>
+                <span className={classes.arrow}>→</span>
+                <Code>{component.smiles}</Code>
+                <span className={classes.resolver}>via {component.resolver}</span>
               </li>
             ))}
           </ul>
         </section>
       )}
-    </div>
+    </Paper>
   );
 };
 
 const MainNLSearch: React.FC = () => {
   // The submitted query lives in the URL (?q=…) so searches are shareable and
   // survive reloads, mirroring the structured search page.
-  const [searchParams, setSearchParams] = useSearchParams();
+  const search = useSearch();
+  const [, navigate] = useLocation();
+  const searchParams = new URLSearchParams(search);
   const submittedQuery = searchParams.get('q');
   // Dev mode: translate + resolve but don't run the search; kept in the URL so it's
   // shareable and survives reloads, like the query itself.
@@ -159,10 +175,10 @@ const MainNLSearch: React.FC = () => {
   const { data, isFetching, error } = useNLQuery(submittedQuery, true, dryRun);
 
   const apply = (query: string, dry: boolean) => {
-    const next: Record<string, string> = {};
-    if (query) next.q = query;
-    if (dry) next.dry_run = '1';
-    setSearchParams(next);
+    const next = new URLSearchParams();
+    if (query) next.set('q', query);
+    if (dry) next.set('dry_run', '1');
+    navigate(`/ask?${next.toString()}`);
   };
 
   const submit = (value: string) => {
@@ -172,83 +188,108 @@ const MainNLSearch: React.FC = () => {
   };
 
   return (
-    <div className="nl-search">
-      <div
-        className="nl-search__banner"
-        role="status"
+    <div className={classes.nlSearch}>
+      <Alert
+        className={classes.banner}
+        icon={<IconBarrierBlock size={16} />}
+        color="orange"
+        radius="sm"
       >
-        🚧 This feature is in development — results may be incomplete or change.
-      </div>
-      <h1 className="nl-search__title">Ask about reactions</h1>
-      <p className="nl-search__subtitle">
+        This feature is in development — results may be incomplete or change.
+      </Alert>
+
+      <Title order={1}>Ask about reactions</Title>
+      <Text className={classes.subtitle}>
         Describe what you&apos;re looking for in plain language — compound names are
         resolved to structures and matched against the database.
-      </p>
+      </Text>
 
       <form
-        className="nl-search__form"
+        className={classes.form}
         onSubmit={event => {
           event.preventDefault();
           submit(input);
         }}
       >
-        <input
-          className="nl-search__input"
-          type="text"
+        <TextInput
+          className={classes.input}
+          size="md"
+          radius="sm"
+          leftSection={<IconSearch size={18} />}
           value={input}
           placeholder="e.g. reactions using benzene as an input with yield greater than 70%"
-          onChange={event => setInput(event.target.value)}
+          onChange={event => setInput(event.currentTarget.value)}
         />
-        <button
-          className="nl-search__button"
+        <Button
           type="submit"
-          disabled={isFetching}
+          size="md"
+          radius="sm"
+          loading={isFetching}
         >
-          {isFetching ? 'Searching…' : 'Search'}
-        </button>
+          Search
+        </Button>
       </form>
 
-      <label className="nl-search__dry-run-toggle">
-        <input
-          type="checkbox"
-          checked={dryRun}
-          onChange={event =>
-            apply(submittedQuery ?? input.trim(), event.target.checked)
-          }
-        />
-        Dry run — translate &amp; resolve only, don&apos;t run the search
-      </label>
+      <Checkbox
+        className={classes.dryRunToggle}
+        size="sm"
+        label="Dry run — translate & resolve only, don't run the search"
+        checked={dryRun}
+        onChange={event => apply(submittedQuery ?? input.trim(), event.target.checked)}
+      />
 
-      <div className="nl-search__examples">
+      <Flex
+        className={classes.examples}
+        gap="xs"
+        wrap="wrap"
+      >
         {EXAMPLES.map(example => (
-          <button
+          <Button
             key={example}
-            type="button"
-            className="nl-search__example"
+            variant="default"
+            size="compact-sm"
+            radius="xl"
+            className={classes.example}
             onClick={() => submit(example)}
           >
             {example}
-          </button>
+          </Button>
         ))}
-      </div>
+      </Flex>
 
-      {error && <div className="nl-search__error">{(error as Error).message}</div>}
+      {error && (
+        <Alert
+          color="red"
+          radius="sm"
+          className={classes.error}
+        >
+          {(error as Error).message}
+        </Alert>
+      )}
 
       {data && submittedQuery && (
         <>
           <Interpretation data={data} />
           {data.dryRun ? (
-            <div className="nl-search__dry-run">
-              <div className="nl-search__dry-run-title">
-                Dry run — search not executed
-              </div>
-            </div>
+            <Paper
+              radius="sm"
+              p="lg"
+              className={classes.dryRunNote}
+            >
+              <Text fw={600}>Dry run — search not executed</Text>
+            </Paper>
           ) : data.results.length > 0 ? (
             <SearchResults searchResults={data.results} />
           ) : (
-            <div className="nl-search__empty">
-              No reactions matched. Try relaxing a filter, or rephrase the query.
-            </div>
+            <Paper
+              radius="sm"
+              p="lg"
+              className={classes.dryRunNote}
+            >
+              <Text c="secondary.1">
+                No reactions matched. Try relaxing a filter, or rephrase the query.
+              </Text>
+            </Paper>
           )}
         </>
       )}

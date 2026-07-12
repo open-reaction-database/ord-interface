@@ -16,8 +16,14 @@
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Buffer } from 'buffer';
 import './index.scss';
 import App from './App.tsx';
+
+// Because ketcher depends on draft-js which requires setImmediate package
+// https://github.com/yuzujs/setImmediate
+globalThis.global ||= globalThis;
+globalThis.Buffer = Buffer;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

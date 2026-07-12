@@ -15,12 +15,14 @@
  */
 
 import React, { useState } from 'react';
+import { Button } from '@mantine/core';
+import { IconDownload } from '@tabler/icons-react';
 import EntityTable from '../../components/EntityTable';
 import ReactionCard from '../../components/ReactionCard';
 import CopyButton from '../../components/CopyButton';
 import DownloadResults from '../../components/DownloadResults';
 import type { SearchResult } from '../../types/search';
-import './SearchResults.scss';
+import classes from './SearchResults.module.scss';
 
 interface SearchResultsProps {
   searchResults: SearchResult[];
@@ -30,16 +32,14 @@ interface SearchResultsProps {
 const SearchResults: React.FC<SearchResultsProps> = ({ searchResults, isOverflow }) => {
   const [showDownloadResults, setShowDownloadResults] = useState(false);
 
-  const title = isOverflow
-    ? '100 Reactions From This Dataset (Sample)'
-    : `Reactions in this Dataset (${searchResults.length} Reactions)`;
+  const title = isOverflow ? 'Reactions (first 100 shown)' : 'Reactions';
 
   if (searchResults.length === 0) {
-    return <div className="search-results" />;
+    return null;
   }
 
   return (
-    <div className="search-results">
+    <div className={classes.searchResults}>
       <EntityTable
         tableData={searchResults}
         title={title}
@@ -47,18 +47,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchResults, isOverflow
       >
         {entities => (
           <>
-            <div className="search-results__action-buttons">
+            <div className={classes.actionButtons}>
               <CopyButton
                 textToCopy={window.location.href}
                 icon="share"
-                buttonText="Shareable Link"
+                buttonText="Shareable link"
               />
-              <button
+              <Button
+                variant="default"
+                radius="sm"
+                leftSection={<IconDownload size={16} />}
                 disabled={!searchResults.length}
                 onClick={() => setShowDownloadResults(true)}
               >
-                Download All Search Results
-              </button>
+                Download all results
+              </Button>
             </div>
 
             {entities.map(row => (
