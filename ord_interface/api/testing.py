@@ -18,7 +18,7 @@ import os
 from glob import glob
 
 from ord_schema.message_helpers import load_message
-from ord_schema.orm.database import add_dataset, prepare_database
+from ord_schema.orm.database import add_dataset, prepare_database, update_derived_data
 from ord_schema.proto import dataset_pb2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -38,4 +38,7 @@ def setup_test_postgres(url: str) -> None:
     with Session(engine) as session:
         for dataset in datasets:
             with session.begin():
-                add_dataset(dataset, session, rdkit_cartridge=rdkit_cartridge)
+                add_dataset(dataset, session)
+                update_derived_data(
+                    dataset.dataset_id, session, rdkit_cartridge=rdkit_cartridge
+                )

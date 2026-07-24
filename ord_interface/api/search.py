@@ -263,8 +263,11 @@ async def get_datasets() -> list[DatasetInfo]:
     """Returns info about the current datasets, most recently submitted first."""
     async with get_cursor() as cursor:
         await cursor.execute(
-            "SELECT dataset_id, name, description, num_reactions, submitted_at FROM dataset "
-            "ORDER BY submitted_at DESC NULLS LAST, dataset_id"
+            "SELECT dataset.dataset_id, dataset.name, dataset.description, "
+            "datasets.num_reactions, datasets.submitted_at "
+            "FROM ord.dataset "
+            "JOIN public.datasets ON datasets.dataset_id = dataset.dataset_id "
+            "ORDER BY datasets.submitted_at DESC NULLS LAST, dataset.dataset_id"
         )
         return [DatasetInfo(**row) async for row in cursor]
 
@@ -274,7 +277,11 @@ async def get_dataset(dataset_id: str) -> DatasetInfo:
     """Returns info about a single dataset."""
     async with get_cursor() as cursor:
         await cursor.execute(
-            "SELECT dataset_id, name, description, num_reactions, submitted_at FROM dataset WHERE dataset_id = %s",
+            "SELECT dataset.dataset_id, dataset.name, dataset.description, "
+            "datasets.num_reactions, datasets.submitted_at "
+            "FROM ord.dataset "
+            "JOIN public.datasets ON datasets.dataset_id = dataset.dataset_id "
+            "WHERE dataset.dataset_id = %s",
             (dataset_id,),
         )
         row = await cursor.fetchone()

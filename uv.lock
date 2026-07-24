@@ -1060,7 +1060,7 @@ requires-dist = [
     { name = "gunicorn" },
     { name = "jinja2", specifier = ">=2.0.0" },
     { name = "numpy", specifier = ">=1.26.4" },
-    { name = "ord-schema", extras = ["orm"], specifier = ">=0.7.1,<0.8" },
+    { name = "ord-schema", extras = ["orm"], specifier = ">=0.8,<0.9" },
     { name = "pandas", specifier = ">=1.0.4" },
     { name = "protobuf", specifier = ">=4.22,<6" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3" },
@@ -1089,7 +1089,7 @@ dev = [
 
 [[package]]
 name = "ord-schema"
-version = "0.7.1"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "joblib" },
@@ -1103,9 +1103,9 @@ dependencies = [
     { name = "rdkit" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b4/60/e89587eff14d1d8c47582d2d3f29a2e5b1cfbc8eb91edc8e708f91f1c192/ord_schema-0.7.1.tar.gz", hash = "sha256:037efc6f5cc1e5b871d6e348286a13529b7722417056770cabfa0ce72e4d140f", size = 167134, upload-time = "2026-06-27T02:15:23.887Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/17/6f/caa03e4654e9c70dda54fccc9c108e3174e157828118af440612b3f35ca8/ord_schema-0.8.0.tar.gz", hash = "sha256:4b4587004b0b3a4ae8e8065df6525ca2144da84933ca570a6385ebb7ef45314d", size = 194944, upload-time = "2026-07-24T02:37:17.393Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/f3/97734584f9fa7a5312ec712f7769103cceb784c3fda0531fca98fb0c1e5f/ord_schema-0.7.1-py3-none-any.whl", hash = "sha256:d04f42ec944fb8397d399631f77238b3c47d5b8db11c6dca61ce0870e8c15a30", size = 190535, upload-time = "2026-06-27T02:15:22.539Z" },
+    { url = "https://files.pythonhosted.org/packages/59/ca/54588f592a3d3a438541671f598893e7177690efb7dd22f055e3b68e124f/ord_schema-0.8.0-py3-none-any.whl", hash = "sha256:55c23e464800e5cdd14d637653ba0283a3fa1b72aca3c89494c34864a762c56b", size = 223167, upload-time = "2026-07-24T02:37:15.758Z" },
 ]
 
 [package.optional-dependencies]
@@ -1113,6 +1113,7 @@ orm = [
     { name = "inflection" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "sqlalchemy" },
+    { name = "uuid6" },
 ]
 
 [[package]]
@@ -1134,10 +1135,10 @@ resolution-markers = [
     "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "numpy", marker = "python_full_version >= '3.14'" },
-    { name = "python-dateutil", marker = "python_full_version >= '3.14'" },
-    { name = "pytz", marker = "python_full_version >= '3.14'" },
-    { name = "tzdata", marker = "python_full_version >= '3.14'" },
+    { name = "numpy" },
+    { name = "python-dateutil" },
+    { name = "pytz" },
+    { name = "tzdata" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/33/01/d40b85317f86cf08d853a4f495195c73815fdf205eef3993821720274518/pandas-2.3.3.tar.gz", hash = "sha256:e05e1af93b977f7eafa636d043f9f94c7ee3ac81af99c13508215942e64c993b", size = 4495223, upload-time = "2025-09-29T23:34:51.853Z" }
 wheels = [
@@ -1193,9 +1194,9 @@ resolution-markers = [
     "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "numpy", marker = "python_full_version < '3.14'" },
-    { name = "python-dateutil", marker = "python_full_version < '3.14'" },
-    { name = "tzdata", marker = "(python_full_version < '3.14' and sys_platform == 'emscripten') or (python_full_version < '3.14' and sys_platform == 'win32')" },
+    { name = "numpy" },
+    { name = "python-dateutil" },
+    { name = "tzdata", marker = "sys_platform == 'emscripten' or sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/da/99/b342345300f13440fe9fe385c3c481e2d9a595ee3bab4d3219247ac94e9a/pandas-3.0.2.tar.gz", hash = "sha256:f4753e73e34c8d83221ba58f232433fca2748be8b18dbca02d242ed153945043", size = 4645855, upload-time = "2026-03-31T06:48:30.816Z" }
 wheels = [
@@ -2236,6 +2237,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz", hash = "sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c", size = 433602, upload-time = "2026-05-07T16:13:18.596Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl", hash = "sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897", size = 131087, upload-time = "2026-05-07T16:13:17.151Z" },
+]
+
+[[package]]
+name = "uuid6"
+version = "2025.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/b7/4c0f736ca824b3a25b15e8213d1bcfc15f8ac2ae48d1b445b310892dc4da/uuid6-2025.0.1.tar.gz", hash = "sha256:cd0af94fa428675a44e32c5319ec5a3485225ba2179eefcf4c3f205ae30a81bd", size = 13932, upload-time = "2025-07-04T18:30:35.186Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/b2/93faaab7962e2aa8d6e174afb6f76be2ca0ce89fde14d3af835acebcaa59/uuid6-2025.0.1-py3-none-any.whl", hash = "sha256:80530ce4d02a93cdf82e7122ca0da3ebbbc269790ec1cb902481fa3e9cc9ff99", size = 6979, upload-time = "2025-07-04T18:30:34.001Z" },
 ]
 
 [[package]]

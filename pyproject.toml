@@ -32,7 +32,7 @@ dependencies = [
     "gunicorn",
     "jinja2>=2.0.0",
     "numpy>=1.26.4",
-    "ord-schema[orm]>=0.7.1,<0.8",
+    "ord-schema[orm]>=0.8,<0.9",
     "pandas>=1.0.4",
     "protobuf>=4.22,<6",
     "psycopg[binary,pool]>=3",
