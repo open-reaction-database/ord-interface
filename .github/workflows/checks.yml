@@ -65,3 +65,6 @@ jobs:
       - name: prettier
         working-directory: app
         run: npm run format:check
+      - name: vitest
+        working-directory: app
+        run: npm test
