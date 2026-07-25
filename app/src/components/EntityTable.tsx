@@ -39,10 +39,12 @@ function EntityTable<T>({
     setEntities(tableData);
   }, [tableData]);
 
-  // Reset to first page when pagination changes
+  // Reset to the first page whenever the page size or the filter changes; the
+  // current page number is meaningless against a different set of rows, and
+  // holding onto it lands the user on a blank page past the end.
   useEffect(() => {
     setCurrentPage(1);
-  }, [pagination]);
+  }, [pagination, searchString]);
 
   const searchArray = useMemo(() => {
     return searchString.split(' ').filter(term => term.trim() !== '');
@@ -93,6 +95,15 @@ function EntityTable<T>({
     }
     return 1;
   }, [pagination, filteredEntities]);
+
+  // Shorter data can arrive under the page the user is on — a new search, or a
+  // dataset with fewer rows. Keeping the old page number would slice past the
+  // end and render a blank table. Depending on `lastPage` rather than on the
+  // data itself keeps this immune to callers that build `tableData` inline: it
+  // is a number, so a re-render with an equal-length array is not a change.
+  useEffect(() => {
+    setCurrentPage(page => Math.min(page, lastPage));
+  }, [lastPage]);
 
   const pagiPrev = useMemo(() => {
     return currentPage === 1 ? lastPage : currentPage - 1;
