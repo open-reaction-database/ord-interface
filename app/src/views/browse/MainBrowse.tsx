@@ -18,6 +18,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import EntityTable from '../../components/EntityTable';
 import FloatingModal from '../../components/FloatingModal';
+import LinkedText from '../../components/LinkedText';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './MainBrowse.scss';
 
@@ -43,7 +44,9 @@ const DescriptionCell: React.FC<{
 
   return (
     <div className="column description-cell">
-      <div className="description-text">{description}</div>
+      <div className="description-text">
+        <LinkedText text={description} />
+      </div>
       <button
         type="button"
         className="expand-button"
@@ -84,7 +87,9 @@ const DescriptionCell: React.FC<{
               <strong>Reactions:</strong> {numReactions.toLocaleString()}
             </span>
           </div>
-          <div className="modal-description">{description}</div>
+          <div className="modal-description">
+            <LinkedText text={description} />
+          </div>
         </FloatingModal>
       )}
     </div>
@@ -145,7 +150,9 @@ const MainBrowse: React.FC = () => {
                 <div className="column">
                   <Link to={`/dataset/${row.dataset_id}`}>{row.dataset_id}</Link>
                 </div>
-                <div className="column">{row.name}</div>
+                <div className="column">
+                  <LinkedText text={row.name} />
+                </div>
                 <DescriptionCell
                   datasetId={row.dataset_id}
                   name={row.name}
