@@ -22,7 +22,7 @@ const MainFooter: React.FC = () => {
     <footer className="main-footer">
       <div className="main-footer__container">
         <div className="main-footer__content">
-          <p className="main-footer__text">© 2024 Open Reaction Database Project</p>
+          <p className="main-footer__text">© 2026 Open Reaction Database Project</p>
           <div className="main-footer__links">
             <a
               href="https://github.com/Open-Reaction-Database"
