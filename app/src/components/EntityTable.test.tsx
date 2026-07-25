@@ -212,9 +212,9 @@ describe('EntityTable', () => {
     expect(visibleIds()).toEqual(['a']);
   });
 
-  it('follows a change of data', () => {
-    const { rerender } = render(
-      <EntityTable<Row> tableData={rows(2)}>
+  describe('replacement data', () => {
+    const table = (tableData: Row[]) => (
+      <EntityTable<Row> tableData={tableData}>
         {entities => (
           <ul>
             {entities.map(entity => (
@@ -222,21 +222,51 @@ describe('EntityTable', () => {
             ))}
           </ul>
         )}
-      </EntityTable>,
+      </EntityTable>
     );
-    expect(visibleIds()).toHaveLength(2);
 
-    rerender(
-      <EntityTable<Row> tableData={rows(5)}>
-        {entities => (
-          <ul>
-            {entities.map(entity => (
-              <li key={entity.id}>{entity.id}</li>
-            ))}
-          </ul>
-        )}
-      </EntityTable>,
-    );
-    expect(visibleIds()).toHaveLength(5);
+    it('follows a change of data', () => {
+      const { rerender } = render(table(rows(2)));
+      expect(visibleIds()).toHaveLength(2);
+
+      rerender(table(rows(5)));
+      expect(visibleIds()).toHaveLength(5);
+    });
+
+    // A new search can return fewer rows than the page the user is sitting on,
+    // which would otherwise slice past the end and render a blank table.
+    it('pulls the page back into range when the data shrinks', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(table(rows(25)));
+
+      await user.click(screen.getByText('Last'));
+      expect(visibleIds()[0]).toBe('row-20');
+
+      rerender(table(rows(12)));
+      expect(visibleIds()).toEqual(['row-10', 'row-11']);
+    });
+
+    it('drops to the first page when the data shrinks to a single page', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(table(rows(25)));
+
+      await user.click(screen.getByText('Last'));
+      rerender(table(rows(3)));
+
+      expect(visibleIds()).toEqual(['row-0', 'row-1', 'row-2']);
+    });
+
+    // Callers are free to rebuild `tableData` on every render; that must not
+    // drag the user back to the first page.
+    it('stays put when the replacement data is no shorter', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(table(rows(25)));
+
+      await user.click(screen.getByText('Next'));
+      expect(visibleIds()[0]).toBe('row-10');
+
+      rerender(table(rows(25)));
+      expect(visibleIds()[0]).toBe('row-10');
+    });
   });
 });
