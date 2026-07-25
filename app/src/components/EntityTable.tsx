@@ -39,10 +39,12 @@ function EntityTable<T>({
     setEntities(tableData);
   }, [tableData]);
 
-  // Reset to first page when pagination changes
+  // Reset to the first page whenever the page size or the filter changes; the
+  // current page number is meaningless against a different set of rows, and
+  // holding onto it lands the user on a blank page past the end.
   useEffect(() => {
     setCurrentPage(1);
-  }, [pagination]);
+  }, [pagination, searchString]);
 
   const searchArray = useMemo(() => {
     return searchString.split(' ').filter(term => term.trim() !== '');
