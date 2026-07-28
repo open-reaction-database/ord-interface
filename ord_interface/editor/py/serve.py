@@ -235,7 +235,7 @@ def enumerate_dataset():
         else:
             spreadsheet_data = data["spreadsheet_data"]
         spreadsheet_data = io.BytesIO(base64.b64decode(spreadsheet_data))
-        dataframe = templating.read_spreadsheet(spreadsheet_data, suffix=suffix)
+        dataframe = templating.load_spreadsheet(spreadsheet_data, suffix=suffix)
         name = f"{basename}_dataset"
         dataset = templating.generate_dataset(
             name=name,
@@ -466,7 +466,7 @@ def resolve_compound(identifier_type):
     if not compound_name:
         return ""
     try:
-        smiles, resolver = resolvers.name_resolve(identifier_type, compound_name)
+        smiles, resolver = resolvers.resolve_name(identifier_type, compound_name)
         return flask.jsonify((_canonicalize_smiles(smiles), resolver))
     except ValueError:
         return ""
