@@ -35,15 +35,12 @@ from importlib import resources
 
 import anthropic
 import yaml
+from ord_schema.agent.nl_query import NLQuery, translate
 from ord_schema.logging import get_logger
 from pydantic import BaseModel
 from rdkit import Chem
 
-from ord_interface.api.nl_query import (
-    NLQuery,
-    build_query_params,
-    translate,
-)
+from ord_interface.api.nl_query import build_query_params
 from ord_interface.api.search import run_query
 
 logger = get_logger(__name__)
@@ -122,7 +119,7 @@ class EvalCase(BaseModel):
 
 def load_cases() -> list[EvalCase]:
     """Loads the evaluation cases bundled alongside this module."""
-    raw = (resources.files("ord_interface.api") / "nl_query_eval_cases.yaml").read_text(
+    raw = (resources.files("ord_schema.agent") / "nl_query_eval_cases.yaml").read_text(
         encoding="utf-8"
     )
     return [EvalCase.model_validate(case) for case in yaml.safe_load(raw)]

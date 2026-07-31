@@ -18,7 +18,8 @@ These cover the offline parts only -- case loading and interpretation scoring --
 model, network, or database is required.
 """
 
-from ord_interface.api.nl_query import NLComponent, NLQuery
+from ord_schema.agent.nl_query import NLComponent, NLQuery
+
 from ord_interface.api.nl_query_eval import (
     CaseExpectation,
     ComponentExpectation,

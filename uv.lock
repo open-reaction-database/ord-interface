@@ -1060,7 +1060,7 @@ requires-dist = [
     { name = "gunicorn" },
     { name = "jinja2", specifier = ">=2.0.0" },
     { name = "numpy", specifier = ">=1.26.4" },
-    { name = "ord-schema", extras = ["orm"], specifier = ">=0.8,<0.9" },
+    { name = "ord-schema", extras = ["agent", "orm"], specifier = ">=0.8,<0.9" },
     { name = "pandas", specifier = ">=1.0.4" },
     { name = "protobuf", specifier = ">=4.22,<6" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3" },

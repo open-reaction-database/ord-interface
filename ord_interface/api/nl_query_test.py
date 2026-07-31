@@ -14,27 +14,22 @@
 
 """Tests for ord_interface.api.nl_query.
 
-These exercise the natural-language translation and structure-resolution layers in
-isolation: the Anthropic client and the name resolver are stubbed, so no network,
-API key, or database is required.
+These exercise the serving layer: mapping a translated query onto QueryParams, the
+Redis translation cache, and the endpoint. Translation and structure resolution are
+tested in ord_schema.agent. The Anthropic client and the name resolver are stubbed, so
+no network, API key, or database is required.
 """
 
 import json
-from types import SimpleNamespace
 from unittest import mock
 
-import anthropic
-import httpx
 import pytest
 from fastapi import HTTPException
+from ord_schema.agent import nl_query as agent_nl_query
+from ord_schema.agent.nl_query import NLComponent, NLQuery
 
 from ord_interface.api import nl_query
-from ord_interface.api.nl_query import (
-    NLComponent,
-    NLQuery,
-    build_query_params,
-    translate,
-)
+from ord_interface.api.nl_query import build_query_params
 from ord_interface.api.nl_query import (
     nl_query as nl_query_endpoint,
 )
@@ -57,7 +52,9 @@ def _no_redis(monkeypatch):
 @pytest.mark.asyncio
 async def test_build_query_params_resolves_name(monkeypatch):
     monkeypatch.setattr(
-        nl_query, "resolve_name", lambda value_type, value: ("CC(=O)O", "PubChem API")
+        agent_nl_query,
+        "resolve_name",
+        lambda value_type, value: ("CC(=O)O", "PubChem API"),
     )
     query = NLQuery(
         components=[
@@ -83,7 +80,7 @@ async def test_build_query_params_accepts_verbatim_smiles(monkeypatch):
     def fail(*args, **kwargs):
         raise AssertionError("resolver should not be called for a valid SMILES")
 
-    monkeypatch.setattr(nl_query, "resolve_name", fail)
+    monkeypatch.setattr(agent_nl_query, "resolve_name", fail)
     query = NLQuery(
         components=[
             NLComponent(identifier="c1ccccc1", target="OUTPUT", mode="SUBSTRUCTURE")
@@ -102,7 +99,7 @@ async def test_build_query_params_accepts_verbatim_smiles(monkeypatch):
 @pytest.mark.asyncio
 async def test_build_query_params_passes_smarts_through(monkeypatch):
     monkeypatch.setattr(
-        nl_query, "canonicalize_smiles", mock.Mock(side_effect=AssertionError)
+        agent_nl_query, "canonicalize_smiles", mock.Mock(side_effect=AssertionError)
     )
     query = NLQuery(
         components=[
@@ -123,7 +120,7 @@ async def test_build_query_params_invalid_smarts(monkeypatch):
     # A SMARTS the model authored but RDKit cannot parse should be a clean 422, not a
     # 400 surfaced deep in query execution (which a dry run would skip entirely).
     monkeypatch.setattr(
-        nl_query, "canonicalize_smiles", mock.Mock(side_effect=AssertionError)
+        agent_nl_query, "canonicalize_smiles", mock.Mock(side_effect=AssertionError)
     )
     query = NLQuery(
         components=[NLComponent(identifier="[Br", target="OUTPUT", mode="SMARTS")]
@@ -157,7 +154,7 @@ async def test_build_query_params_unresolvable_name(monkeypatch):
     def raise_value_error(value_type, value):
         raise ValueError(f"Could not resolve {value_type} {value} to SMILES")
 
-    monkeypatch.setattr(nl_query, "resolve_name", raise_value_error)
+    monkeypatch.setattr(agent_nl_query, "resolve_name", raise_value_error)
     query = NLQuery(
         components=[
             NLComponent(identifier="not-a-compound", target="INPUT", mode="EXACT")
@@ -166,90 +163,6 @@ async def test_build_query_params_unresolvable_name(monkeypatch):
     with pytest.raises(HTTPException) as excinfo:
         await build_query_params(query)
     assert excinfo.value.status_code == 422
-
-
-@pytest.mark.asyncio
-async def test_resolve_name_cached_hit_skips_resolver(monkeypatch):
-    def fail(*args, **kwargs):
-        raise AssertionError("resolver should not be called on a cache hit")
-
-    async def hit(key):
-        return json.dumps(["CCO", "PubChem API"])
-
-    monkeypatch.setattr(nl_query, "resolve_name", fail)
-    monkeypatch.setattr(nl_query, "_redis_get", hit)
-    smiles, resolver = await nl_query._resolve_name_cached("ethanol")
-    assert smiles == "CCO"
-    assert resolver == "PubChem API (cached)"
-
-
-@pytest.mark.asyncio
-async def test_resolve_name_cached_miss_writes_cache(monkeypatch):
-    writes = {}
-
-    async def set_cache(key, value, ttl_seconds):
-        writes[key] = value
-
-    monkeypatch.setattr(
-        nl_query, "resolve_name", lambda value_type, value: ("CCO", "PubChem API")
-    )
-    monkeypatch.setattr(nl_query, "_redis_set", set_cache)
-    smiles, resolver = await nl_query._resolve_name_cached("ethanol")
-    assert (smiles, resolver) == ("CCO", "PubChem API")
-    assert list(writes.values()) == [json.dumps(["CCO", "PubChem API"])]
-
-
-@pytest.mark.asyncio
-async def test_translate_parses_tool_call():
-    tool_use = anthropic.types.ToolUseBlock(
-        type="tool_use",
-        id="toolu_test",
-        name="build_query",
-        input={
-            "components": [
-                {"identifier": "ibuprofen", "target": "OUTPUT", "mode": "EXACT"}
-            ],
-            "min_yield": 70,
-        },
-    )
-    response = SimpleNamespace(content=[tool_use])
-    client = mock.AsyncMock()
-    client.messages.create.return_value = response
-    result = await translate("reactions making ibuprofen with yield over 70%", client)
-    assert result.components[0].identifier == "ibuprofen"
-    assert result.components[0].target == "OUTPUT"
-    assert result.min_yield == 70
-
-
-@pytest.mark.asyncio
-async def test_translate_without_tool_call_raises():
-    response = SimpleNamespace(content=[SimpleNamespace(type="text", text="sorry")])
-    client = mock.AsyncMock()
-    client.messages.create.return_value = response
-    with pytest.raises(HTTPException) as excinfo:
-        await translate("hello", client)
-    assert excinfo.value.status_code == 502
-
-
-@pytest.mark.asyncio
-async def test_translate_invalid_tool_payload_maps_to_502():
-    # A tool call whose payload fails NLQuery validation (bad target) is a 502, not a 500.
-    tool_use = anthropic.types.ToolUseBlock(
-        type="tool_use",
-        id="toolu_test",
-        name="build_query",
-        input={
-            "components": [
-                {"identifier": "benzene", "target": "NOWHERE", "mode": "EXACT"}
-            ]
-        },
-    )
-    response = SimpleNamespace(content=[tool_use])
-    client = mock.AsyncMock()
-    client.messages.create.return_value = response
-    with pytest.raises(HTTPException) as excinfo:
-        await translate("anything", client)
-    assert excinfo.value.status_code == 502
 
 
 @pytest.mark.asyncio
@@ -262,29 +175,6 @@ async def test_translation_cache_get_discards_invalid_payload(monkeypatch):
 
     monkeypatch.setattr(nl_query, "_redis_get", stale)
     assert await nl_query._translation_cache_get("key") is None
-
-
-@pytest.mark.asyncio
-async def test_translate_rate_limit_maps_to_429():
-    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
-    response = httpx.Response(429, request=request)
-    client = mock.AsyncMock()
-    client.messages.create.side_effect = anthropic.RateLimitError(
-        "slow down", response=response, body=None
-    )
-    with pytest.raises(HTTPException) as excinfo:
-        await translate("anything", client)
-    assert excinfo.value.status_code == 429
-
-
-@pytest.mark.asyncio
-async def test_translate_api_error_maps_to_503():
-    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
-    client = mock.AsyncMock()
-    client.messages.create.side_effect = anthropic.APIConnectionError(request=request)
-    with pytest.raises(HTTPException) as excinfo:
-        await translate("anything", client)
-    assert excinfo.value.status_code == 503
 
 
 def _benzene_interpretation() -> NLQuery:
@@ -305,10 +195,12 @@ async def test_nl_query_uses_cached_translation_without_model_call(monkeypatch):
         return []
 
     monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
-    monkeypatch.setattr(nl_query, "_get_client", fail_get_client)
+    monkeypatch.setattr(nl_query, "get_client", fail_get_client)
     monkeypatch.setattr(nl_query, "run_query", fake_run_query)
     monkeypatch.setattr(
-        nl_query, "resolve_name", lambda value_type, value: ("c1ccccc1", "PubChem API")
+        agent_nl_query,
+        "resolve_name",
+        lambda value_type, value: ("c1ccccc1", "PubChem API"),
     )
     result = await nl_query_endpoint(q="reactions using benzene")
     # The search still runs on a cache hit, so results are fresh.
@@ -334,11 +226,13 @@ async def test_nl_query_translates_and_caches_translation_on_miss(monkeypatch):
 
     monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
     monkeypatch.setattr(nl_query, "_translation_cache_set", fake_cache_set)
-    monkeypatch.setattr(nl_query, "_get_client", lambda: mock.AsyncMock())
+    monkeypatch.setattr(nl_query, "get_client", lambda: mock.AsyncMock())
     monkeypatch.setattr(nl_query, "translate", fake_translate)
     monkeypatch.setattr(nl_query, "run_query", fake_run_query)
     monkeypatch.setattr(
-        nl_query, "resolve_name", lambda value_type, value: ("c1ccccc1", "PubChem API")
+        agent_nl_query,
+        "resolve_name",
+        lambda value_type, value: ("c1ccccc1", "PubChem API"),
     )
     result = await nl_query_endpoint(q="reactions using benzene")
     assert result.resolved_components[0].smiles == "c1ccccc1"
@@ -373,7 +267,9 @@ async def test_nl_query_dry_run_skips_search(monkeypatch):
     monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
     monkeypatch.setattr(nl_query, "run_query", fail_run_query)
     monkeypatch.setattr(
-        nl_query, "resolve_name", lambda value_type, value: ("c1ccccc1", "PubChem API")
+        agent_nl_query,
+        "resolve_name",
+        lambda value_type, value: ("c1ccccc1", "PubChem API"),
     )
     result = await nl_query_endpoint(q="reactions using benzene", dry_run=True)
     assert result.dry_run is True
