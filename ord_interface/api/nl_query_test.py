@@ -276,3 +276,56 @@ async def test_nl_query_dry_run_skips_search(monkeypatch):
     assert result.results == []
     # The query that would have run is still surfaced for inspection.
     assert json.loads(result.query_components[0])["pattern"] == "c1ccccc1"
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_status"),
+    [
+        (nl_query.ModelRateLimitedError("busy"), 429),
+        (nl_query.ModelUnavailableError("down"), 503),
+        (nl_query.MalformedQueryError("garbled"), 502),
+    ],
+)
+def test_translation_failures_keep_their_status_codes(error, expected_status):
+    # ord-schema raises plain exceptions; this mapping is the only thing preserving the
+    # API's contract, so it is asserted here rather than inferred from the library.
+    http_error = nl_query._as_http_error(error)
+    assert http_error.status_code == expected_status
+    assert http_error.detail == str(error)
+
+
+def test_an_unmapped_translation_failure_is_a_500():
+    class NewFailure(agent_nl_query.NLQueryError):
+        """A subclass added upstream without a status code here."""
+
+    assert nl_query._as_http_error(NewFailure("?")).status_code == 500
+
+
+@pytest.mark.asyncio
+async def test_the_endpoint_surfaces_a_translation_failure(monkeypatch):
+    async def fake_cache_get(key):
+        return None
+
+    async def failing_translate(query, client):
+        raise nl_query.ModelUnavailableError("temporarily unavailable")
+
+    monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
+    monkeypatch.setattr(nl_query, "get_client", lambda: mock.Mock())
+    monkeypatch.setattr(nl_query, "translate", failing_translate)
+    with pytest.raises(HTTPException) as excinfo:
+        await nl_query_endpoint(q="anything")
+    assert excinfo.value.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_a_missing_api_key_surfaces_as_unavailable(monkeypatch):
+    async def fake_cache_get(key):
+        return None
+
+    monkeypatch.setattr(nl_query, "_translation_cache_get", fake_cache_get)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    with pytest.raises(HTTPException) as excinfo:
+        await nl_query_endpoint(q="anything")
+    # get_client() is inside the mapped block, so a missing key is a 503 rather than
+    # an unhandled error.
+    assert excinfo.value.status_code == 503
