@@ -23,16 +23,12 @@ interpretation into the :class:`QueryParams` this backend executes.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
-import os
 from typing import cast
 
 from fastapi import APIRouter, HTTPException, Query
 from ord_schema.agent.nl_query import (
-    DEFAULT_MODEL,
     TRANSLATION_CACHE_TTL_SECONDS,
-    TRANSLATION_CACHE_VERSION,
     MalformedQueryError,
     ModelRateLimitedError,
     ModelUnavailableError,
@@ -41,6 +37,7 @@ from ord_schema.agent.nl_query import (
     get_client,
     resolve_component,
     translate,
+    translation_cache_key,
 )
 from ord_schema.logging import get_logger
 from pydantic import BaseModel, ValidationError
@@ -185,13 +182,6 @@ class NLQueryResponse(BaseModel):
     dry_run: bool = False
 
 
-def _translation_cache_key(query: str) -> str:
-    """Returns the Redis cache key for a question under the current model and version."""
-    model = os.getenv("ORD_NL_QUERY_MODEL", DEFAULT_MODEL)
-    digest = hashlib.sha256(f"{model}\n{query.strip()}".encode()).hexdigest()
-    return f"nl_query:{TRANSLATION_CACHE_VERSION}:{digest}"
-
-
 async def _translation_cache_get(key: str) -> NLQuery | None:
     """Returns a cached translation, or None on a miss or unparseable payload."""
     raw = await _redis_get(key)
@@ -229,7 +219,7 @@ async def nl_query(
     With ``dry_run=true`` the question is translated and resolved but the database
     search is not executed -- useful for inspecting exactly what query would run.
     """
-    key = _translation_cache_key(q)
+    key = translation_cache_key(q)
     interpretation = await _translation_cache_get(key)
     if interpretation is not None:
         logger.info(f"NL query translation cache hit for {q!r}")

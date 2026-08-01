@@ -31,141 +31,25 @@ import argparse
 import asyncio
 import os
 import time
-from importlib import resources
 
 import anthropic
-import yaml
 from ord_schema.agent.nl_query import NLQuery, translate
+from ord_schema.agent.nl_query_eval import (
+    EvalCase,
+    check_interpretation,
+    load_cases,
+)
 from ord_schema.logging import get_logger
 from pydantic import BaseModel
-from rdkit import Chem
 
 from ord_interface.api.nl_query import build_query_params
 from ord_interface.api.search import run_query
 
 logger = get_logger(__name__)
 
-# Numeric filters the model must populate only when the question asks for them; an
-# unexpected value here is over-extraction and counts as a miss.
-_NUMERIC_FIELDS = (
-    "min_yield",
-    "max_yield",
-    "min_conversion",
-    "max_conversion",
-    "similarity_threshold",
-    "limit",
-)
-
 # Bound each DB search so a pathologically slow query (e.g. a common-scaffold
 # SUBSTRUCTURE match) is reported rather than hanging the whole sweep.
 SEARCH_TIMEOUT_SECONDS = 60.0
-
-
-class ComponentExpectation(BaseModel):
-    """Expected component constraint.
-
-    Identifiers are compared by structure, not by exact string: SMARTS and SMILES are
-    canonicalized with RDKit so equivalent patterns match (e.g. ``cB(O)O`` vs
-    ``[c]B(O)O``), while names that RDKit cannot parse fall back to a case- and
-    whitespace-insensitive string compare (so "4-aminophenol" still differs from
-    "aminophenol").
-    """
-
-    identifier: str
-    target: str
-    mode: str
-
-
-def _canonical_identifier(identifier: str, mode: str) -> str:
-    """Canonicalizes a component identifier for structure-aware comparison.
-
-    Args:
-        identifier: The component identifier (a name, SMILES, or SMARTS).
-        mode: The match mode; ``SMARTS`` is parsed as SMARTS, everything else as SMILES.
-
-    Returns:
-        The RDKit-canonical SMARTS or SMILES, or the lowercased, stripped identifier when
-        RDKit cannot parse it (e.g. a compound name awaiting resolution).
-    """
-    if mode == "SMARTS":
-        mol = Chem.MolFromSmarts(identifier)
-        if mol is not None:
-            return Chem.MolToSmarts(mol)
-    else:
-        mol = Chem.MolFromSmiles(identifier)
-        if mol is not None:
-            return Chem.MolToSmiles(mol)
-    return identifier.strip().lower()
-
-
-class CaseExpectation(BaseModel):
-    """Per-case expectations checked against the model's interpretation."""
-
-    components: list[ComponentExpectation] = []
-    min_yield: float | None = None
-    max_yield: float | None = None
-    min_conversion: float | None = None
-    max_conversion: float | None = None
-    similarity_threshold: float | None = None
-    limit: int | None = None
-
-
-class EvalCase(BaseModel):
-    """A single evaluation example: a question and its expected interpretation."""
-
-    question: str
-    expect: CaseExpectation
-
-
-def load_cases() -> list[EvalCase]:
-    """Loads the evaluation cases bundled alongside this module."""
-    raw = (resources.files("ord_schema.agent") / "nl_query_eval_cases.yaml").read_text(
-        encoding="utf-8"
-    )
-    return [EvalCase.model_validate(case) for case in yaml.safe_load(raw)]
-
-
-def check_interpretation(expect: CaseExpectation, interpretation: NLQuery) -> list[str]:
-    """Returns a list of mismatch messages between expectation and interpretation.
-
-    An empty list means the interpretation matched all expectations.
-
-    Args:
-        expect: The case's expected interpretation.
-        interpretation: The structured query the model produced.
-
-    Returns:
-        Human-readable mismatch descriptions; empty if the case passed.
-    """
-    mismatches = []
-    remaining = list(interpretation.components)
-    for wanted in expect.components:
-        for candidate in remaining:
-            if (
-                candidate.target == wanted.target
-                and candidate.mode == wanted.mode
-                and _canonical_identifier(candidate.identifier, candidate.mode)
-                == _canonical_identifier(wanted.identifier, wanted.mode)
-            ):
-                remaining.remove(candidate)
-                break
-        else:
-            mismatches.append(
-                f"missing component {wanted.identifier!r} "
-                f"({wanted.target}/{wanted.mode})"
-            )
-    for extra in remaining:
-        mismatches.append(
-            f"unexpected component {extra.identifier!r} ({extra.target}/{extra.mode})"
-        )
-    for field in _NUMERIC_FIELDS:
-        wanted_value = getattr(expect, field)
-        actual_value = getattr(interpretation, field)
-        if wanted_value is None and actual_value is not None:
-            mismatches.append(f"unexpected {field}={actual_value}")
-        elif wanted_value is not None and actual_value != wanted_value:
-            mismatches.append(f"{field}: expected {wanted_value}, got {actual_value}")
-    return mismatches
 
 
 class CaseResult(BaseModel):
