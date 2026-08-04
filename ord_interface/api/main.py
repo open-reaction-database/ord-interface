@@ -15,7 +15,6 @@
 """Open Reaction Database API."""
 
 import os
-import re
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -33,8 +32,7 @@ async def lifespan(*args, **kwargs):
         from testing.postgresql import Postgresql
 
         with Postgresql() as postgres:
-            url = re.sub("postgresql://", "postgresql+psycopg://", postgres.url())
-            setup_test_postgres(url)
+            setup_test_postgres(postgres.url())
             os.environ["ORD_INTERFACE_POSTGRES"] = postgres.url()
             yield
     else:

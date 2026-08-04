@@ -12,7 +12,6 @@ Web interface and FastAPI server for the [Open Reaction Database](https://open-r
   - `api/` — FastAPI server (search, view, queries)
   - `client/` — utilities for building the Postgres + rdkit-cartridge database
   - `visualization/` — Jinja filters and helpers for rendering reactions and molecules
-  - `editor/` — legacy reaction-submission UI (being removed)
 
 The React frontend talks to the FastAPI server, so both processes need to be running for the UI to work. On Windows, use WSL.
 
@@ -47,7 +46,6 @@ rest of the steps.
 ```shell
 cd ord_interface
 ./build_test_database.sh
-# Apple silicon: append `--build-arg="ARCH=aarch_64"`.
 docker build --file Dockerfile -t openreactiondatabase/ord-interface ..
 docker compose up
 ```

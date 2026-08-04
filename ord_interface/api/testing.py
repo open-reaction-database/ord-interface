@@ -20,12 +20,18 @@ from glob import glob
 from ord_schema.message_helpers import load_message
 from ord_schema.orm.database import add_dataset, prepare_database, update_derived_data
 from ord_schema.proto import dataset_pb2
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, make_url
 from sqlalchemy.orm import Session
 
 
 def setup_test_postgres(url: str) -> None:
-    """Adds test data to a postgres database."""
+    """Adds test data to a postgres database.
+
+    Args:
+        url: Postgres connection URL. Any driver it names is replaced with
+            psycopg (v3), the only Postgres driver we install; SQLAlchemy would
+            otherwise reach for psycopg2 on a bare ``postgresql://`` URL.
+    """
     datasets = [
         load_message(filename, dataset_pb2.Dataset)
         for filename in glob(
@@ -33,7 +39,9 @@ def setup_test_postgres(url: str) -> None:
         )
     ]
     assert datasets
-    engine = create_engine(url, future=True)
+    engine = create_engine(
+        make_url(url).set(drivername="postgresql+psycopg"), future=True
+    )
     rdkit_cartridge = prepare_database(engine)
     with Session(engine) as session:
         for dataset in datasets:

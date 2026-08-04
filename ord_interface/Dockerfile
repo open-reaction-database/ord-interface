@@ -18,14 +18,9 @@
 
 FROM python:3.11
 
-# default-jre is required for running the closure compiler linter.
-# For this next line, see:
-# https://github.com/geerlingguy/ansible-role-java/issues/64#issuecomment-597132394
-RUN mkdir -p /usr/share/man/man1/
 RUN apt-get update \
    && apt-get install -y \
    build-essential \
-   default-jre \
    nginx \
    npm \
    procps \
@@ -33,31 +28,11 @@ RUN apt-get update \
    && apt-get clean \
    && rm -rf /var/lib/apt/lists/*
 
-# Fetch and build editor dependencies.
+# Fetch the Ketcher distribution served by the SPA.
 # NOTE(kearnes): Do this before COPYing the local state so it can be cached.
 WORKDIR /app/ord-interface/ord_interface
 RUN wget https://github.com/epam/ketcher/releases/download/v2.5.1/ketcher-standalone-2.5.1.zip \
    && unzip ketcher-standalone-2.5.1.zip
-WORKDIR /app/ord-interface/ord_interface/editor
-RUN wget https://github.com/google/closure-library/archive/v20200517.tar.gz \
-   && tar -xzf v20200517.tar.gz \
-   && rm v20200517.tar.gz
-RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protobuf-js-3.14.0.tar.gz \
-   && tar -xzf protobuf-js-3.14.0.tar.gz \
-   && rm protobuf-js-3.14.0.tar.gz
-ARG ARCH=x86_64
-RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-${ARCH}.zip \
-   && unzip protoc-3.14.0-linux-${ARCH}.zip
-ENV PATH="/app/ord-interface/ord_interface/editor/bin:${PATH}"
-RUN wget https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-3.3.js \
-   && mkdir -p externs \
-   && mv jquery-3.3.js externs
-RUN npm install google-closure-compiler@20220803
-WORKDIR /app
-RUN wget https://github.com/open-reaction-database/ord-schema/archive/refs/tags/v0.3.93.zip \
-   && unzip v0.3.93.zip \
-   && rm v0.3.93.zip \
-   && mv ord-schema-0.3.93 ord-schema
 
 # Install dependencies.
 WORKDIR /app/ord-interface
@@ -68,12 +43,6 @@ ENV UV_PROJECT_ENVIRONMENT=/usr/local \
 COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-# Copy the local state.
-COPY ord_interface/editor/js/ ord_interface/editor/js/
-COPY ord_interface/editor/build.sh ord_interface/editor
-WORKDIR /app/ord-interface/ord_interface/editor
-RUN ./build.sh
-WORKDIR /app/ord-interface
 # Build the SPA (React + TypeScript + Vite).
 COPY app/ app/
 WORKDIR /app/ord-interface/app
@@ -88,10 +57,7 @@ RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/pu
    && npm run build \
    && mv dist/ /app/ord-interface/spa
 WORKDIR /app/ord-interface
-# Copy the rest of the editor files.
-COPY ord_interface/editor/ ord_interface/editor/
 # Now copy everything else.
-COPY ord_interface/interface.py ord_interface/
 COPY ord_interface/api/ ord_interface/api/
 COPY ord_interface/visualization/ ord_interface/visualization/
 RUN uv sync --frozen --no-dev
