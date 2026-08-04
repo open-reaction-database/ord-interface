@@ -5,9 +5,8 @@
 Set up your environment by installing postgres with the RDKit cartridge:
 
 ```shell
-conda install postgresql python=3.10
-# Note that rdkit-postgresql is currently only available on x86_64.
-conda install -c rdkit rdkit-postgresql
+conda install postgresql python=3.11
+conda install -c conda-forge rdkit-postgresql
 cd ord-interface
 pip install -e ".[tests]"
 ```
@@ -26,7 +25,7 @@ This does a few things:
 
 To view the API docs, navigate to http://localhost:8000/docs.
 
-To test with the Vue interface:
+To test with the React interface:
 
 ```shell
 # In one terminal session:

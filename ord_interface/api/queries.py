@@ -45,14 +45,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from base64 import b64decode, b64encode
 from enum import Enum, auto
+from typing import Any, LiteralString
 
 from ord_schema import message_helpers, validations
 from ord_schema.logging import get_logger
 from ord_schema.proto import reaction_pb2
-from psycopg import AsyncCursor
+from psycopg import AsyncCursor, sql
 from pydantic import BaseModel
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
+
+DictCursor = AsyncCursor[dict[str, Any]]
 
 logger = get_logger(__name__)
 
@@ -64,6 +67,20 @@ class ReactionQuery(ABC):
     @abstractmethod
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
+
+    @property
+    def session_config(self) -> dict[str, str]:
+        """RDKit GUC settings required for index-assisted execution.
+
+        Some RDKit operators read tuning parameters from session settings rather
+        than from the query text (e.g. the similarity threshold for ``%`` and the
+        chirality flag for ``@>``). ``run_queries`` applies these via
+        ``set_config`` before executing.
+
+        Returns:
+            Mapping of GUC name to value, as strings for ``set_config()``.
+        """
+        return {}
 
 
 class DatasetIdQuery(ReactionQuery):
@@ -86,7 +103,7 @@ class DatasetIdQuery(ReactionQuery):
         query = """
             SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN dataset ON dataset.id = reaction.dataset_id
+            JOIN ord.dataset ON dataset.id = reaction.dataset_id
             WHERE dataset.dataset_id = ANY (%s)
         """
         return query, [self._dataset_ids]
@@ -136,8 +153,9 @@ class ReactionSmartsQuery(ReactionQuery):
         """Returns the query and any query parameters."""
         query = """
             SELECT DISTINCT reaction.reaction_id
-            FROM reaction
-            JOIN rdkit.reactions ON rdkit.reactions.id = reaction.rdkit_reaction_id
+            FROM ord.reaction
+            JOIN derived.reaction_smiles ON reaction_smiles.reaction_id = reaction.id
+            JOIN rdkit.reactions ON rdkit.reactions.id = reaction_smiles.rdkit_reaction_id
             WHERE rdkit.reactions.reaction @> reaction_from_smarts(%s)
         """
         return query, [self._reaction_smarts]
@@ -146,7 +164,9 @@ class ReactionSmartsQuery(ReactionQuery):
 class ReactionConversionQuery(ReactionQuery):
     """Looks up reactions by conversion."""
 
-    def __init__(self, min_conversion: float | None, max_conversion: float | None) -> None:
+    def __init__(
+        self, min_conversion: float | None, max_conversion: float | None
+    ) -> None:
         """Initializes the query.
 
         Args:
@@ -154,7 +174,9 @@ class ReactionConversionQuery(ReactionQuery):
             max_conversion: Maximum conversion, as a percentage.
         """
         if min_conversion is None and max_conversion is None:
-            raise ValueError("At least one of min_conversion or max_conversion must be specified")
+            raise ValueError(
+                "At least one of min_conversion or max_conversion must be specified"
+            )
         self._min_conversion = min_conversion
         self._max_conversion = max_conversion
 
@@ -165,7 +187,7 @@ class ReactionConversionQuery(ReactionQuery):
             SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
-            JOIN percentage on percentage.reaction_outcome_id = reaction_outcome.id
+            JOIN ord.percentage on percentage.reaction_outcome_id = reaction_outcome.id
         """
         if self._min_conversion is not None and self._max_conversion is not None:
             query += "WHERE percentage.value >= %s AND percentage.value <= %s\n"
@@ -203,7 +225,7 @@ class ReactionYieldQuery(ReactionQuery):
             JOIN ord.reaction_outcome on reaction_outcome.reaction_id = reaction.id
             JOIN ord.product_compound on product_compound.reaction_outcome_id = reaction_outcome.id
             JOIN ord.product_measurement on product_measurement.product_compound_id = product_compound.id
-            JOIN percentage on percentage.product_measurement_id = product_measurement.id
+            JOIN ord.percentage on percentage.product_measurement_id = product_measurement.id
             WHERE product_measurement.type = 'YIELD'
         """
         params = []
@@ -243,7 +265,7 @@ class DoiQuery(ReactionQuery):
         query = """
             SELECT DISTINCT reaction.reaction_id
             FROM ord.reaction
-            JOIN reaction_provenance ON reaction_provenance.reaction_id = reaction.id
+            JOIN ord.reaction_provenance ON reaction_provenance.reaction_id = reaction.id
             WHERE reaction_provenance.doi = ANY (%s)
         """
         return query, [self._dois]
@@ -266,7 +288,7 @@ class ReactionComponentQuery(ReactionQuery):
         SUBSTRUCTURE = auto()
         SMARTS = auto()
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         pattern: str,
         target: Target,
@@ -296,37 +318,46 @@ class ReactionComponentQuery(ReactionQuery):
         self._use_chirality = use_chirality
 
     @property
+    def _mols_join(self) -> LiteralString:
+        """Returns the JOINs linking ord.reaction to rdkit.mols for the target components."""
+        if self._target == ReactionComponentQuery.Target.INPUT:
+            return """
+            JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
+            JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
+            JOIN derived.compound_smiles ON compound_smiles.compound_id = compound.id
+            JOIN rdkit.mols ON rdkit.mols.id = compound_smiles.rdkit_mol_id
+            """
+        return """
+            JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
+            JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+            JOIN derived.product_compound_smiles ON product_compound_smiles.product_compound_id = product_compound.id
+            JOIN rdkit.mols ON rdkit.mols.id = product_compound_smiles.rdkit_mol_id
+            """
+
+    @property
+    def is_similarity(self) -> bool:
+        """Whether this is a similarity query, whose matches can be ranked by score."""
+        return self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR
+
+    @property
     def query_and_parameters(self) -> tuple[str, list]:
         """Returns the query and any query parameters."""
-        if self._target == ReactionComponentQuery.Target.INPUT:
-            mols_sql = """
-            JOIN reaction_input ON reaction_input.reaction_id = reaction.id
-            JOIN compound ON compound.reaction_input_id = reaction_input.id
-            JOIN rdkit.mols ON rdkit.mols.id = compound.rdkit_mol_id
-            """
-        else:
-            mols_sql = """
-            JOIN reaction_outcome ON reaction_outcome.reaction_id = reaction.id
-            JOIN product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
-            JOIN rdkit.mols ON rdkit.mols.id = product_compound.rdkit_mol_id
-            """
+        mols_sql = self._mols_join
         if self._match_mode == ReactionComponentQuery.MatchMode.EXACT:
             predicate_sql = "rdkit.mols.smiles = %s"
             params = [Chem.CanonSmiles(self._pattern)]
         elif self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR:
-            predicate_sql = "tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s)) >= %s"
-            params = [self._pattern, self._similarity_threshold]
+            # The %% (Tanimoto) operator uses the GiST index on morgan_bfp; the
+            # threshold is supplied via rdkit.tanimoto_threshold (session_config).
+            predicate_sql = "rdkit.mols.morgan_bfp %% morganbv_fp(%s)"
+            params = [self._pattern]
         elif self._match_mode == ReactionComponentQuery.MatchMode.SUBSTRUCTURE:
-            if self._use_chirality:
-                predicate_sql = "substruct_chiral(rdkit.mols.mol, %s)"
-            else:
-                predicate_sql = "substruct(rdkit.mols.mol, %s)"
+            # The @> (substructure) operator uses the GiST index on mol; chirality
+            # is controlled via rdkit.do_chiral_sss (session_config).
+            predicate_sql = "rdkit.mols.mol @> %s::mol"
             params = [self._pattern]
         elif self._match_mode == ReactionComponentQuery.MatchMode.SMARTS:
-            if self._use_chirality:
-                predicate_sql = "substruct_chiral(rdkit.mols.mol, %s::qmol)"
-            else:
-                predicate_sql = "substruct(rdkit.mols.mol, %s::qmol)"
+            predicate_sql = "rdkit.mols.mol @> %s::qmol"
             params = [self._pattern]
         else:
             raise NotImplementedError(f"Unsupported match_mode: {self._match_mode}")
@@ -338,8 +369,51 @@ class ReactionComponentQuery(ReactionQuery):
         """
         return query, params
 
+    def similarity_score_query(self) -> tuple[LiteralString, list]:
+        """Returns a query ranking reactions by similarity, plus its leading parameter.
 
-async def fetch_results(cursor: AsyncCursor) -> list[str]:
+        Each reaction is scored by the greatest Tanimoto similarity to the query
+        pattern among its components on the searched side -- reactants or products,
+        matching this predicate's target -- and the results are ordered by that score,
+        descending. The two sides are never combined. The caller supplies the
+        candidate reaction IDs (and any LIMIT) as the remaining parameters; scoring
+        runs over that already-filtered set, so the per-row ``tanimoto_sml()`` calls
+        are cheap.
+
+        Raises:
+            ValueError: If this is not a similarity query.
+        """
+        if not self.is_similarity:
+            raise ValueError("similarity_score_query is only valid for SIMILAR queries")
+        query = f"""
+            SELECT reaction.reaction_id,
+                   MAX(tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s))) AS similarity
+            FROM ord.reaction
+            {self._mols_join}
+            WHERE reaction.reaction_id = ANY (%s)
+            GROUP BY reaction.reaction_id
+            ORDER BY similarity DESC, reaction.reaction_id
+        """
+        return query, [self._pattern]
+
+    @property
+    def session_config(self) -> dict[str, str]:
+        """RDKit GUC settings required for index-assisted execution."""
+        if self._match_mode == ReactionComponentQuery.MatchMode.SIMILAR:
+            return {"rdkit.tanimoto_threshold": str(self._similarity_threshold)}
+        if (
+            self._match_mode
+            in (
+                ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
+                ReactionComponentQuery.MatchMode.SMARTS,
+            )
+            and self._use_chirality
+        ):
+            return {"rdkit.do_chiral_sss": "true"}
+        return {}
+
+
+async def fetch_results(cursor: DictCursor) -> list[str]:
     """Fetches query results.
 
     Args:
@@ -350,13 +424,15 @@ async def fetch_results(cursor: AsyncCursor) -> list[str]:
     """
     reaction_ids = set()
     async for row in cursor:
-        assert row["reaction_id"] not in reaction_ids  # Sanity check for well-written queries.
+        assert (
+            row["reaction_id"] not in reaction_ids
+        )  # Sanity check for well-written queries.
         reaction_ids.add(row["reaction_id"])
     return list(reaction_ids)
 
 
 async def run_queries(
-    cursor: AsyncCursor,
+    cursor: DictCursor,
     reaction_queries: list[ReactionQuery] | ReactionQuery,
     limit: int | None = None,
 ) -> list[str]:
@@ -368,24 +444,77 @@ async def run_queries(
         limit: Integer maximum number of matches. If None (the default), no limit is set.
 
     Returns:
-        List of reaction IDs.
+        List of reaction IDs. When the query contains exactly one similarity
+        predicate, the IDs are ordered by descending similarity; otherwise the
+        order is unspecified.
     """
-    if not isinstance(reaction_queries, list):
-        reaction_queries = [reaction_queries]
+    queries_list: list[ReactionQuery] = (
+        [reaction_queries]
+        if isinstance(reaction_queries, ReactionQuery)
+        else reaction_queries
+    )
+    similarity_queries = [
+        query
+        for query in queries_list
+        if isinstance(query, ReactionComponentQuery) and query.is_similarity
+    ]
+    # Ranking needs a single similarity predicate to define the order; with zero or
+    # several, results are returned unordered.
+    ranking_query = similarity_queries[0] if len(similarity_queries) == 1 else None
+
     queries, combined_params = [], []
-    for reaction_query in reaction_queries:
+    config: dict[str, str] = {}
+    for reaction_query in queries_list:
         query, params = reaction_query.query_and_parameters
         queries.append(query)
         combined_params.extend(params)
+        for name, value in reaction_query.session_config.items():
+            existing = config.setdefault(name, value)
+            if existing != value:
+                raise ValueError(
+                    f"Conflicting values for {name}: {existing} != {value}"
+                )
     combined_query = "\nINTERSECT\n".join(queries)
-    if limit:
-        # TODO(skearnes): Adding LIMIT can significantly slow down queries, especially if they return few results.
-        # See https://stackoverflow.com/q/21385555.
+    if limit and ranking_query is None:
+        # LIMIT sits on top of the whole INTERSECT. Each branch is materialized
+        # (sort + unique for DISTINCT) before the set operation, so this truncates
+        # the final result rather than bounding the per-branch index scans. When
+        # ranking, the LIMIT is deferred to the scoring step so it selects the most
+        # similar matches rather than an arbitrary subset.
         combined_query += "LIMIT %s"
         combined_params.append(limit)
+    # Apply RDKit GUCs so the substructure/similarity operators can use their GiST
+    # indexes. These are set transaction-locally (set_config local=true), so they
+    # apply to the queries below and reset when the transaction ends -- safe even if
+    # the connection is later returned to a pool and reused.
+    for name, value in config.items():
+        await cursor.execute("SELECT set_config(%s, %s, true)", (name, value))
     logger.debug((combined_query, combined_params))
     await cursor.execute(combined_query, combined_params)
-    return await fetch_results(cursor)
+    reaction_ids = await fetch_results(cursor)
+    if ranking_query is not None:
+        reaction_ids = await _rank_by_similarity(
+            cursor, ranking_query, reaction_ids, limit
+        )
+    return reaction_ids
+
+
+async def _rank_by_similarity(
+    cursor: DictCursor,
+    ranking_query: ReactionComponentQuery,
+    reaction_ids: list[str],
+    limit: int | None,
+) -> list[str]:
+    """Returns the matched reaction IDs ordered by descending similarity, limited to ``limit``."""
+    if not reaction_ids:
+        return []
+    query, params = ranking_query.similarity_score_query()
+    params.append(reaction_ids)
+    if limit:
+        query += "\nLIMIT %s"
+        params.append(limit)
+    await cursor.execute(query, params)
+    return [row["reaction_id"] async for row in cursor]
 
 
 class QueryResult(BaseModel):
@@ -399,27 +528,40 @@ class QueryResult(BaseModel):
     def reaction(self) -> reaction_pb2.Reaction:
         return reaction_pb2.Reaction.FromString(b64decode(self.proto))
 
-    def __eq__(self, other: QueryResult) -> bool:
-        return self.dataset_id == other.dataset_id and self.reaction_id == other.reaction_id
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, QueryResult):
+            return NotImplemented
+        return (
+            self.dataset_id == other.dataset_id
+            and self.reaction_id == other.reaction_id
+        )
 
 
-async def fetch_reactions(cursor: AsyncCursor, reaction_ids: list[str]) -> list[QueryResult]:
-    """Fetches dataset and proto information for a list of reaction IDs."""
+async def fetch_reactions(
+    cursor: DictCursor, reaction_ids: list[str]
+) -> list[QueryResult]:
+    """Fetches dataset and proto information for a list of reaction IDs.
+
+    Results preserve the order of ``reaction_ids`` (e.g. similarity ranking from
+    ``run_queries``); duplicate or unknown IDs are dropped.
+    """
+    unique_ids = list(dict.fromkeys(reaction_ids))  # De-dup, preserving order.
     query = """
-        SELECT dataset.dataset_id, reaction.reaction_id, reaction.proto
+        SELECT dataset.dataset_id, reaction.reaction_id, reactions.proto
         FROM ord.reaction
         JOIN ord.dataset ON dataset.id = reaction.dataset_id
+        JOIN public.reactions ON reactions.reaction_id = reaction.reaction_id
         WHERE reaction.reaction_id = ANY (%s)
     """
-    await cursor.execute(query, (list(set(reaction_ids)),))
-    results = []
+    await cursor.execute(query, (unique_ids,))
+    results_by_id = {}
     async for row in cursor:
-        results.append(
-            QueryResult(
-                dataset_id=row["dataset_id"], reaction_id=row["reaction_id"], proto=b64encode(row["proto"]).decode()
-            )
+        results_by_id[row["reaction_id"]] = QueryResult(
+            dataset_id=row["dataset_id"],
+            reaction_id=row["reaction_id"],
+            proto=b64encode(row["proto"]).decode(),
         )
-    return results
+    return [results_by_id[rid] for rid in unique_ids if rid in results_by_id]
 
 
 class StatsResult(BaseModel):
@@ -429,47 +571,95 @@ class StatsResult(BaseModel):
     times_appearing: int
 
 
-async def fetch_dataset_most_used_smiles_for_inputs(
-    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+async def _fetch_dataset_most_used_smiles(
+    cursor: DictCursor,
+    dataset_id: str,
+    *,
+    compound_table: str,
+    join_table: str,
+    foreign_key: str,
+    smiles_table: str,
+    smiles_foreign_key: str,
+    limit: int,
 ) -> list[StatsResult]:
-    """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
-    query = """
-            SELECT smiles, COUNT(*) as times_appearing
-            FROM ord.compound
-            JOIN ord.reaction_input ON ord.compound.reaction_input_id = ord.reaction_input.id
-            JOIN ord.reaction ON ord.reaction_input.reaction_id = ord.reaction.id
+    """Fetches the top K most used SMILES for a dataset, joined through the given tables.
+
+    Args:
+        cursor: Database cursor.
+        dataset_id: Dataset to aggregate over.
+        compound_table: Compound table linking to reactions, e.g. "compound" or
+            "product_compound".
+        join_table: Table linking compounds to reactions, e.g. "reaction_input".
+        foreign_key: Column on ``compound_table`` referencing ``join_table``.
+        smiles_table: Derived table holding the generated SMILES, e.g.
+            "compound_smiles" or "product_compound_smiles".
+        smiles_foreign_key: Column on ``smiles_table`` referencing ``compound_table``.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        Most frequently appearing SMILES, in descending order of frequency.
+    """
+    # Compose schema-qualified identifiers safely rather than interpolating raw
+    # strings into the SQL text. The SMILES live in the derived schema, one row per
+    # compound, joined back to the compound table by its primary key.
+    compound = sql.Identifier("ord", compound_table)
+    join = sql.Identifier("ord", join_table)
+    smiles = sql.Identifier("derived", smiles_table)
+    query = sql.SQL(
+        """
+            SELECT {smiles}.smiles AS smiles, COUNT(*) AS times_appearing
+            FROM {compound}
+            JOIN {join} ON {compound}.{foreign_key} = {join}.id
+            JOIN ord.reaction ON {join}.reaction_id = ord.reaction.id
             JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
+            JOIN {smiles} ON {smiles}.{smiles_foreign_key} = {compound}.id
             WHERE ord.dataset.dataset_id = %s
-            AND smiles IS NOT NULL
-            GROUP BY smiles
+            AND {smiles}.smiles IS NOT NULL
+            GROUP BY {smiles}.smiles
             ORDER BY times_appearing DESC
             LIMIT %s
         """
+    ).format(
+        compound=compound,
+        join=join,
+        foreign_key=sql.Identifier(foreign_key),
+        smiles=smiles,
+        smiles_foreign_key=sql.Identifier(smiles_foreign_key),
+    )
     await cursor.execute(query, (dataset_id, limit))
     results = []
     async for row in cursor:
         results.append(StatsResult(**row))
     return results
+
+
+async def fetch_dataset_most_used_smiles_for_inputs(
+    cursor: DictCursor, dataset_id: str, limit: int = 30
+) -> list[StatsResult]:
+    """Fetches the top K most used SMILES molecules in terms of reaction inputs for a given dataset."""
+    return await _fetch_dataset_most_used_smiles(
+        cursor,
+        dataset_id,
+        compound_table="compound",
+        join_table="reaction_input",
+        foreign_key="reaction_input_id",
+        smiles_table="compound_smiles",
+        smiles_foreign_key="compound_id",
+        limit=limit,
+    )
 
 
 async def fetch_dataset_most_used_smiles_for_products(
-    cursor: AsyncCursor, dataset_id: str, limit: int = 30
+    cursor: DictCursor, dataset_id: str, limit: int = 30
 ) -> list[StatsResult]:
     """Fetches the top K most used SMILES molecules in terms of reaction products for a given dataset."""
-    query = """
-            SELECT smiles, COUNT(*) as times_appearing
-            FROM ord.product_compound
-            JOIN ord.reaction_outcome ON ord.product_compound.reaction_outcome_id = ord.reaction_outcome.id
-            JOIN ord.reaction ON ord.reaction_outcome.reaction_id = ord.reaction.id
-            JOIN ord.dataset ON ord.reaction.dataset_id = ord.dataset.id
-            WHERE ord.dataset.dataset_id = %s
-            AND smiles IS NOT NULL
-            GROUP BY smiles
-            ORDER BY times_appearing DESC
-            LIMIT %s
-        """
-    await cursor.execute(query, (dataset_id, limit))
-    results = []
-    async for row in cursor:
-        results.append(StatsResult(**row))
-    return results
+    return await _fetch_dataset_most_used_smiles(
+        cursor,
+        dataset_id,
+        compound_table="product_compound",
+        join_table="reaction_outcome",
+        foreign_key="reaction_outcome_id",
+        smiles_table="product_compound_smiles",
+        smiles_foreign_key="product_compound_id",
+        limit=limit,
+    )

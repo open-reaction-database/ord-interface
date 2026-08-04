@@ -20,7 +20,6 @@ given an RDKit molecule object: mol_to_svg and mol_to_png.
 import base64
 import io
 import re
-from typing import Optional
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -28,8 +27,6 @@ from rdkit import Chem
 from rdkit.Chem import Draw, rdDepictor
 
 rdDepictor.SetPreferCoordGen(True)
-
-# pylint: disable=unsubscriptable-object
 
 
 def trim_image_whitespace(image: Image.Image, padding: int = 0) -> Image.Image:
@@ -74,13 +71,13 @@ def trim_image_whitespace(image: Image.Image, padding: int = 0) -> Image.Image:
     return ImageOps.expand(image, border=padding, fill=255)
 
 
-def mol_to_svg(  # pylint: disable=inconsistent-return-statements
+def mol_to_svg(
     mol: Chem.Mol,
     min_size: int = 50,
     max_size: int = 300,
     bond_length: int = 25,
     padding: int = 10,
-) -> Optional[str]:
+) -> str | None:
     """Creates a (cropped) SVG molecule drawing as a string.
 
     Args:
@@ -115,7 +112,9 @@ def mol_to_svg(  # pylint: disable=inconsistent-return-statements
         return match.group(1)
 
 
-def _draw_svg(mol: Chem.Mol, size_x: int, size_y: int, bond_length: int) -> Draw.MolDraw2DSVG:
+def _draw_svg(
+    mol: Chem.Mol, size_x: int, size_y: int, bond_length: int
+) -> Draw.MolDraw2DSVG:
     """Creates a canvas and draws a SVG.
 
     Args:
@@ -135,7 +134,9 @@ def _draw_svg(mol: Chem.Mol, size_x: int, size_y: int, bond_length: int) -> Draw
     return drawer
 
 
-def mol_to_png(mol: Chem.Mol, max_size: int = 1000, bond_length: int = 25, png_quality: int = 70) -> str:
+def mol_to_png(
+    mol: Chem.Mol, max_size: int = 1000, bond_length: int = 25, png_quality: int = 70
+) -> str:
     """Creates a (cropped) PNG molecule drawing as a string.
 
     Args:

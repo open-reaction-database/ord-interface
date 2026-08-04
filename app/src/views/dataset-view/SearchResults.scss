@@ -1,0 +1,90 @@
+/**
+ * Copyright 2026 Open Reaction Database Project Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// SearchResults component styles
+@use '../../styles/vars.scss' as vars;
+
+.search-results {
+  &__action-buttons {
+    margin: -2.5rem 0 1rem; // bring button row inline with title without having to pass too much into EntityTable
+    display: flex;
+    justify-content: flex-end;
+    column-gap: 0.5rem;
+
+    button {
+      padding: 0.5rem 1rem;
+      background-color: vars.$linkblue;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: background-color 0.25s;
+
+      &:hover:not(:disabled) {
+        background-color: vars.$hoverblue;
+      }
+
+      &:disabled {
+        background-color: vars.$darkgrey;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__reaction-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__checkbox {
+    margin-top: 1rem;
+    cursor: pointer;
+  }
+
+  &__view-selected {
+    position: fixed;
+    bottom: 2rem;
+    right: 6.5rem;
+    z-index: 1000;
+    transition: opacity 0.25s ease-in-out;
+  }
+
+  &__view-selected-button {
+    padding: 0.5rem 1rem;
+    color: white;
+    background-color: vars.$linkblue;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    box-shadow: 0 0 5px vars.$darkgrey;
+    animation: bounce 5s infinite ease-in-out;
+
+    @keyframes bounce {
+      0%,
+      20% {
+        transform: translateY(0);
+      }
+      10% {
+        transform: translateY(-10px);
+      }
+    }
+  }
+
+  @media (max-width: 1000px) {
+    margin-top: 2.5rem;
+  }
+}

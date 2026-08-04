@@ -18,13 +18,23 @@ import logging
 from ord_schema.orm import database
 
 from ord_interface.api.testing import setup_test_postgres
-from ord_interface.client import POSTGRES_DB, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER
+from ord_interface.client import (
+    POSTGRES_DB,
+    POSTGRES_HOST,
+    POSTGRES_PASSWORD,
+    POSTGRES_PORT,
+    POSTGRES_USER,
+)
 
 
 def main():
     logging.disable(logging.DEBUG)
     connection_string = database.get_connection_string(
-        database=POSTGRES_DB, username=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST, port=POSTGRES_PORT
+        database=POSTGRES_DB,
+        username=POSTGRES_USER,
+        password=POSTGRES_PASSWORD,
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
     )
     setup_test_postgres(connection_string)
 

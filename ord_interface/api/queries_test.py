@@ -13,6 +13,8 @@
 # limitations under the License.
 """Tests for ord_interface.api.queries."""
 
+from typing import Any
+
 import pytest
 
 from ord_interface.api.queries import (
@@ -32,7 +34,9 @@ from ord_interface.api.queries import (
 
 @pytest.mark.asyncio
 async def test_fetch_reactions(test_cursor):
-    results = await fetch_reactions(test_cursor, ["ord-1e8382606d99485b9859da6a92f80a72"])
+    results = await fetch_reactions(
+        test_cursor, ["ord-1e8382606d99485b9859da6a92f80a72"]
+    )
     assert len(results) == 1
     result = results[0]
     assert result.dataset_id == "ord_dataset-b440f8c90b6343189093770060fc4098"
@@ -81,7 +85,9 @@ async def test_reaction_yield_query(test_cursor):
 async def test_doi_query(test_cursor):
     dois = ["10.1126/science.1255525"]
     query = DoiQuery(dois)
-    results = await fetch_reactions(test_cursor, await run_queries(test_cursor, query, limit=10))
+    results = await fetch_reactions(
+        test_cursor, await run_queries(test_cursor, query, limit=10)
+    )
     assert len(results) == 10
     for result in results:
         assert result.reaction.provenance.doi in dois
@@ -90,7 +96,9 @@ async def test_doi_query(test_cursor):
 @pytest.mark.asyncio
 async def test_exact_query(test_cursor):
     query = ReactionComponentQuery(
-        "[Br]C1=CC=C(C(C)=O)C=C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.EXACT
+        "[Br]C1=CC=C(C(C)=O)C=C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.EXACT,
     )
     results = await run_queries(test_cursor, query, limit=5)
     assert len(results) == 5
@@ -99,7 +107,9 @@ async def test_exact_query(test_cursor):
 @pytest.mark.asyncio
 async def test_substructure_query(test_cursor):
     query = ReactionComponentQuery(
-        "C", ReactionComponentQuery.Target.OUTPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+        "C",
+        ReactionComponentQuery.Target.OUTPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
     )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
@@ -108,12 +118,16 @@ async def test_substructure_query(test_cursor):
 @pytest.mark.asyncio
 async def test_chiral_substructure_query(test_cursor):
     query = ReactionComponentQuery(
-        "OC1CC(O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+        "OC1CC(O)C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
     )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
     query = ReactionComponentQuery(
-        "O[C@H]1C[C@H](O)C1", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+        "O[C@H]1C[C@H](O)C1",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
     )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
@@ -137,14 +151,18 @@ async def test_chiral_substructure_query(test_cursor):
 
 @pytest.mark.asyncio
 async def test_smarts_query(test_cursor):
-    query = ReactionComponentQuery("[#6]", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SMARTS)
+    query = ReactionComponentQuery(
+        "[#6]",
+        ReactionComponentQuery.Target.INPUT,
+        ReactionComponentQuery.MatchMode.SMARTS,
+    )
     results = await run_queries(test_cursor, query, limit=10)
     assert len(results) == 10
 
 
 @pytest.mark.asyncio
 async def test_similarity_query(test_cursor):
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "pattern": "CC=O",
         "target": ReactionComponentQuery.Target.INPUT,
         "match_mode": ReactionComponentQuery.MatchMode.SIMILAR,
@@ -157,23 +175,84 @@ async def test_similarity_query(test_cursor):
     assert len(results) == 10
 
 
+async def _max_similarities(test_cursor, reaction_ids, pattern, target):
+    """Returns each reaction's greatest component Tanimoto similarity to ``pattern`` on ``target``'s side.
+
+    Independently recomputes the ranking score, mirroring
+    ``ReactionComponentQuery._mols_join`` for INPUT vs OUTPUT targets.
+    """
+    if target == ReactionComponentQuery.Target.INPUT:
+        join = """
+        JOIN ord.reaction_input ON reaction_input.reaction_id = reaction.id
+        JOIN ord.compound ON compound.reaction_input_id = reaction_input.id
+        JOIN derived.compound_smiles ON compound_smiles.compound_id = compound.id
+        JOIN rdkit.mols ON rdkit.mols.id = compound_smiles.rdkit_mol_id
+        """
+    else:
+        join = """
+        JOIN ord.reaction_outcome ON reaction_outcome.reaction_id = reaction.id
+        JOIN ord.product_compound ON product_compound.reaction_outcome_id = reaction_outcome.id
+        JOIN derived.product_compound_smiles ON product_compound_smiles.product_compound_id = product_compound.id
+        JOIN rdkit.mols ON rdkit.mols.id = product_compound_smiles.rdkit_mol_id
+        """
+    await test_cursor.execute(
+        f"""
+        SELECT reaction.reaction_id,
+               MAX(tanimoto_sml(rdkit.mols.morgan_bfp, morganbv_fp(%s))) AS similarity
+        FROM ord.reaction
+        {join}
+        WHERE reaction.reaction_id = ANY (%s)
+        GROUP BY reaction.reaction_id
+        """,
+        [pattern, reaction_ids],
+    )
+    return {row["reaction_id"]: row["similarity"] async for row in test_cursor}
+
+
+@pytest.mark.asyncio
+async def test_similarity_ranking(test_cursor):
+    kwargs: dict[str, Any] = {
+        "pattern": "CC=O",
+        "target": ReactionComponentQuery.Target.INPUT,
+        "match_mode": ReactionComponentQuery.MatchMode.SIMILAR,
+    }
+    query = ReactionComponentQuery(**kwargs, similarity_threshold=0.05)
+    ranked = await run_queries(test_cursor, query)
+    assert len(ranked) > 10  # Enough matches to make the top-N check meaningful.
+    # Results are ordered by descending best-component similarity.
+    scores = await _max_similarities(
+        test_cursor, ranked, "CC=O", ReactionComponentQuery.Target.INPUT
+    )
+    ordered = [scores[reaction_id] for reaction_id in ranked]
+    assert ordered == sorted(ordered, reverse=True)
+    # Limiting returns the most similar matches, not an arbitrary subset.
+    top = await run_queries(test_cursor, query, limit=10)
+    assert top == ranked[:10]
+
+
 @pytest.mark.asyncio
 async def test_bad_smiles(test_cursor):
     with pytest.raises(ValueError, match="Cannot parse pattern"):
         ReactionComponentQuery(
-            "invalid_smiles", ReactionComponentQuery.Target.INPUT, ReactionComponentQuery.MatchMode.SUBSTRUCTURE
+            "invalid_smiles",
+            ReactionComponentQuery.Target.INPUT,
+            ReactionComponentQuery.MatchMode.SUBSTRUCTURE,
         )
 
 
 @pytest.mark.asyncio
 async def test_fetch_dataset_most_used_smiles_for_inputs(test_cursor):
     dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
-    results = await fetch_dataset_most_used_smiles_for_inputs(test_cursor, dataset_id, limit=10)
+    results = await fetch_dataset_most_used_smiles_for_inputs(
+        test_cursor, dataset_id, limit=10
+    )
     assert len(results) == 10
 
 
 @pytest.mark.asyncio
 async def test_fetch_dataset_most_used_smiles_for_products(test_cursor):
     dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
-    results = await fetch_dataset_most_used_smiles_for_products(test_cursor, dataset_id, limit=10)
+    results = await fetch_dataset_most_used_smiles_for_products(
+        test_cursor, dataset_id, limit=10
+    )
     assert len(results) == 10

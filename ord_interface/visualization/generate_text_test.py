@@ -13,6 +13,8 @@
 # limitations under the License.
 """Tests for ord_interface.visualization.generate_text."""
 
+from collections.abc import Iterator
+
 import pytest
 from ord_schema import message_helpers, units
 from ord_schema.proto import reaction_pb2
@@ -21,7 +23,7 @@ from ord_interface.visualization import generate_text
 
 
 @pytest.fixture
-def reaction() -> reaction_pb2.Reaction:
+def reaction() -> Iterator[reaction_pb2.Reaction]:
     resolver = units.UnitResolver()
     reaction = reaction_pb2.Reaction()
     reaction.setup.is_automated = True
@@ -49,9 +51,13 @@ def reaction() -> reaction_pb2.Reaction:
             amount="catalytic",
         )
     )
-    reaction.conditions.pressure.atmosphere.type = reaction_pb2.PressureConditions.Atmosphere.OXYGEN
+    reaction.conditions.pressure.atmosphere.type = (
+        reaction_pb2.PressureConditions.Atmosphere.OXYGEN
+    )
     reaction.conditions.stirring.rate.rpm = 100
-    reaction.conditions.temperature.control.type = reaction_pb2.TemperatureConditions.TemperatureControl.OIL_BATH
+    reaction.conditions.temperature.control.type = (
+        reaction_pb2.TemperatureConditions.TemperatureControl.OIL_BATH
+    )
     reaction.conditions.temperature.setpoint.CopyFrom(
         reaction_pb2.Temperature(value=100, units=reaction_pb2.Temperature.CELSIUS)
     )
@@ -65,14 +71,32 @@ def reaction() -> reaction_pb2.Reaction:
 
 def test_text(reaction):
     text = generate_text.generate_text(reaction)
-    expected = ["vessel", "oil bath", "after 40 min", "as a solvent", "hexanone", "automatically", "mL", "catalytic"]
+    expected = [
+        "vessel",
+        "oil bath",
+        "after 40 min",
+        "as a solvent",
+        "hexanone",
+        "automatically",
+        "mL",
+        "catalytic",
+    ]
     for value in expected:
         assert value in text
 
 
 def test_html(reaction):
     html = generate_text.generate_html(reaction)
-    expected = ["<table", "hexanone", "under oxygen", "100 rpm", "40 min", "solvent", "100 °C", "catalytic"]
+    expected = [
+        "<table",
+        "hexanone",
+        "under oxygen",
+        "100 rpm",
+        "40 min",
+        "solvent",
+        "100 °C",
+        "catalytic",
+    ]
     for value in expected:
         assert value in html
 
@@ -82,7 +106,14 @@ def test_compact_html(reaction):
     expected = ["<table"]
     for value in expected:
         assert value in html
-    not_expected = ["hexanone", "under oxygen", "100 rpm", "40 min", "solvent", "100 °C"]
+    not_expected = [
+        "hexanone",
+        "under oxygen",
+        "100 rpm",
+        "40 min",
+        "solvent",
+        "100 °C",
+    ]
     for value in not_expected:
         assert value not in html
 
@@ -92,3 +123,13 @@ def test_reaction_smiles_html():
     reaction.identifiers.add(value="C>C>C", type="REACTION_SMILES")
     html = generate_text.generate_html(reaction)
     assert html is not None
+
+
+def test_pressure_setpoint_without_atmosphere_html(reaction):
+    """A pressure setpoint must render even when the atmosphere is unspecified."""
+    reaction.conditions.pressure.ClearField("atmosphere")
+    reaction.conditions.pressure.setpoint.CopyFrom(
+        reaction_pb2.Pressure(value=2, units=reaction_pb2.Pressure.ATMOSPHERE)
+    )
+    html = generate_text.generate_html(reaction)
+    assert "2 atm" in html

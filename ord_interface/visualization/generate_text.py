@@ -15,7 +15,6 @@
 
 import os
 import re
-from typing import Optional
 
 import jinja2
 from ord_schema import message_helpers
@@ -24,7 +23,9 @@ from ord_schema.proto import reaction_pb2
 from ord_interface.visualization import filters
 
 
-def _generate(reaction: reaction_pb2.Reaction, template_string: str, line_breaks: bool, **kwargs) -> str:
+def _generate(
+    reaction: reaction_pb2.Reaction, template_string: str, line_breaks: bool, **kwargs
+) -> str:
     """Renders a Jinja2 template string with a reaction message.
 
     Args:
@@ -52,18 +53,20 @@ def _generate(reaction: reaction_pb2.Reaction, template_string: str, line_breaks
 
 def generate_text(reaction: reaction_pb2.Reaction) -> str:
     """Generates a textual reaction description."""
-    with open(os.path.join(os.path.dirname(__file__), "template.txt"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "template.txt")) as f:
         template = f.read()
     return _generate(reaction, template_string=template, line_breaks=False)
 
 
-def generate_html(reaction: reaction_pb2.Reaction, compact=False, bond_length: Optional[int] = None) -> str:
+def generate_html(
+    reaction: reaction_pb2.Reaction, compact=False, bond_length: int | None = None
+) -> str:
     """Generates an HTML reaction description."""
     # Special handling for e.g. USPTO reactions.
     reaction_smiles = message_helpers.get_reaction_smiles(reaction)
     if reaction_smiles and not reaction.inputs and not reaction.outcomes:
         reaction = message_helpers.reaction_from_smiles(reaction_smiles)
-    with open(os.path.join(os.path.dirname(__file__), "template.html"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "template.html")) as f:
         template = f.read()
     if not bond_length:
         if compact:

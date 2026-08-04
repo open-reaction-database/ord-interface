@@ -19,12 +19,15 @@ in this module do not include any HTML tags, only their contents.
 
 import collections
 import re
-from typing import Any, Iterable, List, Mapping, Optional, Tuple
+from collections.abc import Iterable, Mapping
+from typing import Any, cast
 
 from dateutil import parser
-from google.protobuf import text_format  # pytype: disable=import-error
+from google.protobuf import text_format
+from google.protobuf.message import Message
 from ord_schema import message_helpers, units
 from ord_schema.proto import reaction_pb2
+from rdkit import Chem
 
 from ord_interface.visualization import drawing
 
@@ -34,7 +37,9 @@ def _is_true(boolean: Any) -> bool:
     return bool(boolean)
 
 
-def _count_addition_order(inputs: Mapping[str, reaction_pb2.ReactionInput]) -> Iterable[Tuple[int, int]]:
+def _count_addition_order(
+    inputs: Mapping[str, reaction_pb2.ReactionInput],
+) -> Iterable[tuple[int, int]]:
     """Returns the number of inputs for each addition_order value.
 
     Args:
@@ -53,7 +58,7 @@ def _count_addition_order(inputs: Mapping[str, reaction_pb2.ReactionInput]) -> I
 
 def _sort_addition_order(
     inputs: Mapping[str, reaction_pb2.ReactionInput],
-) -> Iterable[Tuple[str, reaction_pb2.ReactionInput]]:
+) -> Iterable[tuple[str, reaction_pb2.ReactionInput]]:
     """Sorts inputs by addition order, sorting again within stages/steps.
 
     Args:
@@ -73,8 +78,8 @@ def _sort_addition_order(
 
 
 def _get_input_borders(
-    components: List[reaction_pb2.Compound],
-) -> Iterable[Tuple[reaction_pb2.Compound, str]]:
+    components: list[reaction_pb2.Compound],
+) -> Iterable[tuple[reaction_pb2.Compound, str]]:
     """Returns the CSS class for a Compound cell.
 
     The HTML representation of a Reaction groups Compounds by their parent
@@ -214,11 +219,10 @@ def _pressure_conditions_html(pressure: reaction_pb2.PressureConditions) -> str:
             pressure.atmosphere.OXYGEN: "under oxygen",
             pressure.atmosphere.HYDROGEN: "under hydrogen",
         }[pressure.atmosphere.type]
-    if pressure.atmosphere.type != pressure.atmosphere.UNSPECIFIED:
-        setpoint = units.format_message(pressure.setpoint)
-        if setpoint:
-            txt += f" ({setpoint})"
-    return txt
+    setpoint = units.format_message(pressure.setpoint)
+    if setpoint:
+        txt += f" ({setpoint})"
+    return txt.strip()
 
 
 def _temperature_conditions(temperature: reaction_pb2.TemperatureConditions) -> str:
@@ -351,7 +355,8 @@ def _compound_svg(compound: reaction_pb2.Compound, bond_length: int = 25) -> str
         String SVG or sentinel value.
     """
     try:
-        mol = message_helpers.mol_from_compound(compound)
+        # mol_from_compound's return type widens to include a tuple when return_identifier=True.
+        mol = cast(Chem.Mol | None, message_helpers.mol_from_compound(compound))
         if mol:
             svg = drawing.mol_to_svg(mol, bond_length=bond_length)
             if svg is None:
@@ -375,7 +380,7 @@ def _compound_png(compound: reaction_pb2.Compound) -> str:
         String PNG or sentinel value.
     """
     try:
-        mol = message_helpers.mol_from_compound(compound)
+        mol = cast(Chem.Mol | None, message_helpers.mol_from_compound(compound))
         if mol:
             return drawing.mol_to_png(mol)
     except ValueError:
@@ -383,7 +388,7 @@ def _compound_png(compound: reaction_pb2.Compound) -> str:
     return message_helpers.get_compound_smiles(compound) or "[Compound]"
 
 
-def _amount(amount: reaction_pb2.Amount) -> Optional[str]:
+def _amount(amount: reaction_pb2.Amount) -> str | None:
     """Returns a string representing an Amount."""
     kind = amount.WhichOneof("kind")
     if not kind:
@@ -607,11 +612,12 @@ def _uses_addition_order(reaction: reaction_pb2.Reaction) -> bool:
 
 def _round(value: float, places=2) -> str:
     """Rounds a value to the given number of decimal places."""
-    fstring = "{:.%gg}" % places  # pylint: disable=consider-using-f-string
-    return fstring.format(value)
+    return f"{value:.{places}g}"
 
 
-def _datetimeformat(message: reaction_pb2.DateTime, format_string: str = "%Y-%m-%d / %H:%M") -> str:
+def _datetimeformat(
+    message: reaction_pb2.DateTime, format_string: str = "%Y-%m-%d / %H:%M"
+) -> str:
     """Formats a date/time string."""
     value = parser.parse(message.value)
     return value.strftime(format_string)
@@ -619,7 +625,7 @@ def _datetimeformat(message: reaction_pb2.DateTime, format_string: str = "%Y-%m-
 
 def _get_compact_components(
     inputs: Mapping[str, reaction_pb2.ReactionInput],
-) -> Iterable[Tuple[reaction_pb2.Compound, bool]]:
+) -> Iterable[tuple[reaction_pb2.Compound, bool]]:
     """Returns a list of input components for 'compact' visualization.
 
     Args:
@@ -647,13 +653,15 @@ def _get_compact_components(
 
 def _get_compact_products(
     products: Iterable[reaction_pb2.ProductCompound],
-) -> List[reaction_pb2.ProductCompound]:
+) -> list[reaction_pb2.ProductCompound]:
     """Returns a list of product compounds for 'compact' visualization."""
     roles_to_keep = [
         reaction_pb2.ReactionRole.PRODUCT,
         reaction_pb2.ReactionRole.UNSPECIFIED,
     ]
-    return [compound for compound in products if compound.reaction_role in roles_to_keep]
+    return [
+        compound for compound in products if compound.reaction_role in roles_to_keep
+    ]
 
 
 def _value_and_precision(message) -> str:
@@ -677,11 +685,11 @@ def _product_measurement_value(message) -> str:
     return ""
 
 
-def _pbtxt(reaction: reaction_pb2.Reaction) -> str:
+def _pbtxt(message: Message) -> str:
     """Converts a message to text format."""
-    message = text_format.MessageToString(reaction)
+    serialized = text_format.MessageToString(message)
     # Preserve indentation.
-    return re.sub(r"\s", "&nbsp;", message.strip().replace("\n", "<br>"))
+    return re.sub(r"\s", "&nbsp;", serialized.strip().replace("\n", "<br>"))
 
 
 def _product_pbtxt(product: reaction_pb2.ProductCompound) -> str:

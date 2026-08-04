@@ -15,6 +15,7 @@
 """Tests for ord_interface.api.search."""
 
 import gzip
+import json
 
 import pytest
 from ord_schema.proto import dataset_pb2
@@ -22,6 +23,12 @@ from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from ord_interface.api.queries import QueryResult
+
+
+def _spec(pattern: str, target: str, mode: str) -> str:
+    """Returns a JSON-encoded component spec for the `component` query parameter."""
+    return json.dumps({"pattern": pattern, "target": target, "mode": mode})
+
 
 QUERY_PARAMS = [
     # Single factor queries.
@@ -31,18 +38,27 @@ QUERY_PARAMS = [
     ({"min_conversion": 50, "max_conversion": 90}, 7),
     ({"min_yield": 50, "max_yield": 90}, 51),
     ({"doi": ["10.1126/science.1255525"]}, 24),
-    ({"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]}, 10),
-    ({"component": ["C;input;substructure"]}, 144),
-    ({"component": ["O[C@@H]1C[C@H](O)C1;input;substructure"], "use_stereochemistry": True}, 20),
-    ({"component": ["[#6];input;smarts"]}, 144),
-    ({"component": ["CC=O;input;similar"], "similarity": 0.5}, 0),
-    ({"component": ["CC=O;input;similar"], "similarity": 0.05}, 120),
+    ({"component": [_spec("[Br]C1=CC=C(C(C)=O)C=C1", "input", "exact")]}, 10),
+    ({"component": [_spec("C", "input", "substructure")]}, 144),
+    (
+        {
+            "component": [_spec("O[C@@H]1C[C@H](O)C1", "input", "substructure")],
+            "use_stereochemistry": True,
+        },
+        20,
+    ),
+    ({"component": [_spec("[#6]", "input", "smarts")]}, 144),
+    ({"component": [_spec("CC=O", "input", "similar")], "similarity": 0.5}, 0),
+    ({"component": [_spec("CC=O", "input", "similar")], "similarity": 0.05}, 120),
     # Multi-factor queries.
     (
         {
             "min_yield": 50,
             "max_yield": 90,
-            "component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact", "CC(C)(C)OC(=O)NC;input;substructure"],
+            "component": [
+                _spec("[Br]C1=CC=C(C(C)=O)C=C1", "input", "exact"),
+                _spec("CC(C)(C)OC(=O)NC", "input", "substructure"),
+            ],
         },
         7,
     ),
@@ -56,8 +72,44 @@ def test_query(test_client, params, num_expected):
     assert len(response.json()) == num_expected
 
 
+def test_query_smarts_with_semicolon(test_client):
+    # SMARTS uses ";" as a low-precedence AND; JSON-encoding the component spec means
+    # such patterns parse cleanly (the legacy ";"-delimited format split incorrectly).
+    response = test_client.get(
+        "/api/query", params={"component": [_spec("[#6;R]", "input", "smarts")]}
+    )
+    response.raise_for_status()
+    assert isinstance(response.json(), list)
+
+
+def test_query_accepts_legacy_component_format(test_client):
+    # Previously shared "pattern;target;mode" URLs still work (backward compatibility).
+    response = test_client.get(
+        "/api/query",
+        params={"component": ["[Br]C1=CC=C(C(C)=O)C=C1;input;exact"]},
+    )
+    response.raise_for_status()
+    assert len(response.json()) == 10
+
+
+def test_query_invalid_component_returns_400(test_client):
+    # A spec that is neither JSON nor a 3-field legacy string is a client error.
+    response = test_client.get("/api/query", params={"component": ["not-a-valid-spec"]})
+    assert response.status_code == 400
+
+
+def test_query_invalid_mode_returns_400(test_client):
+    # Valid JSON but an unknown match mode (enum KeyError) is still a client error.
+    response = test_client.get(
+        "/api/query", params={"component": [_spec("C", "input", "bogus")]}
+    )
+    assert response.status_code == 400
+
+
 def test_get_reaction(test_client):
-    response = test_client.get("/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"})
+    response = test_client.get(
+        "/api/reaction", params={"reaction_id": "ord-3f67aa5592fd434d97a577988d3fd241"}
+    )
     response.raise_for_status()
     result = QueryResult(**response.json())
     assert result.dataset_id == "ord_dataset-89b083710e2d441aa0040c361d63359f"
@@ -65,7 +117,10 @@ def test_get_reaction(test_client):
 
 
 def test_get_reactions(test_client):
-    response = test_client.post("/api/reactions", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]})
+    response = test_client.post(
+        "/api/reactions",
+        json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]},
+    )
     response.raise_for_status()
     reactions = response.json()
     assert len(reactions) == 1
@@ -77,6 +132,28 @@ def test_get_datasets(test_client):
     response.raise_for_status()
     dataset_info = response.json()
     assert len(dataset_info) == 3
+    assert all("submitted_at" in row for row in dataset_info)
+    # Datasets are ordered by submission date, newest first, with undated
+    # datasets (submitted_at is None) sorted last.
+    submitted = [row["submitted_at"] for row in dataset_info]
+    dated = [value for value in submitted if value is not None]
+    assert dated == sorted(dated, reverse=True)
+    assert submitted == dated + [None] * (len(submitted) - len(dated))
+
+
+def test_get_dataset(test_client):
+    dataset_id = "ord_dataset-89b083710e2d441aa0040c361d63359f"
+    response = test_client.get("/api/dataset", params={"dataset_id": dataset_id})
+    response.raise_for_status()
+    dataset_info = response.json()
+    assert dataset_info["dataset_id"] == dataset_id
+
+
+def test_get_dataset_not_found(test_client):
+    response = test_client.get(
+        "/api/dataset", params={"dataset_id": "ord_dataset-does-not-exist"}
+    )
+    assert response.status_code == 404
 
 
 def test_get_molfile(test_client):
@@ -85,9 +162,15 @@ def test_get_molfile(test_client):
     assert Chem.MolToSmiles(Chem.MolFromMolBlock(response.json())) == "NC=O"
 
 
+def test_get_molfile_invalid_smiles(test_client):
+    response = test_client.get("/api/molfile", params={"smiles": "not-a-smiles"})
+    assert response.status_code == 400
+
+
 def test_get_search_results(test_client):
     response = test_client.post(
-        "/api/download_search_results", json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]}
+        "/api/download_search_results",
+        json={"reaction_ids": ["ord-3f67aa5592fd434d97a577988d3fd241"]},
     )
     response.raise_for_status()
     dataset = dataset_pb2.Dataset.FromString(gzip.decompress(response.read()))
@@ -113,7 +196,11 @@ def test_query_async(test_client, params, num_expected):
 
 def test_get_input_stats(test_client):
     response = test_client.get(
-        "/api/input_stats", params={"dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f", "limit": 10}
+        "/api/input_stats",
+        params={
+            "dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f",
+            "limit": 10,
+        },
     )
     response.raise_for_status()
     input_stats = response.json()
@@ -122,7 +209,11 @@ def test_get_input_stats(test_client):
 
 def test_get_product_stats(test_client):
     response = test_client.get(
-        "/api/product_stats", params={"dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f", "limit": 10}
+        "/api/product_stats",
+        params={
+            "dataset_id": "ord_dataset-89b083710e2d441aa0040c361d63359f",
+            "limit": 10,
+        },
     )
     response.raise_for_status()
     product_stats = response.json()

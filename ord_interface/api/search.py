@@ -16,17 +16,27 @@
 
 from __future__ import annotations
 
+import datetime
 import gzip
 import json
 import os
 import re
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
-from typing import AsyncIterator, cast
+from typing import Any, cast
 from uuid import uuid4
 
 import psycopg
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Response,
+    status,
+)
 from ord_schema.logging import get_logger
 from ord_schema.orm.database import get_connection_string
 from ord_schema.proto import dataset_pb2
@@ -60,7 +70,7 @@ MAX_RESULTS = 1000
 
 
 @asynccontextmanager
-async def get_cursor() -> AsyncIterator[AsyncCursor]:
+async def get_cursor() -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
     """Returns a psycopg cursor."""
     dsn = os.getenv("ORD_INTERFACE_POSTGRES")
     if dsn is None:
@@ -74,7 +84,7 @@ async def get_cursor() -> AsyncIterator[AsyncCursor]:
                 host=os.environ["POSTGRES_HOST"],
             ),
         )
-    async with await psycopg.AsyncConnection.connect(
+    async with await psycopg.AsyncConnection[dict[str, Any]].connect(
         dsn, row_factory=dict_row, options="-c search_path=public,ord"
     ) as connection:
         await connection.set_read_only(True)
@@ -89,14 +99,17 @@ async def get_redis() -> AsyncIterator[Redis]:
     port = int(os.environ.get("REDIS_PORT", "6379"))
     ssl = os.environ.get("REDIS_SSL", "0") == "1"
     async with Redis(host=host, port=port, ssl=ssl) as client:
-        if not await client.ping():
-            raise RuntimeError(f"Failed to connect to Redis server {host}:{port} ({ssl=})")
+        # redis.asyncio stubs return Awaitable[bool] | bool from ping(); the runtime is always awaitable.
+        if not await cast(Awaitable[bool], client.ping()):
+            raise RuntimeError(
+                f"Failed to connect to Redis server {host}:{port} ({ssl=})"
+            )
         logger.debug(f"Connected to Redis server {host}:{port} ({ssl=})")
         yield client
 
 
 @dataclass
-class QueryParams:  # pylint: disable=too-many-instance-attributes
+class QueryParams:
     """Query parameters."""
 
     # NOTE(skearnes): BaseModel does not work here; see https://github.com/fastapi/fastapi/discussions/10556.
@@ -109,15 +122,53 @@ class QueryParams:  # pylint: disable=too-many-instance-attributes
     min_yield: float | None = None
     max_yield: float | None = None
     doi: list[str] | None = Query(None)
+    # Each value is a JSON-encoded ComponentSpec; see ComponentSpec.
     component: list[str] | None = Query(None)
     use_stereochemistry: bool | None = None
     similarity: float | None = None
     limit: int | None = None
 
 
-async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] | list[str]:
+class ComponentSpec(BaseModel):
+    """A single component predicate, JSON-encoded in each ``component`` query value.
+
+    Replaces a legacy ``"pattern;target;mode"`` string whose ``;`` delimiter collided
+    with SMARTS patterns (which use ``;`` as a low-precedence AND). ``target`` and
+    ``mode`` are matched case-insensitively against the ReactionComponentQuery enums.
+    """
+
+    pattern: str
+    target: str
+    mode: str
+
+    @classmethod
+    def parse(cls, spec: str) -> ComponentSpec:
+        """Parses one ``component`` value, accepting JSON or the legacy format.
+
+        New values are JSON objects; the legacy ``"pattern;target;mode"`` form is still
+        accepted so previously shared search URLs keep working. The legacy parse splits
+        from the right because a SMARTS ``pattern`` may itself contain ``;``.
+
+        Args:
+            spec: A single ``component`` query-parameter value.
+
+        Returns:
+            The parsed ComponentSpec.
+
+        Raises:
+            ValueError: If ``spec`` is neither valid JSON nor a 3-field legacy string.
+        """
+        spec = spec.strip()
+        if spec.startswith("{"):
+            return cls.model_validate_json(spec)
+        pattern, target, mode = spec.rsplit(";", 2)
+        return cls(pattern=pattern, target=target, mode=mode)
+
+
+async def run_query(
+    params: QueryParams, return_ids: bool
+) -> list[QueryResult] | list[str]:
     """Runs a query and returns a list of matched reactions."""
-    # pylint: disable=too-many-arguments,too-many-branches,too-many-locals
     queries = []
     if params.dataset_id and isinstance(params.dataset_id, list):
         queries.append(DatasetIdQuery(params.dataset_id))
@@ -126,7 +177,9 @@ async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] 
     if params.reaction_smarts:
         queries.append(ReactionSmartsQuery(params.reaction_smarts))
     if params.min_conversion is not None or params.max_conversion is not None:
-        queries.append(ReactionConversionQuery(params.min_conversion, params.max_conversion))
+        queries.append(
+            ReactionConversionQuery(params.min_conversion, params.max_conversion)
+        )
     if params.min_yield is not None or params.max_yield is not None:
         queries.append(ReactionYieldQuery(params.min_yield, params.max_yield))
     if params.doi and isinstance(params.doi, list):
@@ -138,15 +191,23 @@ async def run_query(params: QueryParams, return_ids: bool) -> list[QueryResult] 
         if params.similarity is not None:
             kwargs["similarity_threshold"] = params.similarity
         for spec in params.component:
-            pattern, target_name, mode_name = spec.split(";")
-            queries.append(
-                ReactionComponentQuery(
-                    pattern,
-                    ReactionComponentQuery.Target[target_name.upper()],
-                    ReactionComponentQuery.MatchMode[mode_name.upper()],
-                    **kwargs,
+            # Cover the whole predicate: a bad target/mode is a KeyError on the enum
+            # lookup and an unparseable pattern is a ValueError from the query -- both
+            # are client errors, not 500s.
+            try:
+                component = ComponentSpec.parse(spec)
+                queries.append(
+                    ReactionComponentQuery(
+                        component.pattern,
+                        ReactionComponentQuery.Target[component.target.upper()],
+                        ReactionComponentQuery.MatchMode[component.mode.upper()],
+                        **kwargs,
+                    )
                 )
-            )
+            except (KeyError, ValueError) as error:
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid component spec: {spec!r}"
+                ) from error
     if not queries:
         raise ValueError("No query parameters were specified.")
     limit = MAX_RESULTS
@@ -194,14 +255,41 @@ class DatasetInfo(BaseModel):
     name: str
     description: str | None
     num_reactions: int
+    submitted_at: datetime.date | None
 
 
 @router.get("/datasets")
 async def get_datasets() -> list[DatasetInfo]:
-    """Returns info about the current datasets."""
+    """Returns info about the current datasets, most recently submitted first."""
     async with get_cursor() as cursor:
-        await cursor.execute("SELECT dataset_id, name, description, num_reactions FROM dataset")
+        await cursor.execute(
+            "SELECT dataset.dataset_id, dataset.name, dataset.description, "
+            "datasets.num_reactions, datasets.submitted_at "
+            "FROM ord.dataset "
+            "JOIN public.datasets ON datasets.dataset_id = dataset.dataset_id "
+            "ORDER BY datasets.submitted_at DESC NULLS LAST, dataset.dataset_id"
+        )
         return [DatasetInfo(**row) async for row in cursor]
+
+
+@router.get("/dataset")
+async def get_dataset(dataset_id: str) -> DatasetInfo:
+    """Returns info about a single dataset."""
+    async with get_cursor() as cursor:
+        await cursor.execute(
+            "SELECT dataset.dataset_id, dataset.name, dataset.description, "
+            "datasets.num_reactions, datasets.submitted_at "
+            "FROM ord.dataset "
+            "JOIN public.datasets ON datasets.dataset_id = dataset.dataset_id "
+            "WHERE dataset.dataset_id = %s",
+            (dataset_id,),
+        )
+        row = await cursor.fetchone()
+        if row is None:
+            raise HTTPException(
+                status_code=404, detail=f"dataset not found: {dataset_id}"
+            )
+        return DatasetInfo(**row)
 
 
 @router.get("/molfile")
@@ -209,7 +297,7 @@ async def get_molfile(smiles: str) -> str:
     """Returns a molblock for the given SMILES."""
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
-        raise ValueError(smiles)
+        raise HTTPException(status_code=400, detail=f"invalid SMILES: {smiles}")
     return Chem.MolToMolBlock(mol)
 
 
@@ -217,8 +305,12 @@ async def get_molfile(smiles: str) -> str:
 async def get_search_results(inputs: ReactionIdList):
     """Downloads search results as a Dataset proto."""
     results = await get_reactions(inputs)
-    dataset = dataset_pb2.Dataset(name="ORD Search Results", reactions=[result.reaction for result in results])
-    return Response(gzip.compress(dataset.SerializeToString()), media_type="application/gzip")
+    dataset = dataset_pb2.Dataset(
+        name="ORD Search Results", reactions=[result.reaction for result in results]
+    )
+    return Response(
+        gzip.compress(dataset.SerializeToString()), media_type="application/gzip"
+    )
 
 
 async def run_task(task_id: str, params: QueryParams) -> bool:
@@ -231,7 +323,9 @@ async def run_task(task_id: str, params: QueryParams) -> bool:
 
 
 @router.get("/submit_query")
-async def submit_query(background_tasks: BackgroundTasks, params: QueryParams = Depends()) -> str:
+async def submit_query(
+    background_tasks: BackgroundTasks, params: QueryParams = Depends()
+) -> str:
     """Submits a query as a background task."""
     task_id = str(uuid4())
     async with get_redis() as client:
@@ -246,23 +340,33 @@ async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
     async with get_redis() as client:
         if not await client.exists(f"query:{task_id}"):
-            return Response(f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND)
+            return Response(
+                f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND
+            )
         result = await client.get(f"result:{task_id}")
     if result is None:
-        return Response(f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED)
+        return Response(
+            f"Task {task_id} is pending", status_code=status.HTTP_202_ACCEPTED
+        )
     async with get_cursor() as cursor:
         return await fetch_reactions(cursor, json.loads(result))
 
 
 @router.get("/input_stats")
 async def get_input_stats(dataset_id: str, limit: int = 30) -> list[StatsResult]:
+    """Return the most frequently used input SMILES for a dataset."""
     async with get_cursor() as cursor:
-        results = await fetch_dataset_most_used_smiles_for_inputs(cursor, dataset_id, limit=limit)
+        results = await fetch_dataset_most_used_smiles_for_inputs(
+            cursor, dataset_id, limit=limit
+        )
     return results
 
 
 @router.get("/product_stats")
 async def get_product_stats(dataset_id: str, limit: int = 30) -> list[StatsResult]:
+    """Return the most frequently used product SMILES for a dataset."""
     async with get_cursor() as cursor:
-        results = await fetch_dataset_most_used_smiles_for_products(cursor, dataset_id, limit=limit)
+        results = await fetch_dataset_most_used_smiles_for_products(
+            cursor, dataset_id, limit=limit
+        )
     return results
