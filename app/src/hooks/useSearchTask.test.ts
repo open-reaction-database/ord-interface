@@ -325,11 +325,11 @@ describe('useSearchTask', () => {
     stall.abort(new DOMException('signal timed out', 'TimeoutError'));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(timeout).toHaveBeenCalledWith(30_000);
+    expect(timeout).toHaveBeenCalledWith(90_000);
   });
 
   // Rerunning must not re-read a task whose result could not be decoded.
-  it('submits again when a failed search runs again', async () => {
+  it('submits again when a search whose result did not decode runs again', async () => {
     const fetchMock = stubProtocol([{ status: 200, body: [{ proto: '!' }] }]);
     const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -337,6 +337,46 @@ describe('useSearchTask', () => {
     await act(() => result.current.refetch());
 
     expect(submitCalls(fetchMock)).toHaveLength(2);
+  });
+
+  // Asking the overdue task again would time out at once, against its old start.
+  it('submits again when a timed-out search runs again', async () => {
+    let now = 0;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const fetchMock = stubProtocol([{ status: 202 }]);
+    const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
+    await waitFor(() => expect(result.current.data?.status).toBe('pending'));
+    now = 200_000;
+    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 3000 });
+
+    await act(() => result.current.refetch());
+
+    await waitFor(() => expect(result.current.isError).toBe(false));
+    expect(submitCalls(fetchMock)).toHaveLength(2);
+  });
+
+  // A failure that says nothing about the task leaves its result to be read, so
+  // a rerun does not run the search again.
+  it.each([
+    ['fails in transit', () => Promise.reject(new TypeError('Failed to fetch'))],
+    ['gets a server error', () => Promise.resolve(jsonResponse({}, 504))],
+  ])('asks about the same task again when a poll %s', async (_, failedPoll) => {
+    let polls = 0;
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.startsWith('/api/submit_query')) return jsonResponse('task-1');
+      polls += 1;
+      return polls === 1
+        ? failedPoll()
+        : jsonResponse([{ reaction_id: 'ord-1', proto: encodedReaction('ord-1') }]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    await act(() => result.current.refetch());
+
+    await waitFor(() => expect(reactionIds(result.current.data)).toEqual(['ord-1']));
+    expect(submitCalls(fetchMock)).toHaveLength(1);
   });
 
   // The cached result still says pending after the error, and polling on from it

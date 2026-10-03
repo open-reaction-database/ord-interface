@@ -24,7 +24,9 @@ import type { SearchResult } from '../types/search';
 const POLL_INTERVAL_MS = 1000;
 const POLL_TIMEOUT_MS = 120_000;
 // Bounds each request, so a stalled one fails the search instead of hanging it.
-const REQUEST_TIMEOUT_MS = 30_000;
+// Longer than the proxy's 60-second proxy_read_timeout (ord_interface/nginx.conf),
+// so a slow response ends as the proxy's 504 rather than a client abort.
+const REQUEST_TIMEOUT_MS = 90_000;
 
 type TaskState =
   | { status: 'success'; results: SearchResult[] }
@@ -113,41 +115,50 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
         }
       }
 
-      try {
-        const res = await fetch(`/api/fetch_query_result?task_id=${task.taskId}`, {
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        });
+      // A failure that condemns the task clears its ID, so a rerun submits the
+      // search afresh. One in transit or on the server leaves it, so a rerun asks
+      // about the same task, whose result may be ready.
+      const abandonTask = (error: Error): Error => {
+        task.taskId = null;
+        return error;
+      };
 
-        if (res.status === 200) {
-          const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
-          const results: SearchResult[] = raw.map(r => ({
+      const res = await fetch(`/api/fetch_query_result?task_id=${task.taskId}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+
+      if (res.status === 200) {
+        const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
+        let results: SearchResult[];
+        try {
+          results = raw.map(r => ({
             ...r,
             data: reaction_pb.Reaction.deserializeBinary(
               new Uint8Array(base64ToBytes(r.proto)),
             ).toObject(),
           }));
-          task.taskId = null;
-          return { status: 'success', results };
+        } catch (error) {
+          throw abandonTask(error as Error);
         }
-
-        // The deadline applies only to a task that is still running, so a result
-        // that is ready by the first poll past it is returned, not discarded.
-        if (res.status === 202) {
-          if (Date.now() - task.startTime > POLL_TIMEOUT_MS) {
-            throw new Error(
-              `Search task ${task.taskId} timed out after ${POLL_TIMEOUT_MS / 1000}s`,
-            );
-          }
-          return { status: 'pending', taskId: task.taskId };
-        }
-
-        throw new Error(`Search task ${task.taskId} failed (HTTP ${res.status})`);
-      } catch (error) {
-        // Running a failed search again submits it afresh rather than re-reading
-        // a task whose result could not be fetched or decoded.
         task.taskId = null;
-        throw error;
+        return { status: 'success', results };
       }
+
+      // The deadline applies only to a task that is still running, so a result
+      // that is ready by the first poll past it is returned, not discarded.
+      if (res.status === 202) {
+        if (Date.now() - task.startTime > POLL_TIMEOUT_MS) {
+          throw abandonTask(
+            new Error(
+              `Search task ${task.taskId} timed out after ${POLL_TIMEOUT_MS / 1000}s`,
+            ),
+          );
+        }
+        return { status: 'pending', taskId: task.taskId };
+      }
+
+      const error = new Error(`Search task ${task.taskId} failed (HTTP ${res.status})`);
+      throw res.status < 500 ? abandonTask(error) : error;
     },
   });
 }
