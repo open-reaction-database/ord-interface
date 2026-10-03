@@ -40,6 +40,10 @@ interface TaskRef {
   startTime: number;
 }
 
+/** The React Query key under which `useSearchTask` caches a query string's search. */
+export const searchTaskKey = (queryString: string | null) =>
+  ['search-task', queryString] as const;
+
 /**
  * Runs the API's submit-query / poll-result protocol against the given query
  * string, returning the materialized search results once the task completes.
@@ -63,7 +67,7 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
   });
 
   return useQuery<TaskState>({
-    queryKey: ['search-task', queryString],
+    queryKey: searchTaskKey(queryString),
     enabled: enabled && queryString !== null,
     retry: false,
     staleTime: Infinity,

@@ -72,10 +72,20 @@ const reactionIds = (data: unknown): string[] | undefined =>
     result => result.reaction_id,
   );
 
+// Renders the hook against one query client for the whole test, so switching back
+// to an earlier query string finds whatever the cache kept for it.
+const renderWithSharedClient = (initialQuery: string) => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return renderHook(({ query }: { query: string }) => useSearchTask(query, true), {
+    wrapper: ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client }, children),
+    initialProps: { query: initialQuery },
+  });
+};
+
 // Starts search A, switches to search B while A's submit_query is still in flight,
 // and lets A's submit return once B's task is running. Task A completes on its
-// first poll; task B reports pending once, then completes. The query client
-// outlives rerenders, so a later switch back to A reads A's cached result.
+// first poll; task B reports pending once, then completes.
 const raceSearches = async () => {
   let releaseSubmitA!: () => void;
   let taskBPolls = 0;
@@ -98,15 +108,7 @@ const raceSearches = async () => {
   });
   vi.stubGlobal('fetch', fetchMock);
 
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const hook = renderHook(
-    ({ query }: { query: string }) => useSearchTask(query, true),
-    {
-      wrapper: ({ children }: { children: ReactNode }) =>
-        createElement(QueryClientProvider, { client }, children),
-      initialProps: { query: '?q=A' },
-    },
-  );
+  const hook = renderWithSharedClient('?q=A');
   hook.rerender({ query: '?q=B' });
   await waitFor(() =>
     expect(hook.result.current.data).toEqual({ status: 'pending', taskId: 'task-B' }),
@@ -327,6 +329,37 @@ describe('useSearchTask', () => {
       expect(result.current.isError).toBe(true);
       expect(submitCalls(fetchMock)).toHaveLength(1);
     });
+  });
+
+  // React Query marks a query invalidated when a fetch fails, so a failed search
+  // runs again on return even though staleTime is Infinity.
+  it('runs a failed search again when it is revisited', async () => {
+    let submits = 0;
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url === '/api/submit_query?q=A') return jsonResponse(`task-A${++submits}`);
+      if (url === '/api/submit_query?q=B') return jsonResponse('task-B');
+      if (url === '/api/fetch_query_result?task_id=task-A1') {
+        return fetchMock.mock.calls.filter(([called]) => called === url).length === 1
+          ? jsonResponse([], 202)
+          : jsonResponse({}, 500);
+      }
+      const id = url.endsWith('task-A2') ? 'A' : 'B';
+      return jsonResponse([{ reaction_id: id, proto: encodedReaction(id) }]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { result, rerender } = renderWithSharedClient('?q=A');
+    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 3000 });
+    rerender({ query: '?q=B' });
+    await waitFor(() => expect(reactionIds(result.current.data)).toEqual(['B']));
+
+    rerender({ query: '?q=A' });
+
+    await waitFor(() => expect(reactionIds(result.current.data)).toEqual(['A']));
+    expect(submitCalls(fetchMock)).toEqual([
+      '/api/submit_query?q=A',
+      '/api/submit_query?q=B',
+      '/api/submit_query?q=A',
+    ]);
   });
 
   describe('when a superseded search submit returns late', () => {

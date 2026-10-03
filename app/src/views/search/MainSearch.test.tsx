@@ -170,6 +170,27 @@ describe('MainSearch', () => {
     ).toBeInTheDocument();
   });
 
+  // The URL doesn't change, so only the page can tell the search to run again.
+  it('runs a failed search again when Search is clicked with the same criteria', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response);
+    vi.stubGlobal('fetch', fetchMock);
+    renderSearch('?dataset_id=ord_dataset-1');
+    await user.click(searchButton());
+    await screen.findByText(/Search failed/);
+    const searchedFor = currentSearch;
+    const submits = fetchMock.mock.calls.length;
+
+    await user.click(searchButton());
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(submits + 1));
+    expect(currentSearch).toBe(searchedFor);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `/api/submit_query${searchedFor}`,
+      undefined,
+    );
+  });
+
   it('reports an empty result set', async () => {
     vi.stubGlobal(
       'fetch',
