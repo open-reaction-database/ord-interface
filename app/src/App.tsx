@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HeaderNav from './components/HeaderNav';
 import MainFooter from './components/MainFooter';
@@ -30,6 +30,13 @@ import MainReactionView from './views/reaction-view/MainReactionView';
 import './App.scss';
 
 const queryClient = new QueryClient();
+
+// A fresh MainReactionView per reaction ID, so no state from the previous reaction
+// (its record, selected tabs, or a fetch still in flight) survives a route change.
+const ReactionRoute: React.FC = () => {
+  const { reactionId } = useParams<{ reactionId: string }>();
+  return <MainReactionView key={reactionId} />;
+};
 
 const AppContent: React.FC = () => {
   return (
@@ -66,7 +73,7 @@ const AppContent: React.FC = () => {
         />
         <Route
           path="/id/:reactionId"
-          element={<MainReactionView />}
+          element={<ReactionRoute />}
         />
       </Routes>
       <MainFooter />

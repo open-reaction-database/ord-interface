@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import reaction_pb from 'ord-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
@@ -24,6 +26,43 @@ const renderAt = (path: string) => {
   window.history.pushState({}, '', path);
   return render(<App />);
 };
+
+// Moves the mounted router to another path, as the browser's back and forward do.
+const navigateTo = (path: string) =>
+  act(() => {
+    window.history.pushState({}, '', path);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+
+// A serialized reaction with one empty input per key, base64-encoded the way the
+// API returns it.
+const encodedReaction = (...inputKeys: string[]): string => {
+  const reaction = new reaction_pb.Reaction();
+  inputKeys.forEach(key =>
+    reaction.getInputsMap().set(key, new reaction_pb.ReactionInput()),
+  );
+  return btoa(String.fromCharCode(...reaction.serializeBinary()));
+};
+
+// Answers /api/reactions from `protos`, keyed by reaction ID.
+const stubReactions = (protos: Record<string, string>) =>
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === '/api/reactions') {
+        const [reactionId] = JSON.parse(init!.body as string).reaction_ids;
+        return {
+          ok: true,
+          status: 200,
+          json: async () => [{ proto: protos[reactionId] }],
+        };
+      }
+      return { ok: true, status: 200, text: async () => '' };
+    }),
+  );
+
+const inputTabs = (container: HTMLElement): string[] =>
+  [...container.querySelectorAll('#inputs .tab')].map(tab => tab.textContent ?? '');
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -86,6 +125,24 @@ describe('App', () => {
   it('routes /id/:reactionId to the reaction view', () => {
     const { container } = renderAt('/id/ord-1');
     expect(container.querySelector('.main-reaction-view')).toBeInTheDocument();
+  });
+
+  // The selected tabs belong to the reaction they were picked on; the second
+  // input tab does not exist on a reaction with one input.
+  it('starts a newly routed reaction on its first tabs', async () => {
+    const user = userEvent.setup();
+    stubReactions({
+      'ord-1': encodedReaction('m1', 'm2'),
+      'ord-2': encodedReaction('m3'),
+    });
+    const { container } = renderAt('/id/ord-1');
+    await user.click(await screen.findByText('m2'));
+
+    navigateTo('/id/ord-2');
+
+    expect(await screen.findByText('m3')).toBeInTheDocument();
+    expect(inputTabs(container)).toEqual(['m3']);
+    expect(container.querySelector('#inputs .tab.selected')?.textContent).toBe('m3');
   });
 
   it('renders no page content for an unknown route', () => {
