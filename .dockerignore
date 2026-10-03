@@ -14,7 +14,7 @@
 
 # Keep local dev artifacts out of the image; the Dockerfile installs deps
 # itself and a macOS-built node_modules contains the wrong platform's
-# rollup binary (see Dockerfile comment about npm cli#4828).
+# rollup binary.
 **/node_modules/
 **/dist/
 **/.venv/

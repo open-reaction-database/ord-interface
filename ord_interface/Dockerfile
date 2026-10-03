@@ -46,14 +46,12 @@ RUN uv sync --frozen --no-dev --no-install-project
 # Build the SPA (React + TypeScript + Vite).
 COPY app/ app/
 WORKDIR /app/ord-interface/app
-# NOTE(skearnes): package-lock.json is regenerated inside the image because npm
-# stores rollup's platform-specific optional binaries by host OS, so a lockfile
-# captured on macOS (or any non-Linux dev box) won't include
-# @rollup/rollup-linux-x64-gnu and vite build fails with MODULE_NOT_FOUND.
-# See https://github.com/npm/cli/issues/4828.
+# Installed from the committed lockfile, so every build resolves the same tree; a
+# resolution made fresh in the image can crash Debian's npm. The lockfile records
+# rollup's optional binary for every platform, @rollup/rollup-linux-x64-gnu among
+# them, and npm ci installs the one this image needs.
 RUN cp -r /app/ord-interface/ord_interface/standalone/ /app/ord-interface/app/public/ketcher \
-   && rm -f package-lock.json \
-   && npm install \
+   && npm ci \
    && npm run build \
    && mv dist/ /app/ord-interface/spa
 WORKDIR /app/ord-interface
