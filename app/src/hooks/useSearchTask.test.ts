@@ -277,6 +277,37 @@ describe('useSearchTask', () => {
     ]);
   });
 
+  // The cached result still says pending after the error, and polling on from it
+  // would resubmit the query and start another backend task.
+  describe('after giving up on a pending task', () => {
+    const outlastPollInterval = () => new Promise(resolve => setTimeout(resolve, 1500));
+
+    it('stops polling once the task times out', async () => {
+      let now = 0;
+      vi.spyOn(Date, 'now').mockImplementation(() => now);
+      const fetchMock = stubProtocol([{ status: 202 }]);
+      const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
+      await waitFor(() => expect(result.current.data?.status).toBe('pending'));
+
+      now = 200_000;
+      await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 3000 });
+      await outlastPollInterval();
+
+      expect(result.current.isError).toBe(true);
+      expect(submitCalls(fetchMock)).toHaveLength(1);
+    });
+
+    it('stops polling once a poll fails', async () => {
+      const fetchMock = stubProtocol([{ status: 202 }, { status: 500 }]);
+      const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
+      await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 3000 });
+      await outlastPollInterval();
+
+      expect(result.current.isError).toBe(true);
+      expect(submitCalls(fetchMock)).toHaveLength(1);
+    });
+  });
+
   describe('when a superseded search submit returns late', () => {
     it('polls its own task, not the current search task', async () => {
       const { fetchMock } = await raceSearches();

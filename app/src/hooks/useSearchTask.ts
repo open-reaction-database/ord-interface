@@ -67,8 +67,12 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
     enabled: enabled && queryString !== null,
     retry: false,
     staleTime: Infinity,
+    // A failed or timed-out poll keeps the last pending result as data, so the
+    // error status is what stops the polling.
     refetchInterval: query =>
-      query.state.data?.status === 'pending' ? POLL_INTERVAL_MS : false,
+      query.state.status !== 'error' && query.state.data?.status === 'pending'
+        ? POLL_INTERVAL_MS
+        : false,
     refetchIntervalInBackground: false,
     queryFn: async (): Promise<TaskState> => {
       if (!queryString) return { status: 'success', results: [] };
