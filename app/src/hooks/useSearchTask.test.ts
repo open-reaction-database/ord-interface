@@ -15,7 +15,7 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import reaction_pb from 'ord-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -66,6 +66,58 @@ const submitCalls = (fetchMock: ReturnType<typeof vi.fn>): string[] =>
   fetchMock.mock.calls
     .map(call => call[0] as string)
     .filter(url => url.startsWith('/api/submit_query'));
+
+const reactionIds = (data: unknown): string[] | undefined =>
+  (data as { results?: Array<{ reaction_id: string }> } | undefined)?.results?.map(
+    result => result.reaction_id,
+  );
+
+// Starts search A, switches to search B while A's submit_query is still in flight,
+// and lets A's submit return once B's task is running. Task A completes on its
+// first poll; task B reports pending once, then completes. The query client
+// outlives rerenders, so a later switch back to A reads A's cached result.
+const raceSearches = async () => {
+  let releaseSubmitA!: () => void;
+  let taskBPolls = 0;
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url === '/api/submit_query?q=A') {
+      await new Promise<void>(resolve => (releaseSubmitA = resolve));
+      return jsonResponse('task-A');
+    }
+    if (url === '/api/submit_query?q=B') return jsonResponse('task-B');
+    if (url === '/api/fetch_query_result?task_id=task-A') {
+      return jsonResponse([{ reaction_id: 'A', proto: encodedReaction('A') }]);
+    }
+    if (url === '/api/fetch_query_result?task_id=task-B') {
+      taskBPolls += 1;
+      return taskBPolls === 1
+        ? jsonResponse([], 202)
+        : jsonResponse([{ reaction_id: 'B', proto: encodedReaction('B') }]);
+    }
+    return jsonResponse({}, 404);
+  });
+  vi.stubGlobal('fetch', fetchMock);
+
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const hook = renderHook(
+    ({ query }: { query: string }) => useSearchTask(query, true),
+    {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(QueryClientProvider, { client }, children),
+      initialProps: { query: '?q=A' },
+    },
+  );
+  hook.rerender({ query: '?q=B' });
+  await waitFor(() =>
+    expect(hook.result.current.data).toEqual({ status: 'pending', taskId: 'task-B' }),
+  );
+  // A macrotask runs only after A's whole promise chain has settled.
+  await act(async () => {
+    releaseSubmitA();
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+  return { fetchMock, ...hook };
+};
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -223,5 +275,30 @@ describe('useSearchTask', () => {
       '/api/submit_query?dataset_id=ord_dataset-1',
       '/api/submit_query?dataset_id=ord_dataset-2',
     ]);
+  });
+
+  describe('when a superseded search submit returns late', () => {
+    it('polls its own task, not the current search task', async () => {
+      const { fetchMock } = await raceSearches();
+      expect(fetchMock).toHaveBeenCalledWith('/api/fetch_query_result?task_id=task-A');
+    });
+
+    it('caches its own results for a return to that search', async () => {
+      const { result, rerender } = await raceSearches();
+      rerender({ query: '?q=A' });
+      expect(reactionIds(result.current.data)).toEqual(['A']);
+    });
+
+    it('leaves the current search submitted once', async () => {
+      const { fetchMock, result } = await raceSearches();
+      await waitFor(() => expect(result.current.data?.status).toBe('success'), {
+        timeout: 5000,
+      });
+      expect(reactionIds(result.current.data)).toEqual(['B']);
+      expect(submitCalls(fetchMock)).toEqual([
+        '/api/submit_query?q=A',
+        '/api/submit_query?q=B',
+      ]);
+    });
   });
 });
