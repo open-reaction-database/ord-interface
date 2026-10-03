@@ -15,11 +15,15 @@
  */
 
 import React, { useMemo } from 'react';
-import type { ReactionNotesData } from '../../types/search';
+import { reflect } from '@bufbuild/protobuf/reflect';
+import {
+  ReactionNotesSchema,
+  type ReactionNotes,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import './NotesView.scss';
 
 interface NotesViewProps {
-  notes: ReactionNotesData | undefined;
+  notes: ReactionNotes | undefined;
 }
 
 interface NoteToDisplay {
@@ -39,12 +43,14 @@ const NotesView: React.FC<NotesViewProps> = ({ notes }) => {
   const notesToDisplay = useMemo((): NoteToDisplay[] => {
     if (!notes) return [];
 
-    const fields = notes as Record<string, unknown>;
-    return Object.keys(fields)
-      .filter(key => Boolean(fields[key]))
-      .map(key => ({
-        val: String(fields[key]),
-        label: camelToSpaces(key),
+    // Walk the schema's fields so notes render in declaration order.
+    const message = reflect(ReactionNotesSchema, notes);
+    return message.fields
+      .map(field => ({ field, value: message.get(field) }))
+      .filter(({ value }) => Boolean(value))
+      .map(({ field, value }) => ({
+        val: String(value),
+        label: camelToSpaces(field.localName),
       }));
   }, [notes]);
 

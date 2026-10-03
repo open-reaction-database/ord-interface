@@ -17,15 +17,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import reaction_pb from 'ord-schema';
+import { create, toBinary } from '@bufbuild/protobuf';
+import { ReactionSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import MainDatasetView from './MainDatasetView';
 
 const encodedReaction = (reactionId: string): string => {
-  const reaction = new reaction_pb.Reaction();
-  reaction.setReactionId(reactionId);
-  return btoa(String.fromCharCode(...reaction.serializeBinary()));
+  const reaction = create(ReactionSchema, { reactionId });
+  return btoa(String.fromCharCode(...toBinary(ReactionSchema, reaction)));
 };
 
 interface ApiOverrides {

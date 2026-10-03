@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-import type {
-  IlluminationConditions,
-  PressureConditions,
-  StirringConditions,
-} from 'ord-schema/proto/reaction_pb';
+import { create } from '@bufbuild/protobuf';
+import {
+  IlluminationConditionsSchema,
+  LengthSchema,
+  PressureConditions_AtmosphereSchema,
+  PressureSchema,
+  StirringConditions_StirringRateSchema,
+  TemperatureSchema,
+  WavelengthSchema,
+  type ElectrochemistryConditions_ElectrochemistryType,
+  type FlowConditions_FlowType,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import {
   electrochemType,
@@ -32,31 +39,31 @@ import {
   stirType,
   tempSetPoint,
   tempType,
+  wavelengthStr,
 } from './conditions';
 
-// The generated AsObject types narrow enum fields to their known values and
-// require every scalar, so the fixtures below are cast in rather than typed.
-// Several cases deliberately use a unit outside the enum.
-const measurement = <T>(value: number, units: number, precision = 0): T =>
-  ({ value, units, precision }) as T;
+// Proto3 enums are open, so a decoded record can carry an undeclared number;
+// several cases below use 99 for one.
+const temperature = (value: number | undefined, units: number, precision?: number) =>
+  create(TemperatureSchema, { value, units, precision });
 
-const enumValue = <T>(value: number): T => value as T;
+const pressure = (value: number, units: number, precision?: number) =>
+  create(PressureSchema, { value, units, precision });
 
-const atmosphere = (
-  type: number,
-  details = '',
-): PressureConditions.Atmosphere.AsObject =>
-  ({ type, details }) as unknown as PressureConditions.Atmosphere.AsObject;
+const length = (value: number | undefined, units: number) =>
+  create(LengthSchema, { value, units });
 
-const stirringRate = (type: number): StirringConditions.StirringRate.AsObject =>
-  ({
-    type,
-    details: '',
-    rpm: 0,
-  }) as unknown as StirringConditions.StirringRate.AsObject;
+const wavelength = (value: number, units: number) =>
+  create(WavelengthSchema, { value, units });
 
-const illumination = (type: number, details = ''): IlluminationConditions.AsObject =>
-  ({ type, details, color: '' }) as unknown as IlluminationConditions.AsObject;
+const atmosphere = (type: number, details = '') =>
+  create(PressureConditions_AtmosphereSchema, { type, details });
+
+const stirringRate = (type: number) =>
+  create(StirringConditions_StirringRateSchema, { type });
+
+const illumination = (type: number, details = '') =>
+  create(IlluminationConditionsSchema, { type, details });
 
 describe('tempType', () => {
   it('names the control type', () => {
@@ -77,17 +84,21 @@ describe('tempSetPoint', () => {
 
   // Only the unit's first letter is shown, after the degree sign: "°C".
   it('abbreviates the unit', () => {
-    expect(tempSetPoint(measurement(25, 1))).toBe('25 °C');
-    expect(tempSetPoint(measurement(77, 2))).toBe('77 °F');
-    expect(tempSetPoint(measurement(298, 3))).toBe('298 °K');
+    expect(tempSetPoint(temperature(25, 1))).toBe('25 °C');
+    expect(tempSetPoint(temperature(77, 2))).toBe('77 °F');
+    expect(tempSetPoint(temperature(298, 3))).toBe('298 °K');
   });
 
   it('includes the precision when one was recorded', () => {
-    expect(tempSetPoint(measurement(25, 1, 2))).toBe('25 (± 2) °C');
+    expect(tempSetPoint(temperature(25, 1, 2))).toBe('25 (± 2) °C');
+  });
+
+  it('reads an unset value as zero', () => {
+    expect(tempSetPoint(temperature(undefined, 1))).toBe('0 °C');
   });
 
   it('omits the unit letter when the unit is unrecognized', () => {
-    expect(tempSetPoint(measurement(25, 99))).toBe('25 °');
+    expect(tempSetPoint(temperature(25, 99))).toBe('25 °');
   });
 });
 
@@ -108,16 +119,16 @@ describe('pressureSetPoint', () => {
   });
 
   it('spells the unit out in lowercase', () => {
-    expect(pressureSetPoint(measurement(1, 2))).toBe('1 atmosphere');
-    expect(pressureSetPoint(measurement(760, 8))).toBe('760 mm_hg');
+    expect(pressureSetPoint(pressure(1, 2))).toBe('1 atmosphere');
+    expect(pressureSetPoint(pressure(760, 8))).toBe('760 mm_hg');
   });
 
   it('includes the precision when one was recorded', () => {
-    expect(pressureSetPoint(measurement(1, 1, 0.1))).toBe('1 (± 0.1) bar');
+    expect(pressureSetPoint(pressure(1, 1, 0.1))).toBe('1 (± 0.1) bar');
   });
 
   it('drops the unit when it is unrecognized', () => {
-    expect(pressureSetPoint(measurement(1, 99))).toBe('1 ');
+    expect(pressureSetPoint(pressure(1, 99))).toBe('1 ');
   });
 });
 
@@ -175,11 +186,15 @@ describe('illumType', () => {
 
 describe('lengthStr', () => {
   it('renders the value with a lowercase unit', () => {
-    expect(lengthStr(measurement(5, 2))).toBe('5 millimeter');
+    expect(lengthStr(length(5, 2))).toBe('5 millimeter');
   });
 
   it('drops the unit when it is unrecognized', () => {
-    expect(lengthStr(measurement(5, 99))).toBe('5');
+    expect(lengthStr(length(5, 99))).toBe('5');
+  });
+
+  it('reads an unset value as zero', () => {
+    expect(lengthStr(length(undefined, 1))).toBe('0 centimeter');
   });
 
   it('returns undefined without a length', () => {
@@ -187,24 +202,43 @@ describe('lengthStr', () => {
   });
 });
 
+// Wavelength has its own units; reading them as Length units would turn
+// NANOMETER into CENTIMETER.
+describe('wavelengthStr', () => {
+  it('renders the value with a lowercase wavelength unit', () => {
+    expect(wavelengthStr(wavelength(450, 1))).toBe('450 nanometer');
+    expect(wavelengthStr(wavelength(2200, 2))).toBe('2200 wavenumber');
+  });
+
+  it('drops the unit when it is unrecognized', () => {
+    expect(wavelengthStr(wavelength(450, 99))).toBe('450');
+  });
+
+  it('returns undefined without a wavelength', () => {
+    expect(wavelengthStr(undefined)).toBeUndefined();
+  });
+});
+
 describe('electrochemType', () => {
   it('names the electrochemistry type', () => {
-    expect(electrochemType(enumValue(2))).toBe('CONSTANT_CURRENT');
+    expect(electrochemType(2)).toBe('CONSTANT_CURRENT');
   });
 
   it('renders an empty string when there is nothing to name', () => {
     expect(electrochemType(undefined)).toBe('');
-    expect(electrochemType(enumValue(99))).toBe('');
+    expect(electrochemType(99 as ElectrochemistryConditions_ElectrochemistryType)).toBe(
+      '',
+    );
   });
 });
 
 describe('flowType', () => {
   it('names the flow type', () => {
-    expect(flowType(enumValue(2))).toBe('PLUG_FLOW_REACTOR');
+    expect(flowType(2)).toBe('PLUG_FLOW_REACTOR');
   });
 
   it('renders an empty string when there is nothing to name', () => {
     expect(flowType(undefined)).toBe('');
-    expect(flowType(enumValue(99))).toBe('');
+    expect(flowType(99 as FlowConditions_FlowType)).toBe('');
   });
 });

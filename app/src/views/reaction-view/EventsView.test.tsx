@@ -16,12 +16,13 @@
 
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RecordEvent } from 'ord-schema/proto/reaction_pb';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { RecordEventSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import EventsView from './EventsView';
 
-const renderEvents = (events: unknown[]) =>
-  render(<EventsView events={events as RecordEvent.AsObject[]} />);
+const renderEvents = (events: MessageInitShape<typeof RecordEventSchema>[]) =>
+  render(<EventsView events={events.map(event => create(RecordEventSchema, event))} />);
 
 const fields = (container: HTMLElement): Record<string, string> => {
   const details = container.querySelector('.details');

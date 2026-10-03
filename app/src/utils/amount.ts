@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-import reaction_pb from 'ord-schema';
-import type { Amount } from 'ord-schema/proto/reaction_pb';
+import {
+  Mass_MassUnitSchema,
+  Moles_MolesUnitSchema,
+  Volume_VolumeUnitSchema,
+  type Amount,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { enumName } from './enum';
 
 export type AmountCategory = 'moles' | 'volume' | 'mass' | 'unmeasured' | '';
@@ -27,37 +31,36 @@ export interface AmountObj {
 }
 
 /**
- * Normalize a Compound.amount oneof (Amount.AsObject) into a flat
- * { unitAmount, unitType, unitCategory } triple so render code doesn't
- * have to branch on which oneof field is populated.
+ * Normalize a Compound.amount oneof into a flat { unitAmount, unitType, unitCategory }
+ * triple so render code doesn't have to branch on which oneof field is populated.
+ *
+ * An unset value reads as 0, the proto3 default.
  */
-export const amountObj = (amount: Amount.AsObject | undefined): AmountObj => {
-  if (!amount) return { unitCategory: '' };
-  if (amount.moles) {
-    return {
-      unitAmount: amount.moles.value,
-      unitType: enumName(reaction_pb.Moles.MolesUnit, amount.moles.units),
-      unitCategory: 'moles',
-    };
+export const amountObj = (amount: Amount | undefined): AmountObj => {
+  switch (amount?.kind.case) {
+    case 'moles':
+      return {
+        unitAmount: amount.kind.value.value ?? 0,
+        unitType: enumName(Moles_MolesUnitSchema, amount.kind.value.units),
+        unitCategory: 'moles',
+      };
+    case 'volume':
+      return {
+        unitAmount: amount.kind.value.value ?? 0,
+        unitType: enumName(Volume_VolumeUnitSchema, amount.kind.value.units),
+        unitCategory: 'volume',
+      };
+    case 'mass':
+      return {
+        unitAmount: amount.kind.value.value ?? 0,
+        unitType: enumName(Mass_MassUnitSchema, amount.kind.value.units),
+        unitCategory: 'mass',
+      };
+    case 'unmeasured':
+      return { unitCategory: 'unmeasured' };
+    default:
+      return { unitCategory: '' };
   }
-  if (amount.volume) {
-    return {
-      unitAmount: amount.volume.value,
-      unitType: enumName(reaction_pb.Volume.VolumeUnit, amount.volume.units),
-      unitCategory: 'volume',
-    };
-  }
-  if (amount.mass) {
-    return {
-      unitAmount: amount.mass.value,
-      unitType: enumName(reaction_pb.Mass.MassUnit, amount.mass.units),
-      unitCategory: 'mass',
-    };
-  }
-  if (amount.unmeasured) {
-    return { unitCategory: 'unmeasured' };
-  }
-  return { unitCategory: '' };
 };
 
 export const amountStr = (obj: AmountObj): string => {

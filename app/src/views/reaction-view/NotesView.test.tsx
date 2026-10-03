@@ -15,12 +15,17 @@
  */
 
 import { render } from '@testing-library/react';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { ReactionNotesSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import NotesView from './NotesView';
-import type { ReactionNotesData } from '../../types/search';
 
-const renderNotes = (notes: unknown): Record<string, string> => {
-  const { container } = render(<NotesView notes={notes as ReactionNotesData} />);
+const renderNotes = (
+  notes: MessageInitShape<typeof ReactionNotesSchema> | undefined,
+): Record<string, string> => {
+  const { container } = render(
+    <NotesView notes={notes && create(ReactionNotesSchema, notes)} />,
+  );
   const labels = [...container.querySelectorAll('.label')].map(
     el => el.textContent ?? '',
   );
@@ -46,9 +51,23 @@ describe('NotesView', () => {
     });
   });
 
-  // proto3 fills every unset scalar with false / "", which would otherwise
-  // render a row per field in the message.
-  it('skips fields left at their default', () => {
+  it('lists the notes in schema order', () => {
+    expect(
+      Object.keys(
+        renderNotes({ procedureDetails: 'stirred overnight', isHeterogeneous: true }),
+      ),
+    ).toEqual(['heterogeneous', 'procedure details']);
+  });
+
+  // Unset fields read as false or "", which would otherwise render a row per
+  // field in the message.
+  it('skips unset fields', () => {
+    expect(renderNotes({ formsPrecipitate: true })).toEqual({
+      'forms precipitate': 'true',
+    });
+  });
+
+  it('skips fields recorded at their default', () => {
     expect(
       renderNotes({
         isHeterogeneous: false,

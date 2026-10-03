@@ -16,40 +16,39 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import reaction_pb from 'ord-schema';
-import type { DateTime, Reaction, ReactionInput } from 'ord-schema/proto/reaction_pb';
+import { create, toBinary, type MessageInitShape } from '@bufbuild/protobuf';
+import {
+  CompoundIdentifier_CompoundIdentifierType,
+  ReactionInput_AdditionDevice_AdditionDeviceType,
+  ReactionIdentifier_ReactionIdentifierType,
+  ReactionInput_AdditionSpeed_AdditionSpeedType,
+  ReactionSchema,
+  ReactionWorkup_ReactionWorkupType,
+  StirringConditions_StirringMethodType,
+  Time_TimeUnit,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import MainReactionView from './MainReactionView';
 
-const encode = (reaction: Reaction): string =>
-  btoa(String.fromCharCode(...reaction.serializeBinary()));
-
-/** A reaction carrying only the sections each test needs. */
-const buildReaction = (build: (reaction: Reaction) => void = () => {}): string => {
-  const reaction = new reaction_pb.Reaction();
-  reaction.setReactionId('ord-1');
-  build(reaction);
-  return encode(reaction);
+/** A serialized reaction carrying only the sections each test needs. */
+const buildReaction = (init: MessageInitShape<typeof ReactionSchema> = {}): string => {
+  const reaction = create(ReactionSchema, { reactionId: 'ord-1', ...init });
+  return btoa(String.fromCharCode(...toBinary(ReactionSchema, reaction)));
 };
 
-const namedInput = (order: number, smiles?: string): ReactionInput => {
-  const input = new reaction_pb.ReactionInput();
-  input.setAdditionOrder(order);
-  if (smiles) {
-    const component = input.addComponents();
-    const identifier = component.addIdentifiers();
-    identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
-    identifier.setValue(smiles);
-  }
-  return input;
-};
-
-const timestamp = (value: string): DateTime => {
-  const time = new reaction_pb.DateTime();
-  time.setValue(value);
-  return time;
-};
+const namedInput = (order: number, smiles?: string) => ({
+  additionOrder: order,
+  components: smiles
+    ? [
+        {
+          identifiers: [
+            { type: CompoundIdentifier_CompoundIdentifierType.SMILES, value: smiles },
+          ],
+        },
+      ]
+    : [],
+});
 
 interface ApiOverrides {
   proto?: string | null;
@@ -177,9 +176,9 @@ describe('MainReactionView', () => {
   describe('the section nav', () => {
     it('lists only the sections the record actually has', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction.getInputsMap().set('m1_m2', namedInput(1, 'CCO'));
-          reaction.setNotes(new reaction_pb.ReactionNotes());
+        proto: buildReaction({
+          inputs: { m1_m2: namedInput(1, 'CCO') },
+          notes: {},
         }),
       });
       const { container } = renderReaction();
@@ -198,13 +197,11 @@ describe('MainReactionView', () => {
 
     it('adds the optional sections that are populated', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction.setSetup(new reaction_pb.ReactionSetup());
-          reaction.setConditions(new reaction_pb.ReactionConditions());
-          reaction.addObservations().setComment('turned yellow');
-          reaction
-            .addWorkups()
-            .setType(reaction_pb.ReactionWorkup.ReactionWorkupType.WASH);
+        proto: buildReaction({
+          setup: {},
+          conditions: {},
+          observations: [{ comment: 'turned yellow' }],
+          workups: [{ type: ReactionWorkup_ReactionWorkupType.WASH }],
         }),
       });
       const { container } = renderReaction();
@@ -220,13 +217,14 @@ describe('MainReactionView', () => {
   describe('identifiers', () => {
     it('names each identifier type', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          const identifier = reaction.addIdentifiers();
-          identifier.setType(
-            reaction_pb.ReactionIdentifier.ReactionIdentifierType.REACTION_SMILES,
-          );
-          identifier.setValue('CCO>>CC=O');
-          identifier.setDetails('from the paper');
+        proto: buildReaction({
+          identifiers: [
+            {
+              type: ReactionIdentifier_ReactionIdentifierType.REACTION_SMILES,
+              value: 'CCO>>CC=O',
+              details: 'from the paper',
+            },
+          ],
         }),
       });
       renderReaction();
@@ -250,9 +248,11 @@ describe('MainReactionView', () => {
     // the tabs read as the procedure was run.
     it('orders the tabs by addition order', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction.getInputsMap().set('added_second', namedInput(2, 'CC=O'));
-          reaction.getInputsMap().set('added_first', namedInput(1, 'CCO'));
+        proto: buildReaction({
+          inputs: {
+            added_second: namedInput(2, 'CC=O'),
+            added_first: namedInput(1, 'CCO'),
+          },
         }),
       });
       const { container } = renderReaction();
@@ -261,14 +261,29 @@ describe('MainReactionView', () => {
       expect(tabsIn(container, 'inputs')).toEqual(['added_first', 'added_second']);
     });
 
+    it('breaks addition-order ties by key', async () => {
+      stubApi({
+        proto: buildReaction({
+          inputs: {
+            solvent: namedInput(1, 'O'),
+            base: namedInput(1, '[Na+].[OH-]'),
+          },
+        }),
+      });
+      const { container } = renderReaction();
+
+      await screen.findByText('Inputs');
+      expect(tabsIn(container, 'inputs')).toEqual(['base', 'solvent']);
+    });
+
     it('shows the selected input and switches on click', async () => {
       const user = userEvent.setup();
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction.getInputsMap().set('first', namedInput(1, 'CCO'));
-          const second = namedInput(2, 'CC=O');
-          second.setAdditionOrder(2);
-          reaction.getInputsMap().set('second', second);
+        proto: buildReaction({
+          inputs: {
+            first: namedInput(1, 'CCO'),
+            second: namedInput(2, 'CC=O'),
+          },
         }),
       });
       const { container } = renderReaction();
@@ -283,23 +298,19 @@ describe('MainReactionView', () => {
 
     it('names the addition device, speed and duration', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          const input = namedInput(1, 'CCO');
-          const device = new reaction_pb.ReactionInput.AdditionDevice();
-          device.setType(
-            reaction_pb.ReactionInput.AdditionDevice.AdditionDeviceType.SYRINGE,
-          );
-          input.setAdditionDevice(device);
-          const speed = new reaction_pb.ReactionInput.AdditionSpeed();
-          speed.setType(
-            reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType.DROPWISE,
-          );
-          input.setAdditionSpeed(speed);
-          const duration = new reaction_pb.Time();
-          duration.setValue(30);
-          duration.setUnits(reaction_pb.Time.TimeUnit.MINUTE);
-          input.setAdditionDuration(duration);
-          reaction.getInputsMap().set('m1', input);
+        proto: buildReaction({
+          inputs: {
+            m1: {
+              ...namedInput(1, 'CCO'),
+              additionDevice: {
+                type: ReactionInput_AdditionDevice_AdditionDeviceType.SYRINGE,
+              },
+              additionSpeed: {
+                type: ReactionInput_AdditionSpeed_AdditionSpeedType.DROPWISE,
+              },
+              additionDuration: { value: 30, units: Time_TimeUnit.MINUTE },
+            },
+          },
         }),
       });
       renderReaction();
@@ -311,14 +322,37 @@ describe('MainReactionView', () => {
     });
   });
 
+  describe('input details', () => {
+    // The details pane lists the fields it knows how to format; other message
+    // fields such as additionTime are not React children and stay out of it.
+    it('renders an input that carries message fields it does not format', async () => {
+      stubApi({
+        proto: buildReaction({
+          inputs: {
+            m1: {
+              ...namedInput(1, 'CCO'),
+              additionTime: { value: 5, units: Time_TimeUnit.MINUTE },
+              flowRate: { value: 1 },
+              additionTemperature: { value: 0 },
+              texture: { type: 2 },
+            },
+          },
+        }),
+      });
+      const { container } = renderReaction();
+
+      await screen.findByText('Inputs');
+      const labels = [...container.querySelectorAll('#inputs .details .label')].map(
+        label => label.textContent,
+      );
+      expect(labels).toEqual(['addition Order']);
+    });
+  });
+
   describe('setup', () => {
     it('offers the automation tab only for an automated setup', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          const setup = new reaction_pb.ReactionSetup();
-          setup.setIsAutomated(true);
-          reaction.setSetup(setup);
-        }),
+        proto: buildReaction({ setup: { isAutomated: true } }),
       });
       const { container } = renderReaction();
 
@@ -332,9 +366,7 @@ describe('MainReactionView', () => {
 
     it('hides the automation tab for a manual setup', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction.setSetup(new reaction_pb.ReactionSetup());
-        }),
+        proto: buildReaction({ setup: {} }),
       });
       const { container } = renderReaction();
 
@@ -346,12 +378,7 @@ describe('MainReactionView', () => {
   describe('conditions', () => {
     it('offers a tab per populated condition', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          const conditions = new reaction_pb.ReactionConditions();
-          conditions.setTemperature(new reaction_pb.TemperatureConditions());
-          conditions.setStirring(new reaction_pb.StirringConditions());
-          reaction.setConditions(conditions);
-        }),
+        proto: buildReaction({ conditions: { temperature: {}, stirring: {} } }),
       });
       const { container } = renderReaction();
 
@@ -363,11 +390,7 @@ describe('MainReactionView', () => {
     // condition fields is set.
     it('offers the other tab for a loose condition field', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          const conditions = new reaction_pb.ReactionConditions();
-          conditions.setReflux(true);
-          reaction.setConditions(conditions);
-        }),
+        proto: buildReaction({ conditions: { reflux: true } }),
       });
       const { container } = renderReaction();
 
@@ -378,13 +401,11 @@ describe('MainReactionView', () => {
     it('switches condition panes on click', async () => {
       const user = userEvent.setup();
       stubApi({
-        proto: buildReaction(reaction => {
-          const conditions = new reaction_pb.ReactionConditions();
-          conditions.setTemperature(new reaction_pb.TemperatureConditions());
-          const stirring = new reaction_pb.StirringConditions();
-          stirring.setType(reaction_pb.StirringConditions.StirringMethodType.STIR_BAR);
-          conditions.setStirring(stirring);
-          reaction.setConditions(conditions);
+        proto: buildReaction({
+          conditions: {
+            temperature: {},
+            stirring: { type: StirringConditions_StirringMethodType.STIR_BAR },
+          },
         }),
       });
       const { container } = renderReaction();
@@ -401,13 +422,11 @@ describe('MainReactionView', () => {
   describe('workups', () => {
     it('labels each tab with a readable workup type', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction
-            .addWorkups()
-            .setType(reaction_pb.ReactionWorkup.ReactionWorkupType.DRY_IN_VACUUM);
-          reaction
-            .addWorkups()
-            .setType(reaction_pb.ReactionWorkup.ReactionWorkupType.FILTRATION);
+        proto: buildReaction({
+          workups: [
+            { type: ReactionWorkup_ReactionWorkupType.DRY_IN_VACUUM },
+            { type: ReactionWorkup_ReactionWorkupType.FILTRATION },
+          ],
         }),
       });
       const { container } = renderReaction();
@@ -419,13 +438,14 @@ describe('MainReactionView', () => {
     it('switches workups on click', async () => {
       const user = userEvent.setup();
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction
-            .addWorkups()
-            .setType(reaction_pb.ReactionWorkup.ReactionWorkupType.EXTRACTION);
-          const second = reaction.addWorkups();
-          second.setType(reaction_pb.ReactionWorkup.ReactionWorkupType.FILTRATION);
-          second.setDetails('through celite');
+        proto: buildReaction({
+          workups: [
+            { type: ReactionWorkup_ReactionWorkupType.EXTRACTION },
+            {
+              type: ReactionWorkup_ReactionWorkupType.FILTRATION,
+              details: 'through celite',
+            },
+          ],
         }),
       });
       const { container } = renderReaction();
@@ -442,10 +462,7 @@ describe('MainReactionView', () => {
   describe('outcomes', () => {
     it('numbers the outcome tabs', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          reaction.addOutcomes();
-          reaction.addOutcomes();
-        }),
+        proto: buildReaction({ outcomes: [{}, {}] }),
       });
       const { container } = renderReaction();
 
@@ -457,15 +474,13 @@ describe('MainReactionView', () => {
   describe('record events', () => {
     it('labels the creation event and orders events oldest first', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          const provenance = new reaction_pb.ReactionProvenance();
-          const createdEvent = new reaction_pb.RecordEvent();
-          createdEvent.setTime(timestamp('2021-01-01T00:00:00Z'));
-          provenance.setRecordCreated(createdEvent);
-          const modified = provenance.addRecordModified();
-          modified.setTime(timestamp('2020-01-01T00:00:00Z'));
-          modified.setDetails('backdated edit');
-          reaction.setProvenance(provenance);
+        proto: buildReaction({
+          provenance: {
+            recordCreated: { time: { value: '2021-01-01T00:00:00Z' } },
+            recordModified: [
+              { time: { value: '2020-01-01T00:00:00Z' }, details: 'backdated edit' },
+            ],
+          },
         }),
       });
       const { container } = renderReaction();
@@ -479,11 +494,7 @@ describe('MainReactionView', () => {
 
     it('omits the section when the record has no creation event', async () => {
       stubApi({
-        proto: buildReaction(reaction => {
-          const provenance = new reaction_pb.ReactionProvenance();
-          provenance.setCity('Cambridge');
-          reaction.setProvenance(provenance);
-        }),
+        proto: buildReaction({ provenance: { city: 'Cambridge' } }),
       });
       renderReaction();
 
@@ -493,6 +504,20 @@ describe('MainReactionView', () => {
   });
 
   describe('the full record', () => {
+    // The raw view is the proto3 JSON mapping, which names enum values.
+    it('names enum values in the raw JSON', async () => {
+      const user = userEvent.setup();
+      stubApi({
+        proto: buildReaction({
+          workups: [{ type: ReactionWorkup_ReactionWorkupType.FILTRATION }],
+        }),
+      });
+      renderReaction();
+
+      await user.click(await screen.findByText('View Full Record'));
+      expect(screen.getByText(/"type": "FILTRATION"/)).toBeInTheDocument();
+    });
+
     it('opens and closes the raw JSON', async () => {
       const user = userEvent.setup();
       stubApi();

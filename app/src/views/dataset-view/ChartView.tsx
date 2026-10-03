@@ -17,7 +17,11 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import reaction_pb from 'ord-schema';
+import { create, toBinary } from '@bufbuild/protobuf';
+import {
+  CompoundIdentifier_CompoundIdentifierType,
+  CompoundSchema,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { fetchJson } from '../../utils/api';
 import './ChartView.scss';
 
@@ -57,12 +61,13 @@ const ChartView: React.FC<ChartViewProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
 
   const getMolHtml = useCallback(async (smiles: string): Promise<string> => {
-    const compound = new reaction_pb.Compound();
-    const identifier = compound.addIdentifiers();
-    identifier.setValue(smiles);
-    identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
+    const compound = create(CompoundSchema, {
+      identifiers: [
+        { type: CompoundIdentifier_CompoundIdentifierType.SMILES, value: smiles },
+      ],
+    });
 
-    const binary = compound.serializeBinary();
+    const binary = toBinary(CompoundSchema, compound);
 
     // Throw on non-2xx (via fetchJson) so the caller's .catch sets molHtml to
     // null instead of feeding an HTML error page to dangerouslySetInnerHTML.
@@ -73,7 +78,7 @@ const ChartView: React.FC<ChartViewProps> = ({
         headers: {
           'Content-Type': 'application/x-protobuf',
         },
-        body: binary as BodyInit,
+        body: binary,
       },
       'compound_svg',
     );

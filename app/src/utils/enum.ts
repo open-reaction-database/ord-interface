@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
+import type { DescEnum } from '@bufbuild/protobuf';
+
 /**
- * Reverse-lookup the name of a protobuf enum map (e.g.
- * `ReactionSetup.ReactionEnvironment.ReactionEnvironmentType`) for a given numeric value.
+ * Look up the protobuf name of an enum value, e.g. `HOUR` for a `Time_TimeUnit`.
  *
- * ord-schema generates these as TS interfaces (`{ UNSPECIFIED: 0; CUSTOM: 1; ... }`)
- * rather than indexable records, so this helper takes `unknown` for the map and
- * narrows internally rather than asking callers to add unsafe casts.
+ * Takes the enum's descriptor (`Time_TimeUnitSchema`) so the name comes from the
+ * schema. Proto3 enums are open, so a decoded record can carry a number the schema
+ * does not declare; that returns undefined.
  */
 export function enumName(
-  enumMap: unknown,
+  schema: DescEnum,
   value: number | undefined,
 ): string | undefined {
-  if (value === undefined || enumMap === null || typeof enumMap !== 'object')
-    return undefined;
-  for (const [key, mapped] of Object.entries(enumMap as Record<string, unknown>)) {
-    if (mapped === value) return key;
-  }
-  return undefined;
+  if (value === undefined) return undefined;
+  return schema.value[value]?.name;
 }

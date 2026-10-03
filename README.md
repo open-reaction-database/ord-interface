@@ -92,7 +92,7 @@ Production deployment is managed via Pulumi/ECS in the [`ord-infrastructure`](ht
 ### Minor changes (e.g. enum additions)
 
 - Update the `ord-schema` specifier in `pyproject.toml` under `[project] dependencies`, then run `uv lock` to refresh `uv.lock`.
-- Update the matching `ord-schema` version in [`app/package.json`](./app/package.json), then run `npm install` to refresh `app/package-lock.json`.
+- Update the frontend's schema package, the protobuf-es SDK that the Buf Schema Registry generates from ord-schema. From `app/`, run `npm install --save-exact @buf/open-reaction-database_ord-schema.bufbuild_es@label-vX.Y.Z` for the matching release; this rewrites [`app/package.json`](./app/package.json) and `app/package-lock.json`. Keep the version exact: BSR versions sort by commit timestamp, so a caret range would float to newer, unreleased commits. [`app/.npmrc`](./app/.npmrc) points the `@buf` scope at the BSR's npm registry.
 - Contact the ORD site administrator to roll out the new version to staging.
 
 ### Major changes (new message types, etc.)

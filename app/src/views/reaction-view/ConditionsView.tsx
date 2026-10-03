@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import type { ReactionConditions } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import {
   electrochemType,
   flowType,
@@ -27,12 +28,12 @@ import {
   stirType,
   tempSetPoint,
   tempType,
+  wavelengthStr,
 } from '../../utils/conditions';
-import type { ReactionConditionsData } from '../../types/search';
 import './ConditionsView.scss';
 
 interface ConditionsViewProps {
-  conditions: ReactionConditionsData | undefined;
+  conditions: ReactionConditions | undefined;
   display: string;
 }
 
@@ -54,11 +55,11 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           )}
           <div className="label">Setpoint</div>
           <div className="value">{tempSetPoint(t?.setpoint)}</div>
-          {t?.measurementsList && t.measurementsList.length > 0 && (
+          {t && t.measurements.length > 0 && (
             <>
               <div className="label">Measurements</div>
               {/* TODO: render temperature measurements once the schema's shape is fully ported. */}
-              <div className="value">{t.measurementsList.length} recorded</div>
+              <div className="value">{t.measurements.length} recorded</div>
             </>
           )}
         </div>
@@ -83,11 +84,11 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           <div className="value">{pressureSetPoint(p?.setpoint)}</div>
           <div className="label">Atmosphere</div>
           <div className="value">{pressureAtmo(p?.atmosphere)}</div>
-          {p?.measurementsList && p.measurementsList.length > 0 && (
+          {p && p.measurements.length > 0 && (
             <>
               <div className="label">Measurements</div>
               {/* TODO: render pressure measurements once the schema's shape is fully ported. */}
-              <div className="value">{p.measurementsList.length} recorded</div>
+              <div className="value">{p.measurements.length} recorded</div>
             </>
           )}
         </div>
@@ -130,7 +131,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
           <div className="label">Type</div>
           <div className="value">{illumType(i)}</div>
           <div className="label">Peak Wavelength</div>
-          <div className="value">{lengthStr(i?.peakWavelength) ?? 'None'}</div>
+          <div className="value">{wavelengthStr(i?.peakWavelength) ?? 'None'}</div>
           {i?.color && (
             <>
               <div className="label">Color</div>
@@ -169,7 +170,7 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
               <div className="value">{e.cathodeMaterial}</div>
             </>
           )}
-          {/* TODO: render current, voltage, electrodeSeparation, and measurementsList. */}
+          {/* TODO: render current, voltage, electrodeSeparation, and measurements. */}
         </div>
       </div>
     );
@@ -210,9 +211,9 @@ const ConditionsView: React.FC<ConditionsViewProps> = ({ conditions, display }) 
               <div className="value">yes</div>
             </>
           )}
-          {/* See WorkupsView for the proto3 zero-default tradeoff: 0 means
-              "default unset" *or* a real, strongly-acidic pH. Match the Vue
-              v-if='conditions.ph' behavior and hide on 0. */}
+          {/* pH has explicit presence, so an unset value is undefined. A recorded
+              0 is hidden as well, matching the Vue v-if='conditions.ph'
+              behavior. */}
           {conditions.ph !== undefined && conditions.ph !== 0 && (
             <>
               <div className="label">pH</div>

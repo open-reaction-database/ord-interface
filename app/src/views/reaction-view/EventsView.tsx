@@ -15,11 +15,11 @@
  */
 
 import React, { useState } from 'react';
-import type { RecordEvent } from 'ord-schema/proto/reaction_pb';
+import type { RecordEvent } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import './EventsView.scss';
 
 interface EventsViewProps {
-  events: RecordEvent.AsObject[];
+  events: RecordEvent[];
 }
 
 const EventsView: React.FC<EventsViewProps> = ({ events }) => {

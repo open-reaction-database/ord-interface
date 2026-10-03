@@ -14,36 +14,38 @@
  * limitations under the License.
  */
 
-import reaction_pb from 'ord-schema';
-import type { Percentage, Time } from 'ord-schema/proto/reaction_pb';
+import {
+  Time_TimeUnitSchema,
+  type Percentage,
+  type Time,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { enumName } from './enum';
 
 /**
- * Format a Time.AsObject as "<value> <unit>(s)" matching the Vue port's
+ * Format a Time as "<value> <unit>(s)" matching the Vue port's
  * `outcomesUtil.formattedTime`. Returns null when there's nothing to show.
+ *
+ * An unset value reads as 0, the proto3 default.
  */
-export const formattedTime = (time: Time.AsObject | undefined): string | null => {
+export const formattedTime = (time: Time | undefined): string | null => {
   if (!time) return null;
-  const type = enumName(reaction_pb.Time.TimeUnit, time.units);
+  const type = enumName(Time_TimeUnitSchema, time.units);
   if (!type) return null;
   // UNSPECIFIED has enum value 0; the Vue util only pluralizes the others.
   const pluralized = time.units !== 0 ? '(s)' : '';
-  return `${time.value} ${type.toLowerCase()}${pluralized}`;
+  return `${time.value ?? 0} ${type.toLowerCase()}${pluralized}`;
 };
 
 /**
- * Format a Percentage.AsObject as "X%" or "X% ± Y", rounded to one decimal.
+ * Format a Percentage as "X%" or "X% ± Y", rounded to one decimal.
  * Used by both ReactionCard yield/conversion and OutcomesView so the two
- * call sites stay in sync.
+ * call sites stay in sync. An unset value reads as 0, the proto3 default.
  */
-export const formatPercentage = (
-  percentage: Percentage.AsObject | undefined,
-): string => {
+export const formatPercentage = (percentage: Percentage | undefined): string => {
   if (!percentage) return '';
-  const rounded = Math.round(percentage.value * 10) / 10;
-  // Percentage.precision defaults to 0 in proto3; treat 0 as "no precision
-  // recorded" rather than "± 0", matching the Vue OutcomesView's
-  // `isNaN(precision)` guard.
+  const rounded = Math.round((percentage.value ?? 0) * 10) / 10;
+  // A precision of 0 renders like an unset one rather than as "± 0", matching
+  // the Vue OutcomesView's `isNaN(precision)` guard.
   const precision =
     Number.isFinite(percentage.precision) && percentage.precision !== 0
       ? ` ± ${percentage.precision}`

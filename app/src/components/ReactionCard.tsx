@@ -16,16 +16,21 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import reaction_pb from 'ord-schema';
-import type {
-  CompoundIdentifier,
-  ProductMeasurement,
-} from 'ord-schema/proto/reaction_pb';
+import {
+  CompoundIdentifier_CompoundIdentifierTypeSchema,
+  Pressure_PressureUnitSchema,
+  ProductMeasurement_ProductMeasurementType,
+  Temperature_TemperatureUnitSchema,
+  Time_TimeUnitSchema,
+  type CompoundIdentifier,
+  type ProductMeasurement,
+  type Reaction,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import LoadingSpinner from './LoadingSpinner';
 import CopyButton from './CopyButton';
 import { enumName } from '../utils/enum';
 import { formatPercentage } from '../utils/outcomes';
-import type { SearchResult, ReactionData } from '../types/search';
+import type { SearchResult } from '../types/search';
 import './ReactionCard.scss';
 
 interface ReactionCardProps {
@@ -34,9 +39,6 @@ interface ReactionCardProps {
   isSelected?: boolean;
   onSelectionChange?: (reactionId: string, isSelected: boolean) => void;
 }
-
-const YIELD_MEASUREMENT_TYPE =
-  reaction_pb.ProductMeasurement.ProductMeasurementType.YIELD;
 
 const ReactionCard: React.FC<ReactionCardProps> = ({
   reaction,
@@ -66,38 +68,43 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
     }
   }, [reaction.reaction_id]);
 
-  const getYield = (measurements: ProductMeasurement.AsObject[] = []): string => {
-    const yieldObj = measurements.find(m => m.type === YIELD_MEASUREMENT_TYPE);
-    return yieldObj?.percentage ? formatPercentage(yieldObj.percentage) : 'Not listed';
+  const getYield = (measurements: ProductMeasurement[] = []): string => {
+    const yieldObj = measurements.find(
+      m => m.type === ProductMeasurement_ProductMeasurementType.YIELD,
+    );
+    return yieldObj?.value.case === 'percentage'
+      ? formatPercentage(yieldObj.value.value)
+      : 'Not listed';
   };
 
-  const getConversion = (data: ReactionData | undefined): string => {
-    const conversion = data?.outcomesList?.[0]?.conversion;
+  const getConversion = (data: Reaction | undefined): string => {
+    const conversion = data?.outcomes[0]?.conversion;
     if (!conversion) return 'Not listed';
     return formatPercentage(conversion);
   };
 
-  const conditionsAndDuration = (data: ReactionData | undefined): string[] => {
+  // An unset setpoint value reads as 0, the proto3 default.
+  const conditionsAndDuration = (data: Reaction | undefined): string[] => {
     const details: string[] = [];
     if (!data) return details;
 
     const temp = data.conditions?.temperature?.setpoint;
     if (temp) {
-      const units = enumName(reaction_pb.Temperature.TemperatureUnit, temp.units);
-      details.push(`at ${temp.value}${units ? ` ${units.toLowerCase()}` : '°C'}`);
+      const units = enumName(Temperature_TemperatureUnitSchema, temp.units);
+      details.push(`at ${temp.value ?? 0}${units ? ` ${units.toLowerCase()}` : '°C'}`);
     }
 
     const pressure = data.conditions?.pressure?.setpoint;
     if (pressure) {
-      const units = enumName(reaction_pb.Pressure.PressureUnit, pressure.units);
+      const units = enumName(Pressure_PressureUnitSchema, pressure.units);
       details.push(
-        `under ${pressure.value}${units ? ` ${units.toLowerCase()}` : ' atm'}`,
+        `under ${pressure.value ?? 0}${units ? ` ${units.toLowerCase()}` : ' atm'}`,
       );
     }
 
-    const reactionTime = data.outcomesList?.[0]?.reactionTime;
+    const reactionTime = data.outcomes[0]?.reactionTime;
     if (reactionTime?.value) {
-      const units = enumName(reaction_pb.Time.TimeUnit, reactionTime.units);
+      const units = enumName(Time_TimeUnitSchema, reactionTime.units);
       details.push(
         `for ${reactionTime.value}${units ? ` ${units.toLowerCase()}` : 's'}`,
       );
@@ -106,9 +113,9 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
     return details;
   };
 
-  const productIdentifier = (identifier: CompoundIdentifier.AsObject): string => {
+  const productIdentifier = (identifier: CompoundIdentifier): string => {
     const type = enumName(
-      reaction_pb.CompoundIdentifier.CompoundIdentifierType,
+      CompoundIdentifier_CompoundIdentifierTypeSchema,
       identifier.type,
     );
     return `${type ?? ''}: ${identifier.value}`;
@@ -129,9 +136,9 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
   }, [getReactionTable]);
 
   const reactionData = reaction.data;
-  const firstOutcome = reactionData?.outcomesList?.[0];
-  const firstProduct = firstOutcome?.productsList?.[0];
-  const firstProductIdentifier = firstProduct?.identifiersList?.[0];
+  const firstOutcome = reactionData?.outcomes[0];
+  const firstProduct = firstOutcome?.products[0];
+  const firstProductIdentifier = firstProduct?.identifiers[0];
   const provenance = reactionData?.provenance;
 
   return (
@@ -171,7 +178,7 @@ const ReactionCard: React.FC<ReactionCardProps> = ({
 
           <div className="col">
             <div className="yield">
-              Yield: {getYield(firstProduct?.measurementsList || [])}
+              Yield: {getYield(firstProduct?.measurements || [])}
             </div>
             <div className="conversion">Conversion: {getConversion(reactionData)}</div>
             <div className="conditions">

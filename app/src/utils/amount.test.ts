@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-import type { Amount } from 'ord-schema/proto/reaction_pb';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import {
+  AmountSchema,
+  type Mass_MassUnit,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import { amountObj, amountStr } from './amount';
 
-// Only the oneof field under test is populated, and some cases carry a unit
-// value outside the generated enum, so the fields are cast rather than typed.
-const amount = (fields: unknown): Amount.AsObject => fields as Amount.AsObject;
+const amount = (init: MessageInitShape<typeof AmountSchema>) =>
+  create(AmountSchema, init);
 
 describe('amountObj', () => {
   it('reports no category without an amount', () => {
@@ -33,49 +36,55 @@ describe('amountObj', () => {
 
   it('normalizes moles', () => {
     expect(
-      amountObj(amount({ moles: { value: 1.5, units: 2, precision: 0 } })),
+      amountObj(amount({ kind: { case: 'moles', value: { value: 1.5, units: 2 } } })),
     ).toEqual({ unitAmount: 1.5, unitType: 'MILLIMOLE', unitCategory: 'moles' });
   });
 
   it('normalizes volume', () => {
     expect(
-      amountObj(amount({ volume: { value: 10, units: 2, precision: 0 } })),
+      amountObj(amount({ kind: { case: 'volume', value: { value: 10, units: 2 } } })),
     ).toEqual({ unitAmount: 10, unitType: 'MILLILITER', unitCategory: 'volume' });
   });
 
   it('normalizes mass', () => {
-    expect(amountObj(amount({ mass: { value: 250, units: 3, precision: 0 } }))).toEqual(
-      {
-        unitAmount: 250,
-        unitType: 'MILLIGRAM',
-        unitCategory: 'mass',
-      },
-    );
-  });
-
-  it('normalizes an unmeasured amount, which carries no value', () => {
-    expect(amountObj(amount({ unmeasured: { type: 1, details: '' } }))).toEqual({
-      unitCategory: 'unmeasured',
-    });
-  });
-
-  it('leaves the unit type undefined when the units are unrecognized', () => {
-    expect(amountObj(amount({ mass: { value: 1, units: 99, precision: 0 } }))).toEqual({
-      unitAmount: 1,
-      unitType: undefined,
+    expect(
+      amountObj(amount({ kind: { case: 'mass', value: { value: 250, units: 3 } } })),
+    ).toEqual({
+      unitAmount: 250,
+      unitType: 'MILLIGRAM',
       unitCategory: 'mass',
     });
   });
 
-  it('prefers moles when more than one oneof field survived serialization', () => {
+  it('normalizes an unmeasured amount, which carries no value', () => {
+    expect(
+      amountObj(amount({ kind: { case: 'unmeasured', value: { type: 1 } } })),
+    ).toEqual({
+      unitCategory: 'unmeasured',
+    });
+  });
+
+  it('reads an unset value as zero', () => {
+    expect(amountObj(amount({ kind: { case: 'mass', value: { units: 2 } } }))).toEqual({
+      unitAmount: 0,
+      unitType: 'GRAM',
+      unitCategory: 'mass',
+    });
+  });
+
+  // Proto3 enums are open, so a decoded record can carry an undeclared unit.
+  it('leaves the unit type undefined when the units are unrecognized', () => {
     expect(
       amountObj(
         amount({
-          moles: { value: 1, units: 1, precision: 0 },
-          volume: { value: 2, units: 1, precision: 0 },
+          kind: { case: 'mass', value: { value: 1, units: 99 as Mass_MassUnit } },
         }),
-      ).unitCategory,
-    ).toBe('moles');
+      ),
+    ).toEqual({
+      unitAmount: 1,
+      unitType: undefined,
+      unitCategory: 'mass',
+    });
   });
 });
 
@@ -110,7 +119,11 @@ describe('amountStr', () => {
 
   it('round-trips an Amount through both helpers', () => {
     expect(
-      amountStr(amountObj(amount({ volume: { value: 2.5, units: 3, precision: 0 } }))),
+      amountStr(
+        amountObj(
+          amount({ kind: { case: 'volume', value: { value: 2.5, units: 3 } } }),
+        ),
+      ),
     ).toBe('2.5 microliter');
   });
 });

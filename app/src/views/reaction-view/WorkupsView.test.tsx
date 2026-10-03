@@ -15,15 +15,17 @@
  */
 
 import { render } from '@testing-library/react';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { ReactionWorkupSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import WorkupsView from './WorkupsView';
-import type { ReactionWorkupData } from '../../types/search';
 
 const SMILES = 2;
 const NAME = 6;
 
-const renderWorkup = (workup: unknown) =>
-  render(<WorkupsView workup={workup as ReactionWorkupData} />);
+const renderWorkup = (
+  workup: MessageInitShape<typeof ReactionWorkupSchema> | undefined,
+) => render(<WorkupsView workup={workup && create(ReactionWorkupSchema, workup)} />);
 
 const fields = (container: HTMLElement): Record<string, string> => {
   const details = container.querySelector('.details');
@@ -57,7 +59,7 @@ describe('WorkupsView', () => {
       type: 6,
       details: 'washed twice',
       duration: { value: 30, units: 2, precision: 0 },
-      amount: { volume: { value: 5, units: 2, precision: 0 } },
+      amount: { kind: { case: 'volume', value: { value: 5, units: 2, precision: 0 } } },
       keepPhase: 'organic',
       targetPh: 7,
       isAutomated: true,
@@ -79,9 +81,13 @@ describe('WorkupsView', () => {
     expect(fields(container)).toEqual({ Type: 'FILTRATION' });
   });
 
-  // proto3 defaults targetPh to 0, which is indistinguishable from a real,
-  // strongly acidic reading, so it is treated as unset.
   it('hides an unset target pH', () => {
+    const { container } = renderWorkup({ type: 6 });
+    expect(fields(container)).not.toHaveProperty('Target pH');
+  });
+
+  // A recorded 0 is hidden too, matching the Vue view.
+  it('hides a zero target pH', () => {
     const { container } = renderWorkup({ type: 6, targetPh: 0 });
     expect(fields(container)).not.toHaveProperty('Target pH');
   });
@@ -91,13 +97,13 @@ describe('WorkupsView', () => {
       const { container } = renderWorkup({
         type: 6,
         input: {
-          componentsList: [
+          components: [
             {
-              identifiersList: [
+              identifiers: [
                 { type: SMILES, value: 'O' },
                 { type: NAME, value: 'water' },
               ],
-              amount: { volume: { value: 10, units: 2, precision: 0 } },
+              amount: { kind: { case: 'volume', value: { value: 10, units: 2 } } },
             },
           ],
         },
@@ -111,10 +117,10 @@ describe('WorkupsView', () => {
       const { container } = renderWorkup({
         type: 6,
         input: {
-          componentsList: [
+          components: [
             {
-              identifiersList: [{ type: SMILES, value: 'CCO' }],
-              amount: { volume: { value: 1, units: 2, precision: 0 } },
+              identifiers: [{ type: SMILES, value: 'CCO' }],
+              amount: { kind: { case: 'volume', value: { value: 1, units: 2 } } },
             },
           ],
         },
@@ -126,14 +132,14 @@ describe('WorkupsView', () => {
     it('renders an empty label when the component has no identifiers', () => {
       const { container } = renderWorkup({
         type: 6,
-        input: { componentsList: [{ identifiersList: [] }] },
+        input: { components: [{ identifiers: [] }] },
       });
 
       expect(inputs(container)).toEqual([['', '']]);
     });
 
     it('omits the inputs section when there are no components', () => {
-      const { container } = renderWorkup({ type: 6, input: { componentsList: [] } });
+      const { container } = renderWorkup({ type: 6, input: { components: [] } });
       expect(container.querySelector('.inputs')).toBeNull();
     });
   });

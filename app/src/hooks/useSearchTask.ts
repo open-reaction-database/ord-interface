@@ -16,7 +16,8 @@
 
 import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import reaction_pb from 'ord-schema';
+import { fromBinary } from '@bufbuild/protobuf';
+import { ReactionSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { base64ToBytes } from '../utils/base64';
 import { fetchJson } from '../utils/api';
 import type { SearchResult } from '../types/search';
@@ -113,9 +114,7 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
         const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
         const results: SearchResult[] = raw.map(r => ({
           ...r,
-          data: reaction_pb.Reaction.deserializeBinary(
-            new Uint8Array(base64ToBytes(r.proto)),
-          ).toObject(),
+          data: fromBinary(ReactionSchema, new Uint8Array(base64ToBytes(r.proto))),
         }));
         taskRef.current.taskId = null;
         return { status: 'success', results };

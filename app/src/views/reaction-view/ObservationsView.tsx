@@ -15,12 +15,12 @@
  */
 
 import React from 'react';
+import type { ReactionObservation } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { formattedTime } from '../../utils/outcomes';
-import type { ReactionObservationData } from '../../types/search';
 import './ObservationsView.scss';
 
 interface ObservationsViewProps {
-  observations: ReactionObservationData[];
+  observations: ReactionObservation[];
 }
 
 const ObservationsView: React.FC<ObservationsViewProps> = ({ observations }) => {

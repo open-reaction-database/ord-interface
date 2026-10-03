@@ -18,8 +18,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { create } from '@bufbuild/protobuf';
+import { ReactionSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import SearchResults from './SearchResults';
-import type { ReactionData, SearchResult } from '../../types/search';
+import type { SearchResult } from '../../types/search';
 
 const SEARCH = '?dataset_id=ord_dataset-1';
 
@@ -28,7 +30,7 @@ const results = (...ids: string[]): SearchResult[] =>
     reaction_id: id,
     dataset_id: 'ord_dataset-1',
     proto: '',
-    data: {} as ReactionData,
+    data: create(ReactionSchema),
   }));
 
 let selectedSetSearch = '';

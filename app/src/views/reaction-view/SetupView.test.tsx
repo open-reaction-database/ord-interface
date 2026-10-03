@@ -15,9 +15,10 @@
  */
 
 import { render } from '@testing-library/react';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { ReactionSetupSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import SetupView from './SetupView';
-import type { ReactionSetupData } from '../../types/search';
 
 const fields = (container: HTMLElement): Record<string, string> => {
   const details = container.querySelector('.details');
@@ -31,11 +32,14 @@ const fields = (container: HTMLElement): Record<string, string> => {
   return Object.fromEntries(labels.map((label, index) => [label, values[index] ?? '']));
 };
 
-const renderSetup = (setup: unknown, display: string) =>
+const renderSetup = (
+  setup: MessageInitShape<typeof ReactionSetupSchema>,
+  display: string,
+) =>
   fields(
     render(
       <SetupView
-        setup={setup as ReactionSetupData}
+        setup={create(ReactionSetupSchema, setup)}
         display={display}
       />,
     ).container,
@@ -74,11 +78,11 @@ describe('SetupView', () => {
           {
             vessel: {
               type: 2,
-              attachmentsList: [
+              attachments: [
                 { type: 3, details: 'rubber' },
                 { type: 4, details: '' },
               ],
-              preparationsList: [{ type: 4, details: '' }],
+              preparations: [{ type: 4, details: '' }],
             },
           },
           'vessel',
