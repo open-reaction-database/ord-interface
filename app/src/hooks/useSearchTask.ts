@@ -107,12 +107,6 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
         }
       }
 
-      if (Date.now() - task.startTime > POLL_TIMEOUT_MS) {
-        const id = task.taskId;
-        task.taskId = null;
-        throw new Error(`Search task ${id} timed out after ${POLL_TIMEOUT_MS / 1000}s`);
-      }
-
       const res = await fetch(`/api/fetch_query_result?task_id=${task.taskId}`);
 
       if (res.status === 200) {
@@ -127,7 +121,16 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
         return { status: 'success', results };
       }
 
+      // The deadline applies only to a task that is still running, so a result
+      // that is ready by the first poll past it is returned, not discarded.
       if (res.status === 202) {
+        if (Date.now() - task.startTime > POLL_TIMEOUT_MS) {
+          const id = task.taskId;
+          task.taskId = null;
+          throw new Error(
+            `Search task ${id} timed out after ${POLL_TIMEOUT_MS / 1000}s`,
+          );
+        }
         return { status: 'pending', taskId: task.taskId };
       }
 

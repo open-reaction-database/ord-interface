@@ -249,7 +249,7 @@ describe('useSearchTask', () => {
           now = 200_000;
           return jsonResponse('task-9');
         }
-        return jsonResponse([], 200);
+        return jsonResponse([], 202);
       }),
     );
     const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
@@ -258,6 +258,27 @@ describe('useSearchTask', () => {
     expect(result.current.error?.message).toBe(
       'Search task task-9 timed out after 120s',
     );
+  });
+
+  // Polling pauses in a hidden tab, so the next poll can come after the deadline.
+  it('returns a result that is ready once the deadline has passed', async () => {
+    let now = 0;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    stubProtocol([
+      { status: 202 },
+      {
+        status: 200,
+        body: [{ reaction_id: 'ord-1', proto: encodedReaction('ord-1') }],
+      },
+    ]);
+    const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
+    await waitFor(() => expect(result.current.data?.status).toBe('pending'));
+
+    now = 200_000;
+
+    await waitFor(() => expect(reactionIds(result.current.data)).toEqual(['ord-1']), {
+      timeout: 3000,
+    });
   });
 
   it('starts a fresh task when the query string changes', async () => {
