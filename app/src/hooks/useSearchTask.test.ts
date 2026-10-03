@@ -62,10 +62,11 @@ const stubProtocol = (
   return fetchMock;
 };
 
+const requestedUrls = (fetchMock: ReturnType<typeof vi.fn>): string[] =>
+  fetchMock.mock.calls.map(call => call[0] as string);
+
 const submitCalls = (fetchMock: ReturnType<typeof vi.fn>): string[] =>
-  fetchMock.mock.calls
-    .map(call => call[0] as string)
-    .filter(url => url.startsWith('/api/submit_query'));
+  requestedUrls(fetchMock).filter(url => url.startsWith('/api/submit_query'));
 
 const reactionIds = (data: unknown): string[] | undefined =>
   (data as { results?: Array<{ reaction_id: string }> } | undefined)?.results?.map(
@@ -154,7 +155,9 @@ describe('useSearchTask', () => {
     const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(fetchMock).toHaveBeenCalledWith('/api/fetch_query_result?task_id=task-42');
+    expect(requestedUrls(fetchMock)).toContain(
+      '/api/fetch_query_result?task_id=task-42',
+    );
   });
 
   it('deserializes the result protos', async () => {
@@ -300,6 +303,42 @@ describe('useSearchTask', () => {
     ]);
   });
 
+  // A request with no bound would leave the search loading for as long as it hangs.
+  it('fails a search whose poll request stalls', async () => {
+    const stall = new AbortController();
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(stall.signal);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) =>
+        url.startsWith('/api/submit_query')
+          ? Promise.resolve(jsonResponse('task-1'))
+          : new Promise<Response>((_, reject) =>
+              init?.signal?.addEventListener('abort', () =>
+                reject(init.signal!.reason),
+              ),
+            ),
+      ),
+    );
+    const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
+    await waitFor(() => expect(timeout).toHaveBeenCalledTimes(2));
+
+    stall.abort(new DOMException('signal timed out', 'TimeoutError'));
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(timeout).toHaveBeenCalledWith(30_000);
+  });
+
+  // Rerunning must not re-read a task whose result could not be decoded.
+  it('submits again when a failed search runs again', async () => {
+    const fetchMock = stubProtocol([{ status: 200, body: [{ proto: '!' }] }]);
+    const { result } = renderSearchTask('?dataset_id=ord_dataset-1');
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    await act(() => result.current.refetch());
+
+    expect(submitCalls(fetchMock)).toHaveLength(2);
+  });
+
   // The cached result still says pending after the error, and polling on from it
   // would resubmit the query and start another backend task.
   describe('after giving up on a pending task', () => {
@@ -365,7 +404,9 @@ describe('useSearchTask', () => {
   describe('when a superseded search submit returns late', () => {
     it('polls its own task, not the current search task', async () => {
       const { fetchMock } = await raceSearches();
-      expect(fetchMock).toHaveBeenCalledWith('/api/fetch_query_result?task_id=task-A');
+      expect(requestedUrls(fetchMock)).toContain(
+        '/api/fetch_query_result?task_id=task-A',
+      );
     });
 
     it('caches its own results for a return to that search', async () => {

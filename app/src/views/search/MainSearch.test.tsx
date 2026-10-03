@@ -81,9 +81,8 @@ describe('MainSearch', () => {
 
   it('runs a search when the URL carries criteria', () => {
     renderSearch('?dataset_id=ord_dataset-1');
-    expect(fetch).toHaveBeenCalledWith(
+    expect(vi.mocked(fetch).mock.calls[0][0]).toBe(
       '/api/submit_query?dataset_id=ord_dataset-1',
-      undefined,
     );
   });
 
@@ -185,10 +184,7 @@ describe('MainSearch', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(submits + 1));
     expect(currentSearch).toBe(searchedFor);
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      `/api/submit_query${searchedFor}`,
-      undefined,
-    );
+    expect(fetchMock.mock.lastCall?.[0]).toBe(`/api/submit_query${searchedFor}`);
   });
 
   it('reports an empty result set', async () => {
