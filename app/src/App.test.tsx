@@ -127,7 +127,7 @@ describe('App', () => {
 
   // The selected tabs belong to the reaction they were picked on; the second
   // input tab does not exist on a reaction with one input.
-  it('starts a newly routed reaction on its first tabs', async () => {
+  it('starts a newly routed reaction on its first input', async () => {
     const user = userEvent.setup();
     stubReactions({
       'ord-1': encodedReaction('m1', 'm2'),
@@ -141,6 +141,20 @@ describe('App', () => {
     expect(await screen.findByText('m3')).toBeInTheDocument();
     expect(inputTabs(container)).toEqual(['m3']);
     expect(container.querySelector('#inputs .tab.selected')?.textContent).toBe('m3');
+  });
+
+  it('drops the previous reaction while the next one loads', async () => {
+    stubReactions({
+      'ord-1': encodedReaction('m1'),
+      'ord-2': new Promise(() => {}),
+    });
+    const { container } = renderAt('/id/ord-1');
+    await screen.findByText('m1');
+
+    navigateTo('/id/ord-2');
+
+    expect(screen.queryByText('m1')).toBeNull();
+    expect(container.querySelector('.spinner-main')).toBeInTheDocument();
   });
 
   it('ignores a response for the reaction it routed away from', async () => {
