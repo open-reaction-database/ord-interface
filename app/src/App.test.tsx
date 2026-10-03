@@ -44,18 +44,16 @@ const encodedReaction = (...inputKeys: string[]): string => {
   return btoa(String.fromCharCode(...reaction.serializeBinary()));
 };
 
-// Answers /api/reactions from `protos`, keyed by reaction ID.
-const stubReactions = (protos: Record<string, string>) =>
+// Answers /api/reactions from `protos`, keyed by reaction ID. A promise holds the
+// response until it resolves.
+const stubReactions = (protos: Record<string, string | Promise<string>>) =>
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
       if (url === '/api/reactions') {
         const [reactionId] = JSON.parse(init!.body as string).reaction_ids;
-        return {
-          ok: true,
-          status: 200,
-          json: async () => [{ proto: protos[reactionId] }],
-        };
+        const proto = await protos[reactionId];
+        return { ok: true, status: 200, json: async () => [{ proto }] };
       }
       return { ok: true, status: 200, text: async () => '' };
     }),
@@ -143,6 +141,25 @@ describe('App', () => {
     expect(await screen.findByText('m3')).toBeInTheDocument();
     expect(inputTabs(container)).toEqual(['m3']);
     expect(container.querySelector('#inputs .tab.selected')?.textContent).toBe('m3');
+  });
+
+  it('ignores a response for the reaction it routed away from', async () => {
+    let respondToFirst!: (proto: string) => void;
+    stubReactions({
+      'ord-1': new Promise(resolve => (respondToFirst = resolve)),
+      'ord-2': encodedReaction('m3'),
+    });
+    const { container } = renderAt('/id/ord-1');
+    navigateTo('/id/ord-2');
+    await screen.findByText('m3');
+
+    // A macrotask runs only after the response's whole promise chain has settled.
+    await act(async () => {
+      respondToFirst(encodedReaction('m1', 'm2'));
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect(inputTabs(container)).toEqual(['m3']);
   });
 
   it('renders no page content for an unknown route', () => {

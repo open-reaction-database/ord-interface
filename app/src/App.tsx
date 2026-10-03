@@ -31,8 +31,8 @@ import './App.scss';
 
 const queryClient = new QueryClient();
 
-// A fresh MainReactionView per reaction ID, so no state from the previous reaction
-// (its record, selected tabs, or a fetch still in flight) survives a route change.
+// A fresh MainReactionView per reaction ID, so nothing from the previous reaction
+// (its record, its selected tabs, or a response still in flight) reaches the next.
 const ReactionRoute: React.FC = () => {
   const { reactionId } = useParams<{ reactionId: string }>();
   return <MainReactionView key={reactionId} />;
