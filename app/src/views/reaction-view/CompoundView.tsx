@@ -32,8 +32,8 @@ import { enumName } from '../../utils/enum';
 import './CompoundView.scss';
 
 // CompoundView is invoked with both reaction inputs (Compound) and outcome
-// products (ProductCompound). The two messages share identifiers, reactionRole and
-// texture; only a Compound has an amount and preparations, and only a
+// products (ProductCompound). Both carry the identifiers, reactionRole and texture
+// this view reads; only a Compound has an amount and preparations, and only a
 // ProductCompound has isDesiredProduct and isolatedColor.
 type ComponentLike = Compound | ProductCompound;
 
