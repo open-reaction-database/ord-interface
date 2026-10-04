@@ -52,7 +52,6 @@ dev = [
     "ruff>=0.9.9",
     "tenacity",
     "testing-postgresql",
-    "testing.redis",
     "ty>=0.0.28",
 ]
 

@@ -15,6 +15,9 @@
 """Pytest fixtures."""
 
 import os
+import socket
+import subprocess
+import time
 from collections.abc import AsyncIterator, Iterator
 from contextlib import ExitStack
 from typing import Any
@@ -28,7 +31,8 @@ from ord_schema.logging import get_logger
 from psycopg import AsyncCursor
 from psycopg.rows import dict_row
 from testing.postgresql import Postgresql
-from testing.redis import RedisServer
+from valkey import Valkey
+from valkey.exceptions import ConnectionError as ValkeyConnectionError
 
 from ord_interface.api.main import app
 from ord_interface.api.testing import setup_test_postgres
@@ -54,24 +58,49 @@ async def test_cursor(test_postgres) -> AsyncIterator[AsyncCursor[dict[str, Any]
 
 
 @pytest.fixture(name="test_valkey", scope="session")
-def test_valkey_fixture() -> Iterator[RedisServer]:
+def test_valkey_fixture(tmp_path_factory) -> Iterator[int]:
     """Runs a throwaway valkey-server and points ``get_valkey()`` at it.
 
-    Every ``VALKEY_*`` variable is overridden, so a shell pointed at another server
-    cannot leak into the tests.
+    The server persists nothing and runs in a temporary directory, so it never loads a
+    dump.rdb from the working tree. Every ``VALKEY_*`` variable is overridden, so a
+    shell pointed at another server cannot leak into the tests.
 
     Yields:
-        The running server.
+        The server's port.
+
+    Raises:
+        RuntimeError: If the server exits or does not answer a ping within ten seconds.
     """
-    with RedisServer(redis_server="valkey-server") as valkey_server:
-        dsn = valkey_server.dsn()
+    # A port the kernel just handed out and released; each test process gets its own.
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    command = ["valkey-server", "--bind", "127.0.0.1", "--port", str(port)]
+    command += ["--dir", str(tmp_path_factory.mktemp("valkey"))]
+    command += ["--save", "", "--appendonly", "no"]
+    process = subprocess.Popen(command, stdout=subprocess.DEVNULL)
+    try:
+        deadline = time.monotonic() + 10
+        while True:
+            if process.poll() is not None:
+                raise RuntimeError(f"valkey-server exited with {process.returncode}")
+            try:
+                if Valkey(host="127.0.0.1", port=port).ping():
+                    break
+            except ValkeyConnectionError:
+                if time.monotonic() > deadline:
+                    raise RuntimeError("valkey-server did not answer a ping") from None
+                time.sleep(0.05)
         environment = {
-            "VALKEY_HOST": dsn["host"],
-            "VALKEY_PORT": str(dsn["port"]),
+            "VALKEY_HOST": "127.0.0.1",
+            "VALKEY_PORT": str(port),
             "VALKEY_SSL": "0",
         }
         with patch.dict(os.environ, environment):
-            yield valkey_server
+            yield port
+    finally:
+        process.terminate()
+        process.wait(timeout=10)
 
 
 @pytest.fixture(scope="session")
