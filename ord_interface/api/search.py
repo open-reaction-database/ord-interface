@@ -21,7 +21,7 @@ import gzip
 import json
 import os
 import re
-from collections.abc import AsyncIterator, Awaitable
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from typing import Any, cast
@@ -99,8 +99,7 @@ async def get_valkey() -> AsyncIterator[Valkey]:
     port = int(os.environ.get("VALKEY_PORT", "6379"))
     ssl = os.environ.get("VALKEY_SSL", "0") == "1"
     async with Valkey(host=host, port=port, ssl=ssl) as client:
-        # valkey.asyncio stubs return Awaitable[bool] | bool from ping(); the runtime is always awaitable.
-        if not await cast(Awaitable[bool], client.ping()):
+        if not await client.ping():
             raise RuntimeError(
                 f"Failed to connect to Valkey server {host}:{port} ({ssl=})"
             )

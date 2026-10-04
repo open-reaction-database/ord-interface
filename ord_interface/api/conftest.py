@@ -62,7 +62,7 @@ def test_valkey_fixture(tmp_path_factory) -> Iterator[int]:
     """Runs a throwaway valkey-server and points ``get_valkey()`` at it.
 
     The server persists nothing and runs in a temporary directory, so it never loads a
-    dump.rdb from the working tree. Every ``VALKEY_*`` variable is overridden, so a
+    ``dump.rdb`` from the working tree. Every ``VALKEY_*`` variable is overridden, so a
     shell pointed at another server cannot leak into the tests.
 
     Yields:

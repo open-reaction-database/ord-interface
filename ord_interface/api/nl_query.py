@@ -397,7 +397,7 @@ async def _valkey_get(key: str) -> str | None:
 
 
 async def _valkey_set(key: str, value: str, ttl_seconds: int) -> None:
-    """Stores a string value with a TTL, ignoring an unreachable/slow Valkey (best-effort)."""
+    """Stores a string value with a TTL, ignoring an unreachable or slow Valkey."""
     try:
         async with asyncio.timeout(VALKEY_OP_TIMEOUT_SECONDS):
             async with get_valkey() as client:
@@ -407,7 +407,7 @@ async def _valkey_set(key: str, value: str, ttl_seconds: int) -> None:
 
 
 def _translation_cache_key(query: str) -> str:
-    """Returns the Valkey cache key for a question under the current model and version."""
+    """Returns the cache key for a question under the current model and version."""
     model = os.getenv("ORD_NL_QUERY_MODEL", DEFAULT_MODEL)
     digest = hashlib.sha256(f"{model}\n{query.strip()}".encode()).hexdigest()
     return f"nl_query:{TRANSLATION_CACHE_VERSION}:{digest}"
@@ -444,8 +444,9 @@ async def nl_query(
     The interpreted query and resolved structures are returned alongside the results
     so the user can see -- and trust or correct -- how their question was understood.
     The model's translation and name lookups are cached (best-effort, in Valkey), so a
-    repeated question skips the model call; the database query always re-runs so results
-    stay fresh. A Valkey outage falls back to live calls rather than failing the request.
+    repeated question skips the model call; the database query always re-runs so
+    results stay fresh. A Valkey outage falls back to live calls rather than failing
+    the request.
 
     With ``dry_run=true`` the question is translated and resolved but the database
     search is not executed -- useful for inspecting exactly what query would run.
