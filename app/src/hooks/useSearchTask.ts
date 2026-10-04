@@ -24,6 +24,10 @@ import type { SearchResult } from '../types/search';
 
 const POLL_INTERVAL_MS = 1000;
 const POLL_TIMEOUT_MS = 120_000;
+// Bounds each request, so a stalled one fails the search instead of hanging it.
+// Longer than the proxy's 60-second proxy_read_timeout (ord_interface/nginx.conf),
+// so a slow response ends as the proxy's 504 rather than a client abort.
+const REQUEST_TIMEOUT_MS = 90_000;
 
 type TaskState =
   | { status: 'success'; results: SearchResult[] }
@@ -40,6 +44,10 @@ interface TaskRef {
   submitPromise: Promise<string> | null;
   startTime: number;
 }
+
+/** The React Query key under which `useSearchTask` caches a query string's search. */
+export const searchTaskKey = (queryString: string | null) =>
+  ['search-task', queryString] as const;
 
 /**
  * Runs the API's submit-query / poll-result protocol against the given query
@@ -64,12 +72,16 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
   });
 
   return useQuery<TaskState>({
-    queryKey: ['search-task', queryString],
+    queryKey: searchTaskKey(queryString),
     enabled: enabled && queryString !== null,
     retry: false,
     staleTime: Infinity,
+    // A failed or timed-out poll keeps the last pending result as data, so the
+    // error status is what stops the polling.
     refetchInterval: query =>
-      query.state.data?.status === 'pending' ? POLL_INTERVAL_MS : false,
+      query.state.status !== 'error' && query.state.data?.status === 'pending'
+        ? POLL_INTERVAL_MS
+        : false,
     refetchIntervalInBackground: false,
     queryFn: async (): Promise<TaskState> => {
       if (!queryString) return { status: 'success', results: [] };
@@ -84,49 +96,59 @@ export function useSearchTask(queryString: string | null, enabled: boolean) {
         };
       }
 
-      if (taskRef.current.taskId === null) {
-        if (!taskRef.current.submitPromise) {
-          taskRef.current.startTime = Date.now();
-          taskRef.current.submitPromise = fetchJson<string>(
+      // This call's own state. After an await the ref may belong to a newer
+      // queryString, and a late call must not poll or clear that query's task.
+      const task = taskRef.current;
+
+      if (task.taskId === null) {
+        if (!task.submitPromise) {
+          task.startTime = Date.now();
+          task.submitPromise = fetchJson<string>(
             `/api/submit_query${queryString}`,
-            undefined,
+            { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) },
             'submit_query',
           );
         }
         try {
-          taskRef.current.taskId = await taskRef.current.submitPromise;
+          task.taskId = await task.submitPromise;
         } finally {
-          taskRef.current.submitPromise = null;
+          task.submitPromise = null;
         }
       }
 
-      if (Date.now() - taskRef.current.startTime > POLL_TIMEOUT_MS) {
-        const id = taskRef.current.taskId;
-        taskRef.current.taskId = null;
-        throw new Error(`Search task ${id} timed out after ${POLL_TIMEOUT_MS / 1000}s`);
+      try {
+        const res = await fetch(`/api/fetch_query_result?task_id=${task.taskId}`, {
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
+
+        if (res.status === 200) {
+          const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
+          const results: SearchResult[] = raw.map(r => ({
+            ...r,
+            data: fromBinary(ReactionSchema, new Uint8Array(base64ToBytes(r.proto))),
+          }));
+          task.taskId = null;
+          return { status: 'success', results };
+        }
+
+        // The deadline applies only to a task that is still running, so a result
+        // that is ready by the first poll past it is returned, not discarded.
+        if (res.status === 202) {
+          if (Date.now() - task.startTime > POLL_TIMEOUT_MS) {
+            throw new Error(
+              `Search task ${task.taskId} timed out after ${POLL_TIMEOUT_MS / 1000}s`,
+            );
+          }
+          return { status: 'pending', taskId: task.taskId };
+        }
+
+        throw new Error(`Search task ${task.taskId} failed (HTTP ${res.status})`);
+      } catch (error) {
+        // Running a failed search again submits it afresh. The task may have
+        // expired, may never finish, or may take too long to read again.
+        task.taskId = null;
+        throw error;
       }
-
-      const res = await fetch(
-        `/api/fetch_query_result?task_id=${taskRef.current.taskId}`,
-      );
-
-      if (res.status === 200) {
-        const raw = (await res.json()) as Omit<SearchResult, 'data'>[];
-        const results: SearchResult[] = raw.map(r => ({
-          ...r,
-          data: fromBinary(ReactionSchema, new Uint8Array(base64ToBytes(r.proto))),
-        }));
-        taskRef.current.taskId = null;
-        return { status: 'success', results };
-      }
-
-      if (res.status === 202) {
-        return { status: 'pending', taskId: taskRef.current.taskId };
-      }
-
-      const id = taskRef.current.taskId;
-      taskRef.current.taskId = null;
-      throw new Error(`Search task ${id} failed (HTTP ${res.status})`);
     },
   });
 }

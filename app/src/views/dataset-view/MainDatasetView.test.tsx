@@ -136,9 +136,8 @@ describe('MainDatasetView', () => {
     renderDataset();
 
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
+      expect(fetchMock.mock.calls.map(([url]) => url)).toContain(
         '/api/submit_query?dataset_id=ord_dataset-1&limit=100',
-        undefined,
       ),
     );
   });

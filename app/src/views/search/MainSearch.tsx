@@ -16,10 +16,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import SearchOptions from './SearchOptions';
 import SearchResults from './SearchResults';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { useSearchTask } from '../../hooks/useSearchTask';
+import { searchTaskKey, useSearchTask } from '../../hooks/useSearchTask';
 import './MainSearch.scss';
 
 interface SearchOptionsData {
@@ -60,6 +61,7 @@ const MEANINGFUL_QUERY_PARAMS = [
 const MainSearch: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showOptions, setShowOptions] = useState(false);
 
   const hasSearchParams = useMemo(() => {
@@ -114,6 +116,14 @@ const MainSearch: React.FC = () => {
 
     searchParams.set('limit', options.general.limit.toString() || '100');
 
+    // Searching again for a search that failed leaves the URL as it is, so reset
+    // the failed query to run it again.
+    if (error && `?${searchParams}` === location.search) {
+      queryClient.resetQueries({
+        queryKey: searchTaskKey(location.search),
+        exact: true,
+      });
+    }
     navigate({ pathname: '/search', search: searchParams.toString() });
   };
 
