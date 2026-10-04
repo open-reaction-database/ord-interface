@@ -16,17 +16,23 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import {
+  ReactionOutcomeSchema,
+  type ProductMeasurementSchema,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import OutcomesView from './OutcomesView';
-import type { ReactionOutcomeData } from '../../types/search';
 
 const YIELD = 3;
 const CUSTOM = 1;
 const AMOUNT = 9;
 const LC_ANALYSIS = 2;
 
-const renderOutcome = (outcome: unknown) =>
-  render(<OutcomesView outcome={outcome as ReactionOutcomeData} />);
+const renderOutcome = (
+  outcome: MessageInitShape<typeof ReactionOutcomeSchema> | undefined,
+) =>
+  render(<OutcomesView outcome={outcome && create(ReactionOutcomeSchema, outcome)} />);
 
 const detailFields = (container: HTMLElement): Record<string, string> => {
   const details = container.querySelector('.details');
@@ -52,9 +58,11 @@ const measurementRows = (container: HTMLElement): string[][] => {
   return rows;
 };
 
-const product = (measurementsList: unknown[]) => ({
-  identifiersList: [],
-  measurementsList,
+const product = (
+  measurements: MessageInitShape<typeof ProductMeasurementSchema>[],
+) => ({
+  identifiers: [],
+  measurements,
 });
 
 beforeEach(() => {
@@ -89,7 +97,7 @@ describe('OutcomesView', () => {
     });
 
     it('omits the details section when neither was recorded', () => {
-      renderOutcome({ productsList: [] });
+      renderOutcome({ products: [] });
       expect(screen.queryByText('Details')).not.toBeInTheDocument();
     });
   });
@@ -97,7 +105,7 @@ describe('OutcomesView', () => {
   describe('products', () => {
     it('renders a tab per product and opens the first', () => {
       const { container } = renderOutcome({
-        productsList: [product([]), product([])],
+        products: [product([]), product([])],
       });
 
       const tabs = [...container.querySelectorAll('.tab')];
@@ -108,9 +116,13 @@ describe('OutcomesView', () => {
     it('switches products on click', async () => {
       const user = userEvent.setup();
       const { container } = renderOutcome({
-        productsList: [
-          product([{ type: YIELD, percentage: { value: 10, precision: 0 } }]),
-          product([{ type: YIELD, percentage: { value: 20, precision: 0 } }]),
+        products: [
+          product([
+            { type: YIELD, value: { case: 'percentage', value: { value: 10 } } },
+          ]),
+          product([
+            { type: YIELD, value: { case: 'percentage', value: { value: 20 } } },
+          ]),
         ],
       });
 
@@ -123,11 +135,11 @@ describe('OutcomesView', () => {
   describe('measurements', () => {
     it('renders a percentage measurement', () => {
       const { container } = renderOutcome({
-        productsList: [
+        products: [
           product([
             {
               type: YIELD,
-              percentage: { value: 82.35, precision: 0 },
+              value: { case: 'percentage', value: { value: 82.35, precision: 0 } },
               analysisKey: 'lcms',
             },
           ]),
@@ -141,11 +153,14 @@ describe('OutcomesView', () => {
 
     it('renders an amount measurement', () => {
       const { container } = renderOutcome({
-        productsList: [
+        products: [
           product([
             {
               type: AMOUNT,
-              amount: { mass: { value: 250, units: 3, precision: 0 } },
+              value: {
+                case: 'amount',
+                value: { kind: { case: 'mass', value: { value: 250, units: 3 } } },
+              },
               analysisKey: '',
             },
           ]),
@@ -157,8 +172,14 @@ describe('OutcomesView', () => {
 
     it('renders a float measurement', () => {
       const { container } = renderOutcome({
-        productsList: [
-          product([{ type: AMOUNT, floatValue: { value: 1.5 }, analysisKey: '' }]),
+        products: [
+          product([
+            {
+              type: AMOUNT,
+              value: { case: 'floatValue', value: { value: 1.5 } },
+              analysisKey: '',
+            },
+          ]),
         ],
       });
 
@@ -167,8 +188,14 @@ describe('OutcomesView', () => {
 
     it('renders a string measurement', () => {
       const { container } = renderOutcome({
-        productsList: [
-          product([{ type: AMOUNT, stringValue: 'trace', analysisKey: '' }]),
+        products: [
+          product([
+            {
+              type: AMOUNT,
+              value: { case: 'stringValue', value: 'trace' },
+              analysisKey: '',
+            },
+          ]),
         ],
       });
 
@@ -177,7 +204,7 @@ describe('OutcomesView', () => {
 
     it('leaves the value blank when the oneof is empty', () => {
       const { container } = renderOutcome({
-        productsList: [product([{ type: AMOUNT, analysisKey: '' }])],
+        products: [product([{ type: AMOUNT, analysisKey: '' }])],
       });
 
       expect(measurementRows(container)[0][2]).toBe('');
@@ -186,11 +213,11 @@ describe('OutcomesView', () => {
     it('opens the raw measurement with its type named', async () => {
       const user = userEvent.setup();
       const { container } = renderOutcome({
-        productsList: [
+        products: [
           product([
             {
               type: YIELD,
-              percentage: { value: 50, precision: 0 },
+              value: { case: 'percentage', value: { value: 50, precision: 0 } },
               analysisKey: 'nmr',
             },
           ]),
@@ -207,7 +234,7 @@ describe('OutcomesView', () => {
       it('offers the recorded details', async () => {
         const user = userEvent.setup();
         renderOutcome({
-          productsList: [
+          products: [
             product([{ type: CUSTOM, details: 'in-house assay', analysisKey: '' }]),
           ],
         });
@@ -221,7 +248,7 @@ describe('OutcomesView', () => {
       it('points at the author when no details were recorded', async () => {
         const user = userEvent.setup();
         renderOutcome({
-          productsList: [product([{ type: CUSTOM, details: '', analysisKey: '' }])],
+          products: [product([{ type: CUSTOM, details: '', analysisKey: '' }])],
         });
 
         await user.click(screen.getByText('CUSTOM'));
@@ -234,7 +261,7 @@ describe('OutcomesView', () => {
       it('closes the details again', async () => {
         const user = userEvent.setup();
         renderOutcome({
-          productsList: [
+          products: [
             product([{ type: CUSTOM, details: 'in-house assay', analysisKey: '' }]),
           ],
         });
@@ -251,17 +278,17 @@ describe('OutcomesView', () => {
 
   describe('analyses', () => {
     it('omits the section when there are none', () => {
-      renderOutcome({ productsList: [product([])], analysesMap: [] });
+      renderOutcome({ products: [product([])], analyses: {} });
       expect(screen.queryByText('Analyses')).not.toBeInTheDocument();
     });
 
     it('names each analysis by its map key and shows the selected one', () => {
       const { container } = renderOutcome({
-        productsList: [product([])],
-        analysesMap: [
-          ['lcms', { type: LC_ANALYSIS, details: 'method A' }],
-          ['nmr', { type: 5, details: 'method B' }],
-        ],
+        products: [product([])],
+        analyses: {
+          lcms: { type: LC_ANALYSIS, details: 'method A' },
+          nmr: { type: 5, details: 'method B' },
+        },
       });
 
       const tabs = [...container.querySelectorAll('.tab')];
@@ -270,14 +297,28 @@ describe('OutcomesView', () => {
       expect(screen.getByText('method A')).toBeInTheDocument();
     });
 
+    // The map arrives in arbitrary order; the tabs follow key order.
+    it('orders the analysis tabs by key', () => {
+      const { container } = renderOutcome({
+        products: [product([])],
+        analyses: {
+          nmr: { type: 5, details: 'method B' },
+          lcms: { type: LC_ANALYSIS, details: 'method A' },
+        },
+      });
+
+      const tabs = [...container.querySelectorAll('.tab')];
+      expect(tabs.map(tab => tab.textContent)).toEqual(['Product 1', 'lcms', 'nmr']);
+    });
+
     it('switches analyses on click', async () => {
       const user = userEvent.setup();
       const { container } = renderOutcome({
-        productsList: [product([])],
-        analysesMap: [
-          ['lcms', { type: LC_ANALYSIS, details: 'method A' }],
-          ['nmr', { type: 5, details: 'method B' }],
-        ],
+        products: [product([])],
+        analyses: {
+          lcms: { type: LC_ANALYSIS, details: 'method A' },
+          nmr: { type: 5, details: 'method B' },
+        },
       });
 
       await user.click([...container.querySelectorAll('.tab')][2]);
@@ -289,8 +330,8 @@ describe('OutcomesView', () => {
     it('opens the raw analysis with its type named', async () => {
       const user = userEvent.setup();
       const { container } = renderOutcome({
-        productsList: [product([])],
-        analysesMap: [['lcms', { type: LC_ANALYSIS, details: 'method A' }]],
+        products: [product([])],
+        analyses: { lcms: { type: LC_ANALYSIS, details: 'method A' } },
       });
 
       await user.click(container.querySelector('.details .button')!);

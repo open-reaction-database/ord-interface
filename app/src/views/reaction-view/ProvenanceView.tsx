@@ -15,11 +15,11 @@
  */
 
 import React from 'react';
-import type { ReactionProvenanceData } from '../../types/search';
+import type { ReactionProvenance } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import './ProvenanceView.scss';
 
 interface ProvenanceViewProps {
-  provenance: ReactionProvenanceData | undefined;
+  provenance: ReactionProvenance | undefined;
 }
 
 const ProvenanceView: React.FC<ProvenanceViewProps> = ({ provenance }) => {

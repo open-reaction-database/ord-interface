@@ -15,53 +15,54 @@
  */
 
 import React, { useState } from 'react';
-import reaction_pb from 'ord-schema';
-import type { Analysis, ProductMeasurement } from 'ord-schema/proto/reaction_pb';
+import { toJson, type JsonValue } from '@bufbuild/protobuf';
+import {
+  AnalysisSchema,
+  Analysis_AnalysisTypeSchema,
+  ProductMeasurementSchema,
+  ProductMeasurement_ProductMeasurementTypeSchema,
+  type ProductMeasurement,
+  type ReactionOutcome,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import CompoundView from './CompoundView';
 import FloatingModal from '../../components/FloatingModal';
 import { amountObj, amountStr } from '../../utils/amount';
 import { enumName } from '../../utils/enum';
 import { formatPercentage, formattedTime } from '../../utils/outcomes';
-import type { ReactionOutcomeData } from '../../types/search';
 import './OutcomesView.scss';
 
 interface OutcomesViewProps {
-  outcome: ReactionOutcomeData | undefined;
+  outcome: ReactionOutcome | undefined;
 }
 
 const measurementType = (type: number | undefined): string =>
-  enumName(reaction_pb.ProductMeasurement.ProductMeasurementType, type) ?? '';
+  enumName(ProductMeasurement_ProductMeasurementTypeSchema, type) ?? '';
 
 const analysisType = (type: number | undefined): string =>
-  enumName(reaction_pb.Analysis.AnalysisType, type) ?? '';
+  enumName(Analysis_AnalysisTypeSchema, type) ?? '';
 
-const measurementValue = (measurement: ProductMeasurement.AsObject): string => {
-  if (measurement.percentage) return formatPercentage(measurement.percentage);
-  if (measurement.amount) return amountStr(amountObj(measurement.amount));
-  if (measurement.floatValue) return String(measurement.floatValue.value);
-  if (measurement.stringValue) return measurement.stringValue;
-  return '';
+// An unset float value reads as 0, the proto3 default.
+const measurementValue = (measurement: ProductMeasurement): string => {
+  switch (measurement.value.case) {
+    case 'percentage':
+      return formatPercentage(measurement.value.value);
+    case 'amount':
+      return amountStr(amountObj(measurement.value.value));
+    case 'floatValue':
+      return String(measurement.value.value.value ?? 0);
+    case 'stringValue':
+      return measurement.value.value;
+    default:
+      return '';
+  }
 };
-
-const measurementWithNamedType = (measurement: ProductMeasurement.AsObject) => ({
-  ...measurement,
-  type: measurementType(measurement.type),
-});
-
-const analysisWithNamedType = (analysis: Analysis.AsObject) => ({
-  ...analysis,
-  type: analysisType(analysis.type),
-});
 
 const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
   const [productsIdx, setProductsIdx] = useState(0);
   const [analysesIdx, setAnalysesIdx] = useState(0);
-  const [rawMeasurement, setRawMeasurement] = useState<ReturnType<
-    typeof measurementWithNamedType
-  > | null>(null);
-  const [rawAnalysis, setRawAnalysis] = useState<ReturnType<
-    typeof analysisWithNamedType
-  > | null>(null);
+  // The raw views show the proto3 JSON mapping, which names enum values.
+  const [rawMeasurement, setRawMeasurement] = useState<JsonValue | null>(null);
+  const [rawAnalysis, setRawAnalysis] = useState<JsonValue | null>(null);
   const [customDetails, setCustomDetails] = useState<string | null>(null);
 
   if (!outcome) return null;
@@ -70,8 +71,13 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
   const conversion = outcome.conversion;
   const showDetails = Boolean(reactionTime || conversion);
 
-  const currentProduct = outcome.productsList?.[productsIdx];
-  const currentAnalysis = outcome.analysesMap?.[analysesIdx]?.[1];
+  // Analyses are a map; tabs follow key order.
+  const analyses = Object.entries(outcome.analyses).sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  );
+
+  const currentProduct = outcome.products[productsIdx];
+  const currentAnalysis = analyses[analysesIdx]?.[1];
 
   return (
     <div className="outcomes-view">
@@ -98,7 +104,7 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
       <div className="title">Products</div>
       <div className="sub-section">
         <div className="tabs">
-          {outcome.productsList?.map((_product, idx) => (
+          {outcome.products.map((_product, idx) => (
             <div
               key={idx}
               className={`tab ${productsIdx === idx ? 'selected' : ''}`}
@@ -122,7 +128,7 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
               <div className="label">Value</div>
               <div className="label">Analysis</div>
               <div className="label">Raw</div>
-              {currentProduct.measurementsList.map((measurement, idx) => {
+              {currentProduct.measurements.map((measurement, idx) => {
                 const typeName = measurementType(measurement.type);
                 return (
                   <React.Fragment key={idx}>
@@ -151,7 +157,9 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
                         <div
                           className="button"
                           onClick={() =>
-                            setRawMeasurement(measurementWithNamedType(measurement))
+                            setRawMeasurement(
+                              toJson(ProductMeasurementSchema, measurement),
+                            )
                           }
                         >
                           &lt;&gt;
@@ -188,12 +196,12 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
         )}
       </div>
 
-      {outcome.analysesMap && outcome.analysesMap.length > 0 && (
+      {analyses.length > 0 && (
         <>
           <div className="title">Analyses</div>
           <div className="sub-section">
             <div className="tabs">
-              {outcome.analysesMap.map(([key], idx) => (
+              {analyses.map(([key], idx) => (
                 <div
                   key={key}
                   className={`tab ${analysesIdx === idx ? 'selected' : ''}`}
@@ -215,7 +223,7 @@ const OutcomesView: React.FC<OutcomesViewProps> = ({ outcome }) => {
                     <div
                       className="button"
                       onClick={() =>
-                        setRawAnalysis(analysisWithNamedType(currentAnalysis))
+                        setRawAnalysis(toJson(AnalysisSchema, currentAnalysis))
                       }
                     >
                       &lt;&gt;

@@ -15,13 +15,20 @@
  */
 
 import React, { useMemo } from 'react';
-import reaction_pb from 'ord-schema';
+import {
+  ReactionSetup_ReactionEnvironment_ReactionEnvironmentTypeSchema,
+  VesselAttachment_VesselAttachmentTypeSchema,
+  VesselMaterial_VesselMaterialTypeSchema,
+  VesselPreparation_VesselPreparationTypeSchema,
+  Vessel_VesselTypeSchema,
+  Volume_VolumeUnitSchema,
+  type ReactionSetup,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { enumName } from '../../utils/enum';
-import type { ReactionSetupData } from '../../types/search';
 import './SetupView.scss';
 
 interface SetupViewProps {
-  setup: ReactionSetupData | undefined;
+  setup: ReactionSetup | undefined;
   display: string;
 }
 
@@ -30,46 +37,40 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
 
   const vesselType = useMemo(() => {
     if (!vessel?.type) return '';
-    return enumName(reaction_pb.Vessel.VesselType, vessel.type) ?? '';
+    return enumName(Vessel_VesselTypeSchema, vessel.type) ?? '';
   }, [vessel?.type]);
 
+  // An unset volume value reads as 0, the proto3 default.
   const vesselVolume = useMemo(() => {
     if (!vessel?.volume) return '';
-    const label = enumName(reaction_pb.Volume.VolumeUnit, vessel.volume.units);
-    return `${vessel.volume.value} ${label ? String(label).toLowerCase() : ''}`;
+    const label = enumName(Volume_VolumeUnitSchema, vessel.volume.units);
+    return `${vessel.volume.value ?? 0} ${label ? String(label).toLowerCase() : ''}`;
   }, [vessel?.volume]);
 
   const vesselAttachments = useMemo(() => {
-    if (!vessel?.attachmentsList?.length) return '';
-    return vessel.attachmentsList
+    if (!vessel?.attachments.length) return '';
+    return vessel.attachments
       .map(attach => {
-        const type = enumName(
-          reaction_pb.VesselAttachment.VesselAttachmentType,
-          attach.type,
-        );
+        const type = enumName(VesselAttachment_VesselAttachmentTypeSchema, attach.type);
         return `${String(type ?? '')}${attach.details ? `: ${attach.details}` : ''}`;
       })
       .join(', ');
-  }, [vessel?.attachmentsList]);
+  }, [vessel?.attachments]);
 
   const vesselPrep = useMemo(() => {
-    if (!vessel?.preparationsList?.length) return '';
-    return vessel.preparationsList
+    if (!vessel?.preparations.length) return '';
+    return vessel.preparations
       .map(prep => {
-        const type = enumName(
-          reaction_pb.VesselPreparation.VesselPreparationType,
-          prep.type,
-        );
+        const type = enumName(VesselPreparation_VesselPreparationTypeSchema, prep.type);
         return `${String(type ?? '')}${prep.details ? `: ${prep.details}` : ''}`;
       })
       .join(', ');
-  }, [vessel?.preparationsList]);
+  }, [vessel?.preparations]);
 
   const vesselMaterial = useMemo(() => {
     if (!vessel?.material?.type) return '';
     return String(
-      enumName(reaction_pb.VesselMaterial.VesselMaterialType, vessel.material.type) ??
-        '',
+      enumName(VesselMaterial_VesselMaterialTypeSchema, vessel.material.type) ?? '',
     );
   }, [vessel?.material?.type]);
 
@@ -79,7 +80,7 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
     return (
       String(
         enumName(
-          reaction_pb.ReactionSetup.ReactionEnvironment.ReactionEnvironmentType,
+          ReactionSetup_ReactionEnvironment_ReactionEnvironmentTypeSchema,
           envVal,
         ) ?? '',
       ) || null
@@ -106,14 +107,14 @@ const SetupView: React.FC<SetupViewProps> = ({ setup, display }) => {
           <div className="label">Volume</div>
           <div className="value">{vesselVolume}</div>
 
-          {vessel?.attachmentsList && vessel.attachmentsList.length > 0 && (
+          {vessel && vessel.attachments.length > 0 && (
             <>
               <div className="label">Attachments</div>
               <div className="value">{vesselAttachments}</div>
             </>
           )}
 
-          {vessel?.preparationsList && vessel.preparationsList.length > 0 && (
+          {vessel && vessel.preparations.length > 0 && (
             <>
               <div className="label">Preparations</div>
               <div className="value">{vesselPrep}</div>

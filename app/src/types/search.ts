@@ -14,25 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  Reaction,
-  ReactionConditions,
-  ReactionNotes,
-  ReactionObservation,
-  ReactionOutcome,
-  ReactionProvenance,
-  ReactionSetup,
-  ReactionWorkup,
-} from 'ord-schema/proto/reaction_pb';
-
-export type ReactionData = Reaction.AsObject;
-export type ReactionConditionsData = ReactionConditions.AsObject;
-export type ReactionNotesData = ReactionNotes.AsObject;
-export type ReactionObservationData = ReactionObservation.AsObject;
-export type ReactionOutcomeData = ReactionOutcome.AsObject;
-export type ReactionProvenanceData = ReactionProvenance.AsObject;
-export type ReactionSetupData = ReactionSetup.AsObject;
-export type ReactionWorkupData = ReactionWorkup.AsObject;
+import type { Reaction } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 
 export interface SearchResult {
   reaction_id: string;
@@ -40,7 +22,7 @@ export interface SearchResult {
   // renders a dataset link from it.
   dataset_id?: string;
   proto: string;
-  data: ReactionData;
+  data: Reaction;
 }
 
 export interface Dataset {

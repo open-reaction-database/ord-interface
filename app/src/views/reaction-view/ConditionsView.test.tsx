@@ -15,9 +15,10 @@
  */
 
 import { render } from '@testing-library/react';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { ReactionConditionsSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import ConditionsView from './ConditionsView';
-import type { ReactionConditionsData } from '../../types/search';
 
 // Each pane is a grid of alternating .label/.value cells; read it back as a
 // label-to-value map so the assertions read like the rendered table.
@@ -33,11 +34,14 @@ const fields = (container: HTMLElement): Record<string, string> => {
   return Object.fromEntries(labels.map((label, index) => [label, values[index] ?? '']));
 };
 
-const renderConditions = (conditions: unknown, display: string) =>
+const renderConditions = (
+  conditions: MessageInitShape<typeof ReactionConditionsSchema>,
+  display: string,
+) =>
   fields(
     render(
       <ConditionsView
-        conditions={conditions as ReactionConditionsData}
+        conditions={create(ReactionConditionsSchema, conditions)}
         display={display}
       />,
     ).container,
@@ -57,7 +61,7 @@ describe('ConditionsView', () => {
   it('renders nothing for an unknown pane', () => {
     const { container } = render(
       <ConditionsView
-        conditions={{} as ReactionConditionsData}
+        conditions={create(ReactionConditionsSchema)}
         display="nonsense"
       />,
     );
@@ -92,7 +96,7 @@ describe('ConditionsView', () => {
 
     it('counts the recorded measurements', () => {
       expect(
-        renderConditions({ temperature: { measurementsList: [{}, {}] } }, 'temperature')
+        renderConditions({ temperature: { measurements: [{}, {}] } }, 'temperature')
           .Measurements,
       ).toBe('2 recorded');
     });
@@ -121,8 +125,7 @@ describe('ConditionsView', () => {
 
     it('counts the recorded measurements', () => {
       expect(
-        renderConditions({ pressure: { measurementsList: [{}] } }, 'pressure')
-          .Measurements,
+        renderConditions({ pressure: { measurements: [{}] } }, 'pressure').Measurements,
       ).toBe('1 recorded');
     });
   });
@@ -175,7 +178,7 @@ describe('ConditionsView', () => {
               type: 4,
               details: '450 nm',
               color: 'blue',
-              peakWavelength: { value: 450, units: 2, precision: 0 },
+              peakWavelength: { value: 450, units: 1, precision: 0 },
               distanceToVessel: { value: 5, units: 1, precision: 0 },
             },
           },
@@ -183,7 +186,7 @@ describe('ConditionsView', () => {
         ),
       ).toEqual({
         Type: 'LED: 450 nm',
-        'Peak Wavelength': '450 millimeter',
+        'Peak Wavelength': '450 nanometer',
         Color: 'blue',
         'Distance to Vessel': '5 centimeter',
       });
@@ -262,9 +265,14 @@ describe('ConditionsView', () => {
       });
     });
 
-    // proto3 defaults pH to 0, which is indistinguishable from a strongly
-    // acidic reading, so it is treated as unset.
     it('hides an unset pH', () => {
+      expect(renderConditions({ reflux: true }, 'other')).toEqual({
+        Reflux: 'yes',
+      });
+    });
+
+    // A recorded 0 is hidden too, matching the Vue view.
+    it('hides a zero pH', () => {
       expect(renderConditions({ ph: 0, reflux: true }, 'other')).toEqual({
         Reflux: 'yes',
       });

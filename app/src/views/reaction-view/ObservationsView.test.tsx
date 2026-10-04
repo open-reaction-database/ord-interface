@@ -15,12 +15,21 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { ReactionObservationSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import ObservationsView from './ObservationsView';
-import type { ReactionObservationData } from '../../types/search';
 
-const renderObservations = (observations: unknown[]) =>
-  render(<ObservationsView observations={observations as ReactionObservationData[]} />);
+const renderObservations = (
+  observations: MessageInitShape<typeof ReactionObservationSchema>[],
+) =>
+  render(
+    <ObservationsView
+      observations={observations.map(observation =>
+        create(ReactionObservationSchema, observation),
+      )}
+    />,
+  );
 
 // The rows are a flat grid of .value cells, two per observation.
 const rows = (container: HTMLElement): string[][] => {

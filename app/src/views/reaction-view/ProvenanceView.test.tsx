@@ -15,12 +15,19 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { ReactionProvenanceSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { describe, expect, it } from 'vitest';
 import ProvenanceView from './ProvenanceView';
-import type { ReactionProvenanceData } from '../../types/search';
 
-const renderProvenance = (provenance: unknown) =>
-  render(<ProvenanceView provenance={provenance as ReactionProvenanceData} />);
+const renderProvenance = (
+  provenance: MessageInitShape<typeof ReactionProvenanceSchema> | undefined,
+) =>
+  render(
+    <ProvenanceView
+      provenance={provenance && create(ReactionProvenanceSchema, provenance)}
+    />,
+  );
 
 const fields = (container: HTMLElement, selector: string): Record<string, string> => {
   const details = container.querySelector(selector);

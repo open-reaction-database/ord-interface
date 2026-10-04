@@ -15,25 +15,26 @@
  */
 
 import React from 'react';
-import reaction_pb from 'ord-schema';
-import type { CompoundIdentifier } from 'ord-schema/proto/reaction_pb';
+import {
+  CompoundIdentifier_CompoundIdentifierType,
+  ReactionWorkup_ReactionWorkupTypeSchema,
+  type CompoundIdentifier,
+  type ReactionWorkup,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { amountObj, amountStr } from '../../utils/amount';
 import { enumName } from '../../utils/enum';
 import { formattedTime } from '../../utils/outcomes';
-import type { ReactionWorkupData } from '../../types/search';
 import './WorkupsView.scss';
 
 interface WorkupsViewProps {
-  workup: ReactionWorkupData | undefined;
+  workup: ReactionWorkup | undefined;
 }
 
-const NAME_IDENTIFIER_TYPE = reaction_pb.CompoundIdentifier.CompoundIdentifierType.NAME;
-
-const getNameIdentifier = (identifiers: CompoundIdentifier.AsObject[]): string => {
+const getNameIdentifier = (identifiers: CompoundIdentifier[]): string => {
   // Falls back to the first identifier when the compound has no NAME entry,
   // rather than throwing the way the Vue source did.
   const nameIdentifier = identifiers.find(
-    identifier => identifier.type === NAME_IDENTIFIER_TYPE,
+    identifier => identifier.type === CompoundIdentifier_CompoundIdentifierType.NAME,
   );
   return nameIdentifier?.value ?? identifiers[0]?.value ?? '';
 };
@@ -42,7 +43,7 @@ const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
   if (!workup) return null;
 
   const workupType =
-    enumName(reaction_pb.ReactionWorkup.ReactionWorkupType, workup.type) ?? '';
+    enumName(ReactionWorkup_ReactionWorkupTypeSchema, workup.type) ?? '';
   const duration = formattedTime(workup.duration);
   const aliquotAmount = workup.amount ? amountStr(amountObj(workup.amount)) : '';
 
@@ -80,10 +81,9 @@ const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
           </>
         )}
 
-        {/* proto3 defaults targetPh to 0 when unset, so 0 is ambiguous (default
-            vs. "actually strongly acidic"). Match the Vue v-if='workup.targetPh'
-            behavior and hide on 0; if a record ever sets it to 0 explicitly,
-            we'll need a `has*` helper from the schema to disambiguate. */}
+        {/* targetPh has explicit presence, so an unset value is undefined. A
+            recorded 0 is hidden as well, matching the Vue
+            v-if='workup.targetPh' behavior. */}
         {workup.targetPh !== undefined && workup.targetPh !== 0 && (
           <>
             <div className="label">Target pH</div>
@@ -99,14 +99,14 @@ const WorkupsView: React.FC<WorkupsViewProps> = ({ workup }) => {
         )}
       </div>
 
-      {workup.input && workup.input.componentsList.length > 0 && (
+      {workup.input && workup.input.components.length > 0 && (
         <div className="inputs">
           <div className="title">Inputs</div>
           <div className="components">
-            {workup.input.componentsList.map((component, idx) => (
+            {workup.input.components.map((component, idx) => (
               <React.Fragment key={idx}>
                 <div className="identifier">
-                  {getNameIdentifier(component.identifiersList)}
+                  {getNameIdentifier(component.identifiers)}
                 </div>
                 <div className="amount">{amountStr(amountObj(component.amount))}</div>
               </React.Fragment>

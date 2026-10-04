@@ -16,7 +16,8 @@
 
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import reaction_pb from 'ord-schema';
+import { create, toBinary } from '@bufbuild/protobuf';
+import { ReactionSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
@@ -37,11 +38,10 @@ const navigateTo = (path: string) =>
 // A serialized reaction with one empty input per key, base64-encoded the way the
 // API returns it.
 const encodedReaction = (...inputKeys: string[]): string => {
-  const reaction = new reaction_pb.Reaction();
-  inputKeys.forEach(key =>
-    reaction.getInputsMap().set(key, new reaction_pb.ReactionInput()),
-  );
-  return btoa(String.fromCharCode(...reaction.serializeBinary()));
+  const reaction = create(ReactionSchema, {
+    inputs: Object.fromEntries(inputKeys.map(key => [key, {}])),
+  });
+  return btoa(String.fromCharCode(...toBinary(ReactionSchema, reaction)));
 };
 
 // Answers /api/reactions from `protos`, keyed by reaction ID. A promise holds the

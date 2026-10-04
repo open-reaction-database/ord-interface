@@ -15,18 +15,27 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import reaction_pb from 'ord-schema';
-import type { Compound, ProductCompound } from 'ord-schema/proto/reaction_pb';
+import { create, isMessage, toBinary } from '@bufbuild/protobuf';
+import {
+  CompoundIdentifier_CompoundIdentifierType,
+  CompoundIdentifier_CompoundIdentifierTypeSchema,
+  CompoundPreparation_CompoundPreparationTypeSchema,
+  CompoundSchema,
+  ProductCompoundSchema,
+  ReactionRole_ReactionRoleTypeSchema,
+  type Compound,
+  type ProductCompound,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import FloatingModal from '../../components/FloatingModal';
 import { amountObj, amountStr } from '../../utils/amount';
 import { enumName } from '../../utils/enum';
 import './CompoundView.scss';
 
 // CompoundView is invoked with both reaction inputs (Compound) and outcome
-// products (ProductCompound); the two protobuf messages share most rendered
-// fields but each carries a few of its own (Compound: reactionRole / preparationsList,
-// ProductCompound: isDesiredProduct / isolatedColor / texture).
-type ComponentLike = Partial<Compound.AsObject> & Partial<ProductCompound.AsObject>;
+// products (ProductCompound). Both carry the identifiers, reactionRole and texture
+// this view reads; only a Compound has an amount and preparations, and only a
+// ProductCompound has isDesiredProduct and isolatedColor.
+type ComponentLike = Compound | ProductCompound;
 
 interface CompoundViewProps {
   component: ComponentLike | undefined;
@@ -46,9 +55,12 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
   const [compoundSVG, setCompoundSVG] = useState<string | null>(null);
   const [showRawData, setShowRawData] = useState(false);
 
+  const compound = isMessage(component, CompoundSchema) ? component : undefined;
+  const product = isMessage(component, ProductCompoundSchema) ? component : undefined;
+
   const compoundAmountObj = useMemo(
-    () => amountObj(component?.amount),
-    [component?.amount],
+    () => amountObj(compound?.amount),
+    [compound?.amount],
   );
   const compoundAmount = useMemo(
     () => amountStr(compoundAmountObj),
@@ -58,26 +70,24 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
   const compoundRole = useMemo(() => {
     if (!component?.reactionRole) return '';
     return String(
-      enumName(reaction_pb.ReactionRole.ReactionRoleType, component.reactionRole) ?? '',
+      enumName(ReactionRole_ReactionRoleTypeSchema, component.reactionRole) ?? '',
     );
   }, [component?.reactionRole]);
 
   const rawData: RawData = useMemo(() => {
     const returnObj: RawData = { reaction_role: compoundRole };
 
-    if (component?.identifiersList?.length) {
-      returnObj.identifiers = component.identifiersList.map(identifier => ({
+    if (component?.identifiers.length) {
+      returnObj.identifiers = component.identifiers.map(identifier => ({
         type: String(
-          enumName(
-            reaction_pb.CompoundIdentifier.CompoundIdentifierType,
-            identifier.type,
-          ) ?? '',
+          enumName(CompoundIdentifier_CompoundIdentifierTypeSchema, identifier.type) ??
+            '',
         ),
         value: identifier.value,
       }));
     }
 
-    if (component?.amount && compoundAmountObj.unitCategory) {
+    if (compound?.amount && compoundAmountObj.unitCategory) {
       returnObj.amount = {
         [compoundAmountObj.unitCategory]: {
           value: compoundAmountObj.unitAmount,
@@ -86,30 +96,26 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
       };
     }
 
-    if (component?.preparationsList?.length) {
-      returnObj.preparations = component.preparationsList.map(prep => ({
+    if (compound?.preparations.length) {
+      returnObj.preparations = compound.preparations.map(prep => ({
         type: String(
-          enumName(
-            reaction_pb.CompoundPreparation.CompoundPreparationType,
-            prep.type,
-          ) ?? '',
+          enumName(CompoundPreparation_CompoundPreparationTypeSchema, prep.type) ?? '',
         ),
         details: prep.details,
       }));
     }
 
-    if (component?.isDesiredProduct) {
-      returnObj.is_desired_product = component.isDesiredProduct;
+    if (product?.isDesiredProduct) {
+      returnObj.is_desired_product = product.isDesiredProduct;
     }
 
-    if (component?.isolatedColor) {
-      returnObj.isolated_color = component.isolatedColor;
+    if (product?.isolatedColor) {
+      returnObj.isolated_color = product.isolatedColor;
     }
 
     if (component?.texture) {
       const textureObj: { type: string; details?: string } = {
-        type:
-          component.texture.type !== undefined ? String(component.texture.type) : '',
+        type: String(component.texture.type),
       };
       if (component.texture.details) {
         textureObj.details = component.texture.details;
@@ -118,30 +124,29 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
     }
 
     return returnObj;
-  }, [component, compoundRole, compoundAmountObj]);
+  }, [component, compound, product, compoundRole, compoundAmountObj]);
 
   const gridColumns = useMemo(
-    () => `1fr repeat(${component?.amount ? 3 : 2}, auto)`,
-    [component?.amount],
+    () => `1fr repeat(${compound?.amount ? 3 : 2}, auto)`,
+    [compound?.amount],
   );
 
   const smilesValue = useMemo(() => {
-    if (!component?.identifiersList?.length) return null;
-    const smilesType = reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES;
-    const smilesIdentifier = component.identifiersList.find(
-      identifier => identifier.type === smilesType,
+    const smilesIdentifier = component?.identifiers.find(
+      identifier =>
+        identifier.type === CompoundIdentifier_CompoundIdentifierType.SMILES,
     );
     return smilesIdentifier?.value ?? null;
-  }, [component?.identifiersList]);
+  }, [component?.identifiers]);
 
   useEffect(() => {
     if (!smilesValue) return;
 
-    // prep compound
-    const compound = new reaction_pb.Compound();
-    const identifier = compound.addIdentifiers();
-    identifier.setValue(smilesValue);
-    identifier.setType(reaction_pb.CompoundIdentifier.CompoundIdentifierType.SMILES);
+    const query = create(CompoundSchema, {
+      identifiers: [
+        { type: CompoundIdentifier_CompoundIdentifierType.SMILES, value: smilesValue },
+      ],
+    });
 
     const fetchSVG = async () => {
       try {
@@ -150,7 +155,7 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
           headers: {
             'Content-Type': 'application/x-protobuf',
           },
-          body: compound.serializeBinary() as BodyInit,
+          body: toBinary(CompoundSchema, query),
         });
 
         // Skip the 4xx/5xx body — it's an HTML error page that
@@ -175,7 +180,7 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
       style={{ gridTemplateColumns: gridColumns }}
     >
       <div className="label">Compound</div>
-      {component?.amount && <div className="label">Amount</div>}
+      {compound?.amount && <div className="label">Amount</div>}
       <div className="label">Role</div>
       <div className="label">Raw</div>
 
@@ -183,7 +188,7 @@ const CompoundView: React.FC<CompoundViewProps> = ({ component }) => {
         className="svg"
         dangerouslySetInnerHTML={{ __html: compoundSVG || '' }}
       />
-      {component?.amount && <div className="amount">{compoundAmount}</div>}
+      {compound?.amount && <div className="amount">{compoundAmount}</div>}
       <div className="role">{compoundRole.toLowerCase()}</div>
       <div className="raw">
         <div

@@ -15,8 +15,8 @@
  */
 
 export const base64ToBytes = (base64String: string): ArrayBuffer => {
-  // converts a base64 encoded string to Uint8Array so it can be parsed by
-  // ord-schema js wrapper
+  // Decodes a base64 string into the bytes of a serialized proto, which
+  // fromBinary parses once wrapped in a Uint8Array.
   const binaryString = window.atob(base64String);
   const length = binaryString.length;
   const arrayBuffer = new ArrayBuffer(length);

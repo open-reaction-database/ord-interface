@@ -16,6 +16,11 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { create, fromBinary, type MessageInitShape } from '@bufbuild/protobuf';
+import {
+  CompoundSchema,
+  ProductCompoundSchema,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CompoundView from './CompoundView';
 
@@ -23,8 +28,14 @@ const SMILES = 2;
 const NAME = 6;
 const REAGENT_ROLE = 2;
 
-const renderCompound = (component: unknown) =>
-  render(<CompoundView component={component as never} />);
+// A reaction input; products go through renderProduct.
+const renderCompound = (
+  component: MessageInitShape<typeof CompoundSchema> | undefined,
+) =>
+  render(<CompoundView component={component && create(CompoundSchema, component)} />);
+
+const renderProduct = (product: MessageInitShape<typeof ProductCompoundSchema>) =>
+  render(<CompoundView component={create(ProductCompoundSchema, product)} />);
 
 const openRawData = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByText('<>'));
@@ -63,7 +74,9 @@ describe('CompoundView', () => {
     expect(screen.queryByText('Amount')).not.toBeInTheDocument();
     unmount();
 
-    renderCompound({ amount: { mass: { value: 250, units: 3 } } });
+    renderCompound({
+      amount: { kind: { case: 'mass', value: { value: 250, units: 3 } } },
+    });
     expect(screen.getByText('Amount')).toBeInTheDocument();
     expect(screen.getByText('250 milligram')).toBeInTheDocument();
   });
@@ -81,7 +94,7 @@ describe('CompoundView', () => {
   describe('the compound drawing', () => {
     it('posts the SMILES identifier and renders the returned SVG', async () => {
       const { container } = renderCompound({
-        identifiersList: [{ type: SMILES, value: 'CCO' }],
+        identifiers: [{ type: SMILES, value: 'CCO' }],
       });
 
       await waitFor(() =>
@@ -96,11 +109,28 @@ describe('CompoundView', () => {
           headers: { 'Content-Type': 'application/x-protobuf' },
         }),
       );
+      const [, init] = vi.mocked(fetch).mock.calls[0];
+      const posted = fromBinary(CompoundSchema, init?.body as Uint8Array);
+      expect(posted.identifiers).toEqual([
+        expect.objectContaining({ type: SMILES, value: 'CCO' }),
+      ]);
+    });
+
+    it('draws a product from its SMILES identifier', async () => {
+      const { container } = renderProduct({
+        identifiers: [{ type: SMILES, value: 'CC=O' }],
+      });
+
+      await waitFor(() =>
+        expect(container.querySelector('.svg')?.innerHTML).toBe(
+          '<svg class="mol"></svg>',
+        ),
+      );
     });
 
     // Without a SMILES there is nothing to draw, so no request should go out.
     it('skips the request when no identifier is a SMILES', () => {
-      renderCompound({ identifiersList: [{ type: NAME, value: 'ethanol' }] });
+      renderCompound({ identifiers: [{ type: NAME, value: 'ethanol' }] });
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -114,7 +144,7 @@ describe('CompoundView', () => {
       );
 
       const { container } = renderCompound({
-        identifiersList: [{ type: SMILES, value: 'CCO' }],
+        identifiers: [{ type: SMILES, value: 'CCO' }],
       });
 
       await waitFor(() => expect(consoleError).toHaveBeenCalled());
@@ -130,7 +160,7 @@ describe('CompoundView', () => {
       );
 
       const { container } = renderCompound({
-        identifiersList: [{ type: SMILES, value: 'CCO' }],
+        identifiers: [{ type: SMILES, value: 'CCO' }],
       });
 
       await waitFor(() => expect(consoleError).toHaveBeenCalled());
@@ -142,7 +172,7 @@ describe('CompoundView', () => {
     it('names the identifier types', async () => {
       const user = userEvent.setup();
       const { container } = renderCompound({
-        identifiersList: [{ type: SMILES, value: 'CCO' }],
+        identifiers: [{ type: SMILES, value: 'CCO' }],
       });
 
       await openRawData(user);
@@ -155,7 +185,7 @@ describe('CompoundView', () => {
     it('reports the amount under its category', async () => {
       const user = userEvent.setup();
       const { container } = renderCompound({
-        amount: { volume: { value: 10, units: 2 } },
+        amount: { kind: { case: 'volume', value: { value: 10, units: 2 } } },
       });
 
       await openRawData(user);
@@ -177,7 +207,7 @@ describe('CompoundView', () => {
     it('names the preparation types', async () => {
       const user = userEvent.setup();
       const { container } = renderCompound({
-        preparationsList: [{ type: 2, details: 'used as received' }],
+        preparations: [{ type: 2, details: 'used as received' }],
       });
 
       await openRawData(user);
@@ -189,7 +219,7 @@ describe('CompoundView', () => {
 
     it('reports the product-only fields', async () => {
       const user = userEvent.setup();
-      const { container } = renderCompound({
+      const { container } = renderProduct({
         isolatedColor: 'white',
         texture: { type: 2, details: 'fine' },
       });

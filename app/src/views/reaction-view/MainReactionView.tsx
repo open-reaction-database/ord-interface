@@ -16,8 +16,17 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import reaction_pb from 'ord-schema';
-import type { ReactionInput, RecordEvent } from 'ord-schema/proto/reaction_pb';
+import { fromBinary, toJsonString } from '@bufbuild/protobuf';
+import {
+  ReactionIdentifier_ReactionIdentifierTypeSchema,
+  ReactionInput_AdditionDevice_AdditionDeviceTypeSchema,
+  ReactionInput_AdditionSpeed_AdditionSpeedTypeSchema,
+  ReactionSchema,
+  ReactionWorkup_ReactionWorkupTypeSchema,
+  type Reaction,
+  type ReactionInput,
+  type RecordEvent,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import CompoundView from './CompoundView';
 import SetupView from './SetupView';
 import ConditionsView from './ConditionsView';
@@ -32,12 +41,22 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { base64ToBytes } from '../../utils/base64';
 import { enumName } from '../../utils/enum';
 import { formattedTime } from '../../utils/outcomes';
-import type { ReactionData } from '../../types/search';
 import './MainReactionView.scss';
+
+/**
+ * Order a reaction's inputs by their declared addition order.
+ *
+ * Inputs are a map, so ties fall back to key order.
+ */
+const sortedInputs = (reaction: Reaction): Array<[string, ReactionInput]> =>
+  Object.entries(reaction.inputs).sort(
+    ([aKey, a], [bKey, b]) =>
+      a.additionOrder - b.additionOrder || (aKey < bKey ? -1 : aKey > bKey ? 1 : 0),
+  );
 
 const MainReactionView: React.FC = () => {
   const { reactionId } = useParams<{ reactionId: string }>();
-  const [reaction, setReaction] = useState<ReactionData | null>(null);
+  const [reaction, setReaction] = useState<Reaction | null>(null);
   const [reactionSummary, setReactionSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [inputsIdx, setInputsIdx] = useState(0);
@@ -60,7 +79,7 @@ const MainReactionView: React.FC = () => {
     'other',
   ];
 
-  const getReactionData = useCallback(async (): Promise<ReactionData | null> => {
+  const getReactionData = useCallback(async (): Promise<Reaction | null> => {
     if (!reactionId) return null;
 
     try {
@@ -75,16 +94,7 @@ const MainReactionView: React.FC = () => {
       if (!data?.[0]?.proto) return null;
 
       const bytes = base64ToBytes(data[0].proto);
-      const decoded = reaction_pb.Reaction.deserializeBinary(
-        new Uint8Array(bytes),
-      ).toObject();
-
-      // Sort inputs by their declared addition order.
-      decoded.inputsMap?.sort(
-        (a, b) => (a[1].additionOrder ?? 0) - (b[1].additionOrder ?? 0),
-      );
-
-      return decoded;
+      return fromBinary(ReactionSchema, new Uint8Array(bytes));
     } catch (error) {
       console.error('Error fetching reaction data:', error);
       return null;
@@ -113,31 +123,22 @@ const MainReactionView: React.FC = () => {
     }
   }, [reactionId]);
 
+  const inputs = useMemo(() => (reaction ? sortedInputs(reaction) : []), [reaction]);
+
+  // Keys are ReactionInput field names, in declaration order, for the fields this
+  // view knows how to render.
   const displayDetails = useMemo<Record<string, React.ReactNode>>(() => {
-    const inputEntry = reaction?.inputsMap?.[inputsIdx];
-    if (!inputEntry) return {};
-    const input: ReactionInput.AsObject = inputEntry[1];
+    const input = inputs[inputsIdx]?.[1];
+    if (!input) return {};
 
-    const raw = { ...(input as unknown as Record<string, unknown>) };
-    const formatted: Record<string, React.ReactNode> = {};
+    const formatted: Record<string, React.ReactNode> = {
+      additionOrder: input.additionOrder,
+    };
 
-    for (const [key, value] of Object.entries(raw)) {
-      if (value == null || Array.isArray(value)) continue;
-      formatted[key] = value as React.ReactNode;
-    }
-
-    if (input.additionDevice?.type !== undefined) {
-      formatted.additionDevice =
-        enumName(
-          reaction_pb.ReactionInput.AdditionDevice.AdditionDeviceType,
-          input.additionDevice.type,
-        )?.toLowerCase() ?? '';
-    }
-
-    if (input.additionSpeed?.type !== undefined) {
+    if (input.additionSpeed) {
       formatted.additionSpeed =
         enumName(
-          reaction_pb.ReactionInput.AdditionSpeed.AdditionSpeedType,
+          ReactionInput_AdditionSpeed_AdditionSpeedTypeSchema,
           input.additionSpeed.type,
         )?.toLowerCase() ?? '';
     }
@@ -146,8 +147,16 @@ const MainReactionView: React.FC = () => {
       formatted.additionDuration = formattedTime(input.additionDuration) ?? '';
     }
 
+    if (input.additionDevice) {
+      formatted.additionDevice =
+        enumName(
+          ReactionInput_AdditionDevice_AdditionDeviceTypeSchema,
+          input.additionDevice.type,
+        )?.toLowerCase() ?? '';
+    }
+
     return formatted;
-  }, [reaction, inputsIdx]);
+  }, [inputs, inputsIdx]);
 
   const displayConditionsOther = useMemo(() => {
     const conditions = reaction?.conditions;
@@ -161,15 +170,15 @@ const MainReactionView: React.FC = () => {
     return otherFields.find(key => conditions[key]);
   }, [reaction?.conditions]);
 
-  const events = useMemo<RecordEvent.AsObject[]>(() => {
+  const events = useMemo<RecordEvent[]>(() => {
     const provenance = reaction?.provenance;
     if (!provenance?.recordCreated) return [];
 
-    const created: RecordEvent.AsObject = {
+    const created: RecordEvent = {
       ...provenance.recordCreated,
       details: '(record created)',
     };
-    const modified = provenance.recordModifiedList ?? [];
+    const modified = provenance.recordModified;
     const all = [created, ...modified];
 
     all.sort((a, b) => {
@@ -182,10 +191,10 @@ const MainReactionView: React.FC = () => {
   }, [reaction?.provenance]);
 
   const getReactionType = (id: number): string =>
-    enumName(reaction_pb.ReactionIdentifier.ReactionIdentifierType, id) ?? '';
+    enumName(ReactionIdentifier_ReactionIdentifierTypeSchema, id) ?? '';
 
   const getWorkupLabel = (type: number): string => {
-    const name = enumName(reaction_pb.ReactionWorkup.ReactionWorkupType, type);
+    const name = enumName(ReactionWorkup_ReactionWorkupTypeSchema, type);
     return name ? name.toLowerCase().replace(/_/g, ' ') : '';
   };
 
@@ -207,18 +216,18 @@ const MainReactionView: React.FC = () => {
         setReactionSummary(summaryData);
 
         const items = ['summary', 'identifiers', 'inputs'];
-        const optionals: Array<keyof ReactionData> = [
+        const optionals: Array<keyof Reaction> = [
           'setup',
           'conditions',
           'notes',
-          'observationsList',
-          'workupsList',
+          'observations',
+          'workups',
         ];
 
         optionals.forEach(key => {
           const value = reactionData[key];
           if (Array.isArray(value) ? value.length > 0 : Boolean(value)) {
-            items.push(key.replace(/List$/, ''));
+            items.push(key);
           }
         });
 
@@ -296,12 +305,12 @@ const MainReactionView: React.FC = () => {
             )}
           </div>
 
-          {reaction?.identifiersList && reaction.identifiersList.length > 0 && (
+          {reaction && reaction.identifiers.length > 0 && (
             <div id="identifiers">
               <div className="title">Identifiers</div>
               <div className="section">
                 <div className="identifiers">
-                  {reaction.identifiersList.map((identifier, index) => (
+                  {reaction.identifiers.map((identifier, index) => (
                     <React.Fragment key={index}>
                       <div className="value">{getReactionType(identifier.type)}</div>
                       <div className="value">{identifier.value}</div>
@@ -313,12 +322,12 @@ const MainReactionView: React.FC = () => {
             </div>
           )}
 
-          {reaction?.inputsMap && reaction.inputsMap.length > 0 && (
+          {inputs.length > 0 && (
             <div id="inputs">
               <div className="title">Inputs</div>
               <div className="section">
                 <div className="tabs">
-                  {reaction.inputsMap.map(([key], idx) => (
+                  {inputs.map(([key], idx) => (
                     <div
                       key={idx}
                       className={`tab ${inputsIdx === idx ? 'selected' : ''}`}
@@ -340,14 +349,12 @@ const MainReactionView: React.FC = () => {
                   </div>
                   <div className="title">Components</div>
                   <div className="compound">
-                    {reaction.inputsMap[inputsIdx][1].componentsList?.map(
-                      (component, index) => (
-                        <CompoundView
-                          key={index}
-                          component={component}
-                        />
-                      ),
-                    )}
+                    {inputs[inputsIdx][1].components.map((component, index) => (
+                      <CompoundView
+                        key={index}
+                        component={component}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
@@ -422,23 +429,23 @@ const MainReactionView: React.FC = () => {
             </div>
           )}
 
-          {reaction?.observationsList && reaction.observationsList.length > 0 && (
+          {reaction && reaction.observations.length > 0 && (
             <div id="observations">
               <div className="title">Observations</div>
               <div className="section">
                 <div className="details">
-                  <ObservationsView observations={reaction.observationsList} />
+                  <ObservationsView observations={reaction.observations} />
                 </div>
               </div>
             </div>
           )}
 
-          {reaction?.workupsList && reaction.workupsList.length > 0 && (
+          {reaction && reaction.workups.length > 0 && (
             <div id="workups">
               <div className="title">Workups</div>
               <div className="section">
                 <div className="tabs">
-                  {reaction.workupsList.map((workup, idx) => (
+                  {reaction.workups.map((workup, idx) => (
                     <div
                       key={idx}
                       className={`tab capitalize ${workupsTab === idx ? 'selected' : ''}`}
@@ -449,18 +456,18 @@ const MainReactionView: React.FC = () => {
                   ))}
                 </div>
                 <div className="details">
-                  <WorkupsView workup={reaction.workupsList[workupsTab]} />
+                  <WorkupsView workup={reaction.workups[workupsTab]} />
                 </div>
               </div>
             </div>
           )}
 
-          {reaction?.outcomesList && reaction.outcomesList.length > 0 && (
+          {reaction && reaction.outcomes.length > 0 && (
             <div id="outcomes">
               <div className="title">Outcomes</div>
               <div className="section">
                 <div className="tabs">
-                  {reaction.outcomesList.map((_outcome, idx) => (
+                  {reaction.outcomes.map((_outcome, idx) => (
                     <div
                       key={idx}
                       className={`tab capitalize ${outcomesTab === idx ? 'selected' : ''}`}
@@ -474,7 +481,7 @@ const MainReactionView: React.FC = () => {
                   {/* key=outcomesTab so the inner tab/modal state resets when the user switches outcomes. */}
                   <OutcomesView
                     key={outcomesTab}
-                    outcome={reaction.outcomesList[outcomesTab]}
+                    outcome={reaction.outcomes[outcomesTab]}
                   />
                 </div>
               </div>
@@ -519,7 +526,7 @@ const MainReactionView: React.FC = () => {
               onCloseModal={() => setShowRawReaction(false)}
             >
               <div className="data">
-                <pre>{JSON.stringify(reaction, null, 2)}</pre>
+                <pre>{toJsonString(ReactionSchema, reaction, { prettySpaces: 2 })}</pre>
               </div>
             </FloatingModal>
           )}

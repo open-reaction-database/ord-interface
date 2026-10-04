@@ -16,7 +16,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import reaction_pb from 'ord-schema';
+import { fromBinary } from '@bufbuild/protobuf';
+import { ReactionSchema } from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import ReactionCard from '../../../components/ReactionCard';
 import DownloadResults from '../../../components/DownloadResults';
@@ -51,9 +52,7 @@ const MainSelectedSet: React.FC = () => {
 
       const decoded: SearchResult[] = fetched.map(r => ({
         ...r,
-        data: reaction_pb.Reaction.deserializeBinary(
-          new Uint8Array(base64ToBytes(r.proto)),
-        ).toObject(),
+        data: fromBinary(ReactionSchema, new Uint8Array(base64ToBytes(r.proto))),
       }));
 
       setReactions(decoded);

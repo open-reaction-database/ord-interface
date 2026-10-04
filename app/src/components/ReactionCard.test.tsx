@@ -17,16 +17,28 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import {
+  ReactionSchema,
+  type Pressure_PressureUnit,
+  type Temperature_TemperatureUnit,
+  type Time_TimeUnit,
+} from '@buf/open-reaction-database_ord-schema.bufbuild_es/ord-schema/proto/reaction_pb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ReactionCard from './ReactionCard';
-import type { ReactionData, SearchResult } from '../types/search';
+import type { SearchResult } from '../types/search';
 
-const reaction = (data: unknown = {}): SearchResult => ({
+const reaction = (
+  data: MessageInitShape<typeof ReactionSchema> = {},
+): SearchResult => ({
   reaction_id: 'ord-1',
   dataset_id: 'ord_dataset-1',
   proto: '',
-  data: data as ReactionData,
+  data: create(ReactionSchema, data),
 });
+
+// Proto3 enums are open, so a decoded record can carry an undeclared unit.
+const UNKNOWN_UNIT = 99;
 
 const renderCard = (result: SearchResult, props = {}) =>
   render(
@@ -66,10 +78,14 @@ describe('ReactionCard', () => {
     it('shows the yield measurement', async () => {
       renderCard(
         reaction({
-          outcomesList: [
+          outcomes: [
             {
-              productsList: [
-                { measurementsList: [{ type: 3, percentage: { value: 82.35 } }] },
+              products: [
+                {
+                  measurements: [
+                    { type: 3, value: { case: 'percentage', value: { value: 82.35 } } },
+                  ],
+                },
               ],
             },
           ],
@@ -82,10 +98,14 @@ describe('ReactionCard', () => {
     it('ignores measurements that are not yields', async () => {
       renderCard(
         reaction({
-          outcomesList: [
+          outcomes: [
             {
-              productsList: [
-                { measurementsList: [{ type: 5, percentage: { value: 99 } }] },
+              products: [
+                {
+                  measurements: [
+                    { type: 5, value: { case: 'percentage', value: { value: 99 } } },
+                  ],
+                },
               ],
             },
           ],
@@ -95,9 +115,7 @@ describe('ReactionCard', () => {
     });
 
     it('shows the conversion', async () => {
-      renderCard(
-        reaction({ outcomesList: [{ conversion: { value: 50, precision: 5 } }] }),
-      );
+      renderCard(reaction({ outcomes: [{ conversion: { value: 50, precision: 5 } }] }));
       expect(await screen.findByText('Conversion: 50% ± 5')).toBeInTheDocument();
     });
 
@@ -116,7 +134,7 @@ describe('ReactionCard', () => {
             temperature: { setpoint: { value: 25, units: 1 } },
             pressure: { setpoint: { value: 1, units: 2 } },
           },
-          outcomesList: [{ reactionTime: { value: 12, units: 1 } }],
+          outcomes: [{ reactionTime: { value: 12, units: 1 } }],
         }),
       );
       expect(
@@ -126,14 +144,37 @@ describe('ReactionCard', () => {
       ).toBeInTheDocument();
     });
 
+    it('reads an unset setpoint value as zero', async () => {
+      renderCard(
+        reaction({
+          conditions: {
+            temperature: { setpoint: { units: 1 } },
+            pressure: { setpoint: { units: 2 } },
+          },
+        }),
+      );
+      expect(
+        await screen.findByText('Conditions: at 0 celsius; under 0 atmosphere'),
+      ).toBeInTheDocument();
+    });
+
     it('falls back to default units when the enum is unrecognized', async () => {
       renderCard(
         reaction({
           conditions: {
-            temperature: { setpoint: { value: 25, units: 99 } },
-            pressure: { setpoint: { value: 1, units: 99 } },
+            temperature: {
+              setpoint: {
+                value: 25,
+                units: UNKNOWN_UNIT as Temperature_TemperatureUnit,
+              },
+            },
+            pressure: {
+              setpoint: { value: 1, units: UNKNOWN_UNIT as Pressure_PressureUnit },
+            },
           },
-          outcomesList: [{ reactionTime: { value: 12, units: 99 } }],
+          outcomes: [
+            { reactionTime: { value: 12, units: UNKNOWN_UNIT as Time_TimeUnit } },
+          ],
         }),
       );
       expect(
@@ -151,9 +192,7 @@ describe('ReactionCard', () => {
     it('labels the identifier with its type', async () => {
       renderCard(
         reaction({
-          outcomesList: [
-            { productsList: [{ identifiersList: [{ type: 2, value: 'CCO' }] }] },
-          ],
+          outcomes: [{ products: [{ identifiers: [{ type: 2, value: 'CCO' }] }] }],
         }),
       );
       expect(await screen.findByText('Product SMILES: CCO')).toBeInTheDocument();
