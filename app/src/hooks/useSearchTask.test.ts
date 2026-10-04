@@ -355,12 +355,12 @@ describe('useSearchTask', () => {
     expect(submitCalls(fetchMock)).toHaveLength(2);
   });
 
-  // A failure that says nothing about the task leaves its result to be read, so
-  // a rerun does not run the search again.
+  // The task may have expired, or its result may be too slow to build again, so a
+  // rerun after any failure starts over.
   it.each([
     ['fails in transit', () => Promise.reject(new TypeError('Failed to fetch'))],
     ['gets a server error', () => Promise.resolve(jsonResponse({}, 504))],
-  ])('asks about the same task again when a poll %s', async (_, failedPoll) => {
+  ])('submits again when a search whose poll %s runs again', async (_, failedPoll) => {
     let polls = 0;
     const fetchMock = vi.fn(async (url: string) => {
       if (url.startsWith('/api/submit_query')) return jsonResponse('task-1');
@@ -376,7 +376,7 @@ describe('useSearchTask', () => {
     await act(() => result.current.refetch());
 
     await waitFor(() => expect(reactionIds(result.current.data)).toEqual(['ord-1']));
-    expect(submitCalls(fetchMock)).toHaveLength(1);
+    expect(submitCalls(fetchMock)).toHaveLength(2);
   });
 
   // The cached result still says pending after the error, and polling on from it
