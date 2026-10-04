@@ -22,7 +22,8 @@ Prerequisites:
 - [`uv`](https://docs.astral.sh/uv/)
 - Postgres with the [rdkit cartridge](https://www.rdkit.org/docs/Cartridge.html)
 - [`node` + `npm`](https://nodejs.org/)
-- [`redis`](https://redis.io/) — the API uses it for search-task state
+- [`valkey`](https://valkey.io/) — the API uses it for search-task state (the conda
+  command below installs it)
 - Docker (optional, for the bundled full-stack image)
 
 ### 1. Install Python dependencies
@@ -30,7 +31,7 @@ Prerequisites:
 ```bash
 git clone https://github.com/open-reaction-database/ord-interface
 cd ord-interface
-conda install -c conda-forge rdkit-postgresql
+conda install -c conda-forge rdkit-postgresql valkey-server
 uv sync
 ```
 
@@ -56,8 +57,8 @@ docker compose up
 
 In your local conda environment
 ```shell
-# Redis (the API uses it for search-task state); leaves it daemonized.
-redis-server --daemonize yes
+# Valkey (the API uses it for search-task state); leaves it daemonized.
+valkey-server --daemonize yes
 
 # Backend. ORD_INTERFACE_TESTING=TRUE spins up an in-process Postgres
 # via testing.postgresql and loads the bundled test datasets.

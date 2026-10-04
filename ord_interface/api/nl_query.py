@@ -43,7 +43,7 @@ from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 
 from ord_interface.api.queries import QueryResult
-from ord_interface.api.search import ComponentSpec, QueryParams, get_redis, run_query
+from ord_interface.api.search import ComponentSpec, QueryParams, get_valkey, run_query
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["nl"])
@@ -66,9 +66,9 @@ TRANSLATION_CACHE_TTL_SECONDS = 60 * 60
 RESOLVE_CACHE_VERSION = "v1"
 RESOLVE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30
 
-# The cache is an optimization, never a dependency: an unreachable or slow Redis must
+# The cache is an optimization, never a dependency: an unreachable or slow Valkey must
 # fail fast so the request falls back to a live call instead of stalling on it.
-REDIS_OP_TIMEOUT_SECONDS = 1.0
+VALKEY_OP_TIMEOUT_SECONDS = 1.0
 
 Target = Literal["INPUT", "OUTPUT"]
 MatchMode = Literal["EXACT", "SIMILAR", "SUBSTRUCTURE", "SMARTS"]
@@ -236,7 +236,7 @@ class ResolvedComponent(BaseModel):
 
 
 def _resolve_name_key(name: str) -> str:
-    """Returns the Redis cache key for a name -> SMILES resolution."""
+    """Returns the Valkey cache key for a name -> SMILES resolution."""
     digest = hashlib.sha256(name.strip().lower().encode()).hexdigest()
     return f"nl_resolve:{RESOLVE_CACHE_VERSION}:{digest}"
 
@@ -258,7 +258,7 @@ async def _resolve_name_cached(name: str) -> tuple[str, str]:
         ValueError: If the name cannot be resolved to a structure.
     """
     key = _resolve_name_key(name)
-    raw = await _redis_get(key)
+    raw = await _valkey_get(key)
     if raw is not None:
         try:
             smiles, resolver = json.loads(raw)
@@ -266,7 +266,7 @@ async def _resolve_name_cached(name: str) -> tuple[str, str]:
         except (ValueError, TypeError) as error:
             logger.warning(f"Discarding bad cached resolution for {name!r}: {error}")
     smiles, resolver = await asyncio.to_thread(resolve_name, "name", name)
-    await _redis_set(key, json.dumps([smiles, resolver]), RESOLVE_CACHE_TTL_SECONDS)
+    await _valkey_set(key, json.dumps([smiles, resolver]), RESOLVE_CACHE_TTL_SECONDS)
     return smiles, resolver
 
 
@@ -378,36 +378,36 @@ class NLQueryResponse(BaseModel):
     dry_run: bool = False
 
 
-async def _redis_get(key: str) -> str | None:
-    """Returns a cached string value, or None on a miss or any Redis failure.
+async def _valkey_get(key: str) -> str | None:
+    """Returns a cached string value, or None on a miss or any Valkey failure.
 
-    The cache is best-effort: an unreachable or slow Redis degrades to a miss within
-    REDIS_OP_TIMEOUT_SECONDS rather than stalling (or failing) the request.
+    The cache is best-effort: an unreachable or slow Valkey degrades to a miss within
+    VALKEY_OP_TIMEOUT_SECONDS rather than stalling (or failing) the request.
     """
     try:
-        async with asyncio.timeout(REDIS_OP_TIMEOUT_SECONDS):
-            async with get_redis() as client:
+        async with asyncio.timeout(VALKEY_OP_TIMEOUT_SECONDS):
+            async with get_valkey() as client:
                 value = await client.get(key)
     except Exception as error:
-        logger.warning(f"Redis read failed for {key!r}: {error}")
+        logger.warning(f"Valkey read failed for {key!r}: {error}")
         return None
     if value is None:
         return None
     return value.decode() if isinstance(value, bytes) else value
 
 
-async def _redis_set(key: str, value: str, ttl_seconds: int) -> None:
-    """Stores a string value with a TTL, ignoring an unreachable/slow Redis (best-effort)."""
+async def _valkey_set(key: str, value: str, ttl_seconds: int) -> None:
+    """Stores a string value with a TTL, ignoring an unreachable/slow Valkey (best-effort)."""
     try:
-        async with asyncio.timeout(REDIS_OP_TIMEOUT_SECONDS):
-            async with get_redis() as client:
+        async with asyncio.timeout(VALKEY_OP_TIMEOUT_SECONDS):
+            async with get_valkey() as client:
                 await client.set(key, value, ex=ttl_seconds)
     except Exception as error:
-        logger.warning(f"Redis write failed for {key!r}: {error}")
+        logger.warning(f"Valkey write failed for {key!r}: {error}")
 
 
 def _translation_cache_key(query: str) -> str:
-    """Returns the Redis cache key for a question under the current model and version."""
+    """Returns the Valkey cache key for a question under the current model and version."""
     model = os.getenv("ORD_NL_QUERY_MODEL", DEFAULT_MODEL)
     digest = hashlib.sha256(f"{model}\n{query.strip()}".encode()).hexdigest()
     return f"nl_query:{TRANSLATION_CACHE_VERSION}:{digest}"
@@ -415,7 +415,7 @@ def _translation_cache_key(query: str) -> str:
 
 async def _translation_cache_get(key: str) -> NLQuery | None:
     """Returns a cached translation, or None on a miss or unparseable payload."""
-    raw = await _redis_get(key)
+    raw = await _valkey_get(key)
     if raw is None:
         return None
     try:
@@ -429,7 +429,7 @@ async def _translation_cache_get(key: str) -> NLQuery | None:
 
 async def _translation_cache_set(key: str, interpretation: NLQuery) -> None:
     """Stores a translation in the cache (best-effort)."""
-    await _redis_set(
+    await _valkey_set(
         key, interpretation.model_dump_json(), TRANSLATION_CACHE_TTL_SECONDS
     )
 
@@ -443,9 +443,9 @@ async def nl_query(
 
     The interpreted query and resolved structures are returned alongside the results
     so the user can see -- and trust or correct -- how their question was understood.
-    Only the model's translation is cached (best-effort, in Redis): identical questions
+    Only the model's translation is cached (best-effort, in Valkey): identical questions
     skip the model call, but the database query is always re-run so results stay fresh.
-    A Redis outage falls back to a live translation rather than failing the request.
+    A Valkey outage falls back to a live translation rather than failing the request.
 
     With ``dry_run=true`` the question is translated and resolved but the database
     search is not executed -- useful for inspecting exactly what query would run.

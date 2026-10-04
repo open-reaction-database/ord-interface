@@ -15,8 +15,11 @@
 """Pytest fixtures."""
 
 import os
+import socket
+import subprocess
+import time
 from collections.abc import AsyncIterator, Iterator
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from typing import Any
 from unittest.mock import patch
 
@@ -28,12 +31,49 @@ from ord_schema.logging import get_logger
 from psycopg import AsyncCursor
 from psycopg.rows import dict_row
 from testing.postgresql import Postgresql
-from testing.redis import RedisServer
+from valkey import Valkey
+from valkey.exceptions import ConnectionError as ValkeyConnectionError
 
 from ord_interface.api.main import app
 from ord_interface.api.testing import setup_test_postgres
 
 logger = get_logger(__name__)
+
+
+@contextmanager
+def _valkey_server() -> Iterator[int]:
+    """Runs a throwaway valkey-server with no persistence on a free port.
+
+    Yields:
+        The port, once the server answers a ping.
+
+    Raises:
+        RuntimeError: If the server exits or does not answer within ten seconds.
+    """
+    # A port the kernel just handed out and released; each test process gets its own.
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    process = subprocess.Popen(
+        ["valkey-server", "--port", str(port), "--save", "", "--appendonly", "no"],
+        stdout=subprocess.DEVNULL,
+    )
+    try:
+        deadline = time.monotonic() + 10
+        while True:
+            if process.poll() is not None:
+                raise RuntimeError(f"valkey-server exited with {process.returncode}")
+            try:
+                if Valkey(port=port).ping():
+                    break
+            except ValkeyConnectionError:
+                if time.monotonic() > deadline:
+                    raise RuntimeError("valkey-server did not answer a ping") from None
+                time.sleep(0.05)
+        yield port
+    finally:
+        process.terminate()
+        process.wait(timeout=10)
 
 
 @pytest.fixture(name="test_postgres", scope="session")
@@ -57,8 +97,8 @@ async def test_cursor(test_postgres) -> AsyncIterator[AsyncCursor[dict[str, Any]
 def test_client(test_postgres) -> Iterator[TestClient]:
     with (
         TestClient(app) as client,
-        RedisServer() as redis_server,
-        patch.dict(os.environ, {"REDIS_PORT": str(redis_server.dsn()["port"])}),
+        _valkey_server() as valkey_port,
+        patch.dict(os.environ, {"VALKEY_PORT": str(valkey_port)}),
         ExitStack() as stack,
     ):
         # NOTE(skearnes): Set ORD_INTERFACE_POSTGRES to use that database instead of a testing.postgresql instance.

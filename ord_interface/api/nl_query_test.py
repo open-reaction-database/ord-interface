@@ -41,8 +41,8 @@ from ord_interface.api.nl_query import (
 
 
 @pytest.fixture(autouse=True)
-def _no_redis(monkeypatch):
-    """Disables Redis so unit tests never touch a real server (always a cache miss)."""
+def _no_valkey(monkeypatch):
+    """Disables Valkey so unit tests never touch a real server (always a cache miss)."""
 
     async def miss(key):
         return None
@@ -50,8 +50,8 @@ def _no_redis(monkeypatch):
     async def noop(key, value, ttl_seconds):
         return None
 
-    monkeypatch.setattr(nl_query, "_redis_get", miss)
-    monkeypatch.setattr(nl_query, "_redis_set", noop)
+    monkeypatch.setattr(nl_query, "_valkey_get", miss)
+    monkeypatch.setattr(nl_query, "_valkey_set", noop)
 
 
 @pytest.mark.asyncio
@@ -177,7 +177,7 @@ async def test_resolve_name_cached_hit_skips_resolver(monkeypatch):
         return json.dumps(["CCO", "PubChem API"])
 
     monkeypatch.setattr(nl_query, "resolve_name", fail)
-    monkeypatch.setattr(nl_query, "_redis_get", hit)
+    monkeypatch.setattr(nl_query, "_valkey_get", hit)
     smiles, resolver = await nl_query._resolve_name_cached("ethanol")
     assert smiles == "CCO"
     assert resolver == "PubChem API (cached)"
@@ -193,7 +193,7 @@ async def test_resolve_name_cached_miss_writes_cache(monkeypatch):
     monkeypatch.setattr(
         nl_query, "resolve_name", lambda value_type, value: ("CCO", "PubChem API")
     )
-    monkeypatch.setattr(nl_query, "_redis_set", set_cache)
+    monkeypatch.setattr(nl_query, "_valkey_set", set_cache)
     smiles, resolver = await nl_query._resolve_name_cached("ethanol")
     assert (smiles, resolver) == ("CCO", "PubChem API")
     assert list(writes.values()) == [json.dumps(["CCO", "PubChem API"])]
@@ -260,7 +260,7 @@ async def test_translation_cache_get_discards_invalid_payload(monkeypatch):
             {"components": [{"identifier": "x", "target": "INPUT", "mode": "BOGUS"}]}
         )
 
-    monkeypatch.setattr(nl_query, "_redis_get", stale)
+    monkeypatch.setattr(nl_query, "_valkey_get", stale)
     assert await nl_query._translation_cache_get("key") is None
 
 
