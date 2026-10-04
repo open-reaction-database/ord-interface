@@ -38,11 +38,17 @@ from ord_interface.api.nl_query import (
 from ord_interface.api.nl_query import (
     nl_query as nl_query_endpoint,
 )
+from ord_interface.api.search import get_valkey
 
 
 @pytest.fixture(autouse=True)
-def _no_valkey(monkeypatch):
-    """Disables Valkey so unit tests never touch a real server (always a cache miss)."""
+def _no_valkey(request, monkeypatch):
+    """Disables Valkey so unit tests never touch a real server (always a cache miss).
+
+    Tests that request ``test_valkey`` keep the real helpers and use its server.
+    """
+    if "test_valkey" in request.fixturenames:
+        return
 
     async def miss(key):
         return None
@@ -262,6 +268,23 @@ async def test_translation_cache_get_discards_invalid_payload(monkeypatch):
 
     monkeypatch.setattr(nl_query, "_valkey_get", stale)
     assert await nl_query._translation_cache_get("key") is None
+
+
+@pytest.mark.asyncio
+async def test_valkey_cache_round_trip(test_valkey):
+    await nl_query._valkey_set("nl_test:round_trip", "value", 60)
+    assert await nl_query._valkey_get("nl_test:round_trip") == "value"
+    async with get_valkey() as client:
+        assert 0 < await client.ttl("nl_test:round_trip") <= 60
+    assert await nl_query._valkey_get("nl_test:missing") is None
+
+
+@pytest.mark.asyncio
+async def test_valkey_cache_outage_is_a_miss(test_valkey, monkeypatch):
+    # An unreachable server reads as a miss and drops the write instead of raising.
+    monkeypatch.setenv("VALKEY_PORT", "1")
+    await nl_query._valkey_set("nl_test:outage", "value", 60)
+    assert await nl_query._valkey_get("nl_test:outage") is None
 
 
 @pytest.mark.asyncio

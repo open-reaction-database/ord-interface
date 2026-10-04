@@ -443,9 +443,9 @@ async def nl_query(
 
     The interpreted query and resolved structures are returned alongside the results
     so the user can see -- and trust or correct -- how their question was understood.
-    Only the model's translation is cached (best-effort, in Valkey): identical questions
-    skip the model call, but the database query is always re-run so results stay fresh.
-    A Valkey outage falls back to a live translation rather than failing the request.
+    The model's translation and name lookups are cached (best-effort, in Valkey), so a
+    repeated question skips the model call; the database query always re-runs so results
+    stay fresh. A Valkey outage falls back to live calls rather than failing the request.
 
     With ``dry_run=true`` the question is translated and resolved but the database
     search is not executed -- useful for inspecting exactly what query would run.

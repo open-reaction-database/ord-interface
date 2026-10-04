@@ -15,11 +15,8 @@
 """Pytest fixtures."""
 
 import os
-import socket
-import subprocess
-import time
 from collections.abc import AsyncIterator, Iterator
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 from typing import Any
 from unittest.mock import patch
 
@@ -31,49 +28,12 @@ from ord_schema.logging import get_logger
 from psycopg import AsyncCursor
 from psycopg.rows import dict_row
 from testing.postgresql import Postgresql
-from valkey import Valkey
-from valkey.exceptions import ConnectionError as ValkeyConnectionError
+from testing.redis import RedisServer
 
 from ord_interface.api.main import app
 from ord_interface.api.testing import setup_test_postgres
 
 logger = get_logger(__name__)
-
-
-@contextmanager
-def _valkey_server() -> Iterator[int]:
-    """Runs a throwaway valkey-server with no persistence on a free port.
-
-    Yields:
-        The port, once the server answers a ping.
-
-    Raises:
-        RuntimeError: If the server exits or does not answer within ten seconds.
-    """
-    # A port the kernel just handed out and released; each test process gets its own.
-    with socket.socket() as probe:
-        probe.bind(("127.0.0.1", 0))
-        port = probe.getsockname()[1]
-    process = subprocess.Popen(
-        ["valkey-server", "--port", str(port), "--save", "", "--appendonly", "no"],
-        stdout=subprocess.DEVNULL,
-    )
-    try:
-        deadline = time.monotonic() + 10
-        while True:
-            if process.poll() is not None:
-                raise RuntimeError(f"valkey-server exited with {process.returncode}")
-            try:
-                if Valkey(port=port).ping():
-                    break
-            except ValkeyConnectionError:
-                if time.monotonic() > deadline:
-                    raise RuntimeError("valkey-server did not answer a ping") from None
-                time.sleep(0.05)
-        yield port
-    finally:
-        process.terminate()
-        process.wait(timeout=10)
 
 
 @pytest.fixture(name="test_postgres", scope="session")
@@ -93,14 +53,30 @@ async def test_cursor(test_postgres) -> AsyncIterator[AsyncCursor[dict[str, Any]
             yield cursor
 
 
+@pytest.fixture(name="test_valkey", scope="session")
+def test_valkey_fixture() -> Iterator[RedisServer]:
+    """Runs a throwaway valkey-server and points ``get_valkey()`` at it.
+
+    Every ``VALKEY_*`` variable is overridden, so a shell pointed at another server
+    cannot leak into the tests.
+
+    Yields:
+        The running server.
+    """
+    with RedisServer(redis_server="valkey-server") as valkey_server:
+        dsn = valkey_server.dsn()
+        environment = {
+            "VALKEY_HOST": dsn["host"],
+            "VALKEY_PORT": str(dsn["port"]),
+            "VALKEY_SSL": "0",
+        }
+        with patch.dict(os.environ, environment):
+            yield valkey_server
+
+
 @pytest.fixture(scope="session")
-def test_client(test_postgres) -> Iterator[TestClient]:
-    with (
-        TestClient(app) as client,
-        _valkey_server() as valkey_port,
-        patch.dict(os.environ, {"VALKEY_PORT": str(valkey_port)}),
-        ExitStack() as stack,
-    ):
+def test_client(test_postgres, test_valkey) -> Iterator[TestClient]:
+    with TestClient(app) as client, ExitStack() as stack:
         # NOTE(skearnes): Set ORD_INTERFACE_POSTGRES to use that database instead of a testing.postgresql instance.
         # To force the use of testing.postgresl, set ORD_INTERFACE_TESTING=TRUE.
         if os.environ.get(

@@ -37,7 +37,7 @@ jobs:
       - name: Setup PostgreSQL
         shell: bash -l {0}
         run: |
-          # NOTE(skearnes): conda is only used for postgres (not python).
+          # NOTE(skearnes): conda is only used for postgres and valkey (not python).
           conda install -c conda-forge rdkit-postgresql valkey-server
           initdb
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
