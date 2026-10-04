@@ -17,11 +17,13 @@
 import gzip
 import json
 
+import psycopg
 import pytest
 from ord_schema.proto import dataset_pb2
 from rdkit import Chem
 from tenacity import retry, stop_after_attempt, wait_fixed
 
+from ord_interface.api import search
 from ord_interface.api.queries import QueryResult
 
 
@@ -192,6 +194,15 @@ def test_query_async(test_client, params, num_expected):
     response = test_client.get("/api/submit_query", params=params)
     response.raise_for_status()
     assert len(wait_for_task(test_client, response.json())) == num_expected
+
+
+@pytest.mark.asyncio
+async def test_statement_timeout_cancels_slow_query(test_postgres, monkeypatch):
+    monkeypatch.setenv("ORD_INTERFACE_POSTGRES", test_postgres.url())
+    monkeypatch.setattr(search, "STATEMENT_TIMEOUT_SECONDS", 1)
+    async with search.get_cursor() as cursor:
+        with pytest.raises(psycopg.errors.QueryCanceled):
+            await cursor.execute("SELECT pg_sleep(2)")
 
 
 def test_get_input_stats(test_client):

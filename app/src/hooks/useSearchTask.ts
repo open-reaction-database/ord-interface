@@ -22,6 +22,8 @@ import { fetchJson } from '../utils/api';
 import type { SearchResult } from '../types/search';
 
 const POLL_INTERVAL_MS = 1000;
+// The server cancels the search query at the same bound (STATEMENT_TIMEOUT_SECONDS
+// in ord_interface/api/search.py).
 const POLL_TIMEOUT_MS = 120_000;
 // Bounds each request, so a stalled one fails the search instead of hanging it.
 // Longer than the proxy's 60-second proxy_read_timeout (ord_interface/nginx.conf),
