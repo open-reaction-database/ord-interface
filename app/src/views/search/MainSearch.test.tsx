@@ -81,9 +81,8 @@ describe('MainSearch', () => {
 
   it('runs a search when the URL carries criteria', () => {
     renderSearch('?dataset_id=ord_dataset-1');
-    expect(fetch).toHaveBeenCalledWith(
+    expect(vi.mocked(fetch).mock.calls[0][0]).toBe(
       '/api/submit_query?dataset_id=ord_dataset-1',
-      undefined,
     );
   });
 
@@ -168,6 +167,24 @@ describe('MainSearch', () => {
     expect(
       await screen.findByText(/Search failed: submit_query failed \(HTTP 500\)/),
     ).toBeInTheDocument();
+  });
+
+  // The URL doesn't change, so only the page can tell the search to run again.
+  it('runs a failed search again when Search is clicked with the same criteria', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response);
+    vi.stubGlobal('fetch', fetchMock);
+    renderSearch('?dataset_id=ord_dataset-1');
+    await user.click(searchButton());
+    await screen.findByText(/Search failed/);
+    const searchedFor = currentSearch;
+    const submits = fetchMock.mock.calls.length;
+
+    await user.click(searchButton());
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(submits + 1));
+    expect(currentSearch).toBe(searchedFor);
+    expect(fetchMock.mock.lastCall?.[0]).toBe(`/api/submit_query${searchedFor}`);
   });
 
   it('reports an empty result set', async () => {
