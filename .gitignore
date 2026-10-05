@@ -14,7 +14,7 @@ __pycache__/
 .ruff_cache/
 .venv/
 
-# Redis dumps.
+# Valkey dumps.
 **/dump.rdb
 # vim swap files
 *.sw[a-z]

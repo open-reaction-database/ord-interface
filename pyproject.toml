@@ -37,7 +37,7 @@ dependencies = [
     "psycopg[binary,pool]>=3",
     "pyyaml",
     "rdkit>=2021.9.5",
-    "redis[hiredis]",
+    "valkey[libvalkey]",
     "requests>=2.24.0",
     "uvicorn[standard]",
 ]
@@ -52,7 +52,6 @@ dev = [
     "ruff>=0.9.9",
     "tenacity",
     "testing-postgresql",
-    "testing.redis",
     "ty>=0.0.28",
 ]
 

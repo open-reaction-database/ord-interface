@@ -21,7 +21,7 @@ import gzip
 import json
 import os
 import re
-from collections.abc import AsyncIterator, Awaitable
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from typing import Any, cast
@@ -44,7 +44,7 @@ from psycopg import AsyncCursor
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 from rdkit import Chem
-from redis.asyncio import Redis
+from valkey.asyncio import Valkey
 
 from ord_interface.api.queries import (
     DatasetIdQuery,
@@ -93,18 +93,17 @@ async def get_cursor() -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
 
 
 @asynccontextmanager
-async def get_redis() -> AsyncIterator[Redis]:
-    """Returns a Redis client instance."""
-    host = os.environ.get("REDIS_HOST", "localhost")
-    port = int(os.environ.get("REDIS_PORT", "6379"))
-    ssl = os.environ.get("REDIS_SSL", "0") == "1"
-    async with Redis(host=host, port=port, ssl=ssl) as client:
-        # redis.asyncio stubs return Awaitable[bool] | bool from ping(); the runtime is always awaitable.
-        if not await cast(Awaitable[bool], client.ping()):
+async def get_valkey() -> AsyncIterator[Valkey]:
+    """Returns a Valkey client instance."""
+    host = os.environ.get("VALKEY_HOST", "localhost")
+    port = int(os.environ.get("VALKEY_PORT", "6379"))
+    ssl = os.environ.get("VALKEY_SSL", "0") == "1"
+    async with Valkey(host=host, port=port, ssl=ssl) as client:
+        if not await client.ping():
             raise RuntimeError(
-                f"Failed to connect to Redis server {host}:{port} ({ssl=})"
+                f"Failed to connect to Valkey server {host}:{port} ({ssl=})"
             )
-        logger.debug(f"Connected to Redis server {host}:{port} ({ssl=})")
+        logger.debug(f"Connected to Valkey server {host}:{port} ({ssl=})")
         yield client
 
 
@@ -318,7 +317,7 @@ async def run_task(task_id: str, params: QueryParams) -> bool:
     # NOTE(skearnes): Use reaction IDs to avoid stuffing full protos into the result database.
     result = await run_query(params, return_ids=True)
     logger.debug(f"Finished task {task_id}")
-    async with get_redis() as client:
+    async with get_valkey() as client:
         return await client.set(f"result:{task_id}", json.dumps(result), ex=60 * 60)
 
 
@@ -328,7 +327,7 @@ async def submit_query(
 ) -> str:
     """Submits a query as a background task."""
     task_id = str(uuid4())
-    async with get_redis() as client:
+    async with get_valkey() as client:
         await client.set(f"query:{task_id}", json.dumps(asdict(params)), ex=60 * 60)
     background_tasks.add_task(run_task, task_id=task_id, params=params)
     logger.debug(f"Created task {task_id}")
@@ -338,7 +337,7 @@ async def submit_query(
 @router.get("/fetch_query_result")
 async def fetch_query_result(task_id: str):
     """Checks the query status, returning the results if the query is complete."""
-    async with get_redis() as client:
+    async with get_valkey() as client:
         if not await client.exists(f"query:{task_id}"):
             return Response(
                 f"Task {task_id} does not exist", status_code=status.HTTP_404_NOT_FOUND
