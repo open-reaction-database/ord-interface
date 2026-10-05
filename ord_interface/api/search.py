@@ -67,6 +67,9 @@ router = APIRouter(tags=["client"])
 
 BOND_LENGTH = 20
 MAX_RESULTS = 1000
+# Postgres cancels any statement that runs longer. Matches POLL_TIMEOUT_MS in
+# app/src/hooks/useSearchTask.ts: past it, the client has stopped waiting.
+STATEMENT_TIMEOUT_SECONDS = 120
 
 
 @asynccontextmanager
@@ -84,8 +87,11 @@ async def get_cursor() -> AsyncIterator[AsyncCursor[dict[str, Any]]]:
                 host=os.environ["POSTGRES_HOST"],
             ),
         )
+    options = (
+        f"-c search_path=public,ord -c statement_timeout={STATEMENT_TIMEOUT_SECONDS}s"
+    )
     async with await psycopg.AsyncConnection[dict[str, Any]].connect(
-        dsn, row_factory=dict_row, options="-c search_path=public,ord"
+        dsn, row_factory=dict_row, options=options
     ) as connection:
         await connection.set_read_only(True)
         async with connection.cursor() as cursor:
